@@ -1,0 +1,13 @@
+# Place at %UserProfile%\.wslconfig on the Windows host (not inside WSL).
+# Enables mirrored networking mode: WSL shares the host's real LAN IP on its
+# own interfaces (instead of a separate NATed subnet), and WSL services
+# bound to 0.0.0.0 auto-forward onto Windows' localhost. This is what makes
+# the Tailscale/Funnel setup in this plan work the way it's documented here.
+#
+# Apply with (elevated PowerShell): wsl --shutdown, then restart the distro.
+
+[wsl2]
+networkingMode=mirrored
+dnsTunneling=true
+firewall=true
+autoProxy=true
