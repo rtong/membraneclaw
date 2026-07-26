@@ -1,0 +1,12 @@
+# Direct dependencies. Install with:
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# requirements.lock.txt holds the full resolved set from a known-good environment.
+
+qwen-agent[rag,code_interpreter]==0.0.34
+
+# qwen_agent.utils.utils imports soundfile unconditionally but never declares it.
+soundfile==0.14.0
+
+# OpenAI-compatible front end (server.py)
+fastapi==0.140.0
+uvicorn[standard]==0.51.0
