@@ -10,3 +10,6 @@ soundfile==0.14.0
 # OpenAI-compatible front end (server.py)
 fastapi==0.140.0
 uvicorn[standard]==0.51.0
+
+# MCP client, for reaching the WaterTAP RO server (agent/core.py)
+mcp>=1.2

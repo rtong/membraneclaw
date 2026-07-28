@@ -1,8 +1,11 @@
 .venv/
 .env
+.env.bak
 __pycache__/
 *.pyc
 workspace/
 logs/
 .qwen_agent_data/
 .owui_admin_password
+.venv-watertap/
+.vendor/

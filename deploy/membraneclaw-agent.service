@@ -1,0 +1,16 @@
+[Unit]
+Description=MembraneClaw agent (OpenAI-compatible front end for Qwen-Agent)
+After=network-online.target vllm-qwen.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bayan
+WorkingDirectory=/home/bayan/MembraneClaw
+# Configuration is read from MembraneClaw/.env by agent/config.py.
+ExecStart=/home/bayan/MembraneClaw/.venv/bin/python server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

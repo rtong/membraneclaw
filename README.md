@@ -92,6 +92,54 @@ tools are not silently rejected at construction.
 Pick the container name with `CONTAINER_NAME`, not `NAME` — `NAME` is frequently
 already set in the shell and silently wins.
 
+## WaterTAP RO simulation (MCP)
+
+`mcp_watertap/` is an MCP server exposing WaterTAP's
+[ReverseOsmosis0D](https://watertap.readthedocs.io/en/stable/technical_reference/unit_models/reverse_osmosis_0D.html)
+unit model as two tools: `simulate_ro` and `describe_ro_parameters`. The agent
+picks it up automatically (`RO_MCP=off` to disable), so it works from the CLI,
+the HTTP front end, and Open WebUI without extra wiring.
+
+```bash
+python3 -m venv .venv-watertap
+.venv-watertap/bin/pip install -r mcp_watertap/requirements.txt
+.venv-watertap/bin/idaes get-extensions --distro ubuntu2204   # solver binaries
+```
+
+WaterTAP gets its **own venv**: the Pyomo/IDAES stack is large, and the agent
+reaches it over MCP stdio rather than importing it, so the two dependency sets
+never interact. The tools appear to the model as `watertap-ro-simulate_ro`.
+
+Sanity check — defaults are 1 kg/s of 35 g/kg seawater at 50 bar over 50 m²:
+
+```
+feed osmotic 28.5 bar · flux 16.4 LMH · recovery 23.4% · permeate 349 ppm · rejection 99.03%
+```
+
+### Platform notes
+
+- **Solver libraries.** IDAES has no Debian 13 build; the `ubuntu2204` one works,
+  but its `ipopt` links `libgfortran.so.5` and `liblapack.so.3`, which Debian 13
+  does not ship. Rather than require root, `.vendor/` holds them unpacked from
+  `.deb` files and `ro_model.py` prepends that to `LD_LIBRARY_PATH` (ipopt is a
+  subprocess, so setting it before Pyomo spawns it suffices):
+  ```bash
+  mkdir -p .vendor/debs && cd .vendor/debs
+  apt-get download libgfortran5 liblapack3 libblas3
+  cd .. && for d in debs/*.deb; do dpkg -x "$d" root/; done
+  cd root/usr/lib/x86_64-linux-gnu && ln -sf lapack/liblapack.so.3 . && ln -sf blas/libblas.so.3 .
+  ```
+  `sudo apt-get install libgfortran5 liblapack3` works too if you prefer.
+- **stdout is the MCP transport.** IDAES binds the original stdout in its log
+  handler at import time and ipopt writes from C, so `redirect_stdout` is not
+  enough — `ro_model.py` redirects file descriptor 1 to stderr around the solve.
+  Verified as zero bytes on fd 1, including the failing-solve path.
+- **Properties must be touched before solving.** WaterTAP builds property
+  variables on demand; one first accessed after the solve is created with its
+  default and never constrained, silently returning a wrong-but-plausible number
+  (feed osmotic pressure read 10 bar instead of 28.5). `_touch_reported_properties`
+  builds everything reported up front.
+
 ## Using it from BetterGPT (or any OpenAI client)
 
 BetterGPT talks straight to an OpenAI-compatible endpoint. Pointed at vLLM

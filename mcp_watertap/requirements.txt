@@ -1,0 +1,7 @@
+# Installed into .venv-watertap, separate from the agent venv: the Pyomo/IDAES
+# stack is large and must not destabilise the agent's dependencies.
+#   python3 -m venv .venv-watertap
+#   .venv-watertap/bin/pip install -r mcp_watertap/requirements.txt
+#   .venv-watertap/bin/idaes get-extensions --distro ubuntu2204
+watertap==1.7.0
+mcp>=1.2

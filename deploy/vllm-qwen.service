@@ -1,0 +1,34 @@
+[Unit]
+Description=vLLM OpenAI-compatible server (Qwen3.5-9B-AWQ)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bayan
+Environment=CUDA_HOME=/usr/local/cuda
+# vllm-env/bin must stay on PATH: torch inductor shells out to `ninja`, which
+# ships only inside that venv, and the engine fails to start without it.
+Environment=PATH=/home/bayan/vllm-env/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=/etc/vllm-qwen.env
+WorkingDirectory=/home/bayan
+# --enable-auto-tool-choice and --tool-call-parser are required: without them the
+# server rejects any request carrying `tools` with a 400, which breaks the agent
+# entirely. Qwen3.5 emits XML tool calls, so the parser must be qwen3_xml —
+# `hermes` expects JSON and never matches.
+ExecStart=/home/bayan/vllm-env/bin/vllm serve /home/bayan/models/Qwen3.5-9B-AWQ \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --served-model-name qwen3.5-9b gpt-4o gpt-4 gpt-3.5-turbo \
+    --gpu-memory-utilization 0.92 \
+    --max-model-len 16384 \
+    --max-num-seqs 16 \
+    --reasoning-parser qwen3 \
+    --enable-auto-tool-choice \
+    --tool-call-parser qwen3_xml \
+    --api-key ${VLLM_API_KEY}
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
