@@ -15,16 +15,21 @@ import os
 from pathlib import Path
 from typing import Any
 
-# The IDAES ipopt build links libgfortran.so.5 / liblapack.so.3, which Debian 13
-# does not ship. .vendor holds them unpacked from .deb files (see README). ipopt
-# runs as a subprocess, so exporting this before Pyomo spawns it is enough.
-_VENDOR_LIB = Path(__file__).resolve().parent.parent / ".vendor/root/usr/lib/x86_64-linux-gnu"
-if _VENDOR_LIB.is_dir():
-    _existing = os.environ.get("LD_LIBRARY_PATH", "")
-    if str(_VENDOR_LIB) not in _existing.split(os.pathsep):
-        os.environ["LD_LIBRARY_PATH"] = (
-            f"{_VENDOR_LIB}{os.pathsep}{_existing}" if _existing else str(_VENDOR_LIB)
-        )
+# The IDAES ipopt build links libgfortran.so.5 / liblapack.so.3, which recent
+# Debian does not ship. .vendor holds them unpacked from .deb files (see README).
+# ipopt runs as a subprocess, so exporting this before Pyomo spawns it is enough.
+# Checked both beside this module and one level up, so the same file works whether
+# it sits inside a larger repo or is deployed standalone.
+_HERE = Path(__file__).resolve().parent
+_VENDOR_REL = ".vendor/root/usr/lib/x86_64-linux-gnu"
+for _candidate in (_HERE / _VENDOR_REL, _HERE.parent / _VENDOR_REL):
+    if _candidate.is_dir():
+        _existing = os.environ.get("LD_LIBRARY_PATH", "")
+        if str(_candidate) not in _existing.split(os.pathsep):
+            os.environ["LD_LIBRARY_PATH"] = (
+                f"{_candidate}{os.pathsep}{_existing}" if _existing else str(_candidate)
+            )
+        break
 
 from pyomo.environ import ConcreteModel, value
 from idaes.core import FlowsheetBlock

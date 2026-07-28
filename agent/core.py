@@ -13,24 +13,26 @@ logger = logging.getLogger("membraneclaw")
 
 DEFAULT_TOOLS = ["calculator", "http_get", "now"]
 
-# WaterTAP lives in its own venv (heavy Pyomo/IDAES stack), so the RO model is
-# reached over MCP stdio rather than imported. Set RO_MCP=off to skip it.
+# WaterTAP runs as a separate MCP server (heavy Pyomo/IDAES stack, its own venv).
+# RO_MCP_URL points at a remote streamable-http server; unset, it falls back to
+# spawning the local one over stdio. Set RO_MCP=off to skip it entirely.
 _RO_PY = config.ROOT / ".venv-watertap/bin/python"
 _RO_SERVER = config.ROOT / "mcp_watertap/server.py"
-RO_MCP_ENABLED = (
-    os.environ.get("RO_MCP", "on").lower() not in ("off", "false", "0")
-    and _RO_PY.exists()
-    and _RO_SERVER.exists()
+RO_MCP_URL = os.environ.get("RO_MCP_URL", "").strip()
+RO_MCP_TOKEN = os.environ.get("MCP_BEARER_TOKEN", "").strip()
+
+RO_MCP_ENABLED = os.environ.get("RO_MCP", "on").lower() not in ("off", "false", "0") and (
+    bool(RO_MCP_URL) or (_RO_PY.exists() and _RO_SERVER.exists())
 )
 
-RO_MCP_CONFIG = {
-    "mcpServers": {
-        "watertap-ro": {
-            "command": str(_RO_PY),
-            "args": [str(_RO_SERVER)],
-        }
-    }
-}
+if RO_MCP_URL:
+    _ro_server: dict = {"type": "streamable-http", "url": RO_MCP_URL}
+    if RO_MCP_TOKEN:
+        _ro_server["headers"] = {"Authorization": f"Bearer {RO_MCP_TOKEN}"}
+else:
+    _ro_server = {"command": str(_RO_PY), "args": [str(_RO_SERVER)]}
+
+RO_MCP_CONFIG = {"mcpServers": {"watertap-ro": _ro_server}}
 
 SYSTEM_MESSAGE = (
     "You are a capable assistant running on a local Qwen3.5 deployment. "
