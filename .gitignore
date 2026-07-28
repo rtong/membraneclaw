@@ -9,3 +9,4 @@ logs/
 .owui_admin_password
 .venv-watertap/
 .vendor/
+.oauth_state.json

@@ -22,7 +22,77 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from ro_model import DEFAULTS, ROSimulationError, simulate
 
-mcp = FastMCP("watertap-ro")
+def _build_mcp() -> tuple[FastMCP, object]:
+    """FastMCP instance, plus the OAuth provider when one is configured.
+
+    OAuth turns on only when MCP_OAUTH_APPROVAL_KEY and MCP_PUBLIC_URL are both
+    set — the issuer must be the externally reachable URL, or the discovery
+    documents advertise endpoints the client cannot reach.
+    """
+    approval_key = os.environ.get("MCP_OAUTH_APPROVAL_KEY", "").strip()
+    public_url = os.environ.get("MCP_PUBLIC_URL", "").strip().rstrip("/")
+    if not (approval_key and public_url):
+        return FastMCP("watertap-ro"), None
+
+    from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions, RevocationOptions
+    from pydantic import AnyHttpUrl
+
+    from oauth import WatertapOAuthProvider
+
+    provider = WatertapOAuthProvider(
+        approval_key=approval_key,
+        static_token=os.environ.get("MCP_BEARER_TOKEN", ""),
+    )
+    settings = AuthSettings(
+        issuer_url=AnyHttpUrl(public_url),
+        resource_server_url=AnyHttpUrl(public_url),
+        # Hosted connectors register themselves; there is no console to pre-create
+        # a client in, so dynamic registration is required rather than optional.
+        client_registration_options=ClientRegistrationOptions(
+            enabled=True, valid_scopes=["watertap"], default_scopes=["watertap"]
+        ),
+        revocation_options=RevocationOptions(enabled=True),
+        # Deliberately empty: connectors request no `scope` at /authorize, so
+        # gating on one mints tokens that fail the check, 401 the MCP call, and
+        # send the client back to re-authorize in a loop.
+        required_scopes=[],
+    )
+    return FastMCP("watertap-ro", auth_server_provider=provider, auth=settings), provider
+
+
+mcp, _oauth_provider = _build_mcp()
+
+
+def _mount_consent(app) -> None:
+    """Approval-key page that turns a parked authorize request into a code."""
+    from starlette.responses import HTMLResponse, RedirectResponse
+    from starlette.routing import Route
+
+    from oauth import CONSENT_PAGE
+
+    async def consent(request):
+        if request.method == "GET":
+            rid = request.query_params.get("rid", "")
+            return HTMLResponse(CONSENT_PAGE.format(rid=rid, error=""))
+        form = await request.form()
+        target = _oauth_provider.complete_consent(
+            str(form.get("rid", "")), str(form.get("key", ""))
+        )
+        if target is None:
+            return HTMLResponse(
+                CONSENT_PAGE.format(
+                    rid=str(form.get("rid", "")),
+                    error='<p class="err">Incorrect or expired approval key.</p>',
+                ),
+                status_code=401,
+            )
+        # 303, not 302: this redirect follows a POST, and 302 lets the browser
+        # repeat it as a POST. The connector callback only accepts GET, so a 302
+        # lands as a rejected POST — the browser returns to /authorize and the
+        # flow loops without ever reaching /token.
+        return RedirectResponse(target, status_code=303)
+
+    app.router.routes.append(Route("/consent", consent, methods=["GET", "POST"]))
 
 
 @mcp.tool()
@@ -123,10 +193,70 @@ def simulate_ro(
         return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, indent=2)
 
 
+def _http_app():
+    """Streamable-HTTP app with host allow-listing and optional bearer auth.
+
+    Two things the stock FastMCP HTTP transport does not give us:
+
+    * DNS-rebinding protection only trusts localhost, so reaching the server by
+      any other name (a tailnet `*.ts.net` host, say) returns 421 Misdirected
+      Request. MCP_ALLOWED_HOSTS adds those names.
+    * There is no built-in static-token auth, but ChatGPT's config supports
+      `bearer_token_env_var`, so a shared secret is the natural fit.
+    """
+    from mcp.server.transport_security import TransportSecuritySettings
+    from starlette.responses import JSONResponse
+
+    extra = [h.strip() for h in os.environ.get("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
+    host, port = mcp.settings.host, mcp.settings.port
+    allowed = [f"{host}:{port}", "127.0.0.1", f"127.0.0.1:{port}", "localhost", f"localhost:{port}"]
+    for h in extra:
+        allowed += [h, f"{h}:{port}", f"{h}:443", f"{h}:8443"]
+    mcp.settings.transport_security = TransportSecuritySettings(
+        allowed_hosts=allowed,
+        allowed_origins=["*"],
+    )
+
+    app = mcp.streamable_http_app()
+    token = os.environ.get("MCP_BEARER_TOKEN", "")
+    if _oauth_provider is not None:
+        _mount_consent(app)
+        return app  # OAuth verifies tokens; the bearer middleware would double-gate
+    if token:
+        # streamable_http_app() returns a bare Starlette app, which has no
+        # @app.middleware decorator — that is FastAPI-only.
+        from starlette.middleware.base import BaseHTTPMiddleware
+
+        async def require_bearer(request, call_next):
+            supplied = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
+            if supplied != token:
+                return JSONResponse({"error": "unauthorized"}, status_code=401)
+            return await call_next(request)
+
+        app.add_middleware(BaseHTTPMiddleware, dispatch=require_bearer)
+    else:
+        print("warning: MCP_BEARER_TOKEN unset, endpoint is unauthenticated", file=sys.stderr)
+    return app
+
+
 if __name__ == "__main__":
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
-    if transport != "stdio":
+    if transport == "stdio":
+        print("watertap-ro MCP starting (stdio)", file=sys.stderr)
+        mcp.run(transport="stdio")
+    else:
+        import uvicorn
+
         mcp.settings.host = os.environ.get("MCP_HOST", "127.0.0.1")
         mcp.settings.port = int(os.environ.get("MCP_PORT", "8002"))
-    print(f"watertap-ro MCP starting ({transport})", file=sys.stderr)
-    mcp.run(transport=transport)
+        # A connector UI keys its "already exists" check on the exact URL string,
+        # so a stale record that can't be removed is worked around by serving the
+        # same endpoint at a different path. OAuth is unaffected — issuer and
+        # resource metadata key off the base URL, not this path.
+        mcp.settings.streamable_http_path = os.environ.get("MCP_PATH", "/mcp")
+        print(
+            f"watertap-ro MCP starting (streamable-http) on "
+            f"{mcp.settings.host}:{mcp.settings.port}{mcp.settings.streamable_http_path}",
+            file=sys.stderr,
+        )
+        uvicorn.run(_http_app(), host=mcp.settings.host, port=mcp.settings.port)
