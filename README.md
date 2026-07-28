@@ -107,8 +107,12 @@ python3 -m venv .venv-watertap
 ```
 
 WaterTAP gets its **own venv**: the Pyomo/IDAES stack is large, and the agent
-reaches it over MCP stdio rather than importing it, so the two dependency sets
-never interact. The tools appear to the model as `watertap-ro-simulate_ro`.
+reaches it over MCP rather than importing it, so the two dependency sets never
+interact. The tools appear to the model as `watertap-ro-simulate_ro`.
+
+Set `RO_MCP_URL` to use a remote server (streamable-http, with `MCP_BEARER_TOKEN`
+sent as a bearer header); leave it unset to spawn the local one over stdio. The
+deployed setup points anton's agent at temur — see below.
 
 Sanity check — defaults are 1 kg/s of 35 g/kg seawater at 50 bar over 50 m²:
 
@@ -116,29 +120,98 @@ Sanity check — defaults are 1 kg/s of 35 g/kg seawater at 50 bar over 50 m²:
 feed osmotic 28.5 bar · flux 16.4 LMH · recovery 23.4% · permeate 349 ppm · rejection 99.03%
 ```
 
-### Platform notes
+### Using it from the ChatGPT desktop app
 
-- **Solver libraries.** IDAES has no Debian 13 build; the `ubuntu2204` one works,
-  but its `ipopt` links `libgfortran.so.5` and `liblapack.so.3`, which Debian 13
-  does not ship. Rather than require root, `.vendor/` holds them unpacked from
-  `.deb` files and `ro_model.py` prepends that to `LD_LIBRARY_PATH` (ipopt is a
-  subprocess, so setting it before Pyomo spawns it suffices):
-  ```bash
-  mkdir -p .vendor/debs && cd .vendor/debs
-  apt-get download libgfortran5 liblapack3 libblas3
-  cd .. && for d in debs/*.deb; do dpkg -x "$d" root/; done
-  cd root/usr/lib/x86_64-linux-gnu && ln -sf lapack/liblapack.so.3 . && ln -sf blas/libblas.so.3 .
-  ```
-  `sudo apt-get install libgfortran5 liblapack3` works too if you prefer.
-- **stdout is the MCP transport.** IDAES binds the original stdout in its log
-  handler at import time and ipopt writes from C, so `redirect_stdout` is not
-  enough — `ro_model.py` redirects file descriptor 1 to stderr around the solve.
-  Verified as zero bytes on fd 1, including the failing-solve path.
-- **Properties must be touched before solving.** WaterTAP builds property
-  variables on demand; one first accessed after the solve is created with its
-  default and never constrained, silently returning a wrong-but-plausible number
-  (feed osmotic pressure read 10 bar instead of 28.5). `_touch_reported_properties`
-  builds everything reported up front.
+The desktop app, Codex CLI and IDE extension share one MCP config at
+`~/.codex/config.toml`. (This is a different surface from Settings → Connectors →
+Developer mode, which is web/Windows only and cannot reach localhost.)
+
+```toml
+# ~/.codex/config.toml
+[mcp_servers.watertap-ro]
+url = "https://temur.tail35bed8.ts.net/mcp"
+bearer_token_env_var = "WATERTAP_MCP_TOKEN"
+```
+
+with `export WATERTAP_MCP_TOKEN=…` matching `MCP_BEARER_TOKEN` in `.env`.
+
+The MCP server runs on **temur** (`192.168.86.42`, tailnet `100.64.77.85`) — the RO
+solve is CPU-only and does not belong on the GPU host. It binds loopback there and
+Tailscale terminates TLS.
+
+**Port 443, not 8443.** Hosted connectors (Claude, ChatGPT web) only reach remote
+MCP servers on 443; a non-standard port fails with a generic "couldn't connect",
+and the giveaway is that *nothing* from the vendor's backend appears in the access
+log while a browser reaches the URL fine. temur's 443 already Funnels a second
+vLLM at `/`, so the MCP endpoint shares the port through path-routed Funnel
+entries — vLLM serves only `/v1/*`, so nothing collides:
+
+```bash
+# on temur
+sudo systemctl enable --now watertap-mcp    # 127.0.0.1:8002
+for p in /mcp /authorize /token /register /revoke /consent \
+         /.well-known/oauth-authorization-server /.well-known/oauth-protected-resource; do
+  tailscale funnel --bg --https=443 --set-path "$p" "http://127.0.0.1:8002$p"
+done
+```
+
+`MCP_PUBLIC_URL` must then be the port-less host, or discovery advertises endpoints
+on a port the connector will not use. `tailscale serve` (rather than `funnel`) keeps
+the same mapping tailnet-only.
+
+**While Funnel is on, `MCP_BEARER_TOKEN` is the only thing between the internet and
+the solver.** The tools cannot read files or run shell commands — the blast radius
+is CPU, not data — but there is **no solve timeout and no rate limiting**, so a
+leaked token means someone can pin temur's cores with pathological inputs. Turn
+Funnel off when you are not using it.
+
+### Two ways to authenticate
+
+| Client | Credential |
+| --- | --- |
+| Agent, CLI, ChatGPT desktop (`config.toml`) | `MCP_BEARER_TOKEN` as a bearer header |
+| Claude / ChatGPT hosted connectors | OAuth 2.1 + `MCP_OAUTH_APPROVAL_KEY` |
+
+Hosted connector UIs authenticate MCP servers over **OAuth with dynamic client
+registration** — there is no field to paste a static token into, so a
+token-only endpoint answers them `401` no matter what is configured. That is the
+failure to look for: repeated `401`s from a public IP in `mcp.log` mean a
+connector is registered and trying, not that the URL is wrong.
+
+`mcp_watertap/oauth.py` implements the authorization server (`/register`,
+`/authorize`, `/token`, `/revoke`, plus both discovery documents). There is no
+user directory behind it, so consent is a single shared **approval key**: any
+client may register itself, but only someone holding `MCP_OAUTH_APPROVAL_KEY`
+can approve one at the `/consent` page. Enable it by setting that key together
+with `MCP_PUBLIC_URL` — the issuer must be the externally reachable URL, or the
+discovery documents advertise endpoints the client cannot reach. The static
+bearer keeps working alongside it.
+
+In Claude, the Client ID / Client Secret fields sit under **Advanced settings** and
+are optional — left blank, Claude registers itself dynamically. When a UI insists
+on values, mint a pair on the server:
+
+```bash
+.venv/bin/python register_client.py claude          # create
+.venv/bin/python register_client.py claude --show   # print later
+```
+
+OAuth 2.1 requires **exact** redirect-URI matching, so the client is registered
+with Claude's callbacks (`https://claude.ai/api/mcp/auth_callback`,
+`https://claude.com/api/mcp/auth_callback`) and the Claude Code CLI's fixed local
+port; anything else is rejected at `/authorize`. Pass `--redirect-uri` to add more.
+
+The approval key is **not** entered in Claude — it is entered once on the
+`/consent` page that opens in the browser during the connect flow.
+
+### "A server with this URL already exists"
+
+Raised by the connector UI against its own account records, **before any
+request reaches this server** — the access log shows no external hit while the
+error recurs, so nothing configured here affects it. The stale record lives in
+the Claude *account*, not the desktop app: check claude.ai → Settings →
+Connectors in a browser (desktop and web share account-level connectors), and
+check org-scoped connectors, which personal settings cannot remove.
 
 ## Using it from BetterGPT (or any OpenAI client)
 
