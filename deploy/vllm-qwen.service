@@ -16,13 +16,40 @@ WorkingDirectory=/home/bayan
 # server rejects any request carrying `tools` with a 400, which breaks the agent
 # entirely. Qwen3.5 emits XML tool calls, so the parser must be qwen3_xml —
 # `hermes` expects JSON and never matches.
+#
+# Context length is bounded by KV cache, which is whatever VRAM is left after the
+# 11.5 GiB of weights — 1.07 GiB, or 30,895 tokens at fp16. Two levers widen it:
+#
+#   --kv-cache-dtype fp8   halves bytes/token (36.3 -> ~18 KiB). Needs compute
+#                          capability >= 8.9 (this card is 12.0) and an attention
+#                          backend other than Triton; FLASH_ATTN is in use.
+#
+# --gpu-memory-utilization stays at 0.92 and cannot go higher. It is a fraction of
+# *total* VRAM, but vLLM requires that much to be *free* at startup, and ~1.6 GiB
+# is held by the display/WSL2 reservation with no compute process attached. Free
+# is 14.66/15.92 GiB = 0.921, so 0.95 aborts with "Free memory on device cuda:0
+# ... is less than desired GPU memory utilization" before the model even loads.
+#
+# Qwen3.5 is hybrid (full_attention_interval: 4), so only 8 of 32 layers hold a
+# KV cache — which is why 32k fits at all on 16 GB. max_position_embeddings is
+# 262144, so the ceiling here is VRAM, not the model.
+#
+# --max-num-batched-tokens caps the prefill chunk, and with it the activation
+# peak. Without it, raising max-model-len to 32768 grew activations by ~0.69 GiB
+# — more than fp8 saved — and available KV *fell* from 1.07 to 0.38 GiB, below
+# the 0.61 GiB one full-length request needs. Chunked prefill is already on, so
+# long prompts are processed in 2048-token chunks and context length no longer
+# drives the activation peak.
 ExecStart=/home/bayan/vllm-env/bin/vllm serve /home/bayan/models/Qwen3.5-9B-AWQ \
     --host 0.0.0.0 \
     --port 8000 \
     --served-model-name qwen3.5-9b gpt-4o gpt-4 gpt-3.5-turbo \
     --gpu-memory-utilization 0.92 \
-    --max-model-len 16384 \
-    --max-num-seqs 16 \
+    --max-model-len 32768 \
+    --max-num-seqs 8 \
+    --max-num-batched-tokens 2048 \
+    --kv-cache-dtype fp8 \
+    --enable-prefix-caching \
     --reasoning-parser qwen3 \
     --enable-auto-tool-choice \
     --tool-call-parser qwen3_xml \

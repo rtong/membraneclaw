@@ -20,6 +20,11 @@ RAG over local documents, and multi-turn chat.
 
 ## Running
 
+The vLLM backend runs 32k context on a 16 GB card via `--kv-cache-dtype fp8`
+(~20 KiB/token instead of ~36) plus `--max-num-batched-tokens 2048`, which
+stops the activation peak scaling with context length — see
+`deploy/vllm-qwen.service` for why each flag is there.
+
 ```bash
 ./serve_vllm.sh                 # backend; takes ~2 min to load
 .venv/bin/python cli.py         # interactive chat

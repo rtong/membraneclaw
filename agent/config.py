@@ -42,7 +42,9 @@ def llm_config() -> dict:
         "generate_cfg": {
             "temperature": 0.7,
             "top_p": 0.8,
-            "max_input_tokens": 14000,
+            # Must stay under the server's --max-model-len (32768), which covers
+            # input *and* output; the remainder is the generation budget.
+            "max_input_tokens": int(os.environ.get("AGENT_MAX_INPUT_TOKENS", "28000")),
             "use_raw_api": NATIVE_TOOL_CALLS,
             "extra_body": {"chat_template_kwargs": {"enable_thinking": ENABLE_THINKING}},
         },
