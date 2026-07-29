@@ -82,9 +82,9 @@ if __name__ == "__main__":
     print(f"   answer={answer[:200]}")
 
     print("=" * 60)
-    print("4. RAG over docs/")
+    print("4. RAG over the synthetic fixture")
     tools, answer = run_agent(
         "What port does the service listen on, according to the document?",
-        files=[str(config.ROOT / "docs" / "sample.md")],
+        files=[str(config.ROOT / "tests" / "fixtures" / "service_notes.md")],
     )
     print(f"   answer={answer[:300]}")

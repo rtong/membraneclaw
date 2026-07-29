@@ -16,6 +16,7 @@ RAG over local documents, and multi-turn chat.
 | `cli.py` | Interactive / one-shot CLI |
 | `server.py` | OpenAI-compatible HTTP front end for chat UIs |
 | `smoke_test.py` | End-to-end check of the backend and agent |
+| `tests/fixtures/` | Synthetic fixtures for the tests — **not** documentation |
 
 ## Running
 
@@ -23,7 +24,7 @@ RAG over local documents, and multi-turn chat.
 ./serve_vllm.sh                 # backend; takes ~2 min to load
 .venv/bin/python cli.py         # interactive chat
 .venv/bin/python cli.py -p "What is 17^4?"
-.venv/bin/python cli.py -f docs/sample.md -p "What port does the service use?"
+.venv/bin/python cli.py -f /path/to/your/doc.md -p "What does it say about X?"
 .venv/bin/python smoke_test.py  # verify everything
 ```
 
@@ -221,7 +222,7 @@ no RAG. `server.py` exposes the *agent* over the same protocol, so point BetterG
 at it instead:
 
 ```bash
-AGENT_FILES=docs/sample.md .venv/bin/python server.py   # listens on :8001
+AGENT_FILES=/path/to/your/docs.md .venv/bin/python server.py   # listens on :8001
 ```
 
 In BetterGPT → Settings → API: set the endpoint to `http://127.0.0.1:8001/v1/chat/completions`.
@@ -231,7 +232,7 @@ The API key is ignored unless you set `AGENT_API_KEY`.
 | --- | --- | --- |
 | `AGENT_PORT` / `AGENT_HOST` | `8001` / `127.0.0.1` | Bind address |
 | `AGENT_API_KEY` | *(unset)* | If set, required as `Bearer` token |
-| `AGENT_FILES` | *(unset)* | Comma-separated docs attached to every request (RAG) |
+| `AGENT_FILES` | *(unset)* | Real documents attached to every request (RAG). Leave empty unless you have documents to ground on — a placeholder here gets stated as fact. |
 | `AGENT_MODEL_ID` | `qwen3.5-9b-agent` | Id advertised by `/v1/models` |
 
 Tool calls are streamed into the reply as `` `🔧 name(args)` `` / `` `↳ result` ``
@@ -245,6 +246,12 @@ Network Access check blocks an HTTPS page from reaching a loopback server.
 
 Because a chat UI cannot upload files to us, RAG is wired through `AGENT_FILES`
 rather than per-message attachments; the CLI's `-f` flag is still the per-run path.
+
+**Point it only at documents you want stated as fact.** Whatever is listed is
+attached to *every* request and the model grounds its answers in it — a
+placeholder or sample file makes the agent confidently assert invented details.
+Leave it empty when you have nothing real to ground on; RAG over fabricated
+content is worse than no RAG.
 
 ## Exposing it (Tailscale)
 
