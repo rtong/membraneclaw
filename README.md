@@ -17,6 +17,7 @@ RAG over local documents, and multi-turn chat.
 | `server.py` | OpenAI-compatible HTTP front end for chat UIs |
 | `smoke_test.py` | End-to-end check of the backend and agent |
 | `tests/fixtures/` | Synthetic fixtures for the tests — **not** documentation |
+| [`OPERATIONS.md`](OPERATIONS.md) | Symptom-indexed failure log, measured limits, and dead ends |
 
 ## Running
 
@@ -34,6 +35,9 @@ stops the activation peak scaling with context length — see
 ```
 
 Credentials live in `.env` (gitignored); see `.env.example`.
+
+**Something already broken?** [`OPERATIONS.md`](OPERATIONS.md) is indexed by
+symptom, and records the approaches that turned out not to work here.
 
 ## Open WebUI
 
