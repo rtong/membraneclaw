@@ -22,6 +22,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from ro_model import DEFAULTS, ROSimulationError, simulate
 
+# Module-qualified: reaktoro_model has its own DEFAULTS, and the two must not be
+# confused — they describe different models with different units.
+import reaktoro_model
+
 def _build_mcp() -> tuple[FastMCP, object]:
     """FastMCP instance, plus the OAuth provider when one is configured.
 
@@ -190,6 +194,169 @@ def simulate_ro(
     except ROSimulationError as exc:
         return json.dumps({"error": str(exc)}, indent=2)
     except Exception as exc:  # never kill the server on a bad request
+        return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, indent=2)
+
+
+@mcp.tool()
+def describe_reaktoro_options() -> str:
+    """List the inputs, reagents and minerals the chemistry tools accept.
+
+    Call this before equilibrate_feed or analyze_ro_scaling when unsure which
+    ions or mineral names are valid.
+    """
+    return json.dumps(
+        {
+            "pinned": {
+                "database": "PhreeqcDatabase/pitzer.dat",
+                "activity_model": "ActivityModelPitzer",
+                "why": (
+                    "Not caller-selectable. reaktoro-pse defaults every phase to an "
+                    "ideal activity model, which for brine returns confident but "
+                    "wrong numbers instead of failing."
+                ),
+            },
+            "composition": {
+                "units": "mol/s per ion, plus H2O",
+                "supported_species": sorted(reaktoro_model.MOLAR_MASS),
+                "default_seawater": reaktoro_model.DEFAULT_COMPOSITION,
+                "note": "H2O is required. Unlisted species are rejected, not ignored.",
+            },
+            "reagents": {
+                "acid_addition_mol_s": "HCl dose [mol/s]",
+                "base_addition_mol_s": "NaOH dose [mol/s]",
+            },
+            "minerals": {
+                "default": list(reaktoro_model.DEFAULT_MINERALS),
+                "available": reaktoro_model.available_minerals(),
+            },
+            "interpretation": {
+                "scaling_tendency": "ion activity product / solubility product; >= 1 means it can precipitate",
+                "saturation_index": "log10(scaling_tendency); >= 0 means it can precipitate",
+                "acid_dosing": (
+                    "Lowers carbonate scale (Calcite) strongly. Does not help "
+                    "sulfate scale (Gypsum, Anhydrite, Barite), whose solubility "
+                    "is essentially pH-independent."
+                ),
+            },
+            "osmotic_pressure_caveat": (
+                "Osmotic pressure here will not match simulate_ro's for the same "
+                "water. simulate_ro treats all dissolved solids as NaCl, which "
+                "contributes more osmoles per gram than the Mg/Ca/SO4 salts in a "
+                "real analysis. Quote each number against its own tool."
+            ),
+        },
+        indent=2,
+    )
+
+
+@mcp.tool()
+def equilibrate_feed(
+    composition_mol_s: Optional[dict] = None,
+    temperature_c: Optional[float] = None,
+    pressure_bar: Optional[float] = None,
+    ph: Optional[float] = None,
+    water_recovery: Optional[float] = None,
+    acid_addition_mol_s: Optional[float] = None,
+    base_addition_mol_s: Optional[float] = None,
+    minerals: Optional[list] = None,
+) -> str:
+    """Equilibrate a water and report which minerals can scale.
+
+    Computes mineral scaling tendencies, saturation indices, pH and osmotic
+    pressure for a feed, optionally after concentrating it (water_recovery) and
+    optionally after dosing acid or base. Use this for a standalone water; use
+    analyze_ro_scaling to derive the recovery from RO operating conditions
+    instead of supplying it.
+
+    Returns JSON. On failure returns {"error": ...} rather than raising.
+    """
+    try:
+        return json.dumps(
+            reaktoro_model.equilibrate(
+                composition=composition_mol_s,
+                temperature_c=temperature_c,
+                pressure_bar=pressure_bar,
+                ph=ph,
+                water_recovery=water_recovery,
+                acid_addition_mol_s=acid_addition_mol_s,
+                base_addition_mol_s=base_addition_mol_s,
+                minerals=minerals,
+            ),
+            indent=2,
+        )
+    except reaktoro_model.ReaktoroSimulationError as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
+    except Exception as exc:
+        return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, indent=2)
+
+
+@mcp.tool()
+def analyze_ro_scaling(
+    composition_mol_s: Optional[dict] = None,
+    feed_pressure_bar: Optional[float] = None,
+    membrane_area_m2: Optional[float] = None,
+    feed_flow_mass_kg_s: Optional[float] = None,
+    feed_temperature_c: Optional[float] = None,
+    ph: Optional[float] = None,
+    acid_addition_mol_s: Optional[float] = None,
+    minerals: Optional[list] = None,
+) -> str:
+    """Simulate an RO module, then report what scales in its concentrate.
+
+    Chains the two models: solves the RO unit to get water recovery, then
+    equilibrates the feed concentrated to exactly that recovery. Answers "at
+    these operating conditions, what precipitates on the membrane?" in one call.
+
+    Salinity for the RO model is derived from composition_mol_s, so both halves
+    describe the same water.
+
+    Returns JSON. On failure returns {"error": ...} rather than raising.
+    """
+    try:
+        composition = composition_mol_s or reaktoro_model.DEFAULT_COMPOSITION
+        salinity = reaktoro_model.composition_salinity(composition)
+
+        ro = simulate(
+            feed_nacl_mass_frac=salinity["mass_fraction"],
+            feed_pressure_bar=feed_pressure_bar,
+            membrane_area_m2=membrane_area_m2,
+            feed_flow_mass_kg_s=feed_flow_mass_kg_s,
+            feed_temperature_c=feed_temperature_c,
+        )
+        recovery = ro["performance"]["water_recovery_pct"] / 100.0
+
+        chem = reaktoro_model.equilibrate(
+            composition=composition,
+            # The concentrate sits at the retentate pressure and the feed
+            # temperature, so equilibrate it there rather than at 1 bar.
+            temperature_c=ro["inputs"]["feed_temperature_c"],
+            pressure_bar=ro["retentate"]["pressure_bar"],
+            ph=ph,
+            water_recovery=recovery,
+            acid_addition_mol_s=acid_addition_mol_s,
+            minerals=minerals,
+        )
+
+        return json.dumps(
+            {
+                "feed_salinity": salinity,
+                "ro_performance": {
+                    "water_recovery_pct": ro["performance"]["water_recovery_pct"],
+                    "salt_rejection_pct": ro["performance"]["salt_rejection_pct"],
+                    "water_flux_LMH": ro["flux"]["water_LMH"],
+                    "retentate_pressure_bar": ro["retentate"]["pressure_bar"],
+                },
+                "concentrate_chemistry": chem,
+                "verdict": (
+                    f"at {recovery * 100:.1f}% recovery, at risk of scaling: "
+                    + (", ".join(chem["at_risk"]) if chem["at_risk"] else "none")
+                ),
+            },
+            indent=2,
+        )
+    except (ROSimulationError, reaktoro_model.ReaktoroSimulationError) as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
+    except Exception as exc:
         return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, indent=2)
 
 

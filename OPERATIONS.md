@@ -28,10 +28,16 @@ the term, and a symptom is what you actually arrive with.
 | vLLM won't start: "Free memory on device… less than desired GPU memory utilization" | `--gpu-memory-utilization` is a fraction of **total** VRAM but must be **free** at startup | Keep ≤ 0.92 here — see Hard limits |
 | vLLM won't start: "estimated maximum model length is …" | Activation buffers scale with `--max-model-len`; raising it can cost more than fp8 saves | `--max-num-batched-tokens 2048` decouples the activation peak from context length |
 | vLLM engine dies at startup: `No such file or directory: 'ninja'` | torch inductor shells out to `ninja`, which ships only inside the vLLM venv | Put `vllm-env/bin` on `PATH` in the unit |
-| ipopt: "Solver did not exit normally" / `libgfortran.so.5` not found | IDAES has no Debian 13 build; the `ubuntu2204` one links libs Debian 13 doesn't ship | `.vendor/` unpacked from `.deb`, prepended to `LD_LIBRARY_PATH` |
+| ipopt: "Solver did not exit normally" / `libgfortran.so.5` not found | IDAES has no Debian 13 build; the `ubuntu2204` one links libs Debian 13 didn't ship at the time | `apt install libgfortran5 liblapack3` — Debian ships both now. The old fix was a `.vendor/` tree unpacked from `.deb` and prepended to `LD_LIBRARY_PATH`; that is removed, and should not come back. Pointing the loader at a vendored libgfortran risks shadowing conda's with a mismatched build, which surfaces as a solver crash rather than a clear error |
 | `127.0.0.1:8000` times out but `172.17.0.1:8000` works | Host firewall drops loopback to that port — connections **time out** rather than being refused | Point `VLLM_BASE_URL` at the reachable address, or fix the rule |
 | RO simulation returns a plausible but wrong number | WaterTAP builds property vars on demand; one first touched *after* the solve is created unconstrained at its default | `_touch_reported_properties` builds everything reported before solving |
 | `EngineDeadError` in the vLLM log | Usually **not** a crash — check for `EngineCore: trigger received signal=SIGTERM` just above it, which is a normal `systemctl restart` | Ignore if SIGTERM is present |
+| Connectors stop reaching the MCP server right after a `tailscale serve` edit | `tailscale serve` on a Funnel-enabled port silently drops Funnel — status flips to "tailnet only" and nothing warns you | Re-issue every mapping with `tailscale funnel --bg --https=443 --set-path …`. Always `tailscale serve status` after editing |
+| `tailscale funnel --https=443 on` → `non-localhost target "http://on"` | The `on`/`off` subcommands are gone as of 1.98; `on` is parsed as a proxy target | Enable Funnel by re-issuing the mapping under `tailscale funnel` instead of `tailscale serve` |
+| `pip install reaktoro` → no matching distribution | Reaktoro is published on **conda-forge only**; there is no PyPI wheel at any version | Build the env with micromamba (`-c conda-forge python=3.13 reaktoro cyipopt`), then layer watertap/reaktoro-pse on with pip |
+| MCP server fails to start after a fresh `pip install mcp` | Unpinned installs now resolve **mcp 2.0**, a major release. That package owns the OAuth provider, `AuthSettings`, transport security and `FastMCP` | Pin `mcp==1.28.1`. Treat 1→2 as its own migration with its own validation |
+| Reaktoro pH output exactly equals the pH you passed in | Concentration was modelled by subtracting H2O from the composition, which holds the concentrate at the feed's fixed pH — an input echoed back as a result | Dose `H2O_evaporation` as a `chemistry_modifier` against the speciated feed instead, so pH floats. Validated against PHREEQC in `test_reaktoro_model.py` |
+| Reaktoro numbers look plausible but are wrong in brine | reaktoro-pse defaults **every** phase to an ideal activity model and never warns | Pin `activity_model="ActivityModelPitzer"` explicitly. Not caller-selectable in this wrapper, deliberately |
 
 ---
 
@@ -64,6 +70,9 @@ Recorded so they aren't retried. Each of these looked reasonable.
 | `--tool-call-parser hermes` | Expects JSON; Qwen3.5's chat template emits XML `<tool_call><function=…>` |
 | Static bearer token for hosted connectors | Their UIs authenticate over OAuth with dynamic registration; there is no field to paste a token into |
 | A sample/placeholder file in `AGENT_FILES` | It is attached to *every* request and the model states it as fact. Point it only at documents you want asserted |
+| **ROSSpy** for RO scaling chemistry | Last release Jun 2022, last commit May 2023, and it declares *no* dependencies at all, so `pip install` yields an unusable package. Needs IPHREEQC compiled from USGS source. Runs beside WaterTAP rather than inside it, so results cannot be optimized jointly. Reaktoro-PSE is maintained by `watertap-org`, installs as a binary, and is a Pyomo graybox |
+| Subtracting H2O from the composition to concentrate a feed | Holds the concentrate at the feed's fixed pH, so reported pH is the input echoed back and carbonate scaling is understated. PHREEQC shows pH falling 7.800 → 7.585 over a 0–90% removal sweep |
+| Two MCP processes sharing one `.oauth_state.json` | Both merge-on-save, so whichever writes last wins and registered clients silently disappear. During a cutover, stop the old service *before* copying the state file |
 
 ---
 

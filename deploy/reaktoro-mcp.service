@@ -1,0 +1,43 @@
+# Runs on temur (192.168.86.42), not on anton — the solves are CPU-only and do
+# not belong on the GPU host. Install there:
+#   sudo cp reaktoro-mcp.service /etc/systemd/system/
+#   sudo systemctl enable --now reaktoro-mcp
+#
+# Supersedes watertap-mcp.service: this serves the RO tools *and* the Reaktoro
+# chemistry tools from one process. They must share an interpreter because
+# analyze_ro_scaling attaches a ReaktoroBlock to a Pyomo model built from the RO
+# result, which cannot cross a process boundary.
+#
+# The environment is conda, not a venv: Reaktoro is distributed on conda-forge
+# only and has no PyPI wheel, so `pip install reaktoro` cannot work. Built with
+#   micromamba create -p /home/bayan/reaktoro-mcp/env -c conda-forge \
+#       python=3.13 reaktoro cyipopt
+#   /home/bayan/reaktoro-mcp/env/bin/pip install -r requirements.txt
+[Unit]
+Description=WaterTAP RO + Reaktoro chemistry MCP server (streamable-http)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bayan
+WorkingDirectory=/home/bayan/reaktoro-mcp
+# MCP_OAUTH_APPROVAL_KEY, MCP_PUBLIC_URL, MCP_BEARER_TOKEN and MCP_ALLOWED_HOSTS
+# live here; the allowed-hosts list must name the tailnet host, or the SDK's
+# DNS-rebinding check returns 421.
+EnvironmentFile=/home/bayan/reaktoro-mcp/.env
+Environment=MCP_TRANSPORT=streamable-http
+# Loopback bind: Tailscale's proxy is the only way in.
+Environment=MCP_HOST=127.0.0.1
+Environment=MCP_PORT=8003
+# Deliberately no LD_LIBRARY_PATH. The old deployment prepended a .vendor/ tree
+# holding libgfortran.so.5 / liblapack.so.3 for the IDAES ipopt build. Debian now
+# ships both (libgfortran5, liblapack3) and conda supplies its own copies for
+# cyipopt — pointing the loader at the vendored pair risks shadowing conda's with
+# a mismatched build, which surfaces as a solver crash rather than a clear error.
+ExecStart=/home/bayan/reaktoro-mcp/env/bin/python server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

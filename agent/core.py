@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 from typing import Iterable, List, Optional
 
 from qwen_agent.agents import Assistant
@@ -13,10 +14,15 @@ logger = logging.getLogger("membraneclaw")
 
 DEFAULT_TOOLS = ["calculator", "http_get", "now"]
 
-# WaterTAP runs as a separate MCP server (heavy Pyomo/IDAES stack, its own venv).
+# The RO + chemistry tools run as a separate MCP server (heavy Pyomo/IDAES/
+# Reaktoro stack, its own conda environment — Reaktoro is conda-forge only).
 # RO_MCP_URL points at a remote streamable-http server; unset, it falls back to
 # spawning the local one over stdio. Set RO_MCP=off to skip it entirely.
-_RO_PY = config.ROOT / ".venv-watertap/bin/python"
+# RO_MCP_PYTHON overrides the interpreter for that stdio fallback.
+_RO_PY = Path(
+    os.environ.get("RO_MCP_PYTHON", "")
+    or (Path.home() / "reaktoro-mcp/env/bin/python")
+)
 _RO_SERVER = config.ROOT / "mcp_watertap/server.py"
 RO_MCP_URL = os.environ.get("RO_MCP_URL", "").strip()
 RO_MCP_TOKEN = os.environ.get("MCP_BEARER_TOKEN", "").strip()

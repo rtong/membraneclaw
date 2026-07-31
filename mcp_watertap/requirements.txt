@@ -1,7 +1,23 @@
-# Installed into .venv-watertap, separate from the agent venv: the Pyomo/IDAES
-# stack is large and must not destabilise the agent's dependencies.
-#   python3 -m venv .venv-watertap
-#   .venv-watertap/bin/pip install -r mcp_watertap/requirements.txt
-#   .venv-watertap/bin/idaes get-extensions --distro ubuntu2204
+# The environment is conda, not a venv. Reaktoro is published on conda-forge
+# only — there is no PyPI wheel — so the base has to be created with a conda
+# client first, and these packages layered on top with pip:
+#
+#   micromamba create -p <prefix>/env -c conda-forge python=3.13 reaktoro cyipopt
+#   <prefix>/env/bin/pip install -r mcp_watertap/requirements.txt
+#
+# cyipopt also comes from conda-forge: it is the only solver reaktoro-pse is
+# tested against, and it links its own ipopt in-process.
+#
+# Do NOT run `idaes get-extensions` against this environment. IDAES's ipopt is a
+# separate subprocess build and is not needed here; on Debian 13 its libgfortran
+# and liblapack requirements are satisfied by the distro packages
+# (libgfortran5, liblapack3) if you do want it for the RO model alone.
 watertap==1.7.0
-mcp>=1.2
+reaktoro-pse==0.4.1
+
+# Pinned deliberately. mcp 2.0 is a major release, and this package supplies the
+# OAuth provider, AuthSettings, transport security and FastMCP — everything the
+# hosted connectors depend on. Upgrading is its own piece of work with its own
+# validation, not something to pick up implicitly from an unpinned install.
+mcp==1.28.1
+uvicorn
