@@ -156,11 +156,52 @@ a second check costs -0.5 now and a myopic agent values the payoff it buys at
 nothing. Gamma is not just a numerical knob — it encodes how patient the agent
 is allowed to be.
 
+## Estimating it by sampling
+
+`monte_carlo.py` throws the transition tables away and estimates V_pi by rolling
+out episodes through `step()` and averaging the returns. The exact V_pi above is
+kept as ground truth, so the error is measurable rather than guessed at.
+
+```
+python3 monte_carlo.py
+python3 monte_carlo.py --exploring-starts --episodes 100000
+```
+
+The estimate converges at the usual Monte Carlo rate — the standard error falls
+like 1/sqrt(n), so each extra digit of accuracy costs a hundred times the
+episodes:
+
+| Episodes | V(`NO_INFO`) | Absolute error | Standard error |
+| --- | --- | --- | --- |
+| 500 | 6.9600 | 0.0400 | 0.1986 |
+| 2,000 | 7.1400 | 0.1400 | 0.0907 |
+| 8,000 | 7.0675 | 0.0675 | 0.0471 |
+| 20,000 | 7.0280 | 0.0280 | 0.0304 |
+
+Three things this makes concrete, all pinned by tests:
+
+* **A deterministic policy sees almost nothing.** Started from `NO_INFO` the
+  optimal policy checks salinity first, so `FOULING_CHECKED` is never visited and
+  its estimate is `NaN` — an honest "no samples", not a `0.0` that would quietly
+  poison any later policy improvement. `--exploring-starts` is the standard fix.
+* **First-visit and every-visit MC are identical here.** No sensible policy in
+  this MDP revisits a state, so the two variants average exactly the same
+  returns. The distinction only starts to matter once a policy loops.
+* **The per-state errors are not independent — they are equal.** On the optimal
+  path the returns differ by deterministic constants (`G(NO_INFO)` is always
+  `G(BOTH_CHECKED) - 1.0`), so one unlucky batch of episodes shifts every state's
+  estimate by exactly the same amount. Averaging over more states buys nothing.
+  This is the weakness that bootstrapping methods exist to attack.
+
+Episodes that fail to terminate are reported rather than truncated: a policy that
+only ever re-checks would otherwise silently bias every return it contributes to.
+
 ## Layout
 
 * `tiny_mdp.py` — the MDP: `transitions()` for exact methods, `step()` for sampling.
 * `value_iteration.py` — value iteration, policy extraction, exact policy evaluation.
-* `test_tiny_mdp.py`, `test_value_iteration.py` — tests for both.
+* `monte_carlo.py` — model-free policy evaluation by sampled returns.
+* `test_tiny_mdp.py`, `test_value_iteration.py`, `test_monte_carlo.py` — tests.
 
 Run the tests from this directory:
 
