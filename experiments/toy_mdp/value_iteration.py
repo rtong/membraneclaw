@@ -90,6 +90,31 @@ def policy_value(policy: np.ndarray, gamma: float = 1.0) -> np.ndarray:
     return V
 
 
+def stochastic_policy_value(probs: np.ndarray, gamma: float = 1.0) -> np.ndarray:
+    """Exact value of a stochastic policy given as action probabilities pi(a|s).
+
+    Same linear solve as `policy_value`, but the per-state transition and reward
+    are averaged over the policy's action distribution first. This is what a
+    softmax policy is actually worth -- taking its argmax and evaluating that
+    instead flatters a policy that has not yet committed.
+    """
+    P, R = transition_tables()
+    rows = NON_TERMINAL
+    P_pi = np.einsum("sa,sat->st", probs, P)[rows][:, rows]
+    R_pi = (probs * R).sum(axis=1)[rows]
+
+    A = np.eye(len(rows)) - gamma * P_pi
+    if np.linalg.matrix_rank(A) < len(rows):
+        raise ValueError(
+            "policy never reaches a terminal state, so its undiscounted value is "
+            "-inf; pass gamma < 1 to evaluate it anyway"
+        )
+
+    V = np.zeros(N_STATES)
+    V[rows] = np.linalg.solve(A, R_pi)
+    return V
+
+
 def _format_table(values: np.ndarray, row_labels, col_labels) -> str:
     width = max(len(c) for c in col_labels) + 3
     lines = [f"{'':<18}" + "".join(f"{c:>{width}}" for c in col_labels)]

@@ -12,6 +12,7 @@ from value_iteration import (
     greedy_policy,
     main,
     policy_value,
+    stochastic_policy_value,
     value_iteration,
 )
 
@@ -140,6 +141,31 @@ def test_action_values_agree_with_the_transition_tables(solved):
 
 def test_non_terminal_index_is_correct():
     assert [State(s) for s in NON_TERMINAL] == [s for s in State if not is_terminal(s)]
+
+
+def test_stochastic_evaluation_matches_the_deterministic_one(solved):
+    # A one-hot distribution is the same policy, so both solvers must agree.
+    policy = greedy_policy(solved)
+    probs = np.zeros((N_STATES, len(Action)))
+    probs[np.arange(N_STATES), policy] = 1.0
+    np.testing.assert_allclose(
+        stochastic_policy_value(probs), policy_value(policy), atol=1e-9
+    )
+
+
+def test_uniform_policy_is_worth_much_less_than_the_optimum(solved):
+    probs = np.full((N_STATES, len(Action)), 0.25)
+    value = stochastic_policy_value(probs)[State.NO_INFO]
+    assert value < solved[State.NO_INFO]
+
+
+def test_stochastic_evaluation_rejects_a_policy_that_never_terminates():
+    # All mass on the two checks: from BOTH_CHECKED it re-checks forever.
+    probs = np.zeros((N_STATES, len(Action)))
+    probs[:, Action.CHECK_SALINITY] = 0.5
+    probs[:, Action.CHECK_FOULING] = 0.5
+    with pytest.raises(ValueError, match="never reaches a terminal state"):
+        stochastic_policy_value(probs)
 
 
 @pytest.mark.parametrize("text", ["0", "0.5", "1", "1.0"])

@@ -196,12 +196,63 @@ Three things this makes concrete, all pinned by tests:
 Episodes that fail to terminate are reported rather than truncated: a policy that
 only ever re-checks would otherwise silently bias every return it contributes to.
 
+## Learning the policy directly
+
+`reinforce.py` drops value functions altogether and follows the gradient of
+expected return. The policy is tabular softmax over logits, and the score
+function is written out by hand rather than handed to autograd, because at this
+size it *is* the idea:
+
+```
+grad log pi(a | s) = e_a - pi(. | s)
+```
+
+```
+python3 reinforce.py
+python3 reinforce.py --baseline --alpha 0.02
+```
+
+From a uniform start it reliably finds an optimal action in every state it
+visits. Two things worth watching:
+
+**Report what the policy is worth, not what its argmax is worth.** A softmax
+policy that is still spread out looks perfect under `policy_value(argmax(theta))`
+and much worse under `stochastic_policy_value(softmax(theta))`. Both are printed;
+the second is the honest one.
+
+**Optimality is not the same as matching a particular argmax.** At `NO_INFO` both
+checks are optimal, so a run that learns `CHECK_FOULING` has not failed. The
+report scores each state by its Q* gap instead of comparing action indices.
+
+### What the baseline actually does
+
+Centring returns by a per-state mean leaves the gradient unbiased and does reduce
+its variance — but by only 10–15% here, measured directly with
+`gradient_samples` at a fixed theta:
+
+| Policy | No baseline | With V_pi baseline | Reduction |
+| --- | --- | --- | --- |
+| uniform | 135.3 | 114.8 | 15.2% |
+| partly trained | 5.70 | 5.09 | 10.7% |
+
+The modest gain is the interesting part. A state-value baseline can only cancel
+variance that comes from *which state you are in*; in this MDP the dominant noise
+is *how the terminal coin landed* (a ±10 swing on every episode), and no b(s) can
+touch that. Cutting it needs an estimate that depends on the action.
+
+It is also not free at a fixed learning rate. Over 12 seeds at 4,000 episodes the
+plain version reached a slightly better policy (6.944 ± 0.011) than the centred
+one (6.937 ± 0.020), because subtracting the mean shrinks the very returns that
+were driving the logits apart. Variance reduction in the estimator and faster
+convergence in practice are two different claims.
+
 ## Layout
 
 * `tiny_mdp.py` — the MDP: `transitions()` for exact methods, `step()` for sampling.
 * `value_iteration.py` — value iteration, policy extraction, exact policy evaluation.
 * `monte_carlo.py` — model-free policy evaluation by sampled returns.
-* `test_tiny_mdp.py`, `test_value_iteration.py`, `test_monte_carlo.py` — tests.
+* `reinforce.py` — policy gradient, with an optional baseline and a gradient-variance probe.
+* `test_*.py` — tests for each of the above.
 
 Run the tests from this directory:
 
