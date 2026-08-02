@@ -108,7 +108,12 @@ extracts the greedy policy, and evaluates any deterministic policy by solving
 
 ```
 python3 value_iteration.py
+python3 value_iteration.py --gamma 0.5
 ```
+
+`--gamma` takes the discount factor, defaulting to 1.0 (undiscounted). Values
+above 1.0 are rejected: the Bellman operator stops being a contraction there and
+value iteration would simply run away.
 
 With gamma=1.0 it converges in 4 sweeps — one per layer of the evidence lattice,
 plus one to notice it is done:
@@ -134,6 +139,22 @@ Two details worth noticing, both pinned by tests:
 * Discounting does not touch V*(`BOTH_CHECKED`), because from there the optimal
   action terminates immediately and its whole value is immediate reward. It only
   bites where the payoff is still several steps away.
+
+Lowering gamma is the quickest way to see that last point, since it penalises
+only the states that still have waiting to do:
+
+| gamma | `NO_INFO` | `SALINITY_CHECKED` | `BOTH_CHECKED` |
+| --- | --- | --- | --- |
+| 1.0 | 7.00 | 7.50 | 8.00 |
+| 0.9 | 5.53 | 6.70 | 8.00 |
+| 0.5 | 1.25 | 3.50 | 8.00 |
+| 0.0 | -0.50 | 0.00 | 8.00 |
+
+Push it far enough and the optimal policy itself flips: at gamma=0 the agent
+stops gathering evidence and simulates straight from `SALINITY_CHECKED`, because
+a second check costs -0.5 now and a myopic agent values the payoff it buys at
+nothing. Gamma is not just a numerical knob — it encodes how patient the agent
+is allowed to be.
 
 ## Layout
 

@@ -7,8 +7,10 @@ import pytest
 from tiny_mdp import N_STATES, Action, State, is_terminal, transition_tables
 from value_iteration import (
     NON_TERMINAL,
+    _gamma,
     action_values,
     greedy_policy,
+    main,
     policy_value,
     value_iteration,
 )
@@ -138,3 +140,39 @@ def test_action_values_agree_with_the_transition_tables(solved):
 
 def test_non_terminal_index_is_correct():
     assert [State(s) for s in NON_TERMINAL] == [s for s in State if not is_terminal(s)]
+
+
+@pytest.mark.parametrize("text", ["0", "0.5", "1", "1.0"])
+def test_gamma_argument_accepts_the_valid_range(text):
+    assert 0.0 <= _gamma(text) <= 1.0
+
+
+@pytest.mark.parametrize("text", ["-0.1", "1.5", "2"])
+def test_gamma_argument_rejects_values_outside_the_range(text):
+    # Above 1.0 the Bellman operator is not a contraction and value iteration
+    # never converges, so this must fail at the boundary rather than time out.
+    import argparse
+
+    with pytest.raises(argparse.ArgumentTypeError, match=r"must be in \[0, 1\]"):
+        _gamma(text)
+
+
+def test_cli_defaults_to_undiscounted(capsys):
+    main([])
+    assert "gamma=1.0" in capsys.readouterr().out
+
+
+def test_cli_honours_the_gamma_flag(capsys):
+    main(["--gamma", "0.5"])
+    out = capsys.readouterr().out
+    assert "gamma=0.5" in out
+    # V*(NO_INFO) drops from 7.00 to 1.25 once payoffs two steps out are halved.
+    assert "V*=  1.25" in out
+
+
+def test_myopic_agent_stops_gathering_evidence():
+    # At gamma=0 only immediate reward counts, so from SALINITY_CHECKED the
+    # agent simulates (0.00 now) rather than pay -0.5 for the second check.
+    V, _ = value_iteration(gamma=0.0)
+    policy = greedy_policy(V, gamma=0.0)
+    assert policy[State.SALINITY_CHECKED] == Action.RUN_SIMULATION

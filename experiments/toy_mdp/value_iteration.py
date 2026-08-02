@@ -5,7 +5,8 @@ instead of sampling, so the answers they produce are exact up to the convergence
 tolerance. They are the ground truth the sampling methods (Monte Carlo,
 REINFORCE, PPO) will later be checked against.
 
-Run `python3 value_iteration.py` to print the optimal values and policy.
+Run `python3 value_iteration.py` to print the optimal values and policy, or
+`python3 value_iteration.py --gamma 0.5` to see how impatience changes them.
 
 Discounting defaults to gamma=1.0. The MDP is an episodic shortest-path problem:
 every terminal state absorbs with zero reward, so undiscounted returns stay
@@ -15,6 +16,8 @@ terminates; under gamma=1.0 its value is -inf, and `policy_value` says so
 explicitly rather than returning a meaningless number.
 """
 from __future__ import annotations
+
+import argparse
 
 import numpy as np
 
@@ -95,8 +98,32 @@ def _format_table(values: np.ndarray, row_labels, col_labels) -> str:
     return "\n".join(lines)
 
 
-def main() -> None:
-    gamma = 1.0
+def _gamma(text: str) -> float:
+    """argparse type: a discount factor must lie in [0, 1].
+
+    Above 1.0 the Bellman operator stops being a contraction and value iteration
+    runs away, so reject it here rather than after 10,000 fruitless sweeps.
+    """
+    value = float(text)
+    if not 0.0 <= value <= 1.0:
+        raise argparse.ArgumentTypeError(f"must be in [0, 1], got {value}")
+    return value
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        description="Solve the toy membrane-diagnosis MDP exactly.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--gamma",
+        type=_gamma,
+        default=1.0,
+        help="discount factor; 1.0 leaves returns undiscounted, lower values "
+             "make the agent impatient about payoffs that are several steps away",
+    )
+    gamma = parser.parse_args(argv).gamma
+
     V, sweeps = value_iteration(gamma)
     Q = action_values(V, gamma)
     policy = greedy_policy(V, gamma)
@@ -128,7 +155,9 @@ def main() -> None:
     check_then_sim[State.NO_INFO] = Action.CHECK_SALINITY
     print(f"  {'check salinity, simulate':<28} "
           f"{policy_value(check_then_sim, gamma)[State.NO_INFO]:>6.2f}")
-    print(f"  {'optimal (check both, then sim)':<28} "
+    # Deliberately unlabelled: which policy is optimal depends on gamma, so
+    # naming it here would go stale the moment someone passes --gamma.
+    print(f"  {'optimal (see above)':<28} "
           f"{policy_value(policy, gamma)[State.NO_INFO]:>6.2f}")
 
 
