@@ -17,16 +17,28 @@ and falls back to a text rendering if it is not; nothing else needs it.
 
 ## The notebooks
 
-| # | File | Covers |
-| --- | --- | --- |
-| 01 | `01_finite_mdp.ipynb` | finite MDPs; states, actions, transitions, rewards, terminal states; MDP diagram and transition matrices |
-| 02 | `02_bellman_value_iteration.ipynb` | Bellman expectation and optimality equations; value iteration; policy extraction |
-| 03 | `03_monte_carlo.ipynb` | Monte Carlo policy evaluation from sampled episodes |
-| 04 | `04_reinforce_baseline.ipynb` | REINFORCE; variance reduction with a baseline and a learned critic |
-| 05 | `05_ppo_clipping.ipynb` | PPO's probability ratio and clipping behaviour |
+| # | File | Covers | Colab |
+| --- | --- | --- | --- |
+| 01 | `01_finite_mdp.ipynb` | finite MDPs; states, actions, transitions, rewards, terminal states; MDP diagram and transition matrices | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bayanasar/membraneclaw/blob/main/experiments/notebooks/01_finite_mdp.ipynb) |
+| 02 | `02_bellman_value_iteration.ipynb` | Bellman expectation and optimality equations; value iteration; policy extraction | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bayanasar/membraneclaw/blob/main/experiments/notebooks/02_bellman_value_iteration.ipynb) |
+| 03 | `03_monte_carlo.ipynb` | Monte Carlo policy evaluation from sampled episodes | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bayanasar/membraneclaw/blob/main/experiments/notebooks/03_monte_carlo.ipynb) |
+| 04 | `04_reinforce_baseline.ipynb` | REINFORCE; variance reduction with a baseline and a learned critic | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bayanasar/membraneclaw/blob/main/experiments/notebooks/04_reinforce_baseline.ipynb) |
+| 05 | `05_ppo_clipping.ipynb` | PPO's probability ratio and clipping behaviour | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bayanasar/membraneclaw/blob/main/experiments/notebooks/05_ppo_clipping.ipynb) |
 
 Read them in order the first time. Each one re-defines the environment in its
 first code cell, so they can also be opened individually later.
+
+### A note on the Colab links
+
+The badges point at `main`. **This repository is private**, so Colab cannot open
+them anonymously — a click gives a 404 until you connect Colab to GitHub once,
+via *File → Open notebook → GitHub* and the "Include private repos" checkbox.
+After that the badges work normally for anyone with repo access. If the
+repository is ever made public, they work for everyone with no setup.
+
+Colab supplies `numpy` and `matplotlib` out of the box, so nothing needs
+installing there — including the optional heatmap in notebook 01, which will
+render rather than fall back to text.
 
 Runtimes on a laptop: 01 and 02 are instant, 03 about 30s, 04 about 40s, 05
 about 60s. The slow cells are multi-seed experiments that deliberately re-run
