@@ -186,9 +186,10 @@ Tailscale terminates TLS.
 **Port 443, not 8443.** Hosted connectors (Claude, ChatGPT web) only reach remote
 MCP servers on 443; a non-standard port fails with a generic "couldn't connect",
 and the giveaway is that *nothing* from the vendor's backend appears in the access
-log while a browser reaches the URL fine. temur's 443 already Funnels a second
-vLLM at `/`, so the MCP endpoint shares the port through path-routed Funnel
-entries — vLLM serves only `/v1/*`, so nothing collides:
+log while a browser reaches the URL fine. The mappings below are path-routed
+rather than a single root proxy, so a second service could share 443 on other
+paths later without colliding — but nothing else is on this port today. There is
+no mapping for `/` itself; hitting the bare host returns a 404, not a service.
 
 ```bash
 # on temur
