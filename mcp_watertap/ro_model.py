@@ -8,6 +8,7 @@ Reference: https://watertap.readthedocs.io/en/stable/technical_reference/unit_mo
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,20 @@ from watertap.core.membrane_channel_base import (
 
 BAR = 1e5
 LMH_PER_KG_M2_S = 3600.0  # kg/m2/s -> L/m2/h, taking water density as 1000 kg/m3
+
+# Hard ceiling on one solve. This endpoint is reachable from the internet and an
+# ipopt run has no natural bound, so the limit is set *in the solver*: ipopt runs
+# as a subprocess writing from C, and a Python-side timeout cannot interrupt it.
+#
+# Both limits are applied, because max_cpu_time alone is a weak guarantee: ipopt
+# only tests it between iterations, so a single pathological iteration overruns
+# it. The iteration cap bounds the count; the time cap bounds the duration.
+MAX_SOLVE_SECONDS = float(os.environ.get("MCP_MAX_SOLVE_SECONDS", "120"))
+MAX_SOLVE_ITERATIONS = int(os.environ.get("MCP_MAX_SOLVE_ITERATIONS", "500"))
+_SOLVE_LIMITS = {
+    "max_cpu_time": MAX_SOLVE_SECONDS,
+    "max_iter": MAX_SOLVE_ITERATIONS,
+}
 
 CP_TYPES = {
     "none": ConcentrationPolarizationType.none,
@@ -191,14 +206,29 @@ def simulate(**overrides: Any) -> dict[str, Any]:
             )
 
         try:
-            u.initialize(outlvl=0)
-            results = get_solver().solve(m)
+            # initialize() runs its own solves, and they are the *longer* half of
+            # the work — bounding only the final solve leaves the real exposure
+            # open, since by then the model is already converged.
+            u.initialize(outlvl=0, optarg=_SOLVE_LIMITS)
+            solver = get_solver()
+            solver.options.update(_SOLVE_LIMITS)
+            results = solver.solve(m)
         except Exception as exc:
             raise ROSimulationError(f"solve failed: {exc}") from exc
 
         tc = str(results.solver.termination_condition)
         if tc != "optimal":
-            raise ROSimulationError(f"solver did not converge (termination: {tc})")
+            hint = ""
+            if "maxTimeLimit" in tc:
+                hint = f" — hit the {MAX_SOLVE_SECONDS:g}s ceiling"
+            elif "maxIterations" in tc:
+                hint = f" — hit the {MAX_SOLVE_ITERATIONS} iteration ceiling"
+            if hint:
+                hint += (
+                    "; the requested operating point is likely infeasible rather "
+                    "than merely slow"
+                )
+            raise ROSimulationError(f"solver did not converge (termination: {tc}){hint}")
 
         return _extract(u, p)
 

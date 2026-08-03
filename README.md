@@ -211,9 +211,19 @@ re-issuing the mapping under `funnel` is now the only way back.
 
 **While Funnel is on, `MCP_BEARER_TOKEN` is the only thing between the internet and
 the solver.** The tools cannot read files or run shell commands — the blast radius
-is CPU, not data — but there is **no solve timeout and no rate limiting**, so a
-leaked token means someone can pin temur's cores with pathological inputs. Turn
-Funnel off when you are not using it.
+is CPU, not data — and that CPU is now bounded three ways:
+
+| Env var | Default | Bounds |
+| --- | --- | --- |
+| `MCP_MAX_SOLVE_SECONDS` | 120 | Wall time of one solve, enforced *inside* ipopt |
+| `MCP_MAX_SOLVE_ITERATIONS` | 500 | Iterations of one solve |
+| `MCP_MAX_CONCURRENT_SOLVES` | 2 | Solves running at once; beyond it callers queue for `MCP_QUEUE_WAIT_SECONDS` (10) then get a readable "server busy" |
+| `MCP_SOLVES_PER_MINUTE` | 30 | Sustained call rate, global token bucket |
+
+Both solver limits are applied to `initialize()` as well as the final solve —
+initialize does most of the work, so bounding only the solve leaves the real
+exposure open. A leaked token now costs latency rather than the machine. Still
+turn Funnel off when you are not using it.
 
 ### Two ways to authenticate
 

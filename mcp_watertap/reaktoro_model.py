@@ -18,6 +18,7 @@ Reference: https://github.com/watertap-org/reaktoro-pse
 from __future__ import annotations
 
 import math
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,10 @@ from reaktoro_pse.reaktoro_block import ReaktoroBlock
 from reaktoro_pse.core.util_classes.cyipopt_solver import get_cyipopt_watertap_solver
 
 BAR = 1e5
+
+# Shared ceiling with ro_model, for the same reason: this endpoint is public and
+# a graybox NLP has no natural bound on iteration cost.
+MAX_SOLVE_SECONDS = float(os.environ.get("MCP_MAX_SOLVE_SECONDS", "120"))
 
 # Seawater at ~34.7 g/kg, as elemental molar flows against 55.5 mol/s of water
 # (1 kg/s) — roughly ro_model's default feed, but not identical to it.
@@ -180,6 +185,10 @@ def _validate(p: dict[str, Any]) -> None:
     for key in MODIFIERS:
         if p[key] < 0:
             raise ReaktoroSimulationError(f"{key} must be non-negative")
+    # Clamped, not validated: max_seconds is a safety ceiling, so a caller
+    # raising it past the limit would defeat the point. Silently lowering it is
+    # the correct behaviour here.
+    p["max_seconds"] = max(1.0, min(float(p["max_seconds"]), MAX_SOLVE_SECONDS))
 
 
 def _build(p: dict[str, Any]) -> ConcreteModel:

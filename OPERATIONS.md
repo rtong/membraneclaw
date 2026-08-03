@@ -37,6 +37,7 @@ the term, and a symptom is what you actually arrive with.
 | `pip install reaktoro` → no matching distribution | Reaktoro is published on **conda-forge only**; there is no PyPI wheel at any version | Build the env with micromamba (`-c conda-forge python=3.13 reaktoro cyipopt`), then layer watertap/reaktoro-pse on with pip |
 | MCP server fails to start after a fresh `pip install mcp` | Unpinned installs now resolve **mcp 2.0**, a major release. That package owns the OAuth provider, `AuthSettings`, transport security and `FastMCP` | Pin `mcp==1.28.1`. Treat 1→2 as its own migration with its own validation |
 | Reaktoro pH output exactly equals the pH you passed in | Concentration was modelled by subtracting H2O from the composition, which holds the concentrate at the feed's fixed pH — an input echoed back as a result | Dose `H2O_evaporation` as a `chemistry_modifier` against the speciated feed instead, so pH floats. Validated against PHREEQC in `test_reaktoro_model.py` |
+| A solve time limit has no effect | The limit was applied only to the final `solve()`. `initialize()` runs its own solves and does most of the work, so by the time the capped solve runs the model is already converged and finishes in ~0 iterations | Pass the same options to `initialize(optarg=…)`. Verify with `max_iter=0`: it must fail *during initialize* |
 | Reaktoro numbers look plausible but are wrong in brine | reaktoro-pse defaults **every** phase to an ideal activity model and never warns | Pin `activity_model="ActivityModelPitzer"` explicitly. Not caller-selectable in this wrapper, deliberately |
 
 ---
@@ -72,6 +73,9 @@ Recorded so they aren't retried. Each of these looked reasonable.
 | A sample/placeholder file in `AGENT_FILES` | It is attached to *every* request and the model states it as fact. Point it only at documents you want asserted |
 | **ROSSpy** for RO scaling chemistry | Last release Jun 2022, last commit May 2023, and it declares *no* dependencies at all, so `pip install` yields an unusable package. Needs IPHREEQC compiled from USGS source. Runs beside WaterTAP rather than inside it, so results cannot be optimized jointly. Reaktoro-PSE is maintained by `watertap-org`, installs as a binary, and is a Pyomo graybox |
 | Subtracting H2O from the composition to concentrate a feed | Holds the concentrate at the feed's fixed pH, so reported pH is the input echoed back and carbonate scaling is understated. PHREEQC shows pH falling 7.800 → 7.585 over a 0–90% removal sweep |
+| `max_cpu_time` alone as a solve bound | ipopt only tests it *between* iterations, so one pathological iteration overruns it. Pair it with `max_iter` — the first bounds duration, the second bounds count |
+| Proving a solve timeout works by setting it tiny | Does not prove anything here: `initialize()` pre-solves the model, so the capped solve converges immediately and returns `optimal` no matter how small the limit. Test option *propagation* with `max_iter=0` instead |
+| Rate limiting the MCP server as HTTP middleware | streamable-http holds long-lived SSE connections open. A request-level concurrency cap counts those against the limit and deadlocks the transport. Guard the tool functions instead |
 | Two MCP processes sharing one `.oauth_state.json` | Both merge-on-save, so whichever writes last wins and registered clients silently disappear. During a cutover, stop the old service *before* copying the state file |
 
 ---

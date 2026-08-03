@@ -8,9 +8,12 @@ so the simulation layer captures IDAES/Pyomo output.
 """
 from __future__ import annotations
 
+import functools
 import json
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -99,6 +102,72 @@ def _mount_consent(app) -> None:
     app.router.routes.append(Route("/consent", consent, methods=["GET", "POST"]))
 
 
+# --- CPU guards -------------------------------------------------------------
+#
+# While Funnel is on, a bearer token is the only thing between the internet and
+# these solvers. Each solve is already time-bounded inside the solver
+# (MCP_MAX_SOLVE_SECONDS); these two caps bound how many can run at once and how
+# fast they can be requested, so a leaked token costs latency rather than the
+# whole machine.
+#
+# Deliberately applied per *tool* rather than as HTTP middleware: streamable-http
+# holds long-lived SSE connections open, and a request-level concurrency limit
+# would count those against the cap and deadlock the transport.
+
+_SOLVE_SLOTS = threading.BoundedSemaphore(
+    int(os.environ.get("MCP_MAX_CONCURRENT_SOLVES", "2"))
+)
+_QUEUE_WAIT_S = float(os.environ.get("MCP_QUEUE_WAIT_SECONDS", "10"))
+_RATE_PER_MIN = float(os.environ.get("MCP_SOLVES_PER_MINUTE", "30"))
+
+_rate_lock = threading.Lock()
+_rate_tokens = _RATE_PER_MIN
+_rate_checked = time.monotonic()
+
+
+def _take_token() -> bool:
+    """Global token bucket. Refills continuously, so a burst is allowed up to
+    the bucket size and the sustained rate settles at _RATE_PER_MIN."""
+    global _rate_tokens, _rate_checked
+    with _rate_lock:
+        now = time.monotonic()
+        _rate_tokens = min(
+            _RATE_PER_MIN, _rate_tokens + (now - _rate_checked) * _RATE_PER_MIN / 60.0
+        )
+        _rate_checked = now
+        if _rate_tokens < 1.0:
+            return False
+        _rate_tokens -= 1.0
+        return True
+
+
+def _guarded(fn):
+    """Rate-limit and cap concurrency for one solve tool.
+
+    Returns the same {"error": ...} shape the tools already use on failure, so a
+    throttled call is something the model can read and retry rather than a
+    transport-level error it cannot interpret.
+    """
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not _take_token():
+            return json.dumps(
+                {"error": f"rate limited: more than {_RATE_PER_MIN:g} solves/minute"},
+                indent=2,
+            )
+        if not _SOLVE_SLOTS.acquire(timeout=_QUEUE_WAIT_S):
+            return json.dumps(
+                {"error": "server busy: too many simulations running, try again"},
+                indent=2,
+            )
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            _SOLVE_SLOTS.release()
+
+    return wrapper
+
+
 @mcp.tool()
 def describe_ro_parameters() -> str:
     """List every RO 0D simulation parameter with its units, default and meaning.
@@ -143,6 +212,7 @@ def describe_ro_parameters() -> str:
 
 
 @mcp.tool()
+@_guarded
 def simulate_ro(
     feed_flow_mass_kg_s: Optional[float] = None,
     feed_nacl_mass_frac: Optional[float] = None,
@@ -250,11 +320,13 @@ def describe_reaktoro_options() -> str:
 
 
 @mcp.tool()
+@_guarded
 def equilibrate_feed(
     composition_mol_s: Optional[dict] = None,
     temperature_c: Optional[float] = None,
     pressure_bar: Optional[float] = None,
     ph: Optional[float] = None,
+    pe: Optional[float] = None,
     water_recovery: Optional[float] = None,
     acid_addition_mol_s: Optional[float] = None,
     base_addition_mol_s: Optional[float] = None,
@@ -277,6 +349,7 @@ def equilibrate_feed(
                 temperature_c=temperature_c,
                 pressure_bar=pressure_bar,
                 ph=ph,
+                pe=pe,
                 water_recovery=water_recovery,
                 acid_addition_mol_s=acid_addition_mol_s,
                 base_addition_mol_s=base_addition_mol_s,
@@ -291,6 +364,7 @@ def equilibrate_feed(
 
 
 @mcp.tool()
+@_guarded
 def analyze_ro_scaling(
     composition_mol_s: Optional[dict] = None,
     feed_pressure_bar: Optional[float] = None,
@@ -299,6 +373,7 @@ def analyze_ro_scaling(
     feed_temperature_c: Optional[float] = None,
     ph: Optional[float] = None,
     acid_addition_mol_s: Optional[float] = None,
+    base_addition_mol_s: Optional[float] = None,
     minerals: Optional[list] = None,
 ) -> str:
     """Simulate an RO module, then report what scales in its concentrate.
@@ -334,6 +409,7 @@ def analyze_ro_scaling(
             ph=ph,
             water_recovery=recovery,
             acid_addition_mol_s=acid_addition_mol_s,
+            base_addition_mol_s=base_addition_mol_s,
             minerals=minerals,
         )
 
