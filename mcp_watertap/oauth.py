@@ -33,7 +33,16 @@ from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 
 CODE_TTL = 300           # authorization codes are single-use and short-lived
 ACCESS_TTL = 3600
+REFRESH_TTL = int(os.environ.get("MCP_REFRESH_TTL_SECONDS", str(30 * 86400)))
 STATE_FILE = Path(__file__).resolve().parent / ".oauth_state.json"
+
+
+def _drop_expired(refresh: dict[str, dict]) -> dict[str, dict]:
+    now = time.time()
+    return {
+        tok: rec for tok, rec in refresh.items()
+        if not (rec.get("expires_at") and rec["expires_at"] < now)
+    }
 
 
 class Store:
@@ -58,14 +67,22 @@ class Store:
         try:
             data = json.loads(self.path.read_text())
             self.clients = data.get("clients", {})
-            self.refresh = data.get("refresh", {})
+            self.refresh = _drop_expired(data.get("refresh", {}))
         except Exception:
             pass  # a corrupt state file should not stop the server booting
 
     def save(self) -> None:
         # register_client.py writes this same file while the server is running, so
         # a blind overwrite would drop a client registered since we last loaded.
-        # Merge on-disk state first, letting in-memory win on genuine conflicts.
+        # Merge on-disk state first for *clients* only, letting in-memory win on
+        # genuine conflicts.
+        #
+        # refresh is written from memory alone, not merged. register_client.py
+        # never touches it, so this process's in-memory view is authoritative —
+        # and a merge here is why a deleted or rotated token used to come back on
+        # the next save: revoke_token/exchange_refresh_token pop it from memory,
+        # then the old union re-added it from disk. Expired tokens are dropped
+        # here too, so the file doesn't grow without bound.
         on_disk: dict[str, Any] = {}
         if self.path.exists():
             try:
@@ -73,7 +90,7 @@ class Store:
             except Exception:
                 on_disk = {}
         clients = {**on_disk.get("clients", {}), **self.clients}
-        refresh = {**on_disk.get("refresh", {}), **self.refresh}
+        refresh = _drop_expired(self.refresh)
         self.clients, self.refresh = clients, refresh
 
         tmp = self.path.with_suffix(".tmp")
@@ -187,7 +204,8 @@ class WatertapOAuthProvider(OAuthAuthorizationServerProvider):
             "expires_at": now + ACCESS_TTL, "resource": resource,
         }
         self.store.refresh[refresh] = {
-            "token": refresh, "client_id": client_id, "scopes": scopes, "expires_at": None,
+            "token": refresh, "client_id": client_id, "scopes": scopes,
+            "expires_at": now + REFRESH_TTL,
         }
         self.store.save()
         return OAuthToken(
@@ -200,6 +218,9 @@ class WatertapOAuthProvider(OAuthAuthorizationServerProvider):
     ) -> RefreshToken | None:
         raw = self.store.refresh.get(refresh_token)
         if not raw or raw["client_id"] != client.client_id:
+            return None
+        if raw.get("expires_at") and raw["expires_at"] < time.time():
+            self.store.refresh.pop(refresh_token, None)
             return None
         return RefreshToken.model_validate(raw)
 
