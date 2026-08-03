@@ -39,7 +39,7 @@ def _build_mcp() -> tuple[FastMCP, object]:
     approval_key = os.environ.get("MCP_OAUTH_APPROVAL_KEY", "").strip()
     public_url = os.environ.get("MCP_PUBLIC_URL", "").strip().rstrip("/")
     if not (approval_key and public_url):
-        return FastMCP("watertap-ro"), None
+        return FastMCP("ro-chem"), None
 
     from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions, RevocationOptions
     from pydantic import AnyHttpUrl
@@ -64,7 +64,7 @@ def _build_mcp() -> tuple[FastMCP, object]:
         # send the client back to re-authorize in a loop.
         required_scopes=[],
     )
-    return FastMCP("watertap-ro", auth_server_provider=provider, auth=settings), provider
+    return FastMCP("ro-chem", auth_server_provider=provider, auth=settings), provider
 
 
 mcp, _oauth_provider = _build_mcp()
@@ -485,7 +485,7 @@ def _http_app():
 if __name__ == "__main__":
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport == "stdio":
-        print("watertap-ro MCP starting (stdio)", file=sys.stderr)
+        print("ro-chem MCP starting (stdio)", file=sys.stderr)
         mcp.run(transport="stdio")
     else:
         import uvicorn
@@ -498,7 +498,7 @@ if __name__ == "__main__":
         # resource metadata key off the base URL, not this path.
         mcp.settings.streamable_http_path = os.environ.get("MCP_PATH", "/mcp")
         print(
-            f"watertap-ro MCP starting (streamable-http) on "
+            f"ro-chem MCP starting (streamable-http) on "
             f"{mcp.settings.host}:{mcp.settings.port}{mcp.settings.streamable_http_path}",
             file=sys.stderr,
         )

@@ -38,7 +38,13 @@ if RO_MCP_URL:
 else:
     _ro_server = {"command": str(_RO_PY), "args": [str(_RO_SERVER)]}
 
-RO_MCP_CONFIG = {"mcpServers": {"watertap-ro": _ro_server}}
+# The mcpServers key becomes the tool-name prefix qwen-agent exposes to the
+# model (mcp_manager.py: register_name = server_name + '-' + tool.name), so
+# "watertap-ro" would undersell the Reaktoro-PSE chemistry tools this server
+# also carries. "ro-chem" names the domain — RO hydraulics + the scaling
+# chemistry that limits it — rather than either library, so it doesn't need to
+# change if either backing library changes again.
+RO_MCP_CONFIG = {"mcpServers": {"ro-chem": _ro_server}}
 
 SYSTEM_MESSAGE = (
     "You are a capable assistant running on a local Qwen3.5 deployment. "
@@ -72,7 +78,7 @@ def build_agent(
         try:
             return _make(base + [RO_MCP_CONFIG])
         except Exception as exc:
-            logger.warning("watertap-ro MCP unavailable, continuing without it: %s", exc)
+            logger.warning("ro-chem MCP unavailable, continuing without it: %s", exc)
     return _make(base)
 
 

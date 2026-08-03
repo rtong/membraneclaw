@@ -122,7 +122,7 @@ attaches a `ReaktoroBlock` to a Pyomo model built from the RO result, and a Pyom
 graybox cannot cross a process boundary. The agent still reaches all of it over
 MCP rather than importing it, so the heavy Pyomo/IDAES/Reaktoro stack never
 touches the agent's dependencies. Tools appear to the model as
-`watertap-ro-simulate_ro` and so on.
+`ro-chem-simulate_ro` and so on.
 
 The environment is **conda, not a venv** — Reaktoro is published on conda-forge
 only and has no PyPI wheel:
@@ -172,7 +172,7 @@ Developer mode, which is web/Windows only and cannot reach localhost.)
 
 ```toml
 # ~/.codex/config.toml
-[mcp_servers.watertap-ro]
+[mcp_servers.ro-chem]
 url = "https://temur.tail35bed8.ts.net/mcp"
 bearer_token_env_var = "WATERTAP_MCP_TOKEN"
 ```
