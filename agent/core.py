@@ -8,13 +8,16 @@ from qwen_agent.tools import MCPManager
 
 from agent import compat, config, google_oauth
 from agent.tools import builtin  # noqa: F401  (registers tools by import)
-from agent.tools.google import google_tools
+from agent.tools.google import ALL_TOOL_NAMES as ALL_GOOGLE_TOOL_NAMES, google_tools
 
 compat.apply()
 
 logger = logging.getLogger("membraneclaw")
 
-DEFAULT_TOOLS = ["calculator", "http_get", "now"]
+# `now` is still implemented and registered in agent/tools/builtin.py, just not
+# declared to the model — every declared tool spends the budget that keeps tool
+# selection reliable (see TOOL_COUNT_WARN). Add it back here to re-enable.
+DEFAULT_TOOLS = ["calculator", "http_get"]
 
 # The RO + chemistry tools run as a separate MCP server (heavy Pyomo/IDAES/
 # Reaktoro stack, its own conda environment — Reaktoro is conda-forge only).
@@ -88,11 +91,16 @@ GOOGLE_TOOL_ALLOW = (
 # from GOOGLE_MCP_TOOLS above, which names tools on Google's official MCP servers —
 # the two sets share no names, so one allowlist cannot serve both. All five fit the
 # budget comfortably, so the default is everything.
+# Unset means the default subset that agent/tools/google.py declares; "*"/"all"
+# means every implemented tool, including the ones that are off by default; a list
+# selects exactly those, and may name a tool that is otherwise not declared.
 _rest_allow = os.environ.get("GOOGLE_TOOLS", "").strip()
-GOOGLE_TOOL_ALLOW_REST = (
-    None if _rest_allow in ("", "*", "all")
-    else {t.strip() for t in _rest_allow.split(",") if t.strip()}
-)
+if not _rest_allow:
+    GOOGLE_TOOL_ALLOW_REST = None
+elif _rest_allow in ("*", "all"):
+    GOOGLE_TOOL_ALLOW_REST = set(ALL_GOOGLE_TOOL_NAMES)
+else:
+    GOOGLE_TOOL_ALLOW_REST = {t.strip() for t in _rest_allow.split(",") if t.strip()}
 
 # Declared-tool count past which tool selection gets unreliable on this model.
 TOOL_COUNT_WARN = int(os.environ.get("AGENT_TOOL_COUNT_WARN", "18"))

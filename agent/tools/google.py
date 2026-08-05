@@ -338,7 +338,26 @@ class GoogleDisconnect(_GoogleTool):
         )
 
 
-TOOL_CLASSES = [DriveSearch, DriveRead, SheetsInfo, SheetsGetValues, SheetsUpdateValues, GoogleDisconnect]
+# Every implemented tool. Membership here means the code exists and works, not
+# that the model is told about it.
+ALL_TOOL_CLASSES = [
+    DriveSearch,
+    DriveRead,
+    SheetsInfo,
+    SheetsGetValues,
+    SheetsUpdateValues,
+    GoogleDisconnect,
+]
+
+# Declared to the model by default. Deliberately a subset: every declared tool
+# spends the budget that keeps tool selection reliable on this model, and the
+# three left out are each reachable another way — a Drive URL can go straight to
+# google_drive_read, and google_sheets_get_values reads a spreadsheet without
+# first asking for its tab list. The omitted ones stay implemented and can be
+# switched back on individually with GOOGLE_TOOLS.
+TOOL_CLASSES = [DriveRead, SheetsGetValues, GoogleDisconnect]
+
+ALL_TOOL_NAMES = [c.name for c in ALL_TOOL_CLASSES]
 TOOL_NAMES = [c.name for c in TOOL_CLASSES]
 
 
@@ -347,9 +366,13 @@ def google_tools(
     login_url: Optional[Callable[[], str]] = None,
     allow: Optional[set] = None,
 ) -> List[BaseTool]:
-    """Build this user's Google tools, bound to their own credentials."""
-    return [
-        cls(token_path, login_url)
-        for cls in TOOL_CLASSES
-        if allow is None or cls.name in allow
+    """Build this user's Google tools, bound to their own credentials.
+
+    `allow=None` declares the default subset. Naming tools explicitly selects from
+    *every* implemented tool, so GOOGLE_TOOLS can re-enable one that is off by
+    default without editing code.
+    """
+    classes = TOOL_CLASSES if allow is None else [
+        cls for cls in ALL_TOOL_CLASSES if cls.name in allow
     ]
+    return [cls(token_path, login_url) for cls in classes]

@@ -325,9 +325,24 @@ operator *is* the only user.
 
 ## Google Drive & Sheets (per user)
 
-Six tools — `google_drive_search`, `google_drive_read`, `google_sheets_info`,
-`google_sheets_get_values`, `google_sheets_update_values`, `google_disconnect` —
-each acting as **the person who typed the message**, not as the operator.
+Six tools are implemented; **three are declared to the model by default** —
+`google_drive_read`, `google_sheets_get_values`, `google_disconnect` — each acting
+as **the person who typed the message**, not as the operator.
+
+`google_drive_search`, `google_sheets_info` and `google_sheets_update_values` are
+implemented but not declared, because declared-tool count is the scarce resource
+here (see the tool-budget note below) and each is reachable another way: a Drive URL
+goes straight to `google_drive_read`, and `google_sheets_get_values` reads a
+spreadsheet without first asking for its tab list. Switch any of them back on
+individually — no code change needed:
+
+```bash
+GOOGLE_TOOLS=google_drive_read,google_sheets_get_values,google_drive_search
+GOOGLE_TOOLS=*        # every implemented tool
+```
+
+Naming tools explicitly selects from *all* implemented tools, so the list can
+include one that is off by default.
 
 They call the plain REST APIs rather than Google's official Workspace MCP servers,
 because those reject non-Workspace accounts outright (see the section below and
@@ -335,8 +350,8 @@ because those reject non-Workspace accounts outright (see the section below and
 registered globally: a registered tool is one object shared by every agent in the
 process, which is precisely the cross-user leak this design avoids.
 
-The five read/write tools accept a **URL or a bare id** — people paste spreadsheet
-links, and the model passes them straight through.
+Every tool that takes a document accepts a **URL or a bare id** — people paste
+spreadsheet links, and the model passes them straight through.
 
 ### How a user connects
 
