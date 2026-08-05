@@ -274,6 +274,159 @@ the Claude *account*, not the desktop app: check claude.ai → Settings →
 Connectors in a browser (desktop and web share account-level connectors), and
 check org-scoped connectors, which personal settings cannot remove.
 
+## Per-user identity
+
+Open WebUI calls this server from its backend over one shared `AGENT_API_KEY`, so
+by default every request is anonymous and identical. That is fine for the model and
+the conversation (the client passes history in), but **not** for Google
+credentials, which belong to a person.
+
+With `ENABLE_FORWARD_USER_INFO_HEADERS=true` and a shared
+`FORWARD_USER_INFO_HEADER_JWT_SECRET`, Open WebUI mints a short-lived HS256 JWT per
+request and sends it as `X-OpenWebUI-User-Jwt`. `agent/identity.py` verifies the
+signature, so a header forged by anything else on the box is rejected.
+`run_openwebui.sh` passes the secret through; put the same value in `.env`.
+
+```bash
+grep FORWARD_USER_INFO_HEADER_JWT_SECRET .env   # must match the container's
+```
+
+Each request logs `user=<email>`, or `user=-` when nothing could be verified.
+
+**Fail closed.** Every unverifiable request — feature off, header missing, bad
+signature, expired, hostile `sub` — resolves to *no* user, and a request with no
+user gets **no** Google tools. There is deliberately no code path from an
+unverified request to the owner's `.google_token.json`; otherwise one person's
+Drive would be readable by every logged-in user. Per-user credentials live in
+`.google_tokens/<user-id>.json` (dir 0700), never the owner's file, and the user id
+is charset-validated before it becomes a filename. `agent/test_identity.py` covers
+all of this, including `alg=none` and path traversal.
+
+The CLI is the exception and passes the owner's token explicitly — there, the
+operator *is* the only user.
+
+## Google Drive & Sheets (per user)
+
+Six tools — `google_drive_search`, `google_drive_read`, `google_sheets_info`,
+`google_sheets_get_values`, `google_sheets_update_values`, `google_disconnect` —
+each acting as **the person who typed the message**, not as the operator.
+
+They call the plain REST APIs rather than Google's official Workspace MCP servers,
+because those reject non-Workspace accounts outright (see the section below and
+`OPERATIONS.md`). Tools are constructed per user and passed as instances, never
+registered globally: a registered tool is one object shared by every agent in the
+process, which is precisely the cross-user leak this design avoids.
+
+The five read/write tools accept a **URL or a bare id** — people paste spreadsheet
+links, and the model passes them straight through.
+
+### How a user connects
+
+Nobody but the operator can run `agent.google_oauth login`, so users authorize from
+the chat itself:
+
+1. They ask for something in Drive/Sheets. The tool sees no token and returns a
+   login link; the model relays it.
+2. They open it, consent, and land back on `/google/callback`, which writes
+   `.google_tokens/<their-id>.json`.
+3. They ask again — the cached agent reads the token file per call, so it works on
+   the next turn with no restart.
+
+The link carries identity in a **signed, single-use, 10-minute `state`**, minted
+only in a request where the forwarded JWT already proved who was asking — the
+browser arriving at the callback has no such header of its own. The signing key is
+*derived* from the Open WebUI secret, so a login state and an identity assertion
+can never be swapped for one another.
+
+### Setup
+
+Requires the [per-user identity](#per-user-identity) section above to be working
+first, plus:
+
+```bash
+GOOGLE_OAUTH_PUBLIC_REDIRECT=https://<your-host>/google/callback   # in .env
+```
+
+Register that exact URL as an authorized redirect URI on the OAuth client, and
+route it publicly — **only** that path, never the chat API:
+
+```bash
+tailscale funnel --bg --https=443 --set-path=/google http://127.0.0.1:8001/google
+tailscale serve status   # confirm / still proxies Open WebUI and Funnel is still on
+```
+
+Use `tailscale funnel`, not `serve` — `serve` on a Funnel-enabled port silently
+drops Funnel (`OPERATIONS.md`). With `/` still mapped to Open WebUI, everything
+outside `/google` reaches the UI rather than the agent; verify with
+`curl https://<host>/health`, which should return Open WebUI's `{"status":true}`
+and not the agent's.
+
+`GET /google/status` reports whether the calling user has connected, and needs a
+forwarded identity like any other per-user route.
+
+### Disconnecting
+
+Either ask the assistant to "disconnect my Google account" (the `google_disconnect`
+tool) or call `POST /google/disconnect` directly with the same forwarded identity
+`/google/status` uses. Both **revoke the grant at Google**, not just delete the local
+file — deleting `.google_tokens/<id>.json` by hand stops the agent from using it,
+but leaves the app listed at
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions) as
+still authorized. The file is removed either way, even if Google's revoke call
+itself fails.
+
+## Google Workspace (MCP)
+
+Drive and Sheets access via Google's **official** remote MCP servers
+([developers.google.com/workspace/guides/configure-mcp-servers](https://developers.google.com/workspace/guides/configure-mcp-servers)),
+not a community package — plain streamable-http endpoints
+(`https://drivemcp.googleapis.com/mcp/v1`, `https://sheetsmcp.googleapis.com/mcp/v1`)
+behind Google OAuth. `agent/google_oauth.py` runs the authorization-code + PKCE
+flow and refreshes the hourly access token; `agent/compat.py` threads that
+refreshing credential into `mcp`'s streamable-http client, since qwen-agent's own
+MCP config only supports a static header.
+
+### One-time setup
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), on a **Web
+   application** OAuth client, add redirect URI
+   `http://localhost:8765/oauth2callback` (exact match, port included — web
+   clients aren't exempted from port-matching the way desktop/loopback clients
+   are). Change the port in both places (`GOOGLE_OAUTH_PORT`) if 8765 is taken.
+2. Enable the APIs: `drive.googleapis.com`, `sheets.googleapis.com`,
+   `drivemcp.googleapis.com`, `sheetsmcp.googleapis.com`.
+3. On the consent screen, add the scopes `drive.readonly`, `drive.file`,
+   `spreadsheets.readonly`, `spreadsheets`; add the account as a test user if the
+   app's audience is External.
+4. Put `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` in `.env`, then:
+   ```bash
+   .venv/bin/python -m agent.google_oauth login    # opens a browser, one-time consent
+   .venv/bin/python -m agent.google_oauth status    # check scopes / expiry any time
+   ```
+   This writes `.google_token.json` (0600, gitignored). Without it, `GOOGLE_MCP_ENABLED`
+   is false and the agent starts normally with Drive/Sheets simply absent — a fresh
+   clone isn't blocked on Google credentials existing.
+
+### Env vars
+
+| Env var | Default | Meaning |
+| --- | --- | --- |
+| `GOOGLE_MCP` | `on` | `off`/`false`/`0` disables both servers even if logged in |
+| `GOOGLE_MCP_SERVERS` | `drive,sheets` | Which of the 8 official servers to connect (`agent/core.py:GOOGLE_MCP_URLS` has the full list) |
+| `GOOGLE_MCP_TOOLS` | *(unset → the built-in allowlist below)* | Comma-separated tool names to declare; `*`/`all` opts out of filtering entirely |
+| `GOOGLE_OAUTH_PORT` | `8765` | Loopback port for the one-time consent callback — must match the console's redirect URI exactly |
+
+### Why the tool list is filtered by default
+
+This model is measured reliable at ≤18 declared tools and calls **nothing** at 27
+(see `OPERATIONS.md`). Drive alone is 8 tools and Sheets is 6; added to the 3
+builtins and 5 ro-chem tools, unfiltered Drive+Sheets would declare **22** — past
+the cliff. So `GOOGLE_MCP_TOOLS` defaults to a 7-tool subset (`search_files,
+get_file_metadata, read_file_content, create_file, get_values, get_spreadsheet,
+update_values`), landing at 15 declared. Widen it — or set it to `*` — only if
+you've also trimmed something else, and check the `declaring N tools to the
+model` log line at startup.
+
 ## Using it from BetterGPT (or any OpenAI client)
 
 BetterGPT talks straight to an OpenAI-compatible endpoint. Pointed at vLLM

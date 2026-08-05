@@ -13,3 +13,7 @@ uvicorn[standard]==0.51.0
 
 # MCP client, for reaching the WaterTAP RO server (agent/core.py)
 mcp>=1.2
+
+# Verifies the identity JWT Open WebUI forwards (agent/identity.py). Already
+# arrives transitively via mcp, but this file depends on it directly.
+pyjwt>=2.8

@@ -24,5 +24,7 @@ exec docker run -d --name "$CONTAINER_NAME" \
   -e ENABLE_OLLAMA_API=false \
   -e ENABLE_SIGNUP="${ENABLE_SIGNUP:-false}" \
   -e WEBUI_SECRET_KEY="$AGENT_API_KEY" \
+  -e ENABLE_FORWARD_USER_INFO_HEADERS=true \
+  -e FORWARD_USER_INFO_HEADER_JWT_SECRET="$FORWARD_USER_INFO_HEADER_JWT_SECRET" \
   -v open-webui:/app/backend/data \
   ghcr.io/open-webui/open-webui:main

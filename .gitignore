@@ -10,3 +10,5 @@ logs/
 .venv-watertap/
 .vendor/
 .oauth_state.json
+.google_token.json
+.google_tokens/
