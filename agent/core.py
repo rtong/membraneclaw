@@ -104,10 +104,10 @@ GOOGLE_MCP_ENABLED = (
     and google_oauth.have_token()
 )
 
-# mcp_watertap/server.py: 5 @mcp.tool() defs. RO_MCP_CONFIG is handed to Assistant()
+# mcp_watertap/server.py: 6 @mcp.tool() defs. RO_MCP_CONFIG is handed to Assistant()
 # as a raw dict and expanded internally, so its tool count isn't observable here —
 # this constant is what makes the declared-count log below accurate.
-RO_CHEM_TOOL_COUNT = 5
+RO_CHEM_TOOL_COUNT = 6
 
 SYSTEM_MESSAGE = (
     "You are a capable assistant running on a local Qwen3.5 deployment. "

@@ -104,15 +104,33 @@ already set in the shell and silently wins.
 
 ## RO simulation and scaling chemistry (MCP)
 
-`mcp_watertap/` is an MCP server exposing five tools from two engines:
+`mcp_watertap/` is an MCP server exposing six tools from two engines:
 
 | Tool | Engine | Answers |
 | --- | --- | --- |
-| `describe_ro_parameters` | — | What `simulate_ro` accepts |
-| `simulate_ro` | WaterTAP [ReverseOsmosis0D](https://watertap.readthedocs.io/en/stable/technical_reference/unit_models/reverse_osmosis_0D.html) | Flux, recovery, rejection, polarization |
+| `describe_ro_parameters` | — | What `simulate_ro` and `simulate_swro_system` accept |
+| `simulate_ro` | WaterTAP [ReverseOsmosis0D](https://watertap.readthedocs.io/en/stable/technical_reference/unit_models/reverse_osmosis_0D.html) | Flux, recovery, rejection, polarization — one membrane unit |
+| `simulate_swro_system` | WaterTAP [seawater RO flowsheet](https://watertap.readthedocs.io/en/stable/technical_reference/flowsheets/seawater_RO_desalination.html) | **Cost and energy for a whole plant** — LCOW $/m³, kWh/m³ |
 | `describe_reaktoro_options` | — | Valid ions, minerals, reagents |
 | `equilibrate_feed` | [Reaktoro-PSE](https://github.com/watertap-org/reaktoro-pse) | What precipitates from a given water |
 | `analyze_ro_scaling` | both | Solves the module, then what scales in *its* concentrate |
+
+`simulate_ro` and `simulate_swro_system` answer different questions and take
+different units. `simulate_ro` is one bare membrane — no pump, no energy recovery,
+no costing — so it structurally *cannot* produce a cost or an energy figure.
+`simulate_swro_system` solves the full train (pretreatment → high pressure pump →
+RO → pressure exchanger or turbine → post-treatment) with costing attached, and
+takes feed flow in m³/s and salinity in g/L rather than kg/s and mass fraction.
+
+Energy recovery is a parameter, not a separate tool: `erd_type='pressure_exchanger'`
+(default) or `'pump_as_turbine'`. On the reference case that choice is worth a lot —
+**3.06 vs 5.96 kWh/m³** and **$0.83 vs $1.10 /m³** — which is the kind of comparison
+the tool exists to make. Pump and exchanger duties come back as result fields.
+
+Both are validated against upstream rather than against themselves:
+`test_ro_model.py` checks WaterTAP's own published unit-test values, and
+`test_swro_model.py` reproduces `seawater_RO_desalination.main()` to zero delta for
+both ERD configurations.
 
 The agent picks the server up automatically (`RO_MCP=off` to disable), so it works
 from the CLI, the HTTP front end, and Open WebUI without extra wiring.
