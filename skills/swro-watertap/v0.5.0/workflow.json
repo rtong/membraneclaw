@@ -1,0 +1,82 @@
+{
+  "workflow_id": "swro-watertap-execution-protocol",
+  "version": "0.5.0",
+  "default_call_budget": 5,
+  "states": [
+    {
+      "id": "question_compilation",
+      "required": [
+        "task_family",
+        "decision_variables",
+        "fixed_inputs",
+        "constraints",
+        "mandatory_outputs",
+        "explicit_candidates"
+      ]
+    },
+    {
+      "id": "argument_lock",
+      "required": [
+        "correct_tool",
+        "complete_arguments",
+        "no_question_stated_default"
+      ]
+    },
+    {
+      "id": "post_call_audit",
+      "required": [
+        "echo_check",
+        "signed_margins",
+        "feasibility_status",
+        "single_next_action"
+      ]
+    },
+    {
+      "id": "bounded_search",
+      "required": [
+        "fixed_inputs_unchanged",
+        "explicit_candidates_first",
+        "reserved_final_answer_budget"
+      ]
+    },
+    {
+      "id": "final_decision",
+      "required": [
+        "all_constraints_checked",
+        "estimated_vs_direct_labeled",
+        "alternatives_rejected"
+      ]
+    },
+    {
+      "id": "single_final_report",
+      "required": [
+        "six_sections",
+        "pass_fail_table",
+        "no_followup_tool_call"
+      ]
+    }
+  ],
+  "recipe_requirements": {
+    "pressure_selection": [
+      "controlling_target",
+      "baseline_deficit",
+      "two_point_slope",
+      "direct_boundary_verification",
+      "optional_engineering_setpoint"
+    ],
+    "membrane_degradation": [
+      "strict_active_limit",
+      "normal_margin",
+      "explicit_B_candidates",
+      "single_bracket_refinement",
+      "online_warning_indicator"
+    ],
+    "scaling_acid_optimization": [
+      "current_pressure_baseline",
+      "proposed_pressure_comparison",
+      "dominant_mineral_identification",
+      "all_explicit_acid_candidates",
+      "basic_vs_margin_recommendation"
+    ]
+  }
+}

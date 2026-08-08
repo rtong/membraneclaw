@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-07T06:40:54+00:00",
+  "cases": [
+    {
+      "case_id": "SWRO-Q1-pressure-selection",
+      "task_family": "pressure_selection",
+      "title": "SWRO固定进水流量下的运行压力选择（题目Q）",
+      "file": "SWRO-Q1-pressure-selection.json",
+      "source_sha256": "82e488d58ef2b13c0b75b415aa96f14b0eeaa04b385488959ef447e9e6bf4fcb"
+    },
+    {
+      "case_id": "SWRO-Q2-membrane-degradation",
+      "task_family": "membrane_degradation",
+      "title": "SWRO膜盐透过增加条件下的产水水质评估（题目Q）",
+      "file": "SWRO-Q2-membrane-degradation.json",
+      "source_sha256": "e739e4a7c995023b4e3d749b781d5946d55c6cd69ec5bed5e46a37ed8d49da5a"
+    },
+    {
+      "case_id": "SWRO-Q3-scaling-acid-optimization",
+      "task_family": "scaling_acid_optimization",
+      "title": "Q3：SWRO升压增产后的结垢风险与最低酸投加量",
+      "file": "SWRO-Q3-scaling-acid-optimization.json",
+      "source_sha256": "85913cbd82a19e34e20916a812f8c2d43a5012467438664ed8175d235ba7a0ff"
+    }
+  ]
+}

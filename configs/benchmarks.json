@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "case_id": "D1-1a-swro-membrane-area-design",
+      "path": "benchmarks/question_bank/raw/D1/D1_1a_SWRO_膜面积设计_QA评分.xlsx",
+      "task_family": "d1_1a"
+    },
+    {
+      "case_id": "D1-1b-swro-membrane-parameter-selection",
+      "path": "benchmarks/question_bank/raw/D1/D1_1b_SWRO_膜性能参数选择_QA评分.xlsx",
+      "task_family": "d1_1b"
+    },
+    {
+      "case_id": "D1-1c-swro-design-pressure",
+      "path": "benchmarks/question_bank/raw/D1/D1_1c_SWRO_设计压力_QA评分.xlsx",
+      "task_family": "d1_1c"
+    }
+  ]
+}

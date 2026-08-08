@@ -1,0 +1,21 @@
+{
+  "workflow_id": "swro-watertap-core",
+  "version": "0.2.0",
+  "states": [
+    {"id": "input_lock", "required": ["task_family", "objective", "decision_variable", "fixed_input_ledger"]},
+    {"id": "argument_lock", "required": ["complete_tool_arguments", "no_explicit_input_uses_default"]},
+    {"id": "limit_lock", "required": ["direct_constraints", "derived_constraints", "strictest_limits"]},
+    {"id": "baseline", "required": ["tool_success", "echo_check", "baseline_outputs"]},
+    {"id": "candidate_search", "required": ["fixed_inputs_unchanged", "feasible_bracket", "active_constraint"]},
+    {"id": "final_verify", "required": ["direct_final_simulation", "all_constraint_margins", "requested_outputs"]},
+    {"id": "report_lock", "required": ["measurement_status", "single_final_answer", "limitations"]}
+  ],
+  "hard_failures": {
+    "explicit_argument_omitted": "stop_and_repair",
+    "echoed_input_mismatch": "discard_comparison_and_rerun",
+    "derived_limit_not_compiled": "stop_before_search",
+    "unbracketed_boundary": "report_as_unverified_only",
+    "latent_parameter_as_online_alarm": "replace_with_measurable_indicator",
+    "repeated_final_answer": "keep_last_complete_answer_only"
+  }
+}

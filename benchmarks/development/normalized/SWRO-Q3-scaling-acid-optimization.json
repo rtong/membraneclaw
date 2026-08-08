@@ -1,0 +1,114 @@
+{
+  "schema_version": "1.0",
+  "case_id": "SWRO-Q3-scaling-acid-optimization",
+  "task_family": "scaling_acid_optimization",
+  "title": "Q3：SWRO升压增产后的结垢风险与最低酸投加量",
+  "question_prompt": "Q3：SWRO升压增产后的结垢风险与最低酸投加量\n\n某SWRO系统目前在52 bar条件下运行。由于产水需求增加，操作人员计划将膜组进水压力提高至58 bar。升压可提高水通量和回收率，但也会提高浓水浓缩程度，从而增加矿物结垢风险。请使用 analyze_ro_scaling 判断升压后是否仍可安全运行；若出现结垢风险，在保持58 bar不变的情况下，确定能够消除结垢风险并保留一定安全裕度的最低HCl投加方案。\n\n已知运行条件 | 结垢判据与候选方案\n类别 | 参数 | 数值 | 单位 / 说明 | 项目 | 要求 / 数值 | 说明\n运行条件 | 当前膜组进水压力 | 52 | bar | 基本结垢安全要求 | Calcite SI < 0；Gypsum SI < 0 | SI≥0表示热力学上可发生析出\n运行条件 | 拟提高膜组进水压力 | 58 | bar | 推荐运行安全裕度 | Calcite SI ≤ -0.05 | 本题定义的benchmark安全裕度，并非通用行业标准\n运行条件 | 进水温度 | 32 | °C | 候选HCl方案1 | 0.0001 | mol/s\n运行条件 | 进水质量流量 | 4 | kg/s | 候选HCl方案2 | 0.0002 | mol/s\n膜系统 | 有效膜面积 | 400 | m² | 候选HCl方案3 | 0.00024 | mol/s\n水化学 | 进水pH | 7.1 | 无量纲\n模型设置 | 结垢矿物 | Calcite, Gypsum | 仅评价这两种矿物 | 需要完成的任务\n模型设置 | 酸投加剂 | HCl | acid_addition_mol_s | 1. 在52 bar、无额外HCl条件下调用 analyze_ro_scaling，报告回收率、水通量、浓缩倍数、Calcite SI、Gypsum SI和结垢判断。\n2. 将进水压力提高到58 bar，其他条件保持不变，再次调用 analyze_ro_scaling；比较升压前后回收率、浓缩倍数和结垢风险。\n进水组成（analyze_ro_scaling 输入） | 3. 判断58 bar下主要结垢风险来自Calcite还是Gypsum，并解释判断依据。\nSpecies | 流量 | 单位 | 说明 | 4. 在58 bar保持不变时，分别测试0.00010、0.00020和0.00024 mol/s HCl，并重新调用 analyze_ro_scaling。\nH2O | 214.588669 | mol/s | 必填 | 5. 找出候选方案中最低能够使Calcite和Gypsum SI均小于0的HCl投加量。\nNa | 1.813371 | mol/s | 6. 找出候选方案中最低能够使Calcite SI≤-0.05的推荐HCl投加量。\nCl | 2.111089 | mol/s | 7. 给出最终运行建议：58 bar是否可继续运行，以及建议采用的HCl投加量和理由。\nMg | 0.204149 | mol/s\nSO4 | 0.109034 | mol/s\nCa | 0.039825 | mol/s\nHCO3 | 0.00928 | mol/s",
+  "reference_answer": "Q3：SWRO升压后的结垢风险与酸投加优化（分步骤答案A）\n\n数据来源：本答案中的52 bar、58 bar以及不同HCl投加量结果均来自本轮直接调用 analyze_ro_scaling。该工具将RO计算得到的回收率与Reaktoro浓水化学分析串联，因此每次改变压力或酸投加量都重新求解。\n\n人类视角：沿同一条逻辑线逐步求解\n步骤 | 人类实际做什么 | 本步输入 | Tool Call / 操作 | 本步关键输出 | 输出如何进入下一步 | 分值\n1 | 先检查当前52 bar工况是否已有结垢风险 | 52 bar；pH 7.10；固定水质组成；无额外HCl | analyze_ro_scaling #1 | Recovery 39.27%；CF 1.647；Calcite SI -0.008；Gypsum SI -0.479；无矿物达到饱和 | 作为升压前的安全基准 | 15\n2 | 将压力提高到58 bar并重新检查 | 58 bar；其他条件完全不变；无额外HCl | analyze_ro_scaling #2 | Recovery 47.06%；CF 1.889；Calcite SI +0.071；Gypsum SI -0.419 | 发现升压后出现Calcite风险 | 20\n3 | 识别主要结垢类型并决定处理方向 | 58 bar的Calcite与Gypsum SI | 比较SI与0的关系 | Calcite SI>0，而Gypsum SI<0；主要风险是Calcite，因此酸化是合理方向 | 选择HCl作为下一步调整变量 | 10\n4 | 先测试较低HCl投加量 | 58 bar；HCl 0.00010 mol/s | analyze_ro_scaling #3 | Calcite SI +0.018；Gypsum SI -0.419；仍有Calcite风险 | 说明酸量不足，需要继续增加 | 15\n5 | 提高HCl至0.00020 mol/s | 58 bar；HCl 0.00020 mol/s | analyze_ro_scaling #4 | Calcite SI -0.032；Gypsum SI -0.419；基本结垢要求满足 | 已达到SI<0，但尚未达到本题推荐安全裕度 | 15\n6 | 进一步测试0.00024 mol/s以获得安全裕度 | 58 bar；HCl 0.00024 mol/s | analyze_ro_scaling #5 | Calcite SI -0.052；Gypsum SI -0.419；满足Calcite SI≤-0.05 | 形成推荐酸投加方案 | 15\n7 | 形成最终工程建议 | 所有候选工况的回收率、SI和酸耗 | 综合比较 | 58 bar可维持；最低基本合格酸量0.00020 mol/s；推荐0.00024 mol/s | 给出可执行运行结论并说明裕度 | 10\n\nanalyze_ro_scaling 直接调用结果\n场景 | 进水压力\nbar | HCl\nmol/s | Water recovery\n% | Water flux\nLMH | Concentration factor | Calcite SI | Gypsum SI | 浓水pH | 浓水渗透压\nbar | 基本结垢安全 | 推荐安全裕度 | 结论\n基准工况 | 52 | 0 | 39.266988 | 13.783418 | 1.646551 | -0.008279 | -0.478988 | 7.031949 | 42.047189 | =IF(AND(G21<0,H21<0),\"通过\",\"不通过\") | =IF(AND(G21<=-0.05,H21<0),\"通过\",\"不通过\") | 当前安全，Calcite接近饱和\n升压后 | 58 | 0 | 47.056548 | 16.517843 | 1.888808 | 0.071423 | -0.418617 | 7.010216 | 48.627873 | =IF(AND(G22<0,H22<0),\"通过\",\"不通过\") | =IF(AND(G22<=-0.05,H22<0),\"通过\",\"不通过\") | 出现Calcite结垢风险\n低酸量 | 58 | 0.0001 | 47.056548 | 16.517843 | 1.888808 | 0.017958 | -0.418618 | 6.960804 | 48.629616 | =IF(AND(G23<0,H23<0),\"通过\",\"不通过\") | =IF(AND(G23<=-0.05,H23<0),\"通过\",\"不通过\") | 酸量不足\n基本合格 | 58 | 0.0002 | 47.056548 | 16.517843 | 1.888808 | -0.032477 | -0.41862 | 6.914652 | 48.631349 | =IF(AND(G24<0,H24<0),\"通过\",\"不通过\") | =IF(AND(G24<=-0.05,H24<0),\"通过\",\"不通过\") | 满足SI<0\n推荐方案 | 58 | 0.00024 | 47.056548 | 16.517843 | 1.888808 | -0.051875 | -0.418621 | 6.897024 | 48.63204 | =IF(AND(G25<0,H25<0),\"通过\",\"不通过\") | =IF(AND(G25<=-0.05,H25<0),\"通过\",\"不通过\") | 满足推荐安全裕度\n\n关键比较与派生结果 | HCl投加量换算（便于工程理解）\n指标 | 基准/起点 | 变化后 | 差值 / 结果 | 解释 | HCl mol/s | 纯HCl质量 g/h | 按14.4 m³/h折算 mg/L | 用途\n升压带来的回收率变化 | 39.266988 | 47.056548 | =C30-B30 | 58 bar相对52 bar提高 | 0.0001 | =G30*36.46*3600 | =H30/14.4 | 仍不足\n升压带来的水通量变化 | 13.783418 | 16.517843 | =C31-B31 | LMH | 0.0002 | =G31*36.46*3600 | =H31/14.4 | 基本合格\n升压带来的浓缩倍数变化 | 1.646551 | 1.888808 | =C32-B32 | 浓水更集中 | 0.00024 | =G32*36.46*3600 | =H32/14.4 | 推荐方案\nCalcite SI变化 | -0.008279 | 0.071423 | =C33-B33 | 由未饱和转为过饱和\n基本合格最低候选HCl | 0.0001 | 0.0002 | 0.0002 | 0.00020 mol/s是三个候选中首个SI<0方案\n推荐HCl投加量 | 0.0002 | 0.00024 | 0.00024 | 满足Calcite SI≤-0.05\n\n最终结论\n\n1. 52 bar基准工况：回收率39.27%，Calcite SI=-0.008，Gypsum SI=-0.479；目前无矿物达到饱和，但Calcite已接近边界。\n2. 升至58 bar：回收率提高至47.06%，浓缩倍数由1.647升至1.889；Calcite SI变为+0.071，出现Calcite结垢风险，而Gypsum仍明显未饱和。\n3. 58 bar + 0.00010 mol/s HCl：Calcite SI仍为+0.018，不足。\n4. 58 bar + 0.00020 mol/s HCl：Calcite SI=-0.032，已满足基本SI<0要求。\n5. 58 bar + 0.00024 mol/s HCl：Calcite SI=-0.052，满足本题定义的推荐安全裕度Calcite SI≤-0.05。\n\n因此：如果仅要求热力学上无结垢，三个候选中最低为0.00020 mol/s；若按本题的运行安全裕度，推荐0.00024 mol/s。该剂量折算为约31.5 g/h纯HCl，按约14.4 m³/h进水折算约2.19 mg/L纯HCl。",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "reasoning_or_calculation": "分析52 bar基准工况",
+        "inputs": "52 bar、pH7.1、固定组成、无HCl",
+        "key_outputs": "Recovery≈39.27%；CF≈1.647；Calcite SI≈-0.008；Gypsum SI≈-0.479",
+        "full_credit": "正确调用analyze_ro_scaling并判断基准无结垢，但Calcite接近饱和",
+        "common_failures": "只看verdict不报告SI；把-0.008误判为已经结垢",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "reasoning_or_calculation": "分析58 bar升压工况",
+        "inputs": "58 bar，其他条件保持完全一致",
+        "key_outputs": "Recovery≈47.06%；CF≈1.889；Calcite SI≈+0.071；Gypsum SI≈-0.419",
+        "full_credit": "正确识别升压使回收率和浓缩倍数提高，并导致Calcite越过SI=0",
+        "common_failures": "改变水质或pH；只关注产水增加，不检查结垢",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 3,
+        "reasoning_or_calculation": "识别主要结垢矿物与处理方向",
+        "inputs": "58 bar的Calcite/Gypsum SI",
+        "key_outputs": "Calcite为主要风险；Gypsum无风险；选择酸化处理",
+        "full_credit": "说明Calcite SI>0且Gypsum SI<0，并理解酸对碳酸盐垢更有效",
+        "common_failures": "错误认为Gypsum是主要风险；认为加酸会显著降低Gypsum风险",
+        "max_score": 10.0
+      },
+      {
+        "step_id": 4,
+        "reasoning_or_calculation": "测试0.00010 mol/s HCl",
+        "inputs": "58 bar + 0.00010 mol/s HCl",
+        "key_outputs": "Calcite SI≈+0.018，仍不合格",
+        "full_credit": "重新调用工具并正确判断“风险下降但未消除”",
+        "common_failures": "看到SI下降就直接判为安全",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 5,
+        "reasoning_or_calculation": "测试0.00020 mol/s HCl",
+        "inputs": "58 bar + 0.00020 mol/s HCl",
+        "key_outputs": "Calcite SI≈-0.032；Gypsum SI≈-0.419；基本安全",
+        "full_credit": "识别这是候选方案中首个满足两种矿物SI<0的方案",
+        "common_failures": "忽略Gypsum；混淆基本安全与推荐安全裕度",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 6,
+        "reasoning_or_calculation": "测试0.00024 mol/s HCl并判断安全裕度",
+        "inputs": "58 bar + 0.00024 mol/s HCl",
+        "key_outputs": "Calcite SI≈-0.052；满足SI≤-0.05",
+        "full_credit": "正确识别其满足本题定义的推荐安全裕度",
+        "common_failures": "把-0.032也说成满足-0.05；不区分两类标准",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 7,
+        "reasoning_or_calculation": "形成最终工程建议",
+        "inputs": "全部5次工具结果",
+        "key_outputs": "基本最低候选0.00020 mol/s；推荐0.00024 mol/s；58 bar可维持",
+        "full_credit": "结论完整，解释为何推荐更高酸量而非刚好SI<0",
+        "common_failures": "只给酸量不说明压力是否可维持；不说明安全裕度",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": [
+      {
+        "name": "工具使用",
+        "criterion": "至少应有2次 analyze_ro_scaling；满分答案自然需要5次直接验证",
+        "penalty_guidance": "若只调用一次工具、其余完全凭猜测，不能得到工具使用相关步骤满分"
+      },
+      {
+        "name": "输入一致性",
+        "criterion": "除压力或HCl投加量外，水质组成、温度、流量、面积和pH保持一致",
+        "penalty_guidance": "无说明地改变多个变量会破坏因果比较"
+      },
+      {
+        "name": "SI解释",
+        "criterion": "SI<0未饱和；SI=0饱和；SI>0热力学上可析出",
+        "penalty_guidance": "不能把SI大小直接解释为实际沉积速率"
+      },
+      {
+        "name": "酸化理解",
+        "criterion": "酸化主要降低Calcite等碳酸盐垢风险；Gypsum对pH不敏感",
+        "penalty_guidance": "不能声称HCl是解决硫酸钙垢的主要手段"
+      },
+      {
+        "name": "安全裕度",
+        "criterion": "本题的Calcite SI≤-0.05是benchmark设定，不应声称为普遍行业标准",
+        "penalty_guidance": "若将其表述为行业强制标准，应扣工程严谨性分"
+      }
+    ]
+  },
+  "source": {
+    "filename": "SWRO_WaterTAP_结垢风险与酸投加优化_Q3.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\Q-A\\SWRO_WaterTAP_结垢风险与酸投加优化_Q3.xlsx",
+    "sha256": "85913cbd82a19e34e20916a812f8c2d43a5012467438664ed8175d235ba7a0ff",
+    "sheets": [
+      "题目_Q",
+      "分步答案_A",
+      "评价标准"
+    ],
+    "imported_at": "2026-08-07T06:40:54+00:00"
+  }
+}

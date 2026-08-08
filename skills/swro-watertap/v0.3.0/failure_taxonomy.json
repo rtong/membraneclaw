@@ -1,0 +1,12 @@
+{
+  "version": "0.3.0",
+  "prevention_checks": {
+    "OUTPUT_OMISSION": ["mandatory pre-calculations", "six-section final contract"],
+    "CONSTRAINT_OMISSION": ["active-limit formula before simulation", "unrounded all-constraint final check"],
+    "UNIT_CONVERSION": ["single permeate-density convention", "do not reuse feed density"],
+    "NUMERICAL_REASONING": ["signed margins", "explicit deficit and two-point slope"],
+    "SEARCH_STRATEGY": ["five-call budget", "passing/failing bracket", "two refinements maximum"],
+    "ENGINEERING_JUDGMENT": ["boundary/setpoint separation", "measurable alarm signal"],
+    "TOOL_ARGUMENT": ["explicit argument lock", "pressure-drop hard check", "echo check"]
+  }
+}

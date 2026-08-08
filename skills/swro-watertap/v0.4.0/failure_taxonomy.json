@@ -1,0 +1,12 @@
+{
+  "version": "0.4.0",
+  "prevention_checks": {
+    "OUTPUT_OMISSION": ["mandatory outputs", "six-section final contract"],
+    "CONSTRAINT_OMISSION": ["active-limit derivation", "all-mineral SI check", "basic vs safety-margin check"],
+    "UNIT_CONVERSION": ["single permeate-density convention", "explicit mol/s acid units"],
+    "NUMERICAL_REASONING": ["signed margins", "unrounded feasibility", "candidate-minimum wording"],
+    "SEARCH_STRATEGY": ["bounded call budget", "all explicit candidates", "no unsupported continuous optimum"],
+    "ENGINEERING_JUDGMENT": ["carbonate vs sulfate response", "benchmark margin caveat"],
+    "TOOL_ARGUMENT": ["explicit argument lock", "complete composition", "echo check"]
+  }
+}
