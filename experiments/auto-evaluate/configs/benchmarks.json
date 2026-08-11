@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "sources": [
+    {
+      "case_id": "D1-1a-multi-condition-membrane-area-window",
+      "path": "benchmarks/Datasets Harness/D1/D1_1a .xlsx",
+      "task_family": "d1_1a"
+    },
+    {
+      "case_id": "D1-1b-membrane-screening-stress-test-selection",
+      "path": "benchmarks/Datasets Harness/D1/D1_1b  .xlsx",
+      "task_family": "d1_1b"
+    },
+    {
+      "case_id": "D1-1c-design-envelope-pressure-sizing",
+      "path": "benchmarks/Datasets Harness/D1/D1_1c  .xlsx",
+      "task_family": "d1_1c"
+    },
+    {
+      "case_id": "D1-1a-r1-new-swro-design-margin",
+      "path": "benchmarks/Datasets Harness/D1/D1_a1_新建SWRO设计裕量.xlsx",
+      "task_family": "d1_1a_r1"
+    },
+    {
+      "case_id": "D1-1a-r2-existing-swro-expansion",
+      "path": "benchmarks/Datasets Harness/D1/D1_a1_既有SWRO扩容.xlsx",
+      "task_family": "d1_1a_r2"
+    },
+    {
+      "case_id": "D1-1a-r3-seasonal-single-area",
+      "path": "benchmarks/Datasets Harness/D1/D1_a1_季节性单一面积.xlsx",
+      "task_family": "d1_1a_r3"
+    },
+    {
+      "case_id": "D1-1a-r4-design-feasibility-check",
+      "path": "benchmarks/Datasets Harness/D1/D1_a1_设计可实施性核查.xlsx",
+      "task_family": "d1_1a_r4"
+    },
+    {
+      "case_id": "D2-2a-feed-salinity-rise-response",
+      "path": "benchmarks/Datasets Harness/D2/D2_2a  .xlsx",
+      "task_family": "d2_2a"
+    },
+    {
+      "case_id": "D2-2b-pressure-flow-operating-setpoint-adjustment",
+      "path": "benchmarks/Datasets Harness/D2/D2_2b  .xlsx",
+      "task_family": "d2_2b"
+    },
+    {
+      "case_id": "D5-5a-calcite-scaling-minimum-hcl-dose",
+      "path": "benchmarks/Datasets Harness/D5/D5_5a.xlsx",
+      "task_family": "d5_5a"
+    }
+  ]
+}

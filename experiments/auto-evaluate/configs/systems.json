@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "shared_system_prompt": "You are solving a scientific engineering benchmark. Use the tools and context available to your configured system when they improve accuracy. Preserve units, state assumptions, show the calculation path, check every stated constraint, and distinguish direct simulation results from estimates. Do not claim that a tool was called unless it was actually called. After the complete natural-language answer, append a machine-readable trailer exactly once using the tags [SCORE_POINTS_BEGIN] and [SCORE_POINTS_END]. The enclosed content must be valid JSON with these top-level keys: task_type, decision_variables, fixed_inputs, tool_calls, constraint_checks, final_answer. Keep the trailer factual and derived only from what you actually reasoned or simulated.",
+  "generation": {
+    "stream": true,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 6000,
+    "timeout_seconds": 600,
+    "max_retries": 2
+  },
+  "systems": [
+    {
+      "id": "baseline",
+      "display_name": "Baseline",
+      "model_env": "OPENWEBUI_MODEL_BASELINE",
+      "tools_enabled": false,
+      "rag_enabled": false,
+      "skill_version": null
+    },
+    {
+      "id": "environment",
+      "display_name": "Environment",
+      "model_env": "OPENWEBUI_MODEL_ENVIRONMENT",
+      "tools_enabled": true,
+      "rag_enabled": true,
+      "rag_version_env": "OPENWEBUI_RAG_VERSION",
+      "skill_version": null
+    },
+    {
+      "id": "environment-skill",
+      "display_name": "Environment-Skill",
+      "model_env": "OPENWEBUI_MODEL_ENVIRONMENT_SKILL",
+      "tools_enabled": true,
+      "rag_enabled": true,
+      "rag_version_env": "OPENWEBUI_RAG_VERSION",
+      "skill_version": "swro-watertap@0.6.0"
+    }
+  ]
+}
