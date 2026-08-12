@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+~$*.xlsx
+.coverage
+.DS_Store
+
+# Generated artifacts
+benchmarks/normalized/
+runs/
+reports/
+archive/

@@ -1,0 +1,10 @@
+{
+  "active_set": "datasets_harness",
+  "sets": {
+    "datasets_harness": {
+      "description": "Datasets Harness 中的全部当前题目",
+      "source_config": "configs/benchmarks.json",
+      "normalized_dir": "benchmarks/normalized"
+    }
+  }
+}
