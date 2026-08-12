@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from agent import config
+from agent import config, google_oauth
 from agent.core import build_agent
 
 
@@ -28,7 +28,10 @@ def main():
     parser.add_argument("-p", "--prompt", help="Run a single prompt and exit")
     args = parser.parse_args()
 
-    agent = build_agent(files=args.file)
+    # The CLI is the operator at their own terminal, so the owner's token is the
+    # right identity here — unlike server.py, which serves many people and must
+    # resolve credentials per request.
+    agent = build_agent(files=args.file, google_token_path=google_oauth.TOKEN_FILE)
     print(f"model={config.MODEL} @ {config.BASE_URL}  "
           f"native_tools={config.NATIVE_TOOL_CALLS}"
           + (f"  files={len(args.file)}" if args.file else ""))

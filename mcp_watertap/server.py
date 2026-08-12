@@ -26,8 +26,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ro_model import DEFAULTS, ROSimulationError, simulate
 
 # Module-qualified: reaktoro_model has its own DEFAULTS, and the two must not be
-# confused — they describe different models with different units.
+# confused — they describe different models with different units. swro_model is
+# qualified for the same reason: its DEFAULTS describe a whole plant, in different
+# units again (m3/s and g/L, not kg/s and mass fraction).
 import reaktoro_model
+import swro_model
 
 def _build_mcp() -> tuple[FastMCP, object]:
     """FastMCP instance, plus the OAuth provider when one is configured.
@@ -170,10 +173,12 @@ def _guarded(fn):
 
 @mcp.tool()
 def describe_ro_parameters() -> str:
-    """List every RO 0D simulation parameter with its units, default and meaning.
+    """List every RO simulation parameter with its units, default and meaning.
 
-    Call this first when unsure which arguments simulate_ro accepts or what units
-    it expects.
+    Covers both simulate_ro (a single membrane unit) and simulate_swro_system (a
+    whole plant, with cost and energy). Call this first when unsure which arguments
+    either accepts or what units they expect — the two use different units for the
+    same physical quantities.
     """
     spec = {
         "feed_flow_mass_kg_s": "Total feed mass flow [kg/s]",
@@ -193,11 +198,34 @@ def describe_ro_parameters() -> str:
         "concentration_polarization": "'none' | 'fixed' | 'calculated'",
         "mass_transfer_coefficient": "'none' | 'fixed' | 'calculated'",
     }
+    swro_spec = {
+        "erd_type": "Energy recovery: 'pressure_exchanger' or 'pump_as_turbine'",
+        "feed_flow_m3_s": "Plant feed volumetric flow [m3/s] (default 0.3092 = 7.05 MGD)",
+        "feed_tds_g_L": "Feed total dissolved solids [g/L]",
+        "feed_tss_g_L": "Feed total suspended solids [g/L]",
+        "feed_temperature_c": "Feed temperature [degC]",
+        "ro_area_m2": "Total RO membrane area [m2]; unset scales with feed flow (flow * 4.5e4)",
+        "A_comp": "Water permeability coefficient [m/s/Pa]",
+        "B_comp": "Salt permeability coefficient [m/s]",
+        "p1_pressure_bar": "High pressure pump outlet pressure [bar]",
+        "p1_efficiency": "High pressure pump efficiency [-]",
+        "pxr_efficiency": "Pressure exchanger efficiency [-] (pressure_exchanger only)",
+        "p2_efficiency": "Booster pump efficiency [-] (pressure_exchanger only)",
+        "erd_efficiency": "Energy recovery turbine efficiency [-] (pump_as_turbine only)",
+    }
     return json.dumps(
         {
+            "simulate_ro": "One ReverseOsmosis0D membrane unit. No pump, no energy "
+                           "recovery, no costing — cannot answer cost or energy questions.",
+            "simulate_swro_system": "A whole seawater RO plant. Reports levelized cost "
+                                    "of water ($/m3) and specific energy (kWh/m3).",
             "parameters": [
                 {"name": k, "description": v, "default": DEFAULTS[k]}
                 for k, v in spec.items()
+            ],
+            "swro_parameters": [
+                {"name": k, "description": v, "default": swro_model.DEFAULTS[k]}
+                for k, v in swro_spec.items()
             ],
             "valid_combinations": [
                 "concentration_polarization='none'      + mass_transfer_coefficient='none'",
@@ -262,6 +290,65 @@ def simulate_ro(
             indent=2,
         )
     except ROSimulationError as exc:
+        return json.dumps({"error": str(exc)}, indent=2)
+    except Exception as exc:  # never kill the server on a bad request
+        return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, indent=2)
+
+
+@mcp.tool()
+@_guarded
+def simulate_swro_system(
+    erd_type: Optional[str] = None,
+    feed_flow_m3_s: Optional[float] = None,
+    feed_tds_g_L: Optional[float] = None,
+    feed_tss_g_L: Optional[float] = None,
+    feed_temperature_c: Optional[float] = None,
+    ro_area_m2: Optional[float] = None,
+    A_comp: Optional[float] = None,
+    B_comp: Optional[float] = None,
+    p1_pressure_bar: Optional[float] = None,
+    p1_efficiency: Optional[float] = None,
+    pxr_efficiency: Optional[float] = None,
+    p2_efficiency: Optional[float] = None,
+    erd_efficiency: Optional[float] = None,
+) -> str:
+    """Simulate and cost a *full seawater RO desalination plant*.
+
+    Use this — not simulate_ro — for any question about cost, energy, or the plant
+    as a whole. It solves the whole train (pretreatment, high pressure pump, RO,
+    energy recovery, post-treatment) and reports **levelized cost of water in $/m3**
+    and **specific energy consumption in kWh/m3**, which simulate_ro cannot produce
+    because it models a single membrane unit with no pump, energy recovery or costing.
+
+    Energy recovery is chosen with erd_type: 'pressure_exchanger' (default, adds a
+    pressure exchanger and a booster pump) or 'pump_as_turbine'. The pxr/p2
+    efficiencies apply only to the former and erd_efficiency only to the latter.
+
+    Slower than simulate_ro — it solves the entire flowsheet twice. Any argument
+    left unset keeps its default (see describe_ro_parameters).
+
+    Returns JSON. On failure returns {"error": ...} rather than raising.
+    """
+    try:
+        return json.dumps(
+            swro_model.simulate_swro(
+                erd_type=erd_type,
+                feed_flow_m3_s=feed_flow_m3_s,
+                feed_tds_g_L=feed_tds_g_L,
+                feed_tss_g_L=feed_tss_g_L,
+                feed_temperature_c=feed_temperature_c,
+                ro_area_m2=ro_area_m2,
+                A_comp=A_comp,
+                B_comp=B_comp,
+                p1_pressure_bar=p1_pressure_bar,
+                p1_efficiency=p1_efficiency,
+                pxr_efficiency=pxr_efficiency,
+                p2_efficiency=p2_efficiency,
+                erd_efficiency=erd_efficiency,
+            ),
+            indent=2,
+        )
+    except swro_model.SWROSimulationError as exc:
         return json.dumps({"error": str(exc)}, indent=2)
     except Exception as exc:  # never kill the server on a bad request
         return json.dumps({"error": f"{type(exc).__name__}: {exc}"}, indent=2)
