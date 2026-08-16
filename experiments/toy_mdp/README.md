@@ -246,12 +246,66 @@ one (6.937 ± 0.020), because subtracting the mean shrinks the very returns that
 were driving the logits apart. Variance reduction in the estimator and faster
 convergence in practice are two different claims.
 
+## PPO: the probability ratio and clipping
+
+REINFORCE takes one gradient step per episode, then discards it. PPO instead
+collects a batch with the current policy and takes several gradient steps on
+that *same* batch -- so by the second step the policy being updated is no
+longer the policy the data came from. The probability ratio
+
+```
+r(s, a) = pi_theta(a|s) / pi_theta_old(a|s)
+```
+
+is the importance-sampling correction for that mismatch, and `ppo.py` derives
+the clipped surrogate's gradient by hand, the same way `reinforce.py` derives
+the score function: `dL/dr` is `A` when the unclipped term wins the `min`, `A`
+when the clipped term wins but the ratio has not actually saturated, and `0`
+once the ratio has been pushed outside `[1-eps, 1+eps]` in the direction the
+advantage favours.
+
+```
+python3 ppo.py
+python3 ppo.py --compare-clipping
+```
+
+The `--compare-clipping` run holds every setting fixed and only removes the
+clip. On this MDP the difference is not subtle. Over 20 seeds at the same
+aggressive schedule (16 episodes/iteration, 4 gradient epochs per batch,
+alpha=0.5):
+
+| | mean V(`NO_INFO`) | std | worst seed | stuck episodes |
+| --- | --- | --- | --- | --- |
+| clipped, eps=0.2 | 6.84 | 0.65 | 3.99 | 0 |
+| unclipped | 0.30 | 5.88 | -inf (never terminates) | 1,725 |
+
+"Stuck" means the softmax policy collapsed into re-checking forever -- an
+improper policy in the same sense `value_iteration.policy_value` already
+rejects. Unclipped multi-epoch updates on stale data can drive a tabular
+softmax to a confidently wrong point badly enough that it stops being a
+policy that solves the problem at all; clipping the ratio keeps every run in
+this sweep proper.
+
+A single run's clip fraction traces the mechanism directly: starting from a
+uniform policy, the first batch is far from what the current policy wants,
+so roughly half its samples get clipped; a few iterations later, once the
+policy has mostly converged and stopped moving far in one batch, the clip
+fraction drops to nearly zero because there is nothing left to clip.
+
+One caveat worth stating: the clip acts per `(state, action)` sample, but a
+tabular softmax couples every action's probability in a state through the
+normalisation. Clipping one action's own gradient to zero does not freeze its
+probability if *other* actions in the same state are still being pushed --
+that coupling is why "stuck" runs can still occur occasionally even with the
+clip on, just far less often than without it.
+
 ## Layout
 
 * `tiny_mdp.py` — the MDP: `transitions()` for exact methods, `step()` for sampling.
 * `value_iteration.py` — value iteration, policy extraction, exact policy evaluation.
 * `monte_carlo.py` — model-free policy evaluation by sampled returns.
 * `reinforce.py` — policy gradient, with an optional baseline and a gradient-variance probe.
+* `ppo.py` — PPO-clip: batched multi-epoch updates, the probability ratio, and clipping.
 * `test_*.py` — tests for each of the above.
 
 Run the tests from this directory:
