@@ -1,0 +1,25 @@
+# This experiment installs its own dependencies and does not use the
+# repository's .venv, which carries the much heavier WaterTAP stack.
+#
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+#
+# The task layer (task/, reward.py) is deliberately standard-library only, so
+# `python3 -m pytest` for everything except the training tests needs none of
+# this installed.
+
+# P0 -- throughput probe and the frozen baseline
+torch
+transformers
+accelerate
+safetensors
+
+# P4/P5 -- training. peft supplies the LoRA adapter; trl is only used in P6 as a
+# cross-check against the hand-written loop, and is expected to be the flakier
+# of the two on MPS.
+peft
+trl
+
+# P7 -- curves
+matplotlib
+
+pytest
