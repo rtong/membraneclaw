@@ -1,0 +1,112 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "model_commit": "7ae557604adf67be50417f59c2c2f167def9a775",
+  "prompt_version": "v1",
+  "device": "cuda",
+  "dtype": "bfloat16",
+  "max_new_tokens": 192,
+  "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+  "torch": "2.13.0+cu130",
+  "prompt_tokens": {
+    "n": 64,
+    "min": 894,
+    "p50": 902,
+    "p95": 904,
+    "max": 904
+  },
+  "generation": [
+    {
+      "batch": 1,
+      "seconds": 1.822,
+      "generated_tokens": 192,
+      "tokens_per_second": 105.4,
+      "seconds_per_sequence": 1.822
+    },
+    {
+      "batch": 8,
+      "seconds": 2.031,
+      "generated_tokens": 1536,
+      "tokens_per_second": 756.3,
+      "seconds_per_sequence": 0.254
+    },
+    {
+      "batch": 16,
+      "seconds": 2.123,
+      "generated_tokens": 3072,
+      "tokens_per_second": 1447.1,
+      "seconds_per_sequence": 0.133
+    },
+    {
+      "batch": 32,
+      "seconds": 2.404,
+      "generated_tokens": 6144,
+      "tokens_per_second": 2556.1,
+      "seconds_per_sequence": 0.075
+    },
+    {
+      "batch": 64,
+      "seconds": 3.12,
+      "generated_tokens": 12288,
+      "tokens_per_second": 3938.4,
+      "seconds_per_sequence": 0.049
+    },
+    {
+      "batch": 128,
+      "seconds": 5.112,
+      "generated_tokens": 24576,
+      "tokens_per_second": 4807.3,
+      "seconds_per_sequence": 0.04
+    }
+  ],
+  "train_step": [
+    {
+      "batch": 1,
+      "prompt_len": 904,
+      "completion_len": 192,
+      "seconds": 0.209,
+      "pool_gib": 2.83,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 4,
+      "prompt_len": 904,
+      "completion_len": 192,
+      "seconds": 0.255,
+      "pool_gib": 8.37,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 8,
+      "prompt_len": 904,
+      "completion_len": 192,
+      "seconds": 1.136,
+      "pool_gib": 15.77,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 16,
+      "prompt_len": 904,
+      "completion_len": 192,
+      "seconds": 11.492,
+      "pool_gib": 30.45,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 32,
+      "oom": true
+    }
+  ],
+  "grad_checkpointing": false,
+  "step_estimate": {
+    "prompts_per_step": 4,
+    "group_size": 8,
+    "sequences_per_step": 32,
+    "generate_batch": 128,
+    "update_batch": 4,
+    "generate_seconds": 5.1,
+    "update_seconds": 2.0,
+    "step_seconds": 7.2,
+    "steps_per_hour": 503.4,
+    "steps_in_8_hours": 4026
+  }
+}

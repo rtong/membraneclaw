@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Training artefacts. Metrics and plots are the record and belong in git;
+# adapter weights do not.
+runs/**/*.safetensors
+runs/**/*.bin
+runs/**/*.pt
+runs/**/checkpoint-*/

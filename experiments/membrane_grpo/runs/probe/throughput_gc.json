@@ -1,0 +1,86 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "model_commit": "7ae557604adf67be50417f59c2c2f167def9a775",
+  "prompt_version": "v1",
+  "device": "mps",
+  "dtype": "bfloat16",
+  "max_new_tokens": 192,
+  "platform": "macOS-26.3.1-arm64-arm-64bit-Mach-O",
+  "torch": "2.13.0",
+  "prompt_tokens": {
+    "n": 64,
+    "min": 894,
+    "p50": 902,
+    "p95": 904,
+    "max": 904
+  },
+  "generation": [
+    {
+      "batch": 1,
+      "seconds": 4.301,
+      "generated_tokens": 192,
+      "tokens_per_second": 44.6,
+      "seconds_per_sequence": 4.301
+    },
+    {
+      "batch": 2,
+      "seconds": 6.313,
+      "generated_tokens": 384,
+      "tokens_per_second": 60.8,
+      "seconds_per_sequence": 3.156
+    },
+    {
+      "batch": 4,
+      "seconds": 10.506,
+      "generated_tokens": 768,
+      "tokens_per_second": 73.1,
+      "seconds_per_sequence": 2.627
+    },
+    {
+      "batch": 8,
+      "seconds": 18.22,
+      "generated_tokens": 1536,
+      "tokens_per_second": 84.3,
+      "seconds_per_sequence": 2.278
+    }
+  ],
+  "train_step": [
+    {
+      "batch": 1,
+      "prompt_len": 904,
+      "completion_len": 192,
+      "seconds": 1.279,
+      "peak_gib": 6.2,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 2,
+      "prompt_len": 904,
+      "completion_len": 192,
+      "seconds": 2.69,
+      "peak_gib": 10.54,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 4,
+      "oom": true
+    },
+    {
+      "batch": 8,
+      "oom": true
+    }
+  ],
+  "grad_checkpointing": true,
+  "step_estimate": {
+    "prompts_per_step": 4,
+    "group_size": 8,
+    "sequences_per_step": 32,
+    "generate_batch": 8,
+    "update_batch": 1,
+    "generate_seconds": 72.9,
+    "update_seconds": 40.9,
+    "step_seconds": 113.8,
+    "steps_per_hour": 31.6,
+    "steps_in_8_hours": 253
+  }
+}
