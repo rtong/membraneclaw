@@ -55,20 +55,29 @@ def sync(device: str) -> None:
 
 
 def release(device: str) -> None:
-    """Drop the cached allocations, so one measurement does not OOM the next."""
+    """Drop cached allocations so one measurement does not OOM the next.
+
+    On CUDA this also resets the peak counter, which is what makes the memory
+    column mean "what this batch size needed" rather than "the largest thing
+    seen so far in this process".
+    """
     if device == "mps":
         torch.mps.empty_cache()
     elif device == "cuda":
         torch.cuda.empty_cache()
+        torch.cuda.reset_peak_memory_stats()
 
 
 def pool_memory_gib(device: str) -> float:
-    """Allocator pool size, *not* a true peak.
+    """Peak memory for the measurement just taken -- with one caveat per backend.
 
-    On MPS `driver_allocated_memory` reports what the allocator holds, which
-    includes cached blocks from earlier measurements and never shrinks mid-run.
-    It is useful for spotting the batch size where things fall over and useless
-    as an estimate of what a single step actually needs.
+    CUDA gives a real answer: `max_memory_allocated` since the counter was last
+    reset in `release()`, which is exactly one measurement's worth.
+
+    MPS does not. `driver_allocated_memory` reports what the allocator is
+    holding, including cached blocks from earlier measurements, and it never
+    shrinks mid-run. There it is useful only for spotting the batch size where
+    things fall over, and it reads far above what is actually retained.
     """
     if device == "mps":
         return torch.mps.driver_allocated_memory() / 2**30
