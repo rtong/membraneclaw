@@ -54,8 +54,8 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P0' | re-measure on `anton` (CUDA) | done |
 | P3a | `eval.py`, 9B reference run | done — **found a task-design bug, see below** |
 | P3b | prompt v2 | done — validated against the 9B |
-| P3c | the frozen 0.5B baseline | next, needs a GPU window |
-| P4 | `grpo_scratch.py` — hand-written GRPO | |
+| P3c | the frozen 0.5B baseline | done — go/no-go passed |
+| P4 | `grpo_scratch.py` — hand-written GRPO | next |
 | P5 | short run + probe-reward control | |
 | P7 | curves and memo | |
 
@@ -179,6 +179,71 @@ Changing `PROMPT_VERSION` was cheap here and would not have been later — no
 frozen baseline depended on v1, which is precisely why the reference run came
 before the baseline rather than after it.
 
+## The frozen baseline, and the go/no-go (P3c)
+
+Qwen2.5-0.5B-Instruct, prompt v2, dev split (`sha256 94b32d05…`), seed 0.
+Artifacts in `runs/baseline-0.5b-v2/`. The test split remains sealed.
+
+| greedy, pass@1 | dev | holdout_shift |
+| --- | --- | --- |
+| reward | **0.086** | 0.098 |
+| exact match | 0.000 | 0.000 |
+| validity (gate) | **1.000** | 1.000 |
+| schema valid | 0.005 | — |
+| cause accuracy | **0.145** | 0.160 |
+| numeric (of 3) | 0.000 | 0.000 |
+| completion tokens | 108 | — |
+
+Three things this pins down.
+
+**Cause accuracy is chance.** 0.145 against 1/7 = 0.143. The base model has no
+diagnostic ability on this task whatsoever; 76% of its reward (0.065 of 0.086)
+is the `root_cause` component paying out on luck.
+
+**It scores worse than a constant guesser.** `baselines.constant` earns 0.245;
+the model earns 0.086. It loses because its flag values are out of vocabulary —
+it writes the *threshold text* into the flag field, `"flow": "<-10"`, and copies
+the threshold constants into the numbers. `flags.bad_value` fires 595 times
+across 200 cases, almost exactly three per case, and `stage` is out of
+vocabulary on 199 of 200. So schema validity is 0.005 and the format component
+is worth 0.0005. A model that learned nothing except to emit the right
+vocabulary would nearly triple this score.
+
+**v2's benefit does not transfer.** The 0.5B ignores the instruction to show
+working and goes straight to JSON at 108 tokens — the same failure v1 produced
+in the 9B. Whatever it gains from v2 is not the arithmetic.
+
+### The go/no-go: sampled diversity
+
+The question that decides whether the experiment can run at all is not accuracy,
+it is whether a group of completions carries any reward variance. Without it
+GRPO's advantages are identically zero and there is no gradient. T=1.0, k=8, 200
+dev cases:
+
+| | |
+| --- | --- |
+| zero-variance groups | **0.160** |
+| unique answers per group of 8 | **5.54** |
+| distinct-4 | 0.727 |
+| validity under sampling | **0.665** |
+| pass@8 | **0.000** |
+
+**84% of groups carry usable gradient.** Prediction 5 does not block the run.
+
+**But pass@8 is zero.** Across 1,600 samples the model never produced a fully
+correct answer. That turns the P2 decision to loosen the gate and score partial
+credit from a judgement call into a precondition: under a binary exact-match
+reward every group here would score zero, `adv_zero_frac` would be 1.0, and the
+gradient would be exactly zero everywhere. **The partial credit is what makes
+this trainable at all.** It also means GRPO cannot reinforce a correct answer
+directly — only the pieces of one.
+
+**Sampling breaks the format.** Validity falls from 1.000 greedy to 0.665 at
+T=1.0, with all 67 failures being `no_json`. That gap is where most of the
+current reward variance lives, so the earliest thing GRPO can learn is to stay
+parseable while sampling — which is prediction 1, arriving before the first
+gradient step.
+
 ## Measured limits (P0', anton)
 
 `NVIDIA RTX 5070 Ti, 16.3 GB` (Blackwell, sm_120) under WSL2, torch 2.13+cu130.
@@ -186,10 +251,18 @@ Raw numbers in `runs/probe/throughput_anton.json`.
 
 | | |
 | --- | --- |
-| Generation, batch 128 | **4807 tok/s**, 0.04 s/sequence |
-| Update (fwd+bwd, LoRA r=16), batch 4 | **0.043 s/sequence**, 8.4 GiB peak |
-| Update, full fine-tune, batch 4 | 0.053 s/sequence, 10.5 GiB peak |
-| Projected step, 4 prompts x 8 completions | ~7 s, or **503 steps/hour** |
+| Prompt length (v2) | 974 tokens |
+| Generation, batch 128 | **5874 tok/s**, 0.11 s/sequence |
+| Update (fwd+bwd, LoRA r=16), batch 2 | **0.11 s/sequence**, 8.3 GiB peak |
+| Update ceiling | **batch 2** — batch 4 spills, 8x slower |
+| Projected step, 4 prompts x 8 completions | ~17.5 s, or **205 steps/hour** |
+
+Measured at a 640-token completion budget, `runs/probe/throughput_anton_640.json`.
+An earlier pass at 192 tokens reported 7 s/step and 503 steps/hour; v2's working
+made that budget 3x too small, and the update's batch ceiling fell from 4 to 2
+as the sequence grew from 1,096 to 1,614 tokens. The estimator is still
+conservative — it sizes generation by the best measured batch (128) rather than
+the 32 sequences a step actually needs, so the real figure is nearer 11 s.
 
 Against the Mac's 62 s/step and 58 steps/hour, roughly 8.6x. Three things worth
 recording:

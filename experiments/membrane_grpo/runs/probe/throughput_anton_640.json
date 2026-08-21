@@ -1,0 +1,94 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "model_commit": "7ae557604adf67be50417f59c2c2f167def9a775",
+  "prompt_version": "v2",
+  "device": "cuda",
+  "dtype": "bfloat16",
+  "max_new_tokens": 640,
+  "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+  "torch": "2.13.0+cu130",
+  "prompt_tokens": {
+    "n": 64,
+    "min": 965,
+    "p50": 974,
+    "p95": 975,
+    "max": 976
+  },
+  "generation": [
+    {
+      "batch": 8,
+      "seconds": 6.327,
+      "generated_tokens": 5120,
+      "tokens_per_second": 809.2,
+      "seconds_per_sequence": 0.791
+    },
+    {
+      "batch": 32,
+      "seconds": 7.239,
+      "generated_tokens": 20480,
+      "tokens_per_second": 2829.1,
+      "seconds_per_sequence": 0.226
+    },
+    {
+      "batch": 64,
+      "seconds": 9.165,
+      "generated_tokens": 40960,
+      "tokens_per_second": 4469.0,
+      "seconds_per_sequence": 0.143
+    },
+    {
+      "batch": 128,
+      "seconds": 13.946,
+      "generated_tokens": 81920,
+      "tokens_per_second": 5873.9,
+      "seconds_per_sequence": 0.109
+    }
+  ],
+  "train_step": [
+    {
+      "batch": 1,
+      "prompt_len": 975,
+      "completion_len": 640,
+      "seconds": 0.278,
+      "pool_gib": 4.61,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 2,
+      "prompt_len": 975,
+      "completion_len": 640,
+      "seconds": 0.223,
+      "pool_gib": 8.3,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 4,
+      "prompt_len": 975,
+      "completion_len": 640,
+      "seconds": 1.75,
+      "pool_gib": 15.52,
+      "trainable_params": 2162688
+    },
+    {
+      "batch": 8,
+      "prompt_len": 975,
+      "completion_len": 640,
+      "seconds": 10.024,
+      "pool_gib": 29.97,
+      "trainable_params": 2162688
+    }
+  ],
+  "grad_checkpointing": false,
+  "step_estimate": {
+    "prompts_per_step": 4,
+    "group_size": 8,
+    "sequences_per_step": 32,
+    "generate_batch": 128,
+    "update_batch": 2,
+    "generate_seconds": 13.9,
+    "update_seconds": 3.6,
+    "step_seconds": 17.5,
+    "steps_per_hour": 205.5,
+    "steps_in_8_hours": 1644
+  }
+}
