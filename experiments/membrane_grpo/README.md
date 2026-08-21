@@ -3,11 +3,11 @@
 GRPO on a 0.5B instruct model, over a structured membrane-troubleshooting task
 with a deterministic reward.
 
-**Scale: this is a smoke test.** One short run of a few hundred steps on a Mac
-mini, not a converged training run. Every claim it produces is scoped to that.
-The point is to run the full loop — prompt, sampled completions, deterministic
-reward, policy update — by hand, and to get a measured example of reward rising
-while held-out accuracy does not.
+**Scale: this is a smoke test.** One short run of a few hundred steps, not a
+converged training run. Every claim it produces is scoped to that. The point is
+to run the full loop — prompt, sampled completions, deterministic reward, policy
+update — by hand, and to get a measured example of reward rising while held-out
+accuracy does not.
 
 This picks up where [`../toy_mdp`](../toy_mdp) left off. That project derived
 REINFORCE and PPO-clip by hand on a six-state MDP; this one keeps the domain and
@@ -53,7 +53,8 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P2 | reward function + adversarial baselines | done |
 | P0' | re-measure on `anton` (CUDA) | done |
 | P3a | `eval.py`, 9B reference run | done — **found a task-design bug, see below** |
-| P3b | prompt v2, then the frozen 0.5B baseline | next |
+| P3b | prompt v2 | done — validated against the 9B |
+| P3c | the frozen 0.5B baseline | next, needs a GPU window |
 | P4 | `grpo_scratch.py` — hand-written GRPO | |
 | P5 | short run + probe-reward control | |
 | P7 | curves and memo | |
@@ -70,13 +71,31 @@ The point of pointing a much larger model at the task first was to ask whether
 the task is well posed before blaming a 0.5B for failing it. It is not, quite —
 and that is worth more than a clean number would have been.
 
-Qwen3.5-9B-AWQ, greedy, on dev cases, `PROMPT_VERSION = v1`:
+Qwen3.5-9B-AWQ, greedy, 40 dev cases, both versions on the same cases with the
+same decoding — `python3 prompt_ab.py --model qwen3.5-9b -n 40`, artifact in
+`runs/prompt-ab/`:
 
-| | numeric (of 3) | validity | tokens |
-| --- | --- | --- | --- |
-| v1: JSON only | **0.08** | 1.00 | 103 |
-| v1 + reasoning mode on | 0.00 | **0.00** | 1024 (budget exhausted) |
-| terse working allowed | **0.58** | 1.00 | 242 |
+| | v1 | v2 |
+| --- | --- | --- |
+| validity | 1.000 | 1.000 |
+| reward | 0.624 | **0.750** |
+| exact match | **0.000** | **0.325** |
+| all three flags | 0.450 | 0.550 |
+| cause accuracy | 0.675 | 0.650 |
+| action accuracy | 0.525 | 0.675 |
+| completion tokens | 104 | **531** |
+
+Numeric accuracy within 0.5 pp, per field — this is where the two versions
+actually differ:
+
+| field | v1 | v2 | v1 p90 error | v2 p90 error |
+| --- | --- | --- | --- | --- |
+| `normalized_flow_change_pct` | 0.375 | 0.675 | 17.7 | 10.1 |
+| `salt_passage_change_pct` | 0.125 | 0.900 | 111.3 | 0.7 |
+| `dp_change_pct` | 0.025 | **1.000** | 51.1 | **0.00** |
+
+Under v2 the median absolute error on all three fields is **0.00**: when it is
+right it is exact, and the failures are outright mistakes rather than drift.
 
 **The model was not doing the arithmetic — it was estimating.** Under v1 it
 emits perfectly formed JSON with plausible-looking numbers. On one case it got
@@ -88,60 +107,77 @@ prompt states `up if >= +10`.
 
 **Reasoning mode is unusable here**, exactly as `agent/config.py` in the parent
 repo records: the model spends the entire budget inside `<think>` and returns
-empty content. All eight cases failed the gate with `empty`.
+empty content. All eight cases failed the gate with `empty` — the exploratory
+artifact is in `runs/9b-v1-exploratory/v1_thinking_n8.json`.
 
-**Letting it show terse work is what fixes the arithmetic** — a 7x improvement,
-at 2.3x the completion length. Both halves of the prompt have to change; editing
-only the user turn does nothing, because the system prompt's "reply with exactly
-one JSON object and no other text" wins and the model goes straight to JSON.
+**Letting it show terse work is what fixes the arithmetic**, at 5.1x the
+completion length. Both halves of the prompt have to change; editing only the
+user turn does nothing, because the system prompt's "reply with exactly one JSON
+object and no other text" wins and the model goes straight to JSON. That was
+measured the hard way — the first attempt at this comparison changed the user
+turn alone and reported no effect at all.
 
 ### A real ambiguity in the task, not a model failure
 
-Per-field, over 24 cases with working allowed:
+`dp_change_pct` was the worst field under v1 at 0.025, and it was the *simplest*
+of the three computations — a sum and a percent change, no ratio, no correction.
+That is what gave the diagnosis away. On the first case inspected the model
+answered 30.2 where the key says 17.8, and `0.28 / 0.93 = 30.1`: the change
+measured against **the anomalous stage's own dp** rather than the train total.
+The prompt does state `dp(t) = dp_lead(t) + dp_tail(t)`, but the record also
+announces which stage the anomaly sits in, and the generator puts the whole dp
+change on that stage, so the two readings diverge sharply. A reasonable reader
+picks the wrong one.
 
-| field | within 0.5 pp | median error | p90 error |
-| --- | --- | --- | --- |
-| `normalized_flow_change_pct` | 0.75 | 0.10 | 13.3 |
-| `salt_passage_change_pct` | 0.50 | 0.80 | 9.8 |
-| `dp_change_pct` | 0.46 | 0.75 | **38.7** |
+Printing the total in v2 took that field from **0.025 to 1.000** — the clearest
+evidence available that this was an ambiguity in the task rather than a limit of
+the model.
 
-That p90 traces to a defect in the prompt. On the first case inspected the model
-answered 30.2 where the key says 17.8 — and `0.28 / 0.93 = 30.1`, which is the
-change measured against **the anomalous stage's own dp** rather than the train
-total. The prompt does state `dp(t) = dp_lead(t) + dp_tail(t)`, but the record
-also announces which stage the anomaly sits in, and the generator puts the whole
-dp change on that stage, so the two readings diverge sharply. A reasonable
-reader picks the wrong one.
+**Loosening the tolerance would not have helped.** Widening the band barely
+moves either version, because the errors are bimodal rather than noisy:
 
-Two further things this run settles:
-
-* **Loosening the tolerance would not help.** All three numbers land within
-  0.5 pp on 0.29 of cases, within 2.0 pp on 0.29, within 5.0 pp on 0.38. The
-  errors are bimodal — near-exact or wildly wrong — so they are mistakes, not
-  noise, and widening the band buys almost nothing.
-* **Cause accuracy (0.67) runs well ahead of all-three-flags-correct (0.38).**
-  The model is diagnosing qualitatively from the direction of travel rather than
-  from the flags it computed. That is worth remembering when reading
-  `root_cause` as evidence of table-reading; it is what
-  `diagnostics["cause_given_flags"]` exists to separate.
+| all three numbers within | 0.5 pp | 1.0 pp | 2.0 pp | 5.0 pp |
+| --- | --- | --- | --- | --- |
+| v1 | 0.000 | 0.000 | 0.000 | 0.050 |
+| v2 | 0.600 | 0.650 | 0.675 | 0.775 |
 
 ### What v2 changes
 
 Fixing the task, not accommodating the model:
 
 1. system and user prompts both permit terse working, JSON last;
-2. the record states the dp **total** alongside the per-stage values, so there
-   is nothing to misread;
-3. intermediate values are to keep four significant figures — salt passage is a
-   percent change *of a ratio*, and rounding the ratio early is the likely
-   source of that 0.80 median error.
+2. the record states the dp **total** alongside the per-stage values;
+3. intermediate values keep four significant figures — salt passage is a percent
+   change *of a ratio*, and rounding the ratio early was costing it accuracy.
 
-`parse_answer` needs a matching change: with working allowed it should select
-the object carrying the most answer keys, not the first one it finds.
+`parse_answer` changes to match: with working allowed it selects the object
+carrying the most answer keys rather than the first one it finds, since a stray
+object in the arithmetic would otherwise be graded as the answer.
 
-Changing `PROMPT_VERSION` is cheap right now and will not be later — no frozen
-baseline depends on v1 yet, which is precisely why the reference run came before
-the baseline rather than after it.
+### Two results v2 did not flatter
+
+**Cause accuracy went slightly down**, 0.675 to 0.650, while every other metric
+rose. Under v1 the model was diagnosing qualitatively — reading the direction of
+travel and picking a plausible cause — and that is surprisingly effective. Under
+v2 it computes first and then derives the cause from its own flags, so a failed
+computation now drags the diagnosis down with it. This is the component cascade
+described in `reward.py`, showing up as a measured regression: **being made to
+compute can hurt the diagnosis on cases where the computation fails.** It is
+also why `diagnostics["cause_given_flags"]` exists.
+
+**The hard tier is still a wall.** v2 exact match splits `easy=0.462` against
+`hard=0.071`. Even a 9B showing its working mostly cannot evaluate
+`1.03 ** (25 - T)` correctly. The tier is doing exactly the job it was designed
+for, and prediction 3 — that RL will move the easy tier and not the hard one —
+now has a reference point well above anything a 0.5B will reach.
+
+**Working costs 5.1x the tokens**, 104 to 531. The P0' step estimates assumed a
+192-token completion budget, so they need redoing against roughly 640 before the
+training run is sized.
+
+Changing `PROMPT_VERSION` was cheap here and would not have been later — no
+frozen baseline depended on v1, which is precisely why the reference run came
+before the baseline rather than after it.
 
 ## Measured limits (P0', anton)
 
@@ -323,6 +359,7 @@ never trained on.
 | `reward.py` | the deterministic reward; six weighted components |
 | `baselines.py` | degenerate strategies, and what the reward pays them |
 | `eval.py` | frozen-split evaluation, HTTP or local backend |
+| `prompt_ab.py` | prompt-version A/B on identical cases |
 | `probe_throughput.py` | hardware measurements |
 | `data/` | frozen splits, `SHA256SUMS`, `DATA_CARD.md` |
 | `runs/` | measurements and evaluation results |
