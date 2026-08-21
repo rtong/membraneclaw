@@ -3,6 +3,7 @@
 .env.bak
 __pycache__/
 *.pyc
+.DS_Store
 workspace/
 logs/
 .qwen_agent_data/
