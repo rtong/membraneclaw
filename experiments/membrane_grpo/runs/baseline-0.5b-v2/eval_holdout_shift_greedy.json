@@ -1,0 +1,179 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "backend": "hf",
+  "split": "holdout_shift",
+  "split_sha256": "0c8dc0bb530ed83aea8cf891d162d9b279ee13c360695283611b26400ce7e2dd",
+  "prompt_version": "v2",
+  "weights": "MAIN",
+  "mode": "greedy",
+  "k": 1,
+  "temperature": 0.0,
+  "max_tokens": 640,
+  "seed": 0,
+  "adapter": null,
+  "elapsed_seconds": 7.9,
+  "overall": {
+    "n_cases": 50,
+    "k": 1,
+    "reward": 0.09299999999999999,
+    "exact_match": 0.0,
+    "validity_gate": 1.0,
+    "schema_ok": 0.0,
+    "cause_acc": 0.16,
+    "action_acc": 0.14,
+    "numeric_acc": 0.0,
+    "flags_acc": 0.0,
+    "cause_given_flags": NaN,
+    "components": {
+      "format": 0.0,
+      "numeric": 0.0,
+      "flags": 0.0,
+      "stage": 0.0,
+      "root_cause": 0.07200000000000001,
+      "action": 0.021
+    },
+    "reward_mean_all": 0.09299999999999999,
+    "completion_tokens_mean": 108.22,
+    "completion_chars_mean": 274.52,
+    "parse_errors": {},
+    "schema_errors": {
+      "flags.bad_value": 150,
+      "bad_value": 50
+    },
+    "predicted_cause_hist": {
+      "biofouling": 50
+    }
+  },
+  "by_tier": {
+    "easy": {
+      "n_cases": 17,
+      "k": 1,
+      "reward": 0.10588235294117647,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.17647058823529413,
+      "action_acc": 0.17647058823529413,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.07941176470588236,
+        "action": 0.026470588235294114
+      },
+      "reward_mean_all": 0.10588235294117647,
+      "completion_tokens_mean": 107.94117647058823,
+      "completion_chars_mean": 274.88235294117646,
+      "parse_errors": {},
+      "schema_errors": {
+        "flags.bad_value": 51,
+        "bad_value": 17
+      },
+      "predicted_cause_hist": {
+        "biofouling": 17
+      }
+    },
+    "hard": {
+      "n_cases": 33,
+      "k": 1,
+      "reward": 0.08636363636363636,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.15151515151515152,
+      "action_acc": 0.12121212121212122,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.06818181818181818,
+        "action": 0.01818181818181818
+      },
+      "reward_mean_all": 0.08636363636363636,
+      "completion_tokens_mean": 108.36363636363636,
+      "completion_chars_mean": 274.3333333333333,
+      "parse_errors": {},
+      "schema_errors": {
+        "flags.bad_value": 99,
+        "bad_value": 33
+      },
+      "predicted_cause_hist": {
+        "biofouling": 33
+      }
+    }
+  },
+  "by_slice": {
+    "shift_boundary": {
+      "n_cases": 25,
+      "k": 1,
+      "reward": 0.096,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.16,
+      "action_acc": 0.16,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.07200000000000001,
+        "action": 0.024
+      },
+      "reward_mean_all": 0.096,
+      "completion_tokens_mean": 108.04,
+      "completion_chars_mean": 275.0,
+      "parse_errors": {},
+      "schema_errors": {
+        "flags.bad_value": 75,
+        "bad_value": 25
+      },
+      "predicted_cause_hist": {
+        "biofouling": 25
+      }
+    },
+    "shift_temp": {
+      "n_cases": 25,
+      "k": 1,
+      "reward": 0.09,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.16,
+      "action_acc": 0.12,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.07200000000000001,
+        "action": 0.018
+      },
+      "reward_mean_all": 0.09,
+      "completion_tokens_mean": 108.4,
+      "completion_chars_mean": 274.04,
+      "parse_errors": {},
+      "schema_errors": {
+        "flags.bad_value": 75,
+        "bad_value": 25
+      },
+      "predicted_cause_hist": {
+        "biofouling": 25
+      }
+    }
+  }
+}

@@ -36,12 +36,25 @@ from .decision_table import (
     SP_UP_PCT,
 )
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
-SYSTEM_PROMPT = (
-    "You are a reverse-osmosis membrane troubleshooting assistant. "
-    "You reply with exactly one JSON object and no other text."
-)
+VERSIONS = ("v1", "v2")
+
+# v1 is kept, and kept working, because the 9B reference run in the README is
+# reported against it. A prompt version that can no longer be rendered is a
+# result that can no longer be checked.
+SYSTEM_PROMPTS = {
+    "v1": (
+        "You are a reverse-osmosis membrane troubleshooting assistant. "
+        "You reply with exactly one JSON object and no other text."
+    ),
+    "v2": (
+        "You are a reverse-osmosis membrane troubleshooting assistant. "
+        "You compute tersely, then end your reply with a single JSON object."
+    ),
+}
+
+SYSTEM_PROMPT = SYSTEM_PROMPTS[PROMPT_VERSION]
 
 # The 17 rows of `decision_table.COVERED`, compressed to one line per cause.
 # `test_prompt.py` checks that this compression is lossless: every covered key
@@ -80,17 +93,25 @@ def _num(value: float | int) -> str:
     return f"{value:g}"
 
 
-def _reading_block(reading: dict[str, Any]) -> str:
+def _reading_block(reading: dict[str, Any], version: str) -> str:
+    # v1 listed the two stages and left the reader to add them. The 9B summed
+    # the wrong thing on 54% of cases -- it measured the change against the
+    # anomalous stage's own dp instead of the train total, which the record
+    # invites by announcing which stage the anomaly sits in. The generator puts
+    # the entire change on that stage, so the two readings diverge sharply.
+    # v2 prints the total, and there is nothing left to misread.
+    dp = f"lead {_num(reading['dp_lead_bar'])} bar, tail {_num(reading['dp_tail_bar'])} bar"
+    if version == "v2":
+        total = round(reading["dp_lead_bar"] + reading["dp_tail_bar"], 2)
+        dp += f", total {_num(total)} bar"
+
     rows = (
         ("feed temperature", f"{_num(reading['feed_temp_C'])} C"),
         ("feed pressure", f"{_num(reading['feed_pressure_bar'])} bar"),
         ("feed conductivity", f"{_num(reading['feed_conductivity_uS_cm'])} uS/cm"),
         ("permeate conductivity", f"{_num(reading['permeate_conductivity_uS_cm'])} uS/cm"),
         ("permeate flow", f"{_num(reading['permeate_flow_m3_h'])} m3/h"),
-        (
-            "differential pressure",
-            f"lead {_num(reading['dp_lead_bar'])} bar, tail {_num(reading['dp_tail_bar'])} bar",
-        ),
+        ("differential pressure", dp),
     )
     return "\n".join(f"  {label:<22}: {value}" for label, value in rows)
 
@@ -124,15 +145,38 @@ SCHEMA_EXAMPLE = """{
 }"""
 
 
-def build_user_prompt(record: dict[str, Any]) -> str:
+# The closing instruction. v1 forbade working, and the 9B answered by
+# estimating: perfectly formed JSON carrying plausible numbers, on cases where
+# it had computed nothing at all. Allowing terse working took its numeric
+# accuracy from 0.08 to 0.58 at 2.3x the completion length.
+#
+# Both halves of the prompt have to agree. Relaxing only the user turn changes
+# nothing, because v1's system prompt -- "exactly one JSON object and no other
+# text" -- wins and the model goes straight to JSON.
+CLOSINGS = {
+    "v1": "Reply with exactly this JSON object and nothing else:",
+    "v2": (
+        "Compute the three percent changes. Use at most one short line of plain\n"
+        "arithmetic per value -- no prose, no LaTeX, no headings. Keep four\n"
+        "significant figures in intermediate values and round only the three\n"
+        "final percentages to one decimal place.\n\n"
+        "Then end your reply with this JSON object and nothing after it:"
+    ),
+}
+
+
+def build_user_prompt(record: dict[str, Any], version: str = PROMPT_VERSION) -> str:
     """Render the user turn for one operating record."""
+    if version not in VERSIONS:
+        raise ValueError(f"unknown prompt version {version!r}; expected one of {VERSIONS}")
+
     return f"""Reverse-osmosis train performance record.
 
 Baseline (t0):
-{_reading_block(record["t0"])}
+{_reading_block(record["t0"], version)}
 
 Current (t1):
-{_reading_block(record["t1"])}
+{_reading_block(record["t1"], version)}
 
 Recovery is {_num(record["recovery_pct"])} % at both readings.
 Vessel probing places the anomaly in the {record["anomaly_stage"].upper()} stage.
@@ -168,13 +212,15 @@ Step 4 -- choose the action.
 
 {_actions_block()}
 
-Reply with exactly this JSON object and nothing else:
+{CLOSINGS[version]}
 
 {SCHEMA_EXAMPLE}"""
 
 
-def build_messages(record: dict[str, Any]) -> list[dict[str, str]]:
+def build_messages(
+    record: dict[str, Any], version: str = PROMPT_VERSION
+) -> list[dict[str, str]]:
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": build_user_prompt(record)},
+        {"role": "system", "content": SYSTEM_PROMPTS[version]},
+        {"role": "user", "content": build_user_prompt(record, version)},
     ]

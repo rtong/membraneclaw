@@ -112,6 +112,37 @@ def test_validation_is_not_the_gate():
     assert not validate(obj).ok
 
 
+def test_the_answer_beats_json_that_appears_in_the_working():
+    """From v2 the model shows arithmetic first, so "first object" is wrong.
+
+    A stray object in the working would otherwise be graded as the answer.
+    """
+    completion = (
+        "flow: 25.7 -> 20.4, so (20.4-25.7)/25.7*100 = -20.6\n"
+        'intermediate = {"nf0": 27.07, "nf1": 21.49}\n'
+        "dp: 1.57 -> 1.85, so +17.8\n\n" + json.dumps(GOOD)
+    )
+    assert parse_answer(completion).obj == GOOD
+
+
+def test_a_trailing_note_does_not_displace_the_answer():
+    """Preferring the richest object, not simply the last one."""
+    completion = json.dumps(GOOD) + '\n\nNote: {"confidence": "moderate"}'
+    assert parse_answer(completion).obj == GOOD
+
+
+def test_the_later_object_wins_a_tie():
+    """Two equally complete objects means the model restated itself; take the last."""
+    revised = dict(GOOD, root_cause="biofouling", action="alkaline_clean_and_sanitize")
+    completion = json.dumps(GOOD) + "\n\nOn reflection:\n" + json.dumps(revised)
+    assert parse_answer(completion).obj == revised
+
+
+def test_working_with_no_answer_object_still_fails_the_gate():
+    completion = "flow: (20.4-25.7)/25.7*100 = -20.6\ndp: +17.8\nsalt passage: +24.3"
+    assert parse_answer(completion).obj is None
+
+
 def test_canonical_is_order_independent():
     shuffled = {key: GOOD[key] for key in reversed(ANSWER_KEYS)}
     assert canonical(shuffled) == canonical(GOOD)
