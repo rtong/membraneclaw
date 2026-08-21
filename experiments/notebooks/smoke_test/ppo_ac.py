@@ -123,12 +123,28 @@ DATA = GRPO_DIR / "data"
 #: runs/baseline-0.5b-v2/eval_dev_greedy.json -> overall.reward
 VALUE_INIT_BIAS = 0.086
 
+#: The go/no-go weighting. Every point is on `stage`, which the prompt states
+#: outright -- `task/generate.py` puts `anomaly_stage` in the record and the
+#: answer copies it, so the correct output is a literal already on screen. No
+#: arithmetic, no table lookup, no vocabulary the model has to infer.
+#:
+#: The question this asks is deliberately the easiest one available: can RL move
+#: this model on a pure copy task when copying is the *only* thing that pays?
+#: Under MAIN weights `stage` is worth 0.03 and 200 steps left it at 0.000. If
+#: it does not move even here, the ceiling is not a tuning problem.
+STAGE_ONLY = Weights(format=0.0, numeric=0.0, flags=0.0, stage=1.0, root_cause=0.0, action=0.0)
+
+#: Steps averaged when deciding which policy was "best". A single step is 8
+#: samples and far too noisy to checkpoint on; a trailing mean is not.
+BEST_WINDOW = 10
+
 __all__ = [
     "DATA",
     "PROMPT_VERSION",
     "VALUE_INIT_BIAS",
     "MAIN",
     "PROBE",
+    "STAGE_ONLY",
     "Weights",
     "ValueHead",
     "build_mask",
@@ -532,7 +548,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     rng = random.Random(cfg.seed)
 
     cases = load_cases(cfg.split)
-    weights = {"MAIN": MAIN, "PROBE": PROBE}[cfg.weights]
+    weights = {"MAIN": MAIN, "PROBE": PROBE, "STAGE_ONLY": STAGE_ONLY}[cfg.weights]
 
     policy, value_head, tokenizer = load_policy(cfg, device)
     actor_params = [p for p in policy.parameters() if p.requires_grad]
@@ -556,6 +572,12 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     )
 
     history: list[dict[str, Any]] = []
+    # An RL run that has solved its task can still destroy itself: this one's
+    # reward sat at 1.0000 from step 170 and collapsed to 0.0000 at 196 with the
+    # gradient norm going from 2.7 to 109. Saving only the final policy saved the
+    # wreck, and every measurement afterwards was of the wreck. Checkpoint the
+    # best trailing mean as well, and say so if the two differ.
+    best: dict[str, Any] = {"reward": float("-inf"), "step": None}
     for step in range(cfg.steps):
         started = time.perf_counter()
         batch = [rng.choice(cases) for _ in range(cfg.prompts_per_step)]
@@ -653,6 +675,14 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             abs(record["value_mean"] - history[-1]["value_mean"]) if history else 0.0, 6
         )
         history.append(record)
+        window = [r["reward_mean"] for r in history[-BEST_WINDOW:]]
+        trailing = sum(window) / len(window)
+        record["reward_trailing"] = round(trailing, 6)
+        if len(history) >= BEST_WINDOW and trailing > best["reward"]:
+            best = {"reward": trailing, "step": step}
+            policy.save_pretrained(out_dir / "adapter-best")
+            torch.save(value_head.state_dict(), out_dir / "value_head-best.pt")
+            (out_dir / "best.json").write_text(json.dumps(best, indent=2) + "\n")
         with metrics_path.open("a") as fh:
             fh.write(json.dumps(record) + "\n")
         progress(
@@ -666,6 +696,12 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     policy.save_pretrained(out_dir / "adapter")
     torch.save(value_head.state_dict(), out_dir / "value_head.pt")
     progress(f"\nwrote {out_dir}")
+    if best["step"] is not None and best["step"] < cfg.steps - 1:
+        progress(
+            f"NOTE: best trailing-{BEST_WINDOW} reward {best['reward']:.4f} was at step "
+            f"{best['step']}, not at the end ({record['reward_mean']:.4f}). "
+            f"adapter-best/ holds that policy; adapter/ holds the final one."
+        )
     return history
 
 

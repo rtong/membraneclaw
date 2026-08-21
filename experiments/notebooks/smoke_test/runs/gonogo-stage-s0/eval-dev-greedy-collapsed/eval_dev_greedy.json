@@ -1,0 +1,151 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "backend": "hf",
+  "split": "dev",
+  "split_sha256": "94b32d0557f6962d5be8f5b33cebb5303c4137475f3292a34e9fd8b8018da6c2",
+  "prompt_version": "v2",
+  "weights": "MAIN",
+  "mode": "greedy",
+  "k": 1,
+  "temperature": 0.0,
+  "max_tokens": 320,
+  "seed": 0,
+  "adapter": "../notebooks/smoke_test/runs/gonogo-stage-s0/adapter",
+  "elapsed_seconds": 15.7,
+  "overall": {
+    "n_cases": 200,
+    "k": 1,
+    "reward": 0.0,
+    "exact_match": 0.0,
+    "validity_gate": 1.0,
+    "schema_ok": 0.0,
+    "cause_acc": 0.0,
+    "action_acc": 0.0,
+    "numeric_acc": 0.0,
+    "flags_acc": 0.0,
+    "cause_given_flags": NaN,
+    "components": {
+      "format": 0.0,
+      "numeric": 0.0,
+      "flags": 0.0,
+      "stage": 0.0,
+      "root_cause": 0.0,
+      "action": 0.0
+    },
+    "reward_mean_all": 0.0,
+    "completion_tokens_mean": 35.0,
+    "completion_chars_mean": 114.0,
+    "parse_errors": {},
+    "schema_errors": {
+      "missing": 800,
+      "bad_value": 400,
+      "not_a_number": 200
+    },
+    "predicted_cause_hist": {
+      "null": 200
+    }
+  },
+  "by_tier": {
+    "easy": {
+      "n_cases": 129,
+      "k": 1,
+      "reward": 0.0,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.0,
+      "action_acc": 0.0,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.0,
+        "action": 0.0
+      },
+      "reward_mean_all": 0.0,
+      "completion_tokens_mean": 35.0,
+      "completion_chars_mean": 114.0,
+      "parse_errors": {},
+      "schema_errors": {
+        "missing": 516,
+        "bad_value": 258,
+        "not_a_number": 129
+      },
+      "predicted_cause_hist": {
+        "null": 129
+      }
+    },
+    "hard": {
+      "n_cases": 71,
+      "k": 1,
+      "reward": 0.0,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.0,
+      "action_acc": 0.0,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.0,
+        "action": 0.0
+      },
+      "reward_mean_all": 0.0,
+      "completion_tokens_mean": 35.0,
+      "completion_chars_mean": 114.0,
+      "parse_errors": {},
+      "schema_errors": {
+        "missing": 284,
+        "bad_value": 142,
+        "not_a_number": 71
+      },
+      "predicted_cause_hist": {
+        "null": 71
+      }
+    }
+  },
+  "by_slice": {
+    "main": {
+      "n_cases": 200,
+      "k": 1,
+      "reward": 0.0,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.0,
+      "action_acc": 0.0,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.0,
+        "action": 0.0
+      },
+      "reward_mean_all": 0.0,
+      "completion_tokens_mean": 35.0,
+      "completion_chars_mean": 114.0,
+      "parse_errors": {},
+      "schema_errors": {
+        "missing": 800,
+        "bad_value": 400,
+        "not_a_number": 200
+      },
+      "predicted_cause_hist": {
+        "null": 200
+      }
+    }
+  }
+}

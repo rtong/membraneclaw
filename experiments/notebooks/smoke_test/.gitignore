@@ -4,7 +4,7 @@ __pycache__/
 # Same rule as ../../membrane_grpo/.gitignore: the metrics are the record,
 # the weights are not.
 runs/**/*.safetensors
-runs/**/adapter/README.md
+runs/**/adapter*/README.md
 runs/**/*.bin
 runs/**/*.pt
 runs/**/checkpoint-*/
