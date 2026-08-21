@@ -281,16 +281,37 @@ an action that is never scored is one RL cannot learn to take; padding was never
 sampled. Qwen2.5 has no distinct pad token so `load_policy` aliases them and the
 distinction collapses in practice, but the mask keeps them apart anyway.
 
-The loop, on CPU with a deliberately tiny configuration:
+The loop, on CPU with a deliberately tiny configuration — one prompt, four
+completions, three steps. `runs/smoke-grpo-cpu/`:
 
 ```
-step  0  reward 0.0375  advzero 0.00  uniq 4.0  tok 114  grad 1.137
-step  1  reward 0.0825  advzero 0.00  uniq 4.0  tok 105  grad 1.266
+step  0  reward 0.0375  advzero 0.00  uniq 4.0  tok 114  grad 1.13655  ratio 1.000
+step  1  reward 0.0825  advzero 0.00  uniq 4.0  tok 105  grad 1.26630  ratio 1.000
+step  2  reward 0.0000  advzero 1.00  uniq 4.0  tok 100  grad 0.00000  ratio 1.000
 ```
 
-Rewards sit around the frozen baseline's 0.086, no group is degenerate, and the
-gradient norm is non-zero — which is the whole of the exit gate: prompt, sampled
-completions, deterministic reward, policy update, all of it hand-written.
+Rewards sit around the frozen baseline's 0.086 and the gradient norm is non-zero,
+which is the exit gate: prompt, sampled completions, deterministic reward, policy
+update, all of it hand-written.
+
+Two things fell out of it that were not planned.
+
+**Step 2 is a degenerate group in the wild.** All four completions scored
+exactly 0.0, the within-group variance vanished, and the gradient norm is
+`0.00000` — the case the unit tests pin, happening on its own within three steps
+at `adv_zero_frac = 1.0`. The frozen baseline measured 16% of groups this way;
+here it was one in three.
+
+**`ratio_mean` is 1.000 on every step**, confirming empirically what the
+derivation says: with one inner epoch the policy has not moved between sampling
+and scoring, so the clip cannot engage.
+
+One caveat on this artifact. Its `config.json` has no `weight_decay` field
+because the run predates that fix, so it used AdamW's default 0.01 — meaning on
+step 2 the gradient was exactly zero and the adapter was decayed anyway. The
+confound is visible in the very record that motivated removing it. The claim
+this run supports is that the loop closes and the gradient flows, and that
+claim is unaffected.
 
 ## Measured limits (P0', anton)
 
