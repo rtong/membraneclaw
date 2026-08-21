@@ -11,9 +11,11 @@ from __future__ import annotations
 import random
 import re
 
+import pytest
+
 from task.decision_table import ACTION_SET, CAUSES, COVERED, SEVERE_ACTION
 from task.generate import generate_case
-from task.prompt import RULES, build_messages, build_user_prompt
+from task.prompt import RULES, SYSTEM_PROMPTS, build_messages, build_user_prompt
 from task.schema import ANSWER_KEYS
 
 
@@ -75,6 +77,66 @@ def test_both_tiers_use_an_identical_template():
         return re.sub(r"[-+0-9.]+", "#", text)
 
     assert skeleton(easy) == skeleton(hard)
+
+
+def test_v1_is_still_renderable():
+    """The 9B reference numbers in the README are reported against v1.
+
+    A prompt version that can no longer be rendered is a result that can no
+    longer be checked, so v1 is kept working rather than kept in the history.
+    """
+    record = generate_case(random.Random(4), "scaling", "hard")[0]
+    v1 = build_user_prompt(record, "v1")
+    assert "Reply with exactly this JSON object and nothing else:" in v1
+    assert SYSTEM_PROMPTS["v1"] != SYSTEM_PROMPTS["v2"]
+
+
+def test_an_unknown_version_is_rejected():
+    record = generate_case(random.Random(5), "scaling", "easy")[0]
+    with pytest.raises(ValueError):
+        build_user_prompt(record, "v3")
+
+
+def test_only_v2_permits_working():
+    """Both halves have to agree, which is what v1 got wrong.
+
+    Relaxing the user turn alone changed nothing during the 9B run: v1's
+    system prompt forbids any text besides the object, and it wins.
+    """
+    assert "no other text" in SYSTEM_PROMPTS["v1"]
+    assert "no other text" not in SYSTEM_PROMPTS["v2"]
+
+    record = generate_case(random.Random(6), "biofouling", "hard")[0]
+    assert "significant figures" in build_user_prompt(record, "v2")
+    assert "significant figures" not in build_user_prompt(record, "v1")
+
+
+def test_v2_states_the_dp_total_and_v1_does_not():
+    record = generate_case(random.Random(7), "scaling", "easy")[0]
+    total = round(record["t0"]["dp_lead_bar"] + record["t0"]["dp_tail_bar"], 2)
+
+    assert f"total {total:g} bar" in build_user_prompt(record, "v2")
+    assert "total" not in build_user_prompt(record, "v1")
+
+
+@pytest.mark.parametrize("cause", CAUSES)
+def test_the_printed_dp_total_reproduces_the_answer_key(cause):
+    """The point of printing the total: reading it off must give the right answer.
+
+    v1 listed only the two stages, and the 9B measured the change against the
+    anomalous stage alone -- a reasonable misreading worth 38.7 pp at p90. This
+    checks that the rounding introduced by printing the total costs far less
+    than the reward's 0.5 pp tolerance.
+    """
+    rng = random.Random(hash(cause) % 2**32)
+    for _ in range(10):
+        record, answer, _ = generate_case(rng, cause, "hard")
+        printed = [
+            round(reading["dp_lead_bar"] + reading["dp_tail_bar"], 2)
+            for reading in (record["t0"], record["t1"])
+        ]
+        from_printed = (printed[1] - printed[0]) / printed[0] * 100.0
+        assert from_printed == pytest.approx(answer["dp_change_pct"], abs=0.1)
 
 
 def test_messages_are_a_system_user_pair():

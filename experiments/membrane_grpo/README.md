@@ -3,11 +3,11 @@
 GRPO on a 0.5B instruct model, over a structured membrane-troubleshooting task
 with a deterministic reward.
 
-**Scale: this is a smoke test.** One short run of a few hundred steps on a Mac
-mini, not a converged training run. Every claim it produces is scoped to that.
-The point is to run the full loop — prompt, sampled completions, deterministic
-reward, policy update — by hand, and to get a measured example of reward rising
-while held-out accuracy does not.
+**Scale: this is a smoke test.** One short run of a few hundred steps, not a
+converged training run. Every claim it produces is scoped to that. The point is
+to run the full loop — prompt, sampled completions, deterministic reward, policy
+update — by hand, and to get a measured example of reward rising while held-out
+accuracy does not.
 
 This picks up where [`../toy_mdp`](../toy_mdp) left off. That project derived
 REINFORCE and PPO-clip by hand on a six-state MDP; this one keeps the domain and
@@ -53,9 +53,10 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P2 | reward function + adversarial baselines | done |
 | P0' | re-measure on `anton` (CUDA) | done |
 | P3a | `eval.py`, 9B reference run | done — **found a task-design bug, see below** |
-| P3b | prompt v2, then the frozen 0.5B baseline | next |
-| P4 | `grpo_scratch.py` — hand-written GRPO | |
-| P5 | short run + probe-reward control | |
+| P3b | prompt v2 | done — validated against the 9B |
+| P3c | the frozen 0.5B baseline | done — go/no-go passed |
+| P4 | `grpo_scratch.py` — hand-written GRPO | done — **exit gate met** |
+| P5 | short run + probe-reward control | next, needs a GPU window |
 | P7 | curves and memo | |
 
 Training moved to `anton`, a CUDA box on the tailnet, after P2. The task layer
@@ -70,13 +71,31 @@ The point of pointing a much larger model at the task first was to ask whether
 the task is well posed before blaming a 0.5B for failing it. It is not, quite —
 and that is worth more than a clean number would have been.
 
-Qwen3.5-9B-AWQ, greedy, on dev cases, `PROMPT_VERSION = v1`:
+Qwen3.5-9B-AWQ, greedy, 40 dev cases, both versions on the same cases with the
+same decoding — `python3 prompt_ab.py --model qwen3.5-9b -n 40`, artifact in
+`runs/prompt-ab/`:
 
-| | numeric (of 3) | validity | tokens |
-| --- | --- | --- | --- |
-| v1: JSON only | **0.08** | 1.00 | 103 |
-| v1 + reasoning mode on | 0.00 | **0.00** | 1024 (budget exhausted) |
-| terse working allowed | **0.58** | 1.00 | 242 |
+| | v1 | v2 |
+| --- | --- | --- |
+| validity | 1.000 | 1.000 |
+| reward | 0.624 | **0.750** |
+| exact match | **0.000** | **0.325** |
+| all three flags | 0.450 | 0.550 |
+| cause accuracy | 0.675 | 0.650 |
+| action accuracy | 0.525 | 0.675 |
+| completion tokens | 104 | **531** |
+
+Numeric accuracy within 0.5 pp, per field — this is where the two versions
+actually differ:
+
+| field | v1 | v2 | v1 p90 error | v2 p90 error |
+| --- | --- | --- | --- | --- |
+| `normalized_flow_change_pct` | 0.375 | 0.675 | 17.7 | 10.1 |
+| `salt_passage_change_pct` | 0.125 | 0.900 | 111.3 | 0.7 |
+| `dp_change_pct` | 0.025 | **1.000** | 51.1 | **0.00** |
+
+Under v2 the median absolute error on all three fields is **0.00**: when it is
+right it is exact, and the failures are outright mistakes rather than drift.
 
 **The model was not doing the arithmetic — it was estimating.** Under v1 it
 emits perfectly formed JSON with plausible-looking numbers. On one case it got
@@ -88,60 +107,211 @@ prompt states `up if >= +10`.
 
 **Reasoning mode is unusable here**, exactly as `agent/config.py` in the parent
 repo records: the model spends the entire budget inside `<think>` and returns
-empty content. All eight cases failed the gate with `empty`.
+empty content. All eight cases failed the gate with `empty` — the exploratory
+artifact is in `runs/9b-v1-exploratory/v1_thinking_n8.json`.
 
-**Letting it show terse work is what fixes the arithmetic** — a 7x improvement,
-at 2.3x the completion length. Both halves of the prompt have to change; editing
-only the user turn does nothing, because the system prompt's "reply with exactly
-one JSON object and no other text" wins and the model goes straight to JSON.
+**Letting it show terse work is what fixes the arithmetic**, at 5.1x the
+completion length. Both halves of the prompt have to change; editing only the
+user turn does nothing, because the system prompt's "reply with exactly one JSON
+object and no other text" wins and the model goes straight to JSON. That was
+measured the hard way — the first attempt at this comparison changed the user
+turn alone and reported no effect at all.
 
 ### A real ambiguity in the task, not a model failure
 
-Per-field, over 24 cases with working allowed:
+`dp_change_pct` was the worst field under v1 at 0.025, and it was the *simplest*
+of the three computations — a sum and a percent change, no ratio, no correction.
+That is what gave the diagnosis away. On the first case inspected the model
+answered 30.2 where the key says 17.8, and `0.28 / 0.93 = 30.1`: the change
+measured against **the anomalous stage's own dp** rather than the train total.
+The prompt does state `dp(t) = dp_lead(t) + dp_tail(t)`, but the record also
+announces which stage the anomaly sits in, and the generator puts the whole dp
+change on that stage, so the two readings diverge sharply. A reasonable reader
+picks the wrong one.
 
-| field | within 0.5 pp | median error | p90 error |
-| --- | --- | --- | --- |
-| `normalized_flow_change_pct` | 0.75 | 0.10 | 13.3 |
-| `salt_passage_change_pct` | 0.50 | 0.80 | 9.8 |
-| `dp_change_pct` | 0.46 | 0.75 | **38.7** |
+Printing the total in v2 took that field from **0.025 to 1.000** — the clearest
+evidence available that this was an ambiguity in the task rather than a limit of
+the model.
 
-That p90 traces to a defect in the prompt. On the first case inspected the model
-answered 30.2 where the key says 17.8 — and `0.28 / 0.93 = 30.1`, which is the
-change measured against **the anomalous stage's own dp** rather than the train
-total. The prompt does state `dp(t) = dp_lead(t) + dp_tail(t)`, but the record
-also announces which stage the anomaly sits in, and the generator puts the whole
-dp change on that stage, so the two readings diverge sharply. A reasonable
-reader picks the wrong one.
+**Loosening the tolerance would not have helped.** Widening the band barely
+moves either version, because the errors are bimodal rather than noisy:
 
-Two further things this run settles:
-
-* **Loosening the tolerance would not help.** All three numbers land within
-  0.5 pp on 0.29 of cases, within 2.0 pp on 0.29, within 5.0 pp on 0.38. The
-  errors are bimodal — near-exact or wildly wrong — so they are mistakes, not
-  noise, and widening the band buys almost nothing.
-* **Cause accuracy (0.67) runs well ahead of all-three-flags-correct (0.38).**
-  The model is diagnosing qualitatively from the direction of travel rather than
-  from the flags it computed. That is worth remembering when reading
-  `root_cause` as evidence of table-reading; it is what
-  `diagnostics["cause_given_flags"]` exists to separate.
+| all three numbers within | 0.5 pp | 1.0 pp | 2.0 pp | 5.0 pp |
+| --- | --- | --- | --- | --- |
+| v1 | 0.000 | 0.000 | 0.000 | 0.050 |
+| v2 | 0.600 | 0.650 | 0.675 | 0.775 |
 
 ### What v2 changes
 
 Fixing the task, not accommodating the model:
 
 1. system and user prompts both permit terse working, JSON last;
-2. the record states the dp **total** alongside the per-stage values, so there
-   is nothing to misread;
-3. intermediate values are to keep four significant figures — salt passage is a
-   percent change *of a ratio*, and rounding the ratio early is the likely
-   source of that 0.80 median error.
+2. the record states the dp **total** alongside the per-stage values;
+3. intermediate values keep four significant figures — salt passage is a percent
+   change *of a ratio*, and rounding the ratio early was costing it accuracy.
 
-`parse_answer` needs a matching change: with working allowed it should select
-the object carrying the most answer keys, not the first one it finds.
+`parse_answer` changes to match: with working allowed it selects the object
+carrying the most answer keys rather than the first one it finds, since a stray
+object in the arithmetic would otherwise be graded as the answer.
 
-Changing `PROMPT_VERSION` is cheap right now and will not be later — no frozen
-baseline depends on v1 yet, which is precisely why the reference run came before
-the baseline rather than after it.
+### Two results v2 did not flatter
+
+**Cause accuracy went slightly down**, 0.675 to 0.650, while every other metric
+rose. Under v1 the model was diagnosing qualitatively — reading the direction of
+travel and picking a plausible cause — and that is surprisingly effective. Under
+v2 it computes first and then derives the cause from its own flags, so a failed
+computation now drags the diagnosis down with it. This is the component cascade
+described in `reward.py`, showing up as a measured regression: **being made to
+compute can hurt the diagnosis on cases where the computation fails.** It is
+also why `diagnostics["cause_given_flags"]` exists.
+
+**The hard tier is still a wall.** v2 exact match splits `easy=0.462` against
+`hard=0.071`. Even a 9B showing its working mostly cannot evaluate
+`1.03 ** (25 - T)` correctly. The tier is doing exactly the job it was designed
+for, and prediction 3 — that RL will move the easy tier and not the hard one —
+now has a reference point well above anything a 0.5B will reach.
+
+**Working costs 5.1x the tokens**, 104 to 531. The P0' step estimates assumed a
+192-token completion budget, so they need redoing against roughly 640 before the
+training run is sized.
+
+Changing `PROMPT_VERSION` was cheap here and would not have been later — no
+frozen baseline depended on v1, which is precisely why the reference run came
+before the baseline rather than after it.
+
+## The frozen baseline, and the go/no-go (P3c)
+
+Qwen2.5-0.5B-Instruct, prompt v2, dev split (`sha256 94b32d05…`), seed 0.
+Artifacts in `runs/baseline-0.5b-v2/`. The test split remains sealed.
+
+| greedy, pass@1 | dev | holdout_shift |
+| --- | --- | --- |
+| reward | **0.086** | 0.098 |
+| exact match | 0.000 | 0.000 |
+| validity (gate) | **1.000** | 1.000 |
+| schema valid | 0.005 | — |
+| cause accuracy | **0.145** | 0.160 |
+| numeric (of 3) | 0.000 | 0.000 |
+| completion tokens | 108 | — |
+
+Three things this pins down.
+
+**Cause accuracy is chance.** 0.145 against 1/7 = 0.143. The base model has no
+diagnostic ability on this task whatsoever; 76% of its reward (0.065 of 0.086)
+is the `root_cause` component paying out on luck.
+
+**It scores worse than a constant guesser.** `baselines.constant` earns 0.245;
+the model earns 0.086. It loses because its flag values are out of vocabulary —
+it writes the *threshold text* into the flag field, `"flow": "<-10"`, and copies
+the threshold constants into the numbers. `flags.bad_value` fires 595 times
+across 200 cases, almost exactly three per case, and `stage` is out of
+vocabulary on 199 of 200. So schema validity is 0.005 and the format component
+is worth 0.0005. A model that learned nothing except to emit the right
+vocabulary would nearly triple this score.
+
+**v2's benefit does not transfer.** The 0.5B ignores the instruction to show
+working and goes straight to JSON at 108 tokens — the same failure v1 produced
+in the 9B. Whatever it gains from v2 is not the arithmetic.
+
+### The go/no-go: sampled diversity
+
+The question that decides whether the experiment can run at all is not accuracy,
+it is whether a group of completions carries any reward variance. Without it
+GRPO's advantages are identically zero and there is no gradient. T=1.0, k=8, 200
+dev cases:
+
+| | |
+| --- | --- |
+| zero-variance groups | **0.160** |
+| unique answers per group of 8 | **5.54** |
+| distinct-4 | 0.727 |
+| validity under sampling | **0.665** |
+| pass@8 | **0.000** |
+
+**84% of groups carry usable gradient.** Prediction 5 does not block the run.
+
+**But pass@8 is zero.** Across 1,600 samples the model never produced a fully
+correct answer. That turns the P2 decision to loosen the gate and score partial
+credit from a judgement call into a precondition: under a binary exact-match
+reward every group here would score zero, `adv_zero_frac` would be 1.0, and the
+gradient would be exactly zero everywhere. **The partial credit is what makes
+this trainable at all.** It also means GRPO cannot reinforce a correct answer
+directly — only the pieces of one.
+
+**Sampling breaks the format.** Validity falls from 1.000 greedy to 0.665 at
+T=1.0, with all 67 failures being `no_json`. That gap is where most of the
+current reward variance lives, so the earliest thing GRPO can learn is to stay
+parseable while sampling — which is prediction 1, arriving before the first
+gradient step.
+
+## The update, written out by hand (P4)
+
+`grpo_scratch.py` is the exit gate: sample a group, score it deterministically,
+centre the rewards within the group, take one clipped policy-gradient step. No
+TRL. `../toy_mdp/ppo.py` derives the clipped surrogate's gradient by hand on a
+tabular policy, and the derivation survives the move to a language model — what
+changes is only that autograd carries the chain rule the rest of the way:
+
+    d/d logp  min(rho*A, clip(rho)*A)  =  rho * A   unless the clip binds
+                                          0         when A > 0 and rho > 1+eps
+                                          0         when A < 0 and rho < 1-eps
+
+`test_grpo_scratch.py` checks autograd against that closed form, including in
+the regime where the clip actually binds. At `rho = 1` it collapses to `A`, so
+**with one inner epoch this is REINFORCE with a group baseline** and the clip is
+inert by construction; it only starts working when a batch is reused.
+
+Three things the tests caught that a smoke run would not have:
+
+**A run that prints a loss can change nothing.** The first end-to-end CPU run
+completed two steps and moved no weights — the token budget truncated every
+completion before any JSON appeared, so all four rewards were zero, the group
+was degenerate, and the gradient was correctly zero throughout. "The loop ran"
+and "the policy moved" are separate claims and are now separately tested.
+
+**A degenerate group is not a no-op under AdamW's defaults.** Weight decay is
+applied whether or not the gradient said anything, so a batch of degenerate
+groups still shrinks the adapter — and 16% of groups are degenerate at the
+frozen baseline. `Config.weight_decay` is therefore 0.0: in an experiment whose
+question is what the *reward* moved, a force acting independently of the reward
+is a confound, not a regulariser. Both behaviours are pinned by tests.
+
+**EOS and padding are not the same event.** Choosing to stop is an action, and
+an action that is never scored is one RL cannot learn to take; padding was never
+sampled. Qwen2.5 has no distinct pad token so `load_policy` aliases them and the
+distinction collapses in practice, but the mask keeps them apart anyway.
+
+The loop, on CPU with a deliberately tiny configuration — one prompt, four
+completions, three steps. `runs/smoke-grpo-cpu/`:
+
+```
+step  0  reward 0.0375  advzero 0.00  uniq 4.0  tok 114  grad 1.13655  ratio 1.000
+step  1  reward 0.0825  advzero 0.00  uniq 4.0  tok 105  grad 1.26630  ratio 1.000
+step  2  reward 0.0000  advzero 1.00  uniq 4.0  tok 100  grad 0.00000  ratio 1.000
+```
+
+Rewards sit around the frozen baseline's 0.086 and the gradient norm is non-zero,
+which is the exit gate: prompt, sampled completions, deterministic reward, policy
+update, all of it hand-written.
+
+Two things fell out of it that were not planned.
+
+**Step 2 is a degenerate group in the wild.** All four completions scored
+exactly 0.0, the within-group variance vanished, and the gradient norm is
+`0.00000` — the case the unit tests pin, happening on its own within three steps
+at `adv_zero_frac = 1.0`. The frozen baseline measured 16% of groups this way;
+here it was one in three.
+
+**`ratio_mean` is 1.000 on every step**, confirming empirically what the
+derivation says: with one inner epoch the policy has not moved between sampling
+and scoring, so the clip cannot engage.
+
+One caveat on this artifact. Its `config.json` has no `weight_decay` field
+because the run predates that fix, so it used AdamW's default 0.01 — meaning on
+step 2 the gradient was exactly zero and the adapter was decayed anyway. The
+confound is visible in the very record that motivated removing it. The claim
+this run supports is that the loop closes and the gradient flows, and that
+claim is unaffected.
 
 ## Measured limits (P0', anton)
 
@@ -150,10 +320,18 @@ Raw numbers in `runs/probe/throughput_anton.json`.
 
 | | |
 | --- | --- |
-| Generation, batch 128 | **4807 tok/s**, 0.04 s/sequence |
-| Update (fwd+bwd, LoRA r=16), batch 4 | **0.043 s/sequence**, 8.4 GiB peak |
-| Update, full fine-tune, batch 4 | 0.053 s/sequence, 10.5 GiB peak |
-| Projected step, 4 prompts x 8 completions | ~7 s, or **503 steps/hour** |
+| Prompt length (v2) | 974 tokens |
+| Generation, batch 128 | **5874 tok/s**, 0.11 s/sequence |
+| Update (fwd+bwd, LoRA r=16), batch 2 | **0.11 s/sequence**, 8.3 GiB peak |
+| Update ceiling | **batch 2** — batch 4 spills, 8x slower |
+| Projected step, 4 prompts x 8 completions | ~17.5 s, or **205 steps/hour** |
+
+Measured at a 640-token completion budget, `runs/probe/throughput_anton_640.json`.
+An earlier pass at 192 tokens reported 7 s/step and 503 steps/hour; v2's working
+made that budget 3x too small, and the update's batch ceiling fell from 4 to 2
+as the sequence grew from 1,096 to 1,614 tokens. The estimator is still
+conservative — it sizes generation by the best measured batch (128) rather than
+the 32 sequences a step actually needs, so the real figure is nearer 11 s.
 
 Against the Mac's 62 s/step and 58 steps/hour, roughly 8.6x. Three things worth
 recording:
@@ -323,6 +501,8 @@ never trained on.
 | `reward.py` | the deterministic reward; six weighted components |
 | `baselines.py` | degenerate strategies, and what the reward pays them |
 | `eval.py` | frozen-split evaluation, HTTP or local backend |
+| `grpo_scratch.py` | the GRPO update, written out by hand |
+| `prompt_ab.py` | prompt-version A/B on identical cases |
 | `probe_throughput.py` | hardware measurements |
 | `data/` | frozen splits, `SHA256SUMS`, `DATA_CARD.md` |
 | `runs/` | measurements and evaluation results |

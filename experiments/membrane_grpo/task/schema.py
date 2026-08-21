@@ -55,8 +55,9 @@ class Validation(NamedTuple):
     errors: tuple[str, ...]
 
 
-def _first_json_object(text: str) -> str | None:
-    """Return the first balanced {...} span, ignoring braces inside strings."""
+def _json_object_spans(text: str) -> list[str]:
+    """Every balanced top-level {...} span, ignoring braces inside strings."""
+    spans: list[str] = []
     depth = 0
     start = -1
     in_string = False
@@ -82,33 +83,55 @@ def _first_json_object(text: str) -> str | None:
             if depth:
                 depth -= 1
                 if depth == 0:
-                    return text[start : i + 1]
+                    spans.append(text[start : i + 1])
 
-    return None
+    return spans
+
+
+def _first_json_object(text: str) -> str | None:
+    """Back-compatible single-span helper."""
+    spans = _json_object_spans(text)
+    return spans[0] if spans else None
 
 
 def parse_answer(completion: str) -> ParseResult:
-    """Extract a JSON object from a raw completion.
+    """Extract the answer object from a raw completion.
 
-    Tries the whole string first, then the first balanced brace span, which
-    covers both ```json fences and a bare object preceded by chatter.
+    Tries the whole string first, then every balanced brace span, which covers
+    ```json fences and objects preceded by chatter.
+
+    Where several objects parse, the one carrying the most answer keys wins,
+    with later objects breaking ties. Taking the *first* was right only while
+    the prompt forbade working: from v2 the model shows its arithmetic before
+    answering, and a stray `{...}` in that working would otherwise be graded as
+    the answer. Preferring the richest object rather than simply the last also
+    survives a model that adds a trailing note after its JSON.
     """
     text = completion.strip()
     if not text:
         return ParseResult(None, "empty")
 
-    for candidate in (text, _first_json_object(text)):
-        if candidate is None:
-            continue
+    candidates: list[dict[str, Any]] = []
+    saw_non_object = False
+
+    for span in (text, *_json_object_spans(text)):
         try:
-            obj = json.loads(candidate)
+            obj = json.loads(span)
         except (json.JSONDecodeError, ValueError):
             continue
         if isinstance(obj, dict):
-            return ParseResult(obj, None)
-        return ParseResult(None, "not_an_object")
+            candidates.append(obj)
+        else:
+            saw_non_object = True
 
-    return ParseResult(None, "no_json")
+    if not candidates:
+        return ParseResult(None, "not_an_object" if saw_non_object else "no_json")
+
+    best = max(
+        enumerate(candidates),
+        key=lambda pair: (sum(key in pair[1] for key in ANSWER_KEYS), pair[0]),
+    )[1]
+    return ParseResult(best, None)
 
 
 def _is_number(value: Any) -> bool:

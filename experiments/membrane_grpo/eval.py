@@ -49,7 +49,7 @@ from typing import Any
 
 import reward as reward_module
 from reward import score
-from task.prompt import PROMPT_VERSION, build_messages
+from task.prompt import PROMPT_VERSION, VERSIONS, build_messages
 from task.schema import canonical, parse_answer
 
 ROOT = Path(__file__).resolve().parent
@@ -98,6 +98,7 @@ def generate_openai(
     concurrency: int,
     timeout: float,
     thinking: bool,
+    prompt_version: str = PROMPT_VERSION,
 ) -> list[CaseResult]:
     """Fan out one request per case, each asking for `n` completions.
 
@@ -108,7 +109,7 @@ def generate_openai(
     def run(case: dict) -> CaseResult:
         payload: dict[str, Any] = {
             "model": model,
-            "messages": build_messages(case["record"]),
+            "messages": build_messages(case["record"], prompt_version),
             "max_tokens": max_tokens,
             "temperature": temperature,
             "n": n,
@@ -164,6 +165,7 @@ def generate_hf(
     seed: int,
     batch_size: int,
     adapter: str | None,
+    prompt_version: str = PROMPT_VERSION,
 ) -> list[CaseResult]:
     """Local decoding. Imported lazily so the HTTP path stays dependency-free."""
     import torch
@@ -191,7 +193,9 @@ def generate_hf(
         chunk = cases[start : start + per_batch]
         prompts = [
             tokenizer.apply_chat_template(
-                build_messages(case["record"]), tokenize=False, add_generation_prompt=True
+                build_messages(case["record"], prompt_version),
+                tokenize=False,
+                add_generation_prompt=True,
             )
             for case in chunk
             for _ in range(n)
@@ -367,6 +371,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--weights", default="MAIN", choices=["MAIN", "PROBE"])
+    parser.add_argument("--prompt-version", default=PROMPT_VERSION, choices=list(VERSIONS))
     parser.add_argument("--run-name", default=None)
     # openai backend
     parser.add_argument("--base-url", default=os.environ.get("VLLM_BASE_URL", "http://127.0.0.1:8000/v1"))
@@ -393,7 +398,7 @@ def main() -> None:
 
     print(
         f"{args.backend} | {args.model} | {args.split} ({len(cases)} cases) | "
-        f"{args.mode} n={n} T={temperature} | prompt {PROMPT_VERSION}"
+        f"{args.mode} n={n} T={temperature} | prompt {args.prompt_version}"
     )
 
     started = time.perf_counter()
@@ -413,6 +418,7 @@ def main() -> None:
             concurrency=args.concurrency,
             timeout=args.timeout,
             thinking=args.thinking,
+            prompt_version=args.prompt_version,
         )
     else:
         import torch
@@ -437,6 +443,7 @@ def main() -> None:
             seed=args.seed,
             batch_size=args.batch_size,
             adapter=args.adapter,
+            prompt_version=args.prompt_version,
         )
     elapsed = time.perf_counter() - started
 
@@ -461,7 +468,7 @@ def main() -> None:
                 "backend": args.backend,
                 "split": args.split,
                 "split_sha256": split_sha,
-                "prompt_version": PROMPT_VERSION,
+                "prompt_version": args.prompt_version,
                 "weights": args.weights,
                 "mode": args.mode,
                 "k": n,

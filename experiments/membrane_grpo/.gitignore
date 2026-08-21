@@ -6,6 +6,8 @@ __pycache__/
 # Training artefacts. Metrics and plots are the record and belong in git;
 # adapter weights do not.
 runs/**/*.safetensors
+# PEFT regenerates this boilerplate on every save_pretrained
+runs/**/adapter/README.md
 runs/**/*.bin
 runs/**/*.pt
 runs/**/checkpoint-*/
