@@ -55,8 +55,8 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P3a | `eval.py`, 9B reference run | done — **found a task-design bug, see below** |
 | P3b | prompt v2 | done — validated against the 9B |
 | P3c | the frozen 0.5B baseline | done — go/no-go passed |
-| P4 | `grpo_scratch.py` — hand-written GRPO | next |
-| P5 | short run + probe-reward control | |
+| P4 | `grpo_scratch.py` — hand-written GRPO | done — **exit gate met** |
+| P5 | short run + probe-reward control | next, needs a GPU window |
 | P7 | curves and memo | |
 
 Training moved to `anton`, a CUDA box on the tailnet, after P2. The task layer
@@ -243,6 +243,54 @@ T=1.0, with all 67 failures being `no_json`. That gap is where most of the
 current reward variance lives, so the earliest thing GRPO can learn is to stay
 parseable while sampling — which is prediction 1, arriving before the first
 gradient step.
+
+## The update, written out by hand (P4)
+
+`grpo_scratch.py` is the exit gate: sample a group, score it deterministically,
+centre the rewards within the group, take one clipped policy-gradient step. No
+TRL. `../toy_mdp/ppo.py` derives the clipped surrogate's gradient by hand on a
+tabular policy, and the derivation survives the move to a language model — what
+changes is only that autograd carries the chain rule the rest of the way:
+
+    d/d logp  min(rho*A, clip(rho)*A)  =  rho * A   unless the clip binds
+                                          0         when A > 0 and rho > 1+eps
+                                          0         when A < 0 and rho < 1-eps
+
+`test_grpo_scratch.py` checks autograd against that closed form, including in
+the regime where the clip actually binds. At `rho = 1` it collapses to `A`, so
+**with one inner epoch this is REINFORCE with a group baseline** and the clip is
+inert by construction; it only starts working when a batch is reused.
+
+Three things the tests caught that a smoke run would not have:
+
+**A run that prints a loss can change nothing.** The first end-to-end CPU run
+completed two steps and moved no weights — the token budget truncated every
+completion before any JSON appeared, so all four rewards were zero, the group
+was degenerate, and the gradient was correctly zero throughout. "The loop ran"
+and "the policy moved" are separate claims and are now separately tested.
+
+**A degenerate group is not a no-op under AdamW's defaults.** Weight decay is
+applied whether or not the gradient said anything, so a batch of degenerate
+groups still shrinks the adapter — and 16% of groups are degenerate at the
+frozen baseline. `Config.weight_decay` is therefore 0.0: in an experiment whose
+question is what the *reward* moved, a force acting independently of the reward
+is a confound, not a regulariser. Both behaviours are pinned by tests.
+
+**EOS and padding are not the same event.** Choosing to stop is an action, and
+an action that is never scored is one RL cannot learn to take; padding was never
+sampled. Qwen2.5 has no distinct pad token so `load_policy` aliases them and the
+distinction collapses in practice, but the mask keeps them apart anyway.
+
+The loop, on CPU with a deliberately tiny configuration:
+
+```
+step  0  reward 0.0375  advzero 0.00  uniq 4.0  tok 114  grad 1.137
+step  1  reward 0.0825  advzero 0.00  uniq 4.0  tok 105  grad 1.266
+```
+
+Rewards sit around the frozen baseline's 0.086, no group is degenerate, and the
+gradient norm is non-zero — which is the whole of the exit gate: prompt, sampled
+completions, deterministic reward, policy update, all of it hand-written.
 
 ## Measured limits (P0', anton)
 
@@ -432,6 +480,7 @@ never trained on.
 | `reward.py` | the deterministic reward; six weighted components |
 | `baselines.py` | degenerate strategies, and what the reward pays them |
 | `eval.py` | frozen-split evaluation, HTTP or local backend |
+| `grpo_scratch.py` | the GRPO update, written out by hand |
 | `prompt_ab.py` | prompt-version A/B on identical cases |
 | `probe_throughput.py` | hardware measurements |
 | `data/` | frozen splits, `SHA256SUMS`, `DATA_CARD.md` |
