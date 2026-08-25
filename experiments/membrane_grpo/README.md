@@ -3,11 +3,16 @@
 GRPO on a 0.5B instruct model, over a structured membrane-troubleshooting task
 with a deterministic reward.
 
-**Scale: this is a smoke test.** One short run of a few hundred steps, not a
-converged training run. Every claim it produces is scoped to that. The point is
-to run the full loop — prompt, sampled completions, deterministic reward, policy
-update — by hand, and to get a measured example of reward rising while held-out
-accuracy does not.
+**Scale: this is a smoke test.** Two 200-step runs, not converged training.
+Every claim is scoped to that. The point was to run the full loop — prompt,
+sampled completions, deterministic reward, policy update — by hand, and to get
+a measured example of reward rising while held-out accuracy does not.
+
+Both were achieved. Held-out reward rose 0.086 → 0.279 while `root_cause`
+accuracy read 0.145 at all nine evaluation points, against a 1/7 = 0.143 chance
+floor — and a second run, identical but for the reward weights, reports the same
+policy as a 19x improvement instead of a 3.2x one. [`MEMO.md`](MEMO.md) is the
+write-up; `runs/grpo_curves.png` is the picture.
 
 This picks up where [`../toy_mdp`](../toy_mdp) left off. That project derived
 REINFORCE and PPO-clip by hand on a six-state MDP; this one keeps the domain and
@@ -56,8 +61,8 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P3b | prompt v2 | done — validated against the 9B |
 | P3c | the frozen 0.5B baseline | done — go/no-go passed |
 | P4 | `grpo_scratch.py` — hand-written GRPO | done — **exit gate met** |
-| P5 | short run + probe-reward control | next, needs a GPU window |
-| P7 | curves and memo | |
+| P5 | short run + probe-reward control | done |
+| P7 | curves and memo | done — [`MEMO.md`](MEMO.md) |
 
 Training moved to `anton`, a CUDA box on the tailnet, after P2. The task layer
 and the frozen data carry over untouched — that is what the standard-library-only
@@ -502,6 +507,8 @@ never trained on.
 | `baselines.py` | degenerate strategies, and what the reward pays them |
 | `eval.py` | frozen-split evaluation, HTTP or local backend |
 | `grpo_scratch.py` | the GRPO update, written out by hand |
+| `plots.py` | curves, drawn against the priced baselines |
+| [`MEMO.md`](MEMO.md) | what the run actually improved |
 | `prompt_ab.py` | prompt-version A/B on identical cases |
 | `probe_throughput.py` | hardware measurements |
 | `data/` | frozen splits, `SHA256SUMS`, `DATA_CARD.md` |
