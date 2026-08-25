@@ -275,7 +275,10 @@ class Config:
     # curve and nothing to read it against, and "reward rose" cannot be
     # separated from "the policy got better" -- which is the question.
     eval_every: int = 25
-    eval_cases: int = 64
+    # The full dev split, so step 0 is directly comparable to the frozen
+    # baseline rather than to a subset of it with a different denominator.
+    eval_cases: int = 200
+    eval_batch: int = 32
     eval_split: str = "dev"
     eval_max_tokens: int = 640
 
@@ -323,7 +326,7 @@ def evaluate(policy, tokenizer, cfg: Config, cases: list[dict], step: int) -> di
         temperature=0.0,
         max_tokens=cfg.eval_max_tokens,
         seed=cfg.seed,
-        batch_size=cfg.eval_cases,
+        batch_size=cfg.eval_batch,
         adapter=None,
         prompt_version=cfg.prompt_version,
         loaded=(policy, tokenizer),
