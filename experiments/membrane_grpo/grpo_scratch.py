@@ -406,56 +406,70 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
         ]
         gen_seconds = time.perf_counter() - started
 
-        sequences = torch.cat([g.sequences for g in groups], dim=0)
-        masks = torch.cat([g.mask for g in groups], dim=0)
-        advantages = torch.tensor(
-            [a for g in groups for a in g.advantages], device=device, dtype=torch.float32
-        )
-        completion_len = masks.shape[1]
+        # Groups are kept apart rather than concatenated. Different prompts
+        # tokenize to different lengths, so one batch would need padding -- and
+        # a padded batch through `model(input_ids=...)` with no attention mask
+        # attends to the pad tokens and starts RoPE at the pad, silently
+        # corrupting the very log-probs that are the training signal. Within a
+        # group there is no padding at all, because a group is G samples of one
+        # prompt. That is a structural convenience of GRPO worth not throwing
+        # away for the sake of one `torch.cat`.
+        total_sequences = sum(len(g.rewards) for g in groups)
+
+        def micro_batches(group: Group):
+            for i in range(0, group.sequences.shape[0], cfg.micro_batch):
+                yield slice(i, i + cfg.micro_batch)
 
         policy.train()
         with torch.no_grad():
-            old_logprobs = torch.cat(
-                [
-                    completion_logprobs(policy, sequences[i : i + cfg.micro_batch], completion_len)
-                    for i in range(0, len(sequences), cfg.micro_batch)
-                ]
-            )
-            ref_logprobs = None
+            old_by_group = [
+                torch.cat(
+                    [
+                        completion_logprobs(policy, g.sequences[sl], g.mask.shape[1])
+                        for sl in micro_batches(g)
+                    ]
+                )
+                for g in groups
+            ]
+            ref_by_group: list[torch.Tensor] | None = None
             if cfg.beta > 0:
                 # The reference policy is the base model: disabling the adapters
                 # gives it for free, with no second copy of the weights.
                 with policy.disable_adapter():
-                    ref_logprobs = torch.cat(
-                        [
-                            completion_logprobs(
-                                policy, sequences[i : i + cfg.micro_batch], completion_len
-                            )
-                            for i in range(0, len(sequences), cfg.micro_batch)
-                        ]
-                    )
+                    ref_by_group = [
+                        torch.cat(
+                            [
+                                completion_logprobs(policy, g.sequences[sl], g.mask.shape[1])
+                                for sl in micro_batches(g)
+                            ]
+                        )
+                        for g in groups
+                    ]
 
         step_stats: dict[str, float] = {}
         for _ in range(cfg.inner_epochs):
             optimizer.zero_grad(set_to_none=True)
             accumulated = 0.0
-            for i in range(0, len(sequences), cfg.micro_batch):
-                sl = slice(i, i + cfg.micro_batch)
-                logprobs = completion_logprobs(policy, sequences[sl], completion_len)
-                loss, stats = grpo_surrogate(
-                    logprobs,
-                    old_logprobs[sl],
-                    advantages[sl],
-                    masks[sl],
-                    ref_logprobs=None if ref_logprobs is None else ref_logprobs[sl],
-                    clip_eps=cfg.clip_eps,
-                    beta=cfg.beta,
-                    normalize=cfg.normalize,
-                )
-                # Each micro-batch carries an equal share of the step.
-                (loss * cfg.micro_batch / len(sequences)).backward()
-                accumulated += stats["loss"] * cfg.micro_batch / len(sequences)
-                step_stats = stats
+            for gi, g in enumerate(groups):
+                completion_len = g.mask.shape[1]
+                advantages = torch.tensor(g.advantages, device=device, dtype=torch.float32)
+                for sl in micro_batches(g):
+                    logprobs = completion_logprobs(policy, g.sequences[sl], completion_len)
+                    loss, stats = grpo_surrogate(
+                        logprobs,
+                        old_by_group[gi][sl],
+                        advantages[sl],
+                        g.mask[sl],
+                        ref_logprobs=None if ref_by_group is None else ref_by_group[gi][sl],
+                        clip_eps=cfg.clip_eps,
+                        beta=cfg.beta,
+                        normalize=cfg.normalize,
+                    )
+                    # Each micro-batch carries an equal share of the step.
+                    share = logprobs.shape[0] / total_sequences
+                    (loss * share).backward()
+                    accumulated += stats["loss"] * share
+                    step_stats = stats
             grad_norm = torch.nn.utils.clip_grad_norm_(
                 [p for p in policy.parameters() if p.requires_grad], 1.0
             )
@@ -467,7 +481,9 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
             "reward_mean": sum(rewards) / len(rewards),
             "reward_max": max(rewards),
             "adv_zero_frac": sum(g.degenerate for g in groups) / len(groups),
-            "completion_tokens": float(masks.sum() / masks.shape[0]),
+            "completion_tokens": float(
+                sum(float(g.mask.sum()) for g in groups) / total_sequences
+            ),
             "unique_completions": sum(len(set(g.completions)) for g in groups) / len(groups),
             "loss": accumulated,
             "grad_norm": float(grad_norm),
