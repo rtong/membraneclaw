@@ -490,6 +490,7 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
             "clip_frac": step_stats.get("clip_frac", 0.0),
             "ratio_mean": step_stats.get("ratio_mean", 1.0),
             "kl": step_stats.get("kl", 0.0),
+            "entropy_proxy": step_stats.get("entropy_proxy", 0.0),
             "gen_seconds": round(gen_seconds, 2),
             "step_seconds": round(time.perf_counter() - started, 2),
         }
