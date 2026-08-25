@@ -1,0 +1,20 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "steps": 3,
+  "prompts_per_step": 1,
+  "group_size": 4,
+  "max_new_tokens": 160,
+  "temperature": 1.0,
+  "lr": 0.0001,
+  "clip_eps": 0.2,
+  "beta": 0.0,
+  "inner_epochs": 1,
+  "micro_batch": 2,
+  "normalize": "token",
+  "lora_r": 16,
+  "weights": "MAIN",
+  "seed": 0,
+  "dtype": "float32",
+  "split": "train",
+  "prompt_version": "v2"
+}
