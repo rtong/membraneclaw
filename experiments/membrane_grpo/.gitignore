@@ -4,8 +4,12 @@ __pycache__/
 .pytest_cache/
 
 # Training artefacts. Metrics and plots are the record and belong in git;
-# adapter weights do not.
+# adapter weights do not -- with one deliberate exception. The main run's
+# adapter is the deliverable checkpoint, 8.3 MiB, and the alternative was
+# leaving the only copy in /tmp on a machine that clears it. The probe run's
+# weights stay out: its value is in its metrics, not its parameters.
 runs/**/*.safetensors
+!runs/grpo-main-s0/adapter/adapter_model.safetensors
 # PEFT regenerates this boilerplate on every save_pretrained
 runs/**/adapter/README.md
 runs/**/*.bin
