@@ -10,20 +10,20 @@ number only means something once it is placed against them:
 * **0.890** — `baselines.skip_correction`: every step right except the
   temperature correction. Reaching here would mean the arithmetic is being done.
 
-Held-out evaluations are overlaid as points wherever a run directory contains
-them, because the gap between the training reward and the held-out reward is the
-thing this project exists to look at. `runs/ppo-ac-ie2-s0` is the case in point:
-held-out reward rose 0.086 -> 0.132 while `cause_acc` stayed at 0.145, which is
-1/7 and therefore chance. The reward moved; the diagnosis did not.
+`grpo_scratch.py` writes a held-out evaluation to `eval.jsonl` as it trains, and
+that curve is drawn against the training reward on the same axis. The gap
+between the two is what this project exists to look at, so it should be hard to
+miss and hard to read as anything else.
 
-The panels beyond reward are there because reward alone cannot distinguish
-learning from collapse. `runs/gonogo-stage-s0` reached a *training* reward of
-1.000 while its completion length fell from 106 tokens to 35 and its held-out
-reward was 0.000. On the reward panel that run looks like a triumph until step
-190; on the length and diversity panels it looks like what it was.
+The panels beyond reward exist because reward alone cannot tell learning from
+collapse. Both failure modes have already been observed on this task in the
+sibling actor-critic experiment (`../notebooks/smoke_test`): one run held a
+training reward of 1.000 from step 75 while its completion length fell 106 -> 35
+tokens and its held-out reward was 0.000, and the length and entropy panels
+showed it about 85 steps before the reward panel did.
 
-    python3 plots.py runs/ppo-ac-ie2-s0
-    python3 plots.py runs/a runs/b --labels main,probe --out compare.png
+    python3 plots.py runs/grpo-main-s0
+    python3 plots.py runs/grpo-main-s0 runs/grpo-probe-s0 --labels main,probe
 """
 from __future__ import annotations
 
@@ -61,11 +61,25 @@ PANELS = (
     ("entropy_proxy", "entropy proxy (-mean logp)", False),
 )
 
+#: Held-out series worth their own panel. `cause_acc` is the one to watch: at
+#: 1/7 = 0.143 it is chance, and a run whose reward climbs while this stays flat
+#: has improved something other than the diagnosis.
+EVAL_PANEL = ("cause_acc", "flags_acc", "validity_gate", "exact_match")
+CHANCE_CAUSE = 1.0 / 7.0
+
 
 def load_metrics(run: Path) -> list[dict[str, Any]]:
     path = run / "metrics.jsonl"
     if not path.exists():
         raise SystemExit(f"no metrics.jsonl in {run}")
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+def load_eval_curve(run: Path) -> list[dict[str, Any]]:
+    """Periodic held-out evaluations written by the training loop."""
+    path = run / "eval.jsonl"
+    if not path.exists():
+        return []
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
@@ -149,8 +163,29 @@ def main() -> None:
                     color=colour,
                     va="bottom",
                 )
-            # Held-out evaluations, placed at the end of their run.
+            # The held-out curve, if the run evaluated as it went. Training
+            # reward and held-out reward on one axis is the entire picture:
+            # the gap between them is what "reward rose" has to be read against.
+            for i, run in enumerate(runs):
+                curve = load_eval_curve(run)
+                if not curve:
+                    continue
+                colour = colours[i % len(colours)]
+                ax.plot(
+                    [r["step"] for r in curve],
+                    [r["reward"] for r in curve],
+                    marker="o",
+                    markersize=3,
+                    linestyle=":",
+                    linewidth=1.6,
+                    color=colour,
+                    label=f"{labels[i]} held-out",
+                )
+
+            # One-off evaluations sitting in a run directory.
             for i, (run, rows) in enumerate(zip(runs, series)):
+                if load_eval_curve(run):
+                    continue
                 last_step = rows[-1]["step"] if rows else 0
                 for name, overall in load_evals(run):
                     ax.scatter(
@@ -175,8 +210,41 @@ def main() -> None:
         ax.set_title(title, fontsize=10)
         ax.set_xlabel("step", fontsize=8)
         ax.grid(alpha=0.25)
-        if log:
+        if log and any(
+            v > 0 for rows in series for v in [r.get(key) or 0 for r in rows]
+        ):
             ax.set_yscale("log")
+        if key == "adv_zero_frac" and any(load_eval_curve(r) for r in runs):
+            # Repurpose this panel when held-out detail is available: the
+            # component breakdown says more than the degenerate-group count.
+            ax.clear()
+            for i, run in enumerate(runs):
+                curve = load_eval_curve(run)
+                for j, metric in enumerate(EVAL_PANEL):
+                    if not any(metric in r for r in curve):
+                        continue
+                    ax.plot(
+                        [r["step"] for r in curve],
+                        [r.get(metric, 0.0) for r in curve],
+                        linestyle=["-", "--", ":", "-."][j % 4],
+                        linewidth=1.5,
+                        color=colours[i % len(colours)],
+                        label=f"{labels[i]} {metric}" if len(runs) > 1 else metric,
+                    )
+            ax.axhline(CHANCE_CAUSE, linestyle="--", linewidth=1, color="#888888")
+            ax.annotate(
+                f"chance {CHANCE_CAUSE:.3f}",
+                xy=(0.01, CHANCE_CAUSE),
+                xycoords=("axes fraction", "data"),
+                fontsize=7,
+                color="#888888",
+                va="bottom",
+            )
+            ax.set_title("held-out components", fontsize=10)
+            ax.set_xlabel("step", fontsize=8)
+            ax.grid(alpha=0.25)
+            ax.legend(fontsize=7)
+            drew = True
         if not drew:
             ax.text(0.5, 0.5, f"no {key}", ha="center", va="center", fontsize=9, alpha=0.5)
 
@@ -199,6 +267,18 @@ def main() -> None:
             )
         if any(tokens):
             print(f"  completion tokens  first {tokens[0]:.0f}  last {tokens[-1]:.0f}")
+        curve = load_eval_curve(run)
+        if curve:
+            first, last = curve[0], curve[-1]
+            print(
+                f"  held-out reward  step {first['step']} {first['reward']:.4f}"
+                f"  ->  step {last['step']} {last['reward']:.4f}"
+            )
+            print(
+                f"  held-out cause   step {first['step']} {first.get('cause_acc', 0):.3f}"
+                f"  ->  step {last['step']} {last.get('cause_acc', 0):.3f}"
+                f"   (chance {CHANCE_CAUSE:.3f})"
+            )
         for name, overall in load_evals(run):
             print(
                 f"  held-out [{name}]  reward {overall.get('reward', 0):.4f}  "

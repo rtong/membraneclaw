@@ -166,20 +166,34 @@ def generate_hf(
     batch_size: int,
     adapter: str | None,
     prompt_version: str = PROMPT_VERSION,
+    loaded: tuple | None = None,
 ) -> list[CaseResult]:
-    """Local decoding. Imported lazily so the HTTP path stays dependency-free."""
+    """Local decoding. Imported lazily so the HTTP path stays dependency-free.
+
+    `loaded` takes an already-constructed `(policy, tokenizer)` so a training
+    loop can evaluate its live policy mid-run. That path exists specifically so
+    the mid-run numbers come from *this* function rather than a reimplementation
+    of it -- a held-out curve measured by different code than the frozen
+    baseline is not comparable to it, which would cost the comparison the whole
+    point.
+    """
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    tokenizer = AutoTokenizer.from_pretrained(model, padding_side="left")
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    if loaded is not None:
+        policy, tokenizer = loaded
+        was_training = policy.training
+    else:
+        was_training = False
+        tokenizer = AutoTokenizer.from_pretrained(model, padding_side="left")
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
 
-    policy = AutoModelForCausalLM.from_pretrained(model, dtype=getattr(torch, dtype)).to(device)
-    if adapter:
-        from peft import PeftModel
+        policy = AutoModelForCausalLM.from_pretrained(model, dtype=getattr(torch, dtype)).to(device)
+        if adapter:
+            from peft import PeftModel
 
-        policy = PeftModel.from_pretrained(policy, adapter)
+            policy = PeftModel.from_pretrained(policy, adapter)
     policy.eval()
 
     torch.manual_seed(seed)
@@ -224,6 +238,8 @@ def generate_hf(
         print(f"  {done}/{len(cases)} cases", end="\r", file=sys.stderr)
 
     print(file=sys.stderr)
+    if loaded is not None and was_training:
+        policy.train()
     return results
 
 

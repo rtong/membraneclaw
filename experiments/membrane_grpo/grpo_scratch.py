@@ -271,6 +271,13 @@ class Config:
     dtype: str = "bfloat16"
     split: str = "train"
     prompt_version: str = PROMPT_VERSION
+    # Held-out evaluation during training. Without it the run produces a reward
+    # curve and nothing to read it against, and "reward rose" cannot be
+    # separated from "the policy got better" -- which is the question.
+    eval_every: int = 25
+    eval_cases: int = 64
+    eval_split: str = "dev"
+    eval_max_tokens: int = 640
 
 
 def load_policy(cfg: Config, device: str):
@@ -294,6 +301,48 @@ def load_policy(cfg: Config, device: str):
     return policy, tokenizer
 
 
+def evaluate(policy, tokenizer, cfg: Config, cases: list[dict], step: int) -> dict[str, Any]:
+    """Greedy pass over a fixed held-out slice, through eval.py's own code path.
+
+    Fixed slice and fixed decoding, so successive evaluations differ only by the
+    policy. Comparable to the frozen baseline because it is literally the same
+    function that produced it.
+    """
+    from eval import generate_hf, summarise
+
+    weights = {"MAIN": MAIN, "PROBE": PROBE}[cfg.weights]
+    # generate_hf still moves the encoded batch onto a device, so it needs the
+    # one the live policy is already on rather than a re-derived guess.
+    device = str(next(policy.parameters()).device)
+    results = generate_hf(
+        cases,
+        model=cfg.model,
+        device=device,
+        dtype=cfg.dtype,
+        n=1,
+        temperature=0.0,
+        max_tokens=cfg.eval_max_tokens,
+        seed=cfg.seed,
+        batch_size=cfg.eval_cases,
+        adapter=None,
+        prompt_version=cfg.prompt_version,
+        loaded=(policy, tokenizer),
+    )
+    metrics = summarise(results, weights)
+    return {
+        "step": step,
+        "reward": metrics["reward"],
+        "exact_match": metrics["exact_match"],
+        "validity_gate": metrics["validity_gate"],
+        "schema_ok": metrics["schema_ok"],
+        "cause_acc": metrics["cause_acc"],
+        "flags_acc": metrics["flags_acc"],
+        "numeric_acc": metrics["numeric_acc"],
+        "action_acc": metrics["action_acc"],
+        "completion_tokens": metrics["completion_tokens_mean"],
+    }
+
+
 def train(cfg: Config, out_dir: Path, device: str) -> None:
     torch.manual_seed(cfg.seed)
     rng = random.Random(cfg.seed)
@@ -312,8 +361,27 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
     (out_dir / "config.json").write_text(json.dumps(asdict(cfg), indent=2) + "\n")
     metrics_path = out_dir / "metrics.jsonl"
     metrics_path.write_text("")
+    eval_path = out_dir / "eval.jsonl"
+    eval_path.write_text("")
+
+    eval_cases = [
+        json.loads(line)
+        for line in (DATA / f"{cfg.eval_split}.jsonl").read_text().splitlines()
+    ][: cfg.eval_cases]
+
+    def run_eval(step: int) -> None:
+        record = evaluate(policy, tokenizer, cfg, eval_cases, step)
+        with eval_path.open("a") as fh:
+            fh.write(json.dumps(record) + "\n")
+        print(
+            f"    eval @{step:<4} reward {record['reward']:.4f} "
+            f"cause {record['cause_acc']:.3f} flags {record['flags_acc']:.3f} "
+            f"EM {record['exact_match']:.3f} valid {record['validity_gate']:.3f}"
+        )
 
     print(f"{cfg.model} | {cfg.steps} steps | {cfg.prompts_per_step}x{cfg.group_size} | {device}")
+    if cfg.eval_every:
+        run_eval(0)  # step 0 must reproduce the frozen baseline
 
     for step in range(cfg.steps):
         started = time.perf_counter()
@@ -414,6 +482,9 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
             f"tok {record['completion_tokens']:.0f} clip {record['clip_frac']:.3f} "
             f"{record['step_seconds']:.1f}s"
         )
+
+        if cfg.eval_every and (step + 1) % cfg.eval_every == 0:
+            run_eval(step + 1)
 
     policy.save_pretrained(out_dir / "adapter")
     print(f"\nwrote {out_dir}")
