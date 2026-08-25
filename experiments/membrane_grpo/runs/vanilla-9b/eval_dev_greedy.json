@@ -1,0 +1,179 @@
+{
+  "model": "qwen3.5-9b",
+  "backend": "openai",
+  "split": "dev",
+  "split_sha256": "94b32d0557f6962d5be8f5b33cebb5303c4137475f3292a34e9fd8b8018da6c2",
+  "prompt_version": "v2",
+  "weights": "MAIN",
+  "mode": "greedy",
+  "k": 1,
+  "temperature": 0.0,
+  "max_tokens": 1024,
+  "seed": 0,
+  "adapter": null,
+  "elapsed_seconds": 275.4,
+  "overall": {
+    "n_cases": 200,
+    "k": 1,
+    "reward": 0.67535,
+    "exact_match": 0.245,
+    "validity_gate": 0.935,
+    "schema_ok": 0.92,
+    "cause_acc": 0.575,
+    "action_acc": 0.575,
+    "numeric_acc": 0.7966666666666667,
+    "flags_acc": 0.7566666666666667,
+    "cause_given_flags": 0.900990099009901,
+    "components": {
+      "format": 0.09200000000000001,
+      "numeric": 0.1195,
+      "flags": 0.0908,
+      "stage": 0.02805,
+      "root_cause": 0.25875,
+      "action": 0.08625
+    },
+    "reward_mean_all": 0.67535,
+    "completion_tokens_mean": 508.51,
+    "completion_chars_mean": 1101.625,
+    "parse_errors": {
+      "no_json": 13
+    },
+    "schema_errors": {
+      "bad_value": 3
+    },
+    "predicted_cause_hist": {
+      "scaling": 26,
+      "mechanical_leak": 61,
+      "biofouling": 23,
+      "compaction": 22,
+      "organic_fouling": 29,
+      "null": 16,
+      "oxidation_damage": 10,
+      "colloidal_fouling": 13
+    }
+  },
+  "by_tier": {
+    "easy": {
+      "n_cases": 129,
+      "k": 1,
+      "reward": 0.6671317829457365,
+      "exact_match": 0.34108527131782945,
+      "validity_gate": 0.9457364341085271,
+      "schema_ok": 0.9302325581395349,
+      "cause_acc": 0.5271317829457365,
+      "action_acc": 0.5658914728682171,
+      "numeric_acc": 0.8914728682170543,
+      "flags_acc": 0.7493540051679587,
+      "cause_given_flags": 0.864406779661017,
+      "components": {
+        "format": 0.09302325581395349,
+        "numeric": 0.13372093023255813,
+        "flags": 0.08992248062015504,
+        "stage": 0.02837209302325581,
+        "root_cause": 0.2372093023255814,
+        "action": 0.08488372093023255
+      },
+      "reward_mean_all": 0.6671317829457365,
+      "completion_tokens_mean": 489.73643410852713,
+      "completion_chars_mean": 1109.9767441860465,
+      "parse_errors": {
+        "no_json": 7
+      },
+      "schema_errors": {
+        "bad_value": 2
+      },
+      "predicted_cause_hist": {
+        "scaling": 13,
+        "mechanical_leak": 47,
+        "biofouling": 15,
+        "compaction": 17,
+        "organic_fouling": 18,
+        "null": 9,
+        "colloidal_fouling": 6,
+        "oxidation_damage": 4
+      }
+    },
+    "hard": {
+      "n_cases": 71,
+      "k": 1,
+      "reward": 0.6902816901408451,
+      "exact_match": 0.07042253521126761,
+      "validity_gate": 0.9154929577464789,
+      "schema_ok": 0.9014084507042254,
+      "cause_acc": 0.6619718309859155,
+      "action_acc": 0.5915492957746479,
+      "numeric_acc": 0.624413145539906,
+      "flags_acc": 0.7699530516431925,
+      "cause_given_flags": 0.9523809523809523,
+      "components": {
+        "format": 0.09014084507042254,
+        "numeric": 0.0936619718309859,
+        "flags": 0.0923943661971831,
+        "stage": 0.027464788732394364,
+        "root_cause": 0.297887323943662,
+        "action": 0.08873239436619718
+      },
+      "reward_mean_all": 0.6902816901408451,
+      "completion_tokens_mean": 542.6197183098592,
+      "completion_chars_mean": 1086.4507042253522,
+      "parse_errors": {
+        "no_json": 6
+      },
+      "schema_errors": {
+        "bad_value": 1
+      },
+      "predicted_cause_hist": {
+        "scaling": 13,
+        "compaction": 5,
+        "organic_fouling": 11,
+        "oxidation_damage": 6,
+        "mechanical_leak": 14,
+        "colloidal_fouling": 7,
+        "null": 7,
+        "biofouling": 8
+      }
+    }
+  },
+  "by_slice": {
+    "main": {
+      "n_cases": 200,
+      "k": 1,
+      "reward": 0.67535,
+      "exact_match": 0.245,
+      "validity_gate": 0.935,
+      "schema_ok": 0.92,
+      "cause_acc": 0.575,
+      "action_acc": 0.575,
+      "numeric_acc": 0.7966666666666667,
+      "flags_acc": 0.7566666666666667,
+      "cause_given_flags": 0.900990099009901,
+      "components": {
+        "format": 0.09200000000000001,
+        "numeric": 0.1195,
+        "flags": 0.0908,
+        "stage": 0.02805,
+        "root_cause": 0.25875,
+        "action": 0.08625
+      },
+      "reward_mean_all": 0.67535,
+      "completion_tokens_mean": 508.51,
+      "completion_chars_mean": 1101.625,
+      "parse_errors": {
+        "no_json": 13
+      },
+      "schema_errors": {
+        "bad_value": 3
+      },
+      "predicted_cause_hist": {
+        "scaling": 26,
+        "mechanical_leak": 61,
+        "biofouling": 23,
+        "compaction": 22,
+        "organic_fouling": 29,
+        "null": 16,
+        "oxidation_damage": 10,
+        "colloidal_fouling": 13
+      }
+    }
+  }
+}
