@@ -1,0 +1,173 @@
+{
+  "model": "Qwen/Qwen2.5-Math-1.5B-Instruct",
+  "backend": "hf",
+  "split": "dev",
+  "split_sha256": "94b32d0557f6962d5be8f5b33cebb5303c4137475f3292a34e9fd8b8018da6c2",
+  "prompt_version": "v2",
+  "thinking_requested": false,
+  "weights": "MAIN",
+  "mode": "sample",
+  "k": 8,
+  "temperature": 1.0,
+  "max_tokens": 640,
+  "seed": 0,
+  "adapter": null,
+  "elapsed_seconds": 1630.2,
+  "overall": {
+    "n_cases": 200,
+    "k": 8,
+    "reward": 0.0,
+    "exact_match": 0.0,
+    "validity_gate": 0.005,
+    "schema_ok": 0.0,
+    "cause_acc": 0.0,
+    "action_acc": 0.0,
+    "numeric_acc": 0.0,
+    "flags_acc": 0.0,
+    "cause_given_flags": NaN,
+    "components": {
+      "format": 0.0,
+      "numeric": 0.0,
+      "flags": 0.0,
+      "stage": 0.0,
+      "root_cause": 0.0,
+      "action": 0.0
+    },
+    "reward_mean_all": 0.00016874999999999998,
+    "completion_tokens_mean": 623.58,
+    "completion_chars_mean": 1646.9125,
+    "pass_at_k": 0.0,
+    "unique_answers_mean": 0.1,
+    "unique_completions_mean": 8.0,
+    "distinct_4": 0.5852702015711986,
+    "adv_zero_frac": 0.98,
+    "parse_errors": {
+      "no_json": 199
+    },
+    "schema_errors": {
+      "missing": 7,
+      "extra": 4
+    },
+    "predicted_cause_hist": {
+      "null": 200
+    }
+  },
+  "by_tier": {
+    "easy": {
+      "n_cases": 129,
+      "k": 8,
+      "reward": 0.0,
+      "exact_match": 0.0,
+      "validity_gate": 0.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.0,
+      "action_acc": 0.0,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.0,
+        "action": 0.0
+      },
+      "reward_mean_all": 0.00018410852713178293,
+      "completion_tokens_mean": 624.3730620155038,
+      "completion_chars_mean": 1654.0019379844962,
+      "pass_at_k": 0.0,
+      "unique_answers_mean": 0.10852713178294573,
+      "unique_completions_mean": 8.0,
+      "distinct_4": 0.6029072770586467,
+      "adv_zero_frac": 0.9767441860465116,
+      "parse_errors": {
+        "no_json": 129
+      },
+      "schema_errors": {},
+      "predicted_cause_hist": {
+        "null": 129
+      }
+    },
+    "hard": {
+      "n_cases": 71,
+      "k": 8,
+      "reward": 0.0,
+      "exact_match": 0.0,
+      "validity_gate": 0.014084507042253521,
+      "schema_ok": 0.0,
+      "cause_acc": 0.0,
+      "action_acc": 0.0,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.0,
+        "action": 0.0
+      },
+      "reward_mean_all": 0.0001408450704225352,
+      "completion_tokens_mean": 622.1390845070423,
+      "completion_chars_mean": 1634.031690140845,
+      "pass_at_k": 0.0,
+      "unique_answers_mean": 0.08450704225352113,
+      "unique_completions_mean": 8.0,
+      "distinct_4": 0.6547767968833769,
+      "adv_zero_frac": 0.9859154929577465,
+      "parse_errors": {
+        "no_json": 70
+      },
+      "schema_errors": {
+        "missing": 7,
+        "extra": 4
+      },
+      "predicted_cause_hist": {
+        "null": 71
+      }
+    }
+  },
+  "by_slice": {
+    "main": {
+      "n_cases": 200,
+      "k": 8,
+      "reward": 0.0,
+      "exact_match": 0.0,
+      "validity_gate": 0.005,
+      "schema_ok": 0.0,
+      "cause_acc": 0.0,
+      "action_acc": 0.0,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.0,
+      "cause_given_flags": NaN,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.0,
+        "stage": 0.0,
+        "root_cause": 0.0,
+        "action": 0.0
+      },
+      "reward_mean_all": 0.00016874999999999998,
+      "completion_tokens_mean": 623.58,
+      "completion_chars_mean": 1646.9125,
+      "pass_at_k": 0.0,
+      "unique_answers_mean": 0.1,
+      "unique_completions_mean": 8.0,
+      "distinct_4": 0.5852702015711986,
+      "adv_zero_frac": 0.98,
+      "parse_errors": {
+        "no_json": 199
+      },
+      "schema_errors": {
+        "missing": 7,
+        "extra": 4
+      },
+      "predicted_cause_hist": {
+        "null": 200
+      }
+    }
+  }
+}
