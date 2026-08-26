@@ -63,6 +63,7 @@ from typing import Any
 
 import torch
 
+from eval import supports_thinking_toggle
 from reward import MAIN, PROBE, Weights, group_advantages, score
 from task.prompt import PROMPT_VERSION, build_messages
 
@@ -200,10 +201,14 @@ def rollout(
     temperature: float,
     weights: Weights,
     device: str,
+    template_kwargs: dict[str, Any] | None = None,
 ) -> Group:
     """Sample one group, score it, and centre the rewards within the group."""
     text = tokenizer.apply_chat_template(
-        build_messages(case["record"]), tokenize=False, add_generation_prompt=True
+        build_messages(case["record"]),
+        tokenize=False,
+        add_generation_prompt=True,
+        **(template_kwargs or {}),
     )
     encoded = tokenizer([text] * group_size, return_tensors="pt", padding=True).to(device)
     prompt_len = encoded["input_ids"].shape[1]
@@ -354,6 +359,15 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
     weights = {"MAIN": MAIN, "PROBE": PROBE}[cfg.weights]
 
     policy, tokenizer = load_policy(cfg, device)
+
+    # Same gap eval.py had: a Qwen3 chat template defaults thinking *on*, and
+    # on this task that means the policy spends its budget inside <think> and
+    # returns nothing to score. Training against that would optimise a policy
+    # for a format we never intend to sample in.
+    template_kwargs: dict[str, Any] = {}
+    if supports_thinking_toggle(tokenizer):
+        template_kwargs["enable_thinking"] = False
+        print("  chat template honours enable_thinking; set to False")
     optimizer = torch.optim.AdamW(
         [p for p in policy.parameters() if p.requires_grad],
         lr=cfg.lr,
@@ -401,6 +415,7 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
                 temperature=cfg.temperature,
                 weights=weights,
                 device=device,
+                template_kwargs=template_kwargs,
             )
             for case in batch
         ]
