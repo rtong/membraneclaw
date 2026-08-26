@@ -153,6 +153,22 @@ def generate_openai(
     return results
 
 
+def supports_thinking_toggle(tokenizer) -> bool:
+    """Whether this tokenizer's chat template honours `enable_thinking`.
+
+    Qwen3 templates default it to *on*, and on this task that is fatal rather
+    than merely verbose: measured on the 9B, the model spends its entire budget
+    inside <think> and returns empty content, so every case fails the reward
+    gate with `empty`. Qwen2.5 templates have no such variable.
+
+    Detected rather than hard-coded by model name, and the result is recorded in
+    the run's output — silently getting this wrong produces a baseline that
+    looks like a capability floor and is actually a formatting artefact.
+    """
+    template = getattr(tokenizer, "chat_template", None) or ""
+    return "enable_thinking" in template
+
+
 def generate_hf(
     cases: list[dict],
     *,
@@ -167,6 +183,7 @@ def generate_hf(
     adapter: str | None,
     prompt_version: str = PROMPT_VERSION,
     loaded: tuple | None = None,
+    thinking: bool = False,
 ) -> list[CaseResult]:
     """Local decoding. Imported lazily so the HTTP path stays dependency-free.
 
@@ -198,6 +215,14 @@ def generate_hf(
 
     torch.manual_seed(seed)
 
+    template_kwargs: dict[str, Any] = {}
+    if supports_thinking_toggle(tokenizer):
+        template_kwargs["enable_thinking"] = thinking
+        print(
+            f"  chat template honours enable_thinking; set to {thinking}",
+            file=sys.stderr,
+        )
+
     # One case contributes n sequences; pack whole cases into a batch so a
     # group is never split across two generate calls.
     per_batch = max(1, batch_size // n)
@@ -210,6 +235,7 @@ def generate_hf(
                 build_messages(case["record"], prompt_version),
                 tokenize=False,
                 add_generation_prompt=True,
+                **template_kwargs,
             )
             for case in chunk
             for _ in range(n)
@@ -460,6 +486,7 @@ def main() -> None:
             batch_size=args.batch_size,
             adapter=args.adapter,
             prompt_version=args.prompt_version,
+            thinking=args.thinking,
         )
     elapsed = time.perf_counter() - started
 
@@ -485,6 +512,7 @@ def main() -> None:
                 "split": args.split,
                 "split_sha256": split_sha,
                 "prompt_version": args.prompt_version,
+                "thinking_requested": args.thinking,
                 "weights": args.weights,
                 "mode": args.mode,
                 "k": n,
