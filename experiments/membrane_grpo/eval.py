@@ -430,7 +430,7 @@ def main() -> None:
     parser.add_argument("--max-tokens", type=int, default=320)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--limit", type=int, default=0)
-    parser.add_argument("--weights", default="MAIN", choices=["MAIN", "PROBE"])
+    parser.add_argument("--weights", default="MAIN", choices=["MAIN", "PROBE", "ABLATE"])
     parser.add_argument("--prompt-version", default=PROMPT_VERSION, choices=list(VERSIONS))
     parser.add_argument("--run-name", default=None)
     # openai backend

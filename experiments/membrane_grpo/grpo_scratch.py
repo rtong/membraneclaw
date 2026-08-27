@@ -64,7 +64,7 @@ from typing import Any
 import torch
 
 from eval import supports_thinking_toggle
-from reward import MAIN, PROBE, Weights, group_advantages, score
+from reward import ABLATE, MAIN, PROBE, Weights, group_advantages, score
 from task.prompt import PROMPT_VERSION, build_messages
 
 ROOT = Path(__file__).resolve().parent
@@ -318,7 +318,7 @@ def evaluate(policy, tokenizer, cfg: Config, cases: list[dict], step: int) -> di
     """
     from eval import generate_hf, summarise
 
-    weights = {"MAIN": MAIN, "PROBE": PROBE}[cfg.weights]
+    weights = {"MAIN": MAIN, "PROBE": PROBE, "ABLATE": ABLATE}[cfg.weights]
     # generate_hf still moves the encoded batch onto a device, so it needs the
     # one the live policy is already on rather than a re-derived guess.
     device = str(next(policy.parameters()).device)
@@ -356,7 +356,7 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
     rng = random.Random(cfg.seed)
 
     cases = [json.loads(line) for line in (DATA / f"{cfg.split}.jsonl").read_text().splitlines()]
-    weights = {"MAIN": MAIN, "PROBE": PROBE}[cfg.weights]
+    weights = {"MAIN": MAIN, "PROBE": PROBE, "ABLATE": ABLATE}[cfg.weights]
 
     policy, tokenizer = load_policy(cfg, device)
 
