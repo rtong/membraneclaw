@@ -103,13 +103,21 @@ def main() -> None:
     verdict = "significant at 0.05" if p < 0.05 else "not significant at 0.05"
     print(f"  verdict                     : {verdict}")
 
-    # The point of the paired test, stated so it cannot be missed.
+    # The contrast with the unpaired reading, stated so it cannot be missed --
+    # though note it does not always favour pairing. Pairing helps when the two
+    # policies agree on most cases; where the discordant pairs are themselves
+    # balanced, the paired test is the *more* conservative of the two, and that
+    # is the honest answer rather than a worse one.
     independent_se = (rate_after * (1 - rate_after) / n) ** 0.5
+    if independent_se == 0:
+        print("\n  both rates are 0; there is nothing to compare")
+        return
     print(
         f"\n  for contrast, the independent-sample SE is {independent_se:.3f}, "
         f"so the same difference reads as {abs(rate_after - rate_before) / independent_se:.1f} SE"
-        "\n  the paired test is tighter because the "
-        f"{both + neither} cases both policies answered alike carry no information"
+        "\n  the paired test uses only the "
+        f"{only_before + only_after} discordant pairs; the {both + neither} cases "
+        "both policies answered alike carry no information"
     )
 
 
