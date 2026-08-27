@@ -364,6 +364,24 @@ def summarise(results: list[CaseResult], weights) -> dict[str, Any]:
     metrics["predicted_cause_hist"] = dict(
         Counter(r.diagnostics.get("predicted_cause") for r in first)
     )
+
+    # Per-case outcomes, so two evaluations of the same split can be compared
+    # with a paired test. Aggregates alone force the far weaker
+    # independent-sample comparison: on 200 cases the SE on a proportion near
+    # 0.26 is 0.031, which is wide enough to leave a real effect looking like
+    # noise. Same cases, same order -- `paired_test.py` relies on that.
+    metrics["per_case"] = [
+        {
+            "id": row["case"]["id"],
+            "tier": row["case"]["tier"],
+            "reward": round(row["scored"][0].total, 6),
+            "cause": bool(row["scored"][0].diagnostics.get("root_cause_correct")),
+            "exact": bool(row["scored"][0].diagnostics["exact_match"]),
+            "schema": bool(row["scored"][0].diagnostics.get("schema_ok")),
+            "numeric": row["scored"][0].diagnostics.get("numeric_correct", 0),
+        }
+        for row in rows
+    ]
     return metrics
 
 
