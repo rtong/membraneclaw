@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D2-2a-feed-salinity-salt-shock",
+  "task_family": "d2_2a",
+  "title": "D2-2a: Minimum Pressure Compensation after a Salinity Shock",
+  "question_prompt": "D2-2a: Minimum Pressure Compensation after a Salinity Shock\n\nAn SWRO train normally operates at a NaCl mass fraction of 0.030. A tidal-mixing event abruptly raises feed salinity to 0.033. Membrane properties, area, temperature, and feed flow are fixed; only the high-pressure-pump setpoint may be changed. Quantify the same-setpoint deterioration first, then restore all constraints with the smallest tested pressure increase. Production recovery alone is not sufficient.\n\nFixed System Parameters and Normal Operating Point | Disturbance Scenario, Constraints, and Control Ranges\nCategory | Parameter | Value | Unit / Note | Item | Requirement / Value | Note\nNormal feed | NaCl mass fraction | 0.03 | WaterTAP equivalent | Salinity shock | 0.033 | All other feed conditions unchanged\nNormal setpoint | Feed pressure | 52 | bar | Permeate flow | ≥ 6.30 m³/h | Hard production constraint\nNormal setpoint | Feed mass flow | 4.073 | kg/s | Recovery | ≤ 46.0% | Operating limit\nFeed | Temperature | 32 | °C, fixed | Flux | ≤ 18.0 LMH | Operating limit\nMembrane | Effective membrane area | 400 | m², fixed | Salt rejection | ≥ 98.7% | Water-quality requirement\nMembrane | A_comp | 4.2e-12 | m/s/Pa, fixed | Permeate NaCl | ≤ 400 mg/L | Water-quality requirement\nMembrane | B_comp | 3.4e-08 | m/s, fixed | Pressure candidates | 52 / 54 / 54.5 bar | Validate progressively at 0.5-bar scale\nHydraulics | Permeate pressure | 1.013 | bar | Feed flow | Fixed at 4.073 kg/s | Not adjustable in this item\nHydraulics | Pressure drop | 0.653 | bar\nChannel | Channel height | 0.002 | m\nChannel | Spacer porosity | 0.75 | - | Required Tasks\nChannel | Module length | 20 | m | 1. Identify a feed-salinity disturbance and establish the 0.030 / 52 bar baseline.\nModel | Concentration polarization / mass transfer | calculated | WaterTAP calculated | 2. Keep 52 bar and 4.073 kg/s unchanged, set NaCl to 0.033, and diagnose changes in Qp, Recovery, Flux, and water quality.\n3. Test 54 bar first; if it still fails, test 54.5 bar. State the exact failed constraints at each step.\n4. Select the lowest tested pressure that restores every constraint and explain why feed-flow adjustment is unnecessary.\n5. Provide a concise control-room response and explicitly state why Qp alone is not a sufficient success criterion.\n\nTask boundary: D2-2a is triggered by a feed-salinity disturbance. System design and membrane properties remain fixed; only the allowed Pressure / Feed-flow controls may be changed adaptively.",
+  "reference_answer": "D2-2a: Gold Answer — Feed-Salinity Disturbance Response\n\nEfficient reference path: ~4 simulate_ro calls: baseline → same-setpoint salinity shock → 54 bar FAIL → 54.5 bar first all-constraints PASS.\n\nHuman View: Continuous Reasoning Chain\nStep | Human action | Input | Tool Call / Action | Key output | How it informs next step | Primary evaluation\n1 | Establish normal baseline | 0.030; 52 bar; 4.073 kg/s | simulate_ro #1 | Qp≈6.594; Recovery≈45.98%; NaCl≈356.7; all constraints pass | Reference before the salinity shock | First tool call\n2 | Diagnose the shock at the same setpoint | 0.033; 52 bar; 4.073 kg/s | simulate_ro #2 | Qp≈5.855 and NaCl≈413.8; production and quality fail | Compensation is required; flow remains fixed | State understanding\n3 | Test a smaller pressure increase | 0.033; 54 bar; 4.073 kg/s | simulate_ro #3 | Qp≈6.223 and NaCl≈401.8; both still fail | Move to the next candidate pressure | Adaptive comparison\n4 | Verify the lowest feasible candidate | 0.033; 54.5 bar; 4.073 kg/s | simulate_ro #4 | Qp≈6.313 and NaCl≈399.1; all constraints pass | Lowest verified compensating setpoint | Final decision\n\nDirect simulate_ro Results\nScenario | NaCl frac | Pressure bar | Feed kg/s | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Qp | Quality | Overall\nNormal baseline | 0.03 | 52 | 4.073 | 1.83170240778751 | 6.59412866803502 | 16.4794406954646 | 45.9844466906034 | 98.8370523486472 | 356.740058859896 | PASS\n0.033 unchanged | 0.033 | 52 | 4.073 | 1.62646100938823 | 5.85525963379762 | 14.6320923116403 | 40.9211362987113 | 98.7764471228964 | 413.766304657496 | FAIL\n0.033: 54 bar | 0.033 | 54 | 4.073 | 1.72872044031413 | 6.22339358513089 | 15.5522332038449 | 43.494341114715 | 98.8119652661832 | 401.758872986468 | FAIL\n0.033: 54.5 bar | 0.033 | 54.5 | 4.073 | 1.75365193326794 | 6.3131469597646 | 15.7765678285466 | 44.1217014265906 | 98.8197123716055 | 399.139820762719 | PASS\n\nRecommended Operating Response | Final Conclusion\n\nWhen feed salinity jumps from 0.030 to 0.033, the original 52-bar setting fails both permeate-flow and permeate-NaCl constraints. 54 bar still fails both; 54.5 bar is the first tested pressure that passes every constraint. With feed flow fixed, the lowest verified pressure compensation is therefore 54.5 bar.\nFeed state / rule | Pressure | Feed flow | Key evidence | Decision / status | Note / correction\nNormal 0.030 | 52.0 bar | 4.073 kg/s | All constraints pass | Hold\nShock 0.033 | 54.5 bar | 4.073 kg/s | 54 bar still fails Qp/NaCl; 54.5 first passes all | Minimum compensation",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem framing",
+        "reasoning_or_calculation": "Recognize a salinity shock, not equipment failure",
+        "inputs": "Recognizes disturbance but weak causal comparison",
+        "key_outputs": "Baseline at 0.030/52, then 0.033 at the same setpoint",
+        "full_credit": "Baseline at 0.030/52, then 0.033 at the same setpoint",
+        "common_failures": "Redesigns membrane/area",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Plan quality",
+        "reasoning_or_calculation": "Seek minimum compensation, not over-adjustment",
+        "inputs": "Reasonable but skips a key candidate",
+        "key_outputs": "52→54→54.5 with progressive validation",
+        "full_credit": "52→54→54.5 with progressive validation",
+        "common_failures": "Jumps directly to maximum pressure",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool correctness",
+        "reasoning_or_calculation": "Change only salinity/pressure",
+        "inputs": "Minor parameter/unit issue",
+        "key_outputs": "Keep flow at 4.073 and all system parameters fixed",
+        "full_credit": "Keep flow at 4.073 and all system parameters fixed",
+        "common_failures": "Changes disallowed variables simultaneously",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation",
+        "reasoning_or_calculation": "Identify dual-constraint failure correctly",
+        "inputs": "Misses one failed constraint",
+        "key_outputs": "52 and 54 fail Qp/NaCl; 54.5 passes all",
+        "full_credit": "52 and 54 fail Qp/NaCl; 54.5 passes all",
+        "common_failures": "Checks Qp only",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptation",
+        "reasoning_or_calculation": "Continue only after a FAIL",
+        "inputs": "Some redundancy",
+        "key_outputs": "54 FAIL→54.5; stop after PASS",
+        "full_credit": "54 FAIL→54.5; stop after PASS",
+        "common_failures": "Continues pointless scanning",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Final decision",
+        "reasoning_or_calculation": "54.5 bar / 4.073 kg/s",
+        "inputs": "Correct setpoint with weak rationale",
+        "key_outputs": "States it is the lowest verified candidate and no flow change is needed",
+        "full_credit": "States it is the lowest verified candidate and no flow change is needed",
+        "common_failures": "Recommends 54 bar or blindly uses 58",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection",
+        "evaluation_focus": "Use the right tool and avoid irrelevant calls",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Wrong tool / excessive metadata",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Prioritize discriminating calls",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Dense low-value scanning",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptation",
+        "evaluation_focus": "Let each result determine the next call",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Preset enumeration ignores results",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning",
+        "evaluation_focus": "Stop failed branches promptly",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Keeps testing disproved branches",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Reach sufficient evidence within a reasonable budget",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Many calls or insufficient evidence",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D2_2a_进水盐度_SaltShock_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D2\\D2_2a_进水盐度_SaltShock_EN.xlsx",
+    "sha256": "0ae4251d93da0364cdd684f3a7d3a00cb25192e5635bf2862b5e2463ba4cda27",
+    "sheets": [
+      "Question",
+      "Gold_Answer",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question",
+      "answer": "Gold_Answer",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:33+00:00"
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D6-6a-n01",
+  "task_family": "d6_6a",
+  "title": "D6_6a-N01 | Joint optimization of area, pressure, PX and acidification for a high-salinity summer expansion",
+  "question_prompt": "D6_6a-N01 | Joint optimization of area, pressure, PX and acidification for a high-salinity summer expansion\n\nA coastal SWRO plant must increase summer output at 31°C and 39 g/kg. Membrane area, operating pressure and PX efficiency may change, but membrane quality/CP, plant SEC/LCOW and concentrate scaling must all remain acceptable. Determine the robust configuration with the lowest overall cost.\n\nEngineering inputs and design boundary | Hard constraints and decision rule\nModule basis: 1 kg/s feed, A=3.8×10⁻¹² m/s/Pa and B=3.2×10⁻⁸ m/s. Engineering bounds: 64–72 bar, 62–68 m² module area; plant area scales proportionally and PX efficiency lies between 93% and 97%. The solver must organize a reproducible discrete search. | Module: water≥0.370 kg/s, NaCl≤360 mg/L, CP≤1.33. Plant: product≥0.042 m³/s, SEC≤3.00 kWh/m³. Chemistry: pH≥6.10 and SI≤0 for Calcite, Dolomite, Gypsum and Anhydrite. Among fully feasible designs minimize LCOW, then acid use.\n\nEngineering dependency | Required engineering answer\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 1 | Define a reproducible discrete search within the stated bounds.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 2 | Evaluate membrane and plant constraints without mixing design identities.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 3 | Transfer actual recovery into concentrate chemistry.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 4 | Show the controlling failure immediately outside the feasible boundary.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 5 | Report the final setting, decisive values and model limitations.\n\nBoundary note\nDo not substitute nominal recovery, mix outputs from different design packages, or average away a failed season/state. The answer must preserve engineering lineage from design identity to final chemistry verification.",
+  "reference_answer": "Gold Answer | D6_6a-N01\n\nRecommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\n\nParallel membrane + whole-plant join (key rows from 10 + 10 calls) | Joint-decision summary\nID | Setting | Water kg/s | NaCl mg/L | Recovery | CP | Plant m³/s | SEC | LCOW | Status | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nD | 70 bar / 62 m² / PX93% | 0.3861128 | 314.6491 | 0.3975842 | 1.303099 | 0.0416278 | 2.990192 | 1.174213 | =IF(AND(C10>=0.37,D10<=360,F10<=1.33,G10>=0.042,H10<=3),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nE | 72 bar / 62 m² / PX97% | 0.4027361 | 308.7778 | 0.4147008 | 1.321301 | 0.0431231 | 2.924016 | 1.139547 | =IF(AND(C11>=0.37,D11<=360,F11<=1.33,G11>=0.042,H11<=3),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nH | 68 bar / 68 m² / PX95% | 0.3871904 | 340.3086 | 0.3986963 | 1.292541 | 0.0423913 | 2.847866 | 1.150619 | =IF(AND(C12>=0.37,D12<=360,F12<=1.33,G12>=0.042,H12<=3),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nI | 70 bar / 68 m² / PX97% | 0.4047575 | 333.4681 | 0.4167847 | 1.31106 | 0.0439821 | 2.850551 | 1.121968 | =IF(AND(C13>=0.37,D13<=360,F13<=1.33,G13>=0.042,H13<=3),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nJ | 72 bar / 68 m² / PX93% | 0.4217776 | 327.7023 | 0.43431 | 1.329754 | 0.0455224 | 3.029174 | 1.113783 | =IF(AND(C14>=0.37,D14<=360,F14<=1.33,G14>=0.042,H14<=3),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nRecommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nSerial concentrate chemistry (actual recovery inherited) | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nID | Parent | Recovery | HCl mol/s | pH | Calcite SI | Dolomite SI | Gypsum SI | Anhydrite SI | Status | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nI-D0.0003 | I | 0.4167847 | 0.0003 | 6.6257 | -0.2661 | 0.524 | -0.3842 | -0.632 | =IF(AND(E18>=6.1,F18<=0,G18<=0,H18<=0,I18<=0),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nI-D0.0006 | I | 0.4167847 | 0.0006 | 6.4091 | -0.5352 | -0.0139 | -0.3843 | -0.6321 | =IF(AND(E19>=6.1,F19<=0,G19<=0,H19<=0,I19<=0),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nI-D0.0009 | I | 0.4167847 | 0.0009 | 6.2286 | -0.7765 | -0.4962 | -0.3843 | -0.6321 | =IF(AND(E20>=6.1,F20<=0,G20<=0,H20<=0,I20<=0),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nI-D0.0012 | I | 0.4167847 | 0.0012 | 6.0634 | -1.013 | -0.9689 | -0.3843 | -0.6322 | =IF(AND(E21>=6.1,F21<=0,G21<=0,H21<=0,I21<=0),\"PASS\",\"FAIL\") | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nH-D0.0006 | H | 0.3986963 | 0.0006 | 6.4133 | -0.5543 | -0.0531 | -0.3985 | -0.6472 | =IF(AND(E22>=6.1,F22<=0,G22<=0,H22<=0,I22<=0),\"PASS\",\"FAIL\")\n\nEngineering conversion / final KPI | Boundary evidence\nSelected HCl mol/s | 0.0006 | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\nPure HCl g/h | =B25*36.46*3600 | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\n31 wt% HCl L/h | =B26/(31%*1150) | Recommend 70 bar, 68 m² module area (6,800 m² plant area), PX 97% and 0.0006 mol/s HCl. Design I gives 0.40476 kg/s module water, 333.47 mg/L NaCl and CP 1.3111; plant product 0.04398 m³/s, SEC 2.8506 kWh/m³ and LCOW 1.12197 $/m³.\n\nModel scope and audit note\nAll numeric rows are direct outputs from connected ROprocess tools. simulate_ro supplies membrane flow, salinity, CP and actual recovery; simulate_swro_system supplies plant product, SEC, CAPEX and LCOW; equilibrate_feed uses Pitzer activity corrections at inherited recovery. Osmotic pressures from different tools are not forced to match.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Formulation",
+        "reasoning_or_calculation": "Common candidate identity",
+        "inputs": "",
+        "key_outputs": "Defines variables, units, constraints and objective.",
+        "full_credit": "Defines variables, units, constraints and objective.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Parallel membrane branch",
+        "reasoning_or_calculation": "simulate_ro fidelity",
+        "inputs": "",
+        "key_outputs": "Runs the declared grid and applies all module constraints.",
+        "full_credit": "Runs the declared grid and applies all module constraints.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Parallel plant branch",
+        "reasoning_or_calculation": "simulate_swro_system fidelity",
+        "inputs": "",
+        "key_outputs": "Uses matching design IDs and applies product/SEC/economic rules.",
+        "full_credit": "Uses matching design IDs and applies product/SEC/economic rules.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Join logic",
+        "reasoning_or_calculation": "Joint feasibility",
+        "inputs": "",
+        "key_outputs": "Intersects both branches before ranking.",
+        "full_credit": "Intersects both branches before ranking.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Serial chemistry",
+        "reasoning_or_calculation": "Inherited recovery",
+        "inputs": "",
+        "key_outputs": "Transfers actual recovery and evaluates dose/state boundaries.",
+        "full_credit": "Transfers actual recovery and evaluates dose/state boundaries.",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision and scope",
+        "reasoning_or_calculation": "Final recommendation",
+        "inputs": "",
+        "key_outputs": "Reports winner, controlling failure, conversion and model limits.",
+        "full_credit": "Reports winner, controlling failure, conversion and model limits.",
+        "common_failures": "",
+        "max_score": 20.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Choose simulator and metadata tools that match the requested outputs.",
+        "full_credit": "Every selected tool is necessary and scientifically appropriate.",
+        "medium_credit": "The main tools are correct, with limited unnecessary metadata or exploratory calls.",
+        "low_credit": "Wrong simulator scope, missing required tool types, or many irrelevant calls.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and call ordering",
+        "evaluation_focus": "Order calls so each stage or branch resolves a decision boundary.",
+        "full_credit": "Call order follows the reference dependencies or an equally informative alternative.",
+        "medium_credit": "Mostly useful ordering with minor low-information calls.",
+        "low_credit": "Dense or serial enumeration without regard to dependencies or information gain.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 State lineage and adaptive iteration",
+        "evaluation_focus": "Preserve candidate identity and exact upstream outputs across coupled calls.",
+        "full_credit": "Downstream calls inherit the correct candidate state and adapt to observed results.",
+        "medium_credit": "Lineage is mostly preserved, with minor rounding or weak adaptation.",
+        "low_credit": "Mixes candidates, substitutes target values for actual outputs, or ignores prior results.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Parallelization, pruning and redundancy control",
+        "evaluation_focus": "Parallelize independent branches, prune resolved candidates, and avoid repetition.",
+        "full_credit": "Independent work is parallelized and redundant/equivalent calls are avoided.",
+        "medium_credit": "Some avoidable serialization or repetition, without changing the conclusion.",
+        "low_credit": "Unnecessary serial execution, repeated equivalent calls, or no pruning.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence, stopping and evidence sufficiency",
+        "evaluation_focus": "Stop after constraints and ranking are supported by auditable evidence.",
+        "full_credit": "Converges within the reference budget or justifies an efficient alternative budget.",
+        "medium_credit": "Minor extra calls or a weakly justified sensitivity check.",
+        "low_credit": "Stops too early to support the answer or continues after the decision is resolved.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "reference_trajectory",
+    "reference_trajectory": "D6_6a-N01 | Tool efficiency (100 points)\n\nReference trajectory: 10 simulate_ro calls and 10 simulate_swro_system calls in parallel, followed by 10 equilibrate_feed calls on inherited recoveries. Efficiency means each call changes a feasibility boundary or ranking.\n\nStage | Tool | Calls | Key input | Key observation | State update | Next step\n1 Metadata | describe_* | 0 | Units, species and valid parameter combinations | Lock common candidate identity | Create auditable search table | Fork\n2A Parallel membrane | simulate_ro | 10 | Pressure, area, A/B, temperature and salinity | Water, NaCl, CP and actual recovery | Mark membrane-feasible IDs | Join\n2B Parallel plant | simulate_swro_system | 10 | Same ID, plant area, ERD and pump settings | Product, SEC, CAPEX and LCOW | Mark plant-feasible IDs | Join\n3 Join | — | 0 | Two aligned branch tables | Intersection and ranking boundary | Create chemistry shortlist | Transfer recovery\n4 Serial chemistry | equilibrate_feed | 10 | Inherited recovery, ion analysis and dose/state | pH and mineral SI | Lock final feasible set | Check adjacent failure\n5 Stop | — | 0 | Winner plus decisive failure evidence | No unresolved boundary | Report recommendation and limits | Stop\n\nHybrid-trajectory audit\nCritical rule: both parallel branches must use the same design identity. Chemistry must inherit the exact actual recovery associated with that identity. Re-running chemistry with a rounded target recovery, or combining the membrane result of one package with the ERD/economics of another, breaks the trajectory even if the final recommendation happens to match.",
+    "derivation_note": "The source sheet defines a 100-point reference trajectory and call budget but no numeric dimension allocation. The project-standard five 20-point efficiency dimensions are applied while preserving the complete task-specific trajectory as Judge evidence."
+  },
+  "source": {
+    "filename": "D6_6a_N01_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D6\\D6_6a_N01_EN.xlsx",
+    "sha256": "b2dc850d6cb29fd4212406b23dfe377636ca2ddc093143075859dfd182974905",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:34+00:00"
+  }
+}

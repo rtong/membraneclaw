@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.4",
+  "modules": [
+    "copy fixed inputs into a concrete tool template",
+    "separate feed pH from result-pH limits",
+    "cap single-boundary searches and stop at adjacent grid evidence",
+    "emit a compact complete answer immediately"
+  ]
+}

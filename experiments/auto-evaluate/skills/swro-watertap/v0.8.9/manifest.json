@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.9",
+  "status": "candidate",
+  "design": "immutable BASE_ARGS with echoed-input validation plus the v0.8.8 six-result finite-state search",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}

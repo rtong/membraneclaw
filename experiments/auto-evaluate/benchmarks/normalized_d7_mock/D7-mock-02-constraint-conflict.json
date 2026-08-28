@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D7-mock-02-constraint-conflict",
+  "task_family": "d7_mock",
+  "title": "D2-2b: Pressure–Flow Correction under Conflicting Constraints",
+  "question_prompt": "D2-2b: Pressure–Flow Correction under Conflicting Constraints\n\nAn operating SWRO train has normal feed, membrane properties, and area, but the current 55.0 bar / 4.073 kg/s setpoint drives Recovery well above its limit. Only Pressure and Feed flow may be adjusted. First test pressure-only and flow-only branches. Escalate to coordinated control only after both are disproved, then apply a lexicographic objective: lowest feasible Pressure first, then the smallest Feed-flow increase.\n\nFixed System Parameters | Operating Objectives and Item Constraints\nCategory | Parameter | Value | Note | Item | Requirement / Value | Note\nFeed | NaCl mass fraction | 0.03 | Fixed; ~30.5 g/L | Qp minimum | 6.9 | m³/h\nFeed | Temperature | 32 | °C; fixed | Qp maximum | None | No upper limit\nMembrane | Effective membrane area | 400 | m²; fixed | Recovery maximum | 46 | %\nMembrane | A_comp | 4.2e-12 | m/s/Pa; fixed | Flux maximum | 18 | LMH\nMembrane | B_comp | 3.4e-08 | m/s; fixed | Salt rejection minimum | 98.7 | %\nHydraulics | Permeate pressure | 1.013 | bar | Permeate NaCl maximum | 400 | mg/L\nHydraulics | Pressure drop | 0.653 | bar | Current setpoint | 55.0 bar / 4.073 kg/s | Recovery is excessive\nChannel | Channel height | 0.002 | m | Pressure range | 50–55 bar | 0.05-bar resolution\nChannel | Spacer porosity | 0.75 | - | Feed-flow range | 4.073–4.30 kg/s | 0.005 kg/s for second-stage refinement\nChannel | Equivalent module length | 20 | m | Optimization objective | ① lowest feasible Pressure; ② smallest flow increase at that P | Prune failed single-variable branches\nModel | Concentration polarization / mass transfer | calculated | WaterTAP calculated\n\nRequired Tasks\n1. Diagnose which hard constraints are violated at the current setpoint.\n2. Test pressure-only and flow-only branches; stop each branch once infeasibility is established.\n3. Enter coordinated Pressure–Flow control and bracket the minimum feasible Pressure.\n4. Fix that Pressure and bracket the minimum Feed-flow increase.\n5. Report the unique setpoint and explain why the first feasible point is not the final answer.\n\nTask boundary: In D2-2b, feed conditions, membrane properties, area, and system structure remain fixed. The problem arises from the operating setpoint or the allowed operating envelope. Do not change feed quality, temperature, membrane area, or A/B.\n\nAdditional operations observation: after normalization to the reference conditions, permeate flow has declined by 12%, normalized salt passage is unchanged, and normalized stage pressure drop has increased by 4%. Decide whether membrane cleaning should be initiated under the manufacturer operating criteria. Do not invent an unstated trigger.",
+  "reference_answer": "D2-2b: Gold Answer — Advanced Operating Setpoint Adjustment\n\nConstraint | Value | Unit\nPressure-only control at 52 bar fails production (Qp≈6.594 m³/h). Flow-only control at 55 bar / 4.30 kg/s still violates Recovery (≈48.46%) and Flux (≈18.33 LMH). Under coordinated control, 52.60/4.30 fails Qp while 52.65/4.30 establishes the minimum feasible Pressure. At 52.65 bar, 4.290 kg/s still fails Qp whereas 4.295 kg/s passes all constraints. Final setpoint: 52.65 bar + 4.295 kg/s. | Qp min | 6.9 | m³/h\nQp max | 999 | m³/h\nRecovery max | 46 | %\nFlux max | 18 | LMH\nContinuous Reasoning Trajectory | Rejection min | 98.7 | %\nNode | Evidence point | Key observation | State update | Engineering meaning | Decision | NaCl max | 400 | mg/L\nCurrent diagnosis | A | Recovery exceeds the limit; other core metrics pass | Operating correction is required | Use branch tests before coordinated search | Continue\nPressure-only | B | Recovery passes but Qp fails | Prune pressure-only | Single-variable control is infeasible | Stop branch\nFlow-only | C | Recovery and Flux still fail | Prune flow-only | Single-variable control is infeasible | Stop branch\nCoarse coordinated search | D→E | 53 bar slightly exceeds Recovery; 52.90 passes all | Continue lowering Pressure | A feasible coordinated region exists | Continue\nPressure boundary | F→G | 52.60 fails Qp; 52.65 passes | Set Pmin=52.65 bar | First optimization layer completed | Proceed to flow refinement\nFlow boundary | H→I | 4.290 fails Qp; 4.295 passes | Final setpoint found | Second optimization layer completed | Stop\n\nsimulate_ro Evidence and Constraint Checks\nScenario | Pressure bar | Feed kg/s | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Qp | Recovery | Flux | Water quality | Overall\n55 / 4.073 current baseline | 55 | 4.073 | 1.9797506995926 | 7.12710251853335 | 17.811580432719 | 49.7015456420662 | 98.8700749743128 | 346.612868180128 | =IF(AND(E21>=$P$4,E21<=$P$5),\"PASS\",\"FAIL\") | =IF(G21<=$P$6,\"PASS\",\"FAIL\") | =IF(F21<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H21>=$P$8,I21<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J21=\"PASS\",K21=\"PASS\",L21=\"PASS\",M21=\"PASS\"),\"PASS\",\"FAIL\")\n52 / 4.073 pressure-only | 52 | 4.073 | 1.83170240778751 | 6.59412866803502 | 16.4794406954646 | 45.9844466906034 | 98.8370523486472 | 356.740058859896 | =IF(AND(E22>=$P$4,E22<=$P$5),\"PASS\",\"FAIL\") | =IF(G22<=$P$6,\"PASS\",\"FAIL\") | =IF(F22<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H22>=$P$8,I22<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J22=\"PASS\",K22=\"PASS\",L22=\"PASS\",M22=\"PASS\"),\"PASS\",\"FAIL\")\n55 / 4.30 flow-only | 55 | 4.3 | 2.03776009941417 | 7.33593635789101 | 18.3337109011362 | 48.457664489109 | 98.9104044469414 | 334.244644022683 | =IF(AND(E23>=$P$4,E23<=$P$5),\"PASS\",\"FAIL\") | =IF(G23<=$P$6,\"PASS\",\"FAIL\") | =IF(F23<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H23>=$P$8,I23<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J23=\"PASS\",K23=\"PASS\",L23=\"PASS\",M23=\"PASS\"),\"PASS\",\"FAIL\")\n53 / 4.30 | 53 | 4.3 | 1.93638947054294 | 6.97100209395459 | 17.4215700797396 | 46.0468634161164 | 98.8898036282236 | 340.562522681332 | =IF(AND(E24>=$P$4,E24<=$P$5),\"PASS\",\"FAIL\") | =IF(G24<=$P$6,\"PASS\",\"FAIL\") | =IF(F24<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H24>=$P$8,I24<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J24=\"PASS\",K24=\"PASS\",L24=\"PASS\",M24=\"PASS\"),\"PASS\",\"FAIL\")\n52.90 / 4.30 | 52.9 | 4.3 | 1.93120516793036 | 6.95233860454928 | 17.3749210345884 | 45.9235695129681 | 98.8886382538251 | 340.919918997431 | =IF(AND(E25>=$P$4,E25<=$P$5),\"PASS\",\"FAIL\") | =IF(G25<=$P$6,\"PASS\",\"FAIL\") | =IF(F25<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H25>=$P$8,I25<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J25=\"PASS\",K25=\"PASS\",L25=\"PASS\",M25=\"PASS\"),\"PASS\",\"FAIL\")\n52.60 / 4.30 | 52.6 | 4.3 | 1.91558437240368 | 6.89610374065324 | 17.2343628712076 | 45.5520729557417 | 98.8850574342909 | 342.018081353824 | =IF(AND(E26>=$P$4,E26<=$P$5),\"PASS\",\"FAIL\") | =IF(G26<=$P$6,\"PASS\",\"FAIL\") | =IF(F26<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H26>=$P$8,I26<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J26=\"PASS\",K26=\"PASS\",L26=\"PASS\",M26=\"PASS\"),\"PASS\",\"FAIL\")\n52.65 / 4.30 | 52.65 | 4.3 | 1.91819493498951 | 6.90550176596225 | 17.2578531058222 | 45.6141578573647 | 98.8856631802543 | 341.832311881989 | =IF(AND(E27>=$P$4,E27<=$P$5),\"PASS\",\"FAIL\") | =IF(G27<=$P$6,\"PASS\",\"FAIL\") | =IF(F27<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H27>=$P$8,I27<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J27=\"PASS\",K27=\"PASS\",L27=\"PASS\",M27=\"PASS\"),\"PASS\",\"FAIL\")\n52.65 / 4.290 | 52.65 | 4.29 | 1.91586640474527 | 6.89711905708298 | 17.2368944464479 | 45.6649654654741 | 98.8839515920869 | 342.357219627473 | =IF(AND(E28>=$P$4,E28<=$P$5),\"PASS\",\"FAIL\") | =IF(G28<=$P$6,\"PASS\",\"FAIL\") | =IF(F28<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H28>=$P$8,I28<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J28=\"PASS\",K28=\"PASS\",L28=\"PASS\",M28=\"PASS\"),\"PASS\",\"FAIL\")\n52.65 / 4.295 | 52.65 | 4.295 | 1.91703108682726 | 6.90131191257813 | 17.2473775289916 | 45.6395420174735 | 98.8848081898688 | 342.094519329858 | =IF(AND(E29>=$P$4,E29<=$P$5),\"PASS\",\"FAIL\") | =IF(G29<=$P$6,\"PASS\",\"FAIL\") | =IF(F29<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H29>=$P$8,I29<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J29=\"PASS\",K29=\"PASS\",L29=\"PASS\",M29=\"PASS\"),\"PASS\",\"FAIL\")\n\nFinal Engineering Conclusion\n\nPressure-only control at 52 bar fails production (Qp≈6.594 m³/h). Flow-only control at 55 bar / 4.30 kg/s still violates Recovery (≈48.46%) and Flux (≈18.33 LMH). Under coordinated control, 52.60/4.30 fails Qp while 52.65/4.30 establishes the minimum feasible Pressure. At 52.65 bar, 4.290 kg/s still fails Qp whereas 4.295 kg/s passes all constraints. Final setpoint: 52.65 bar + 4.295 kg/s.\n\nFor the added cleaning decision, retrieve the manufacturer criteria: cleaning is indicated when normalized permeate flow drops 10%, normalized salt passage increases 5-10%, or normalized pressure drop increases 10-15%. The 12% normalized-flow decline alone exceeds its 10% trigger, so cleaning should be initiated even though salt passage and pressure drop have not triggered.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem framing",
+        "reasoning_or_calculation": "Recognize D2-2b and the item-specific objective",
+        "inputs": "Understands setpoint correction but misses part of the special objective",
+        "key_outputs": "Prune single-variable branches, then complete two-stage boundary search; keep feed, membrane, and area fixed",
+        "full_credit": "Prune single-variable branches, then complete two-stage boundary search; keep feed, membrane, and area fixed",
+        "common_failures": "Changes feed/membrane or turns the task into design",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Plan quality",
+        "reasoning_or_calculation": "Decompose in an information-efficient order",
+        "inputs": "Mostly reasonable but skips a key stage",
+        "key_outputs": "Use evidence-driven branching/boundary logic rather than enumeration",
+        "full_credit": "Use evidence-driven branching/boundary logic rather than enumeration",
+        "common_failures": "Brute-force grid or ignores stated priority",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool-call correctness",
+        "reasoning_or_calculation": "Change only allowed variables in simulate_ro",
+        "inputs": "Minor input/unit issue",
+        "key_outputs": "All comparisons keep identical feed/membrane parameters; Pressure/Flow match the item",
+        "full_credit": "All comparisons keep identical feed/membrane parameters; Pressure/Flow match the item",
+        "common_failures": "Changes salinity, temperature, area, A, or B",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation interpretation",
+        "reasoning_or_calculation": "Read active constraints and FAIL/PASS precisely",
+        "inputs": "Mostly correct but misses one boundary or failure mechanism",
+        "key_outputs": "Pressure-only control at 52 bar fails production (Qp≈6.594 m³/h). Flow-only control at 55 bar / 4.30 kg/s still violates Recovery",
+        "full_credit": "Pressure-only control at 52 bar fails production (Qp≈6.594 m³/h). Flow-only control at 55 bar / 4.30 kg/s still violates Recovery",
+        "common_failures": "Rounds near-fail to PASS or treats one passing metric as overall success",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptation and pruning",
+        "reasoning_or_calculation": "Let each result determine the next action",
+        "inputs": "Some redundancy",
+        "key_outputs": "Prune single-variable branches, then complete two-stage boundary search; stop once evidence is sufficient",
+        "full_credit": "Prune single-variable branches, then complete two-stage boundary search; stop once evidence is sufficient",
+        "common_failures": "Continues disproved branches or performs unstructured enumeration",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Final decision",
+        "reasoning_or_calculation": "Deliver the conclusion required by this objective\n\nFor the added cleaning decision, compare each observed normalized change with the retrieved manufacturer trigger for that metric.",
+        "inputs": "Correct endpoint/conclusion with weak rationale",
+        "key_outputs": "minimum feasible Pressure. At 52.65 bar, 4.290 kg/s still fails Qp whereas 4.295 kg/s passes all constraints. Final setpoint: 52.65 bar + 4.295 kg/s.\n\nInitiate cleaning because the 12% normalized permeate-flow decline exceeds the 10% trigger; do not require all three indicators to trigger.",
+        "full_credit": "minimum feasible Pressure. At 52.65 bar, 4.290 kg/s still fails Qp whereas 4.295 kg/s passes all constraints. Final setpoint: 52.65 bar + 4.295 kg/s.\n\nRetrieves the 10% flow-loss, 5-10% salt-passage-rise, and 10-15% pressure-drop-rise criteria and correctly applies the one-or-more rule.",
+        "common_failures": "Blindly applies the original 'minimum Pressure' objective\n\nInvents thresholds, waits for all indicators, or treats the 4% pressure-drop increase as the deciding trigger.",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection",
+        "evaluation_focus": "Use only tools relevant to operating setpoints",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Wrong tool or excessive metadata",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Test the most discriminating points first",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Dense full-grid search first",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptation",
+        "evaluation_focus": "Let each result trigger the next call",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Preset enumeration ignores results",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning",
+        "evaluation_focus": "Stop invalid branches once proven",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Keeps testing disproved options",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Use minimal but sufficient evidence",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Too many calls or missing critical evidence",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D2_2b_ConstraintConflict_EN.xlsx",
+    "absolute_path": "D:\\PhD_Work\\auto-evaluate\\benchmarks\\Datasets Harness\\D2\\D2_2b_ConstraintConflict_EN.xlsx",
+    "sha256": "a449a24e4ae0cd61fec0642bcd613a36cb0d05707da704d4bc4cff09f2ef084c",
+    "sheets": [
+      "Question",
+      "Gold_Answer",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question",
+      "answer": "Gold_Answer",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-25T10:23:13+00:00",
+    "derived_overlay": {
+      "overlay_id": "d7-mock-r2-cleaning-trigger-v1",
+      "sha256": "e69ccbdea49ac5794d6a97d581bdf948f2bfe954e399d7415b7f94f1cc77b398"
+    }
+  },
+  "benchmark_view": {
+    "rag_need": "R2",
+    "expected_route": "use_rag"
+  },
+  "rag_evidence": {
+    "source_document": "RO-operational Manual.pdf",
+    "source_locator": "page 135, section 6.3 Cleaning Requirements",
+    "missing_knowledge": "manufacturer thresholds and one-or-more rule for initiating membrane cleaning",
+    "decision_impact": "determines whether a 12% normalized permeate-flow decline triggers cleaning"
+  }
+}

@@ -1,52 +1,52 @@
-# Skill iteration protocol
+# Router Skill iteration protocol
 
-## Current candidate
+## Active research boundary
 
-`swro-watertap@0.6.0` is the current development candidate. The OpenWebUI runtime artifact is the
-self-contained `skills/swro-watertap/v0.6.0/SKILL.md`. The adjacent JSON files are the
-machine-readable local source of truth for workflow, mappings, and failure prevention;
-OpenWebUI does not read those JSON files.
+`swro-watertap@0.8.9` is frozen as preliminary evidence that a task-specific solver Skill can improve
+one benchmark family but may not transfer. It is not mounted in the paper-ready systems and is no longer
+optimized. Its final artifact remains under `skills/swro-watertap/v0.8.9/`.
 
-To keep maintenance sane, the human-edited markdown source is now split into modules under
-`skills/swro-watertap/v0.6.0/source/`. Rebuild the runtime artifact with:
+The active development Skill is `swro-rag-router@0.1.2`. It does not solve the engineering problem. It classifies
+whether missing external knowledge could change the later tool-based decision, then returns `use_rag`
+or `skip_rag`. Version 0.1.2 adds a decision-rule sufficiency gate after the natural short probe showed
+that 0.1.1 treated known measurements as a fully specified task even when the governing external rule
+was absent.
 
-```powershell
-python skills/swro-watertap/v0.6.0/build_skill.py
+## Router-only ablation
+
+Run the fixed D1-D6 pilot:
+
+```bat
+python ae.py router-eval --benchmark-set d1_d6 --run-id router-r0-pilot --pilot
 ```
 
-Edit the source modules first, then regenerate `SKILL.md`, and only then copy the rebuilt runtime
-file into OpenWebUI.
+The command sends each question twice to the same 9B model:
 
-The current design keeps the same benchmark-answer isolation rule and uses a reusable execution protocol:
+- `zero-shot`: minimal task and JSON contract only;
+- `router-skill`: the frozen Router Skill instructions.
 
-- compile the question into decision variables, fixed inputs, constraints, outputs, and explicit candidates;
-- lock all stated arguments and reject silent tool defaults before every call;
-- run a post-call audit with signed margins and a single justified next action;
-- prioritize explicit question candidates over invented micro-search;
-- separate theoretical boundary estimates from directly verified recommendations;
-- emit one complete final answer with a full pass-fail table and monitoring guidance.
+No WaterTAP tool, Knowledge collection, or solver request is used. The output
+`runs/router-r0-pilot/router_summary.json` reports valid-response rate, route accuracy, activation rate,
+latency, and the Skill-minus-zero-shot difference.
 
-## Development gate
+D1-D6 are R0 cases, so this pilot measures false RAG activation and output stability only. A complete
+two-action routing result requires D7 R2 cases mixed with D1-D6 before evaluation.
 
-The three current benchmarks are development data. A candidate is promoted only when the
-following command returns success:
+## Reward-guided revision
 
-```powershell
-python ae.py skill-gate --run-id pilot-003
+This method is reward-guided prompt/Skill optimization, not reinforcement learning of model weights.
+Only revise the Router when a development result reveals a transferable information-need error. Never
+write case IDs, benchmark family names, source filenames, reference answers, or task-specific target
+values into the Skill.
+
+For end-to-end runs, execute:
+
+```bat
+python ae.py reward-analysis --run-id <run-id>
 ```
 
-The default gate requires the candidate to beat Environment on every development case and in
-the mean, with no TOOL_ARGUMENT or PARAMETER_EXTRACTION failures. If it fails, use the
-step-level diagnoses to create a new immutable version; do not edit the already evaluated version.
+The command writes `reward_analysis.json` and `router_update_plan.json`. The latter contains misroute
+evidence only; the retired Solver Skill promotion and source-file targeting loop has been removed.
 
-## OpenWebUI deployment
-
-1. Open the existing `swro-watertap` Skill in OpenWebUI.
-2. Run `python skills/swro-watertap/v0.6.0/build_skill.py`.
-3. Replace the OpenWebUI markdown with `skills/swro-watertap/v0.6.0/SKILL.md` and save.
-4. Confirm that only Environment-Skill has this Skill attached.
-5. Confirm Environment and Environment-Skill still use the same Knowledge collection.
-6. Run `python ae.py probe --details` before starting a new run.
-
-The run manifest records `swro-watertap@0.6.0` and a local artifact hash. Use a new run ID
-instead of overwriting an earlier experiment run.
+Each accepted Router revision must use a new immutable version while keeping the 9B weights, solver
+prompt, Tools preset, Knowledge corpus, and generation settings fixed.

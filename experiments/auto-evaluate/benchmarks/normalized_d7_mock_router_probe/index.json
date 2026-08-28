@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-24T09:57:29+00:00",
+  "cases": [
+    {
+      "case_id": "D7-probe-01-pressure-missing",
+      "task_family": "d7_mock_router_probe",
+      "title": "D1-1a-R4: Robust Membrane-Area Feasibility — Design Feasibility Check",
+      "file": "D7-probe-01-pressure-missing.json",
+      "source_sha256": "8b93a9080cce783c1fc7c69b51fd02a13cd754c9e53b756a3eed78b48fe2305f"
+    },
+    {
+      "case_id": "D7-probe-02-pressure-supplied",
+      "task_family": "d7_mock_router_probe",
+      "title": "D2-2b: Pressure–Flow Correction under Conflicting Constraints",
+      "file": "D7-probe-02-pressure-supplied.json",
+      "source_sha256": "a449a24e4ae0cd61fec0642bcd613a36cb0d05707da704d4bc4cff09f2ef084c"
+    },
+    {
+      "case_id": "D7-probe-03-cleaning-missing",
+      "task_family": "d7_mock_router_probe",
+      "title": "D3-3a N01: Maximum Tolerable Salinity During a Post-Algal High-Salinity Intrusion",
+      "file": "D7-probe-03-cleaning-missing.json",
+      "source_sha256": "ab4456dd90a5567b3bd7e852747c61b3ff9c7910b6f6fb0a5b2ce5e9ec35a84a"
+    },
+    {
+      "case_id": "D7-probe-04-cleaning-supplied",
+      "task_family": "d7_mock_router_probe",
+      "title": "D4_4a: SWRO Concept-Design CAPEX and Key-Parameter Sensitivity",
+      "file": "D7-probe-04-cleaning-supplied.json",
+      "source_sha256": "3018d152ebe60fb8d656def1f201569332d6286c2dc390f54503b0f00132353b"
+    },
+    {
+      "case_id": "D7-probe-05-recovery-missing",
+      "task_family": "d7_mock_router_probe",
+      "title": "D5-5a N01: Maximum Safe Recovery for High-Sulfate Summer Seawater",
+      "file": "D7-probe-05-recovery-missing.json",
+      "source_sha256": "20c66950f8d2fceb74e03bf62fd0fd2ec653e4db7aa4a606046027e0dbe8ebf7"
+    },
+    {
+      "case_id": "D7-probe-06-recovery-supplied",
+      "task_family": "d7_mock_router_probe",
+      "title": "Coupled SWRO Decision: Minimum Pressure and Acid-Dose Window",
+      "file": "D7-probe-06-recovery-supplied.json",
+      "source_sha256": "c6bbefb67ace8fad18597a4c0b1f57fb93335b6db32f8ded8b1cb7f621246c74"
+    }
+  ]
+}

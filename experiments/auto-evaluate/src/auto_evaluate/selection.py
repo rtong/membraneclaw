@@ -56,7 +56,7 @@ def _resolve_set(root: Path, set_name: str | None) -> tuple[str, dict[str, Any]]
 
 def prepare_selected_argv(argv: list[str], root: Path) -> list[str]:
     """Materialize repeatable run/auto --case selections inside the run directory."""
-    if not argv or argv[0] not in {"run", "auto"}:
+    if not argv or argv[0] not in {"run", "auto", "router-eval"}:
         return list(argv)
 
     cleaned, requested = _extract_cases(list(argv))

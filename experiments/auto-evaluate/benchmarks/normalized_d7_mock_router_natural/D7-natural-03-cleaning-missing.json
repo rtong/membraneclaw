@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D7-natural-03-cleaning-missing",
+  "task_family": "d7_mock_router_natural",
+  "title": "D3-3a N01: Maximum Tolerable Salinity During a Post-Algal High-Salinity Intrusion",
+  "question_prompt": "After normalization to reference conditions, permeate flow has declined by 12%, salt passage is unchanged, and normalized stage pressure drop has increased by 4%. Decide whether membrane cleaning is required under the manufacturer's operating criteria.",
+  "reference_answer": "D3-3a N01: Stepwise Gold Answer — Maximum Tolerable Salinity During a Post-Algal High-Salinity Intrusion\n\nReference efficient trajectory: eight simulate_swro_system calls, first bracketing, then locking the basic and recommended boundaries. Sole variable: Feed TDS; resolution: 0.1 g/L.\n\nReference agent trajectory\nStage | Known state | Action | Key observation | State update | Next step | Capability\n1 Baseline | Control direction unknown | 35 | low-salinity baseline | Establish baseline | Test opposite end | Problem diagnosis\n2 Coarse bracket | Baseline known | 41 | high-salinity failure | Create pass/fail bracket | Test midpoints | Plan→Observe\n3 Narrow | 35 / 41 | 39→40 | both targets pass; basic fails | Locate both targets | Move to final resolution | Adaptive search\n4 Basic boundary | Basic target unresolved | 40↔39.9 | Adjacent fail/pass | Lock basic boundary | Switch to margin target | Boundary proof\n5 Recommended boundary | Use stricter margin | 39.2↔39.1 | Adjacent fail/pass | Lock recommendation | Calculate energy | Target switch\n6 Decision | Both boundaries proven | Summarize outputs | Maximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d. | Set operating rule | Stop | Engineering decision\n\nEight actual simulate_swro_system calls\nCall | Feed TDS | Product m³/d | System recovery % | P1 power kW | P2 power kW | Pump-train kW | SEC kWh/m³ | Net plant kW | Daily energy kWh/d | LCOW $/m³ | Basic | Margin | g/L | Observation/decision | Feed TDS | Key output | Recommended target\n1 | 35 | 11319.3844201416 | 43.6704645838797 | 1108.45921567959 | 99.2059952738249 | =E20+F20 | 2.96858350492972 | =C20/24*H20 | =C20*H20 | 0.819851713606508 | PASS | g/L | low-salinity baseline | 35 | 11319.3844201416 | 10200\n2 | 41 | 9725.03463595204 | 37.519423749815 | 952.047129910082 | 111.57195376727 | =E21+F21 | 3.03303940094041 | =C21/24*H21 | =C21*H21 | 0.906410388711334 | FAIL | g/L | high-salinity failure | 39 | 10244.1756407038 | 10200\n3 | 39 | 10244.1756407038 | 39.5222825644438 | 1002.97149261366 | 107.490637117608 | =E22+F22 | 3.00970775847167 | =C22/24*H22 | =C22*H22 | 0.875313524761459 | PASS | g/L | both targets pass | 39.1 | 10217.9379026298 | 10200\n4 | 40 | 9983.14029763588 | 38.5152017655705 | 977.364914840869 | 109.536068688838 | =E23+F23 | 3.02111819666297 | =C23/24*H23 | =C23*H23 | 0.890551612237222 | FAIL | g/L | basic fails | 39.2 | 10191.7302151886 | 10200\n5 | 39.9 | 10009.1106416104 | 38.6153959938673 | 979.912444203528 | 109.331960693045 | =E24+F24 | 3.0199547041025 | =C24/24*H24 | =C24*H24 | 0.889000521996602 | PASS | FAIL | g/L | basic pass | 39.9 | 10009.1106416104 | 10200\n6 | 40 | 9983.14029763588 | 38.5152017655705 | 977.364914840869 | 109.536068688838 | =E25+F25 | 3.02111819666297 | =C25/24*H25 | =C25*H25 | 0.890551612237222 | FAIL | g/L | basic fail | 40 | 9983.14029763588 | 10200\n7 | 39.1 | 10217.9379026298 | 39.4210567231089 | 1000.39760712246 | 107.695619640885 | =E26+F26 | 3.01082672824263 | =C26/24*H26 | =C26*H26 | 0.8768105065025 | PASS | g/L | margin pass | 40 | 9983.14029763588 | 10200\n8 | 39.2 | 10191.7302151886 | 39.3199468178573 | 997.826683421418 | 107.900503579915 | =E27+F27 | 3.0119505212699 | =C27/24*H27 | =C27*H27 | 0.878313350214098 | PASS | FAIL | g/L | margin fail | 41 | 9725.03463595204 | 10200\n\nFinal boundaries and engineering conclusion | Final conclusion\n\nMaximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.\n\nKey simulation results: product 10217.94 m³/d, recovery 39.42%, P1=1000.40 kW and P2=107.70 kW.\nLevel | Fail point | Pass point | Resolution | Recommended pump kW | Recommended SEC | Conclusion | Final conclusion\n\nMaximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.\n\nKey simulation results: product 10217.94 m³/d, recovery 39.42%, P1=1000.40 kW and P2=107.70 kW.\nBasic boundary | 40 | 39.9 | 0.1 g/L | =E26+F26 | Adjacent proof | Final conclusion\n\nMaximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.\n\nKey simulation results: product 10217.94 m³/d, recovery 39.42%, P1=1000.40 kW and P2=107.70 kW.\nRecommended boundary | 39.2 | 39.1 | 0.1 g/L | =E26+F26 | Adjacent proof | Final conclusion\n\nMaximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.\n\nKey simulation results: product 10217.94 m³/d, recovery 39.42%, P1=1000.40 kW and P2=107.70 kW.\nRecommended case | - | 39.1 | g/L | =E26+F26 | 3.01082672824263 | Maximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d. | Final conclusion\n\nMaximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.\n\nKey simulation results: product 10217.94 m³/d, recovery 39.42%, P1=1000.40 kW and P2=107.70 kW.\nFinal conclusion | - | =E26+F26 | 3.01082672824263 | Maximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d. | Final conclusion\n\nMaximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.\n\nKey simulation results: product 10217.94 m³/d, recovery 39.42%, P1=1000.40 kW and P2=107.70 kW.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 State",
+        "reasoning_or_calculation": "Identify sole variable and two criteria",
+        "inputs": "Main goal found but margin mixed",
+        "key_outputs": "Vary only Feed TDS; basic=Product ≥10,000 m³/d; margin=Product ≥10,200 m³/d",
+        "full_credit": "Vary only Feed TDS; basic=Product ≥10,000 m³/d; margin=Product ≥10,200 m³/d",
+        "common_failures": "Changes fixed inputs or wrong variable",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning",
+        "reasoning_or_calculation": "Coarse bracket then two refinements",
+        "inputs": "Iterates but misses one adjacent proof",
+        "key_outputs": "Prove both adjacent pairs at 0.1 g/L",
+        "full_credit": "Prove both adjacent pairs at 0.1 g/L",
+        "common_failures": "Direct answer or brute-force full grid",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool calls",
+        "reasoning_or_calculation": "Correct tool, inputs and units",
+        "inputs": "Minor noncritical deviations",
+        "key_outputs": "Use simulate_swro_system with fixed invariants",
+        "full_credit": "Use simulate_swro_system with fixed invariants",
+        "common_failures": "Uses simulate_ro for plant energy or changes multiple variables",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation",
+        "reasoning_or_calculation": "Interpret product, power and SEC correctly",
+        "inputs": "Roughly correct but key output missing",
+        "key_outputs": "Update pass/fail correctly; distinguish pump vs net plant power",
+        "full_credit": "Update pass/fail correctly; distinguish pump vs net plant power",
+        "common_failures": "Wrong direction or power-basis confusion",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive replanning",
+        "reasoning_or_calculation": "Let prior output choose next call",
+        "inputs": "Partly adaptive with enumeration",
+        "key_outputs": "Bracket coarsely; switch target after basic limit",
+        "full_credit": "Bracket coarsely; switch target after basic limit",
+        "common_failures": "Calls ignore feedback",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision",
+        "reasoning_or_calculation": "Give actionable conclusion",
+        "inputs": "Mostly correct but one output missing",
+        "key_outputs": "Maximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.",
+        "full_credit": "Maximum basic TDS is 39.9 g/L; recommended limit is 39.1 g/L. At the recommendation, pump-train power is 1,108.09 kW, SEC is 3.0108 kWh/m³ and daily energy is 30,764.44 kWh/d.",
+        "common_failures": "No adjacent proof or wrong recommended boundary",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice",
+        "evaluation_focus": "Use full-plant tool",
+        "full_credit": "Primarily simulate_swro_system",
+        "medium_credit": "A few irrelevant metadata calls",
+        "low_credit": "Wrong single-membrane tool or many irrelevant calls",
+        "case_observation": "Feed TDS",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Bracket first",
+        "full_credit": "Endpoints/coarse points establish direction before refinement",
+        "medium_credit": "Some low-information points",
+        "low_credit": "Dense full-grid scan first",
+        "case_observation": "35→41→39→40",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Choose next point from feedback",
+        "full_credit": "Switch to margin after basic boundary",
+        "medium_credit": "Partly preset enumeration",
+        "low_credit": "Sequence ignores results",
+        "case_observation": "40/39.9; 39.2/39.1",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning",
+        "evaluation_focus": "Stop resolved branches",
+        "full_credit": "Stop after adjacent proof",
+        "medium_credit": "One or two repeats",
+        "low_credit": "Keep testing eliminated regions",
+        "case_observation": "0.1 g/L",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Complete proof in reasonable budget",
+        "full_credit": "About 7–9 calls with full evidence",
+        "medium_credit": "10–12 with minor redundancy",
+        "low_credit": ">12 enumerative or insufficient evidence",
+        "case_observation": "Reference 8; alternatives can score equally",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D3_3a_N01_salinity_intrusion_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D3\\D3_3a_N01_salinity_intrusion_English.xlsx",
+    "sha256": "ab4456dd90a5567b3bd7e852747c61b3ff9c7910b6f6fb0a5b2ce5e9ec35a84a",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-25T06:50:15+00:00",
+    "derived_overlay": {
+      "overlay_id": "d7-natural-cleaning-r2-v1",
+      "sha256": "17ee45a8228ea2da8c034e9d28fa3ab13f7a580791e932a7a06b6bc424fe85b0"
+    }
+  },
+  "benchmark_view": {
+    "rag_need": "R2",
+    "expected_route": "use_rag"
+  },
+  "rag_evidence": {
+    "source_document": "RO-operational Manual.pdf",
+    "source_locator": "page 135, section 6.3 Cleaning Requirements",
+    "missing_knowledge": "manufacturer cleaning thresholds and the one-or-more trigger rule",
+    "decision_impact": "determines whether the observed normalized changes require cleaning"
+  }
+}

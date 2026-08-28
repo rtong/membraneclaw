@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D3-3a-n02-membrane-aging",
+  "task_family": "d3_3a",
+  "title": "D3-3a N02: Minimum Effective Water Permeability and Cleaning Trigger for Aged Membranes",
+  "question_prompt": "D3-3a N02: Minimum Effective Water Permeability and Cleaning Trigger for Aged Membranes\n\nAn SWRO train at fixed pressure shows irreversible compaction/fouling, represented by normalized A. Vary A_comp only. Find the minimum A that still meets 10,000 m³/d and the minimum recommended A preserving 2% margin, 10,200 m³/d. Prove each with adjacent 0.01×10⁻¹² m/s/Pa points and identify the CIP or replacement-assessment trigger.\n\nFixed case (except decision variable) | Constraints and criteria\nParameter | Value | Unit | Note | Level | Criterion | Evidence\nFeed flow | 0.3 | m³/s | Fixed unless decision variable | Basic | Product ≥10,000 m³/d | 0.01×10⁻¹²\nTDS | 38 | g/L | Fixed baseline | Recommended margin | Product ≥10,200 m³/d | 0.01×10⁻¹²\nTSS | 0.03 | g/L | Pretreatment design | Membrane A (×10⁻¹²) | Membrane water permeability A | Vary this only\nTemperature | 22 | °C | Fixed | Objective | Minimize required A\nActive membrane area | 13500 | m² | Fixed\nA_comp | 4.2e-12 | m/s/Pa | Fixed baseline | Required deliverables\nB_comp | 3.5e-08 | m/s | Fixed | 1. Establish a coarse safe/fail bracket.\nP1 outlet pressure | 70.3 | bar(a) | Fixed | 2. Prove the adjacent basic pass/fail boundary.\nP1 efficiency | 0.82 | - | Fixed baseline | 3. Switch to the stricter recommended margin and prove its adjacent boundary.\nPX efficiency | 0.96 | - | Fixed baseline | 4. Report product, recovery, P1/P2, SEC and daily energy at the recommendation.\nP2 efficiency | 0.82 | - | Fixed | 5. Give an actionable operating, alarm, maintenance or expansion decision.\nEnergy recovery | pressure_exchanger | - | Fixed\n\nScope: use full-plant simulate_swro_system and hold every input fixed except Membrane water permeability A. The recommended margin is benchmark-specific, not a universal industry standard.",
+  "reference_answer": "D3-3a N02: Stepwise Gold Answer — Minimum Effective Water Permeability and Cleaning Trigger for Aged Membranes\n\nReference efficient trajectory: eight simulate_swro_system calls, first bracketing, then locking the basic and recommended boundaries. Sole variable: Membrane water permeability A; resolution: 0.01×10⁻¹².\n\nReference agent trajectory\nStage | Known state | Action | Key observation | State update | Next step | Capability\n1 Baseline | Control direction unknown | 3.2 | severe aging fails | Establish baseline | Test opposite end | Problem diagnosis\n2 Coarse bracket | Baseline known | 4.2 | new-membrane baseline | Create pass/fail bracket | Test midpoints | Plan→Observe\n3 Narrow | 3.2 / 4.2 | 3.6→4 | contract fails; both pass | Locate both targets | Move to final resolution | Adaptive search\n4 Basic boundary | Basic target unresolved | 3.75↔3.76 | Adjacent fail/pass | Lock basic boundary | Switch to margin target | Boundary proof\n5 Recommended boundary | Use stricter margin | 3.92↔3.93 | Adjacent fail/pass | Lock recommendation | Calculate energy | Target switch\n6 Decision | Both boundaries proven | Summarize outputs | Minimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d. | Set operating rule | Stop | Engineering decision\n\nEight actual simulate_swro_system calls\nCall | Membrane A (×10⁻¹²) | Product m³/d | System recovery % | P1 power kW | P2 power kW | Pump-train kW | SEC kWh/m³ | Net plant kW | Daily energy kWh/d | LCOW $/m³ | Basic | Margin | m/s/Pa | Observation/decision | Membrane water permeability A | Key output | Recommended target\n1 | 3.2 | 9255.21048820513 | 35.7068305872111 | 906.259211433407 | 115.798124537056 | =E20+F20 | 3.05856680155938 | =C20/24*H20 | =C20*H20 | 0.937847039028305 | FAIL | ×10⁻¹² m/s/Pa | severe aging fails | 3.2 | 9255.21048820513 | 10200\n2 | 4.2 | 10508.2251533463 | 40.5409921039595 | 1028.87514162657 | 105.435308480202 | =E21+F21 | 2.99877683461819 | =C21/24*H21 | =C21*H21 | 0.860658219725923 | PASS | ×10⁻¹² m/s/Pa | new-membrane baseline | 3.6 | 9807.92671708814 | 10200\n3 | 3.6 | 9807.92671708814 | 37.8392234455561 | 960.350402435792 | 111.18420367936 | =E22+F22 | 3.03021530336078 | =C22/24*H22 | =C22*H22 | 0.901404504940461 | FAIL | ×10⁻¹² m/s/Pa | contract fails | 3.75 | 9996.23720368363 | 10200\n4 | 10289.875873032 | 39.6985951891667 | 1007.51070037383 | 107.216319121634 | =E23+F23 | 3.00809613355454 | =C23/24*H23 | =C23*H23 | 0.872776698368778 | PASS | ×10⁻¹² m/s/Pa | both pass | 3.76 | 10008.4555473556 | 10200\n5 | 3.75 | 9996.23720368363 | 38.5657299524831 | 978.777812550882 | 109.627776890092 | =E24+F24 | 3.02130578216125 | =C24/24*H24 | =C24*H24 | 0.88989532313738 | FAIL | ×10⁻¹² m/s/Pa | basic fail | 3.92 | 10198.5240129716 | 10200\n6 | 3.76 | 10008.4555473556 | 38.612868624057 | 979.973430422749 | 109.527059572164 | =E25+F25 | 3.020739862008 | =C25/24*H25 | =C25*H25 | 0.889163295732058 | PASS | FAIL | ×10⁻¹² m/s/Pa | basic pass | 3.93 | 10210.0736921157 | 10200\n7 | 3.92 | 10198.5240129716 | 39.3461574574522 | 998.572023646056 | 107.96451420607 | =E26+F26 | 3.01211992977714 | =C26/24*H26 | =C26*H26 | 0.877998333714587 | PASS | FAIL | ×10⁻¹² m/s/Pa | margin fail | 4 | 10289.875873032 | 10200\n8 | 3.93 | 10210.0736921157 | 39.3907164047673 | 999.702157345714 | 107.869819106826 | =E27+F27 | 3.01160701135301 | =C27/24*H27 | =C27*H27 | 0.877333078165059 | PASS | ×10⁻¹² m/s/Pa | margin pass | 4.2 | 10508.2251533463 | 10200\n\nFinal boundaries and engineering conclusion | Final conclusion\n\nMinimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.\n\nKey simulation results: product 10210.07 m³/d, recovery 39.39%, P1=999.70 kW and P2=107.87 kW.\nLevel | Fail point | Pass point | Resolution | Recommended pump kW | Recommended SEC | Conclusion | Final conclusion\n\nMinimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.\n\nKey simulation results: product 10210.07 m³/d, recovery 39.39%, P1=999.70 kW and P2=107.87 kW.\nBasic boundary | 3.75 | 3.76 | 0.01×10⁻¹² | =E27+F27 | Adjacent proof | Final conclusion\n\nMinimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.\n\nKey simulation results: product 10210.07 m³/d, recovery 39.39%, P1=999.70 kW and P2=107.87 kW.\nRecommended boundary | 3.92 | 3.93 | 0.01×10⁻¹² | =E27+F27 | Adjacent proof | Final conclusion\n\nMinimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.\n\nKey simulation results: product 10210.07 m³/d, recovery 39.39%, P1=999.70 kW and P2=107.87 kW.\nRecommended case | - | 3.93 | m/s/Pa | =E27+F27 | 3.01160701135301 | Minimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d. | Final conclusion\n\nMinimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.\n\nKey simulation results: product 10210.07 m³/d, recovery 39.39%, P1=999.70 kW and P2=107.87 kW.\nFinal conclusion | - | =E27+F27 | 3.01160701135301 | Minimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d. | Final conclusion\n\nMinimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.\n\nKey simulation results: product 10210.07 m³/d, recovery 39.39%, P1=999.70 kW and P2=107.87 kW.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 State",
+        "reasoning_or_calculation": "Identify sole variable and two criteria",
+        "inputs": "Main goal found but margin mixed",
+        "key_outputs": "Vary only Membrane water permeability A; basic=Product ≥10,000 m³/d; margin=Product ≥10,200 m³/d",
+        "full_credit": "Vary only Membrane water permeability A; basic=Product ≥10,000 m³/d; margin=Product ≥10,200 m³/d",
+        "common_failures": "Changes fixed inputs or wrong variable",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning",
+        "reasoning_or_calculation": "Coarse bracket then two refinements",
+        "inputs": "Iterates but misses one adjacent proof",
+        "key_outputs": "Prove both adjacent pairs at 0.01×10⁻¹²",
+        "full_credit": "Prove both adjacent pairs at 0.01×10⁻¹²",
+        "common_failures": "Direct answer or brute-force full grid",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool calls",
+        "reasoning_or_calculation": "Correct tool, inputs and units",
+        "inputs": "Minor noncritical deviations",
+        "key_outputs": "Use simulate_swro_system with fixed invariants",
+        "full_credit": "Use simulate_swro_system with fixed invariants",
+        "common_failures": "Uses simulate_ro for plant energy or changes multiple variables",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation",
+        "reasoning_or_calculation": "Interpret product, power and SEC correctly",
+        "inputs": "Roughly correct but key output missing",
+        "key_outputs": "Update pass/fail correctly; distinguish pump vs net plant power",
+        "full_credit": "Update pass/fail correctly; distinguish pump vs net plant power",
+        "common_failures": "Wrong direction or power-basis confusion",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive replanning",
+        "reasoning_or_calculation": "Let prior output choose next call",
+        "inputs": "Partly adaptive with enumeration",
+        "key_outputs": "Bracket coarsely; switch target after basic limit",
+        "full_credit": "Bracket coarsely; switch target after basic limit",
+        "common_failures": "Calls ignore feedback",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision",
+        "reasoning_or_calculation": "Give actionable conclusion",
+        "inputs": "Mostly correct but one output missing",
+        "key_outputs": "Minimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.",
+        "full_credit": "Minimum contract A is 3.76×10⁻¹² m/s/Pa; recommended cleaning/maintenance trigger is A=3.93×10⁻¹². Pump-train power is 1,107.57 kW, SEC 3.0116 kWh/m³ and daily energy 30,748.73 kWh/d.",
+        "common_failures": "No adjacent proof or wrong recommended boundary",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice",
+        "evaluation_focus": "Use full-plant tool",
+        "full_credit": "Primarily simulate_swro_system",
+        "medium_credit": "A few irrelevant metadata calls",
+        "low_credit": "Wrong single-membrane tool or many irrelevant calls",
+        "case_observation": "Membrane water permeability A",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Bracket first",
+        "full_credit": "Endpoints/coarse points establish direction before refinement",
+        "medium_credit": "Some low-information points",
+        "low_credit": "Dense full-grid scan first",
+        "case_observation": "3.2→4.2→3.6→4",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Choose next point from feedback",
+        "full_credit": "Switch to margin after basic boundary",
+        "medium_credit": "Partly preset enumeration",
+        "low_credit": "Sequence ignores results",
+        "case_observation": "3.75/3.76; 3.92/3.93",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning",
+        "evaluation_focus": "Stop resolved branches",
+        "full_credit": "Stop after adjacent proof",
+        "medium_credit": "One or two repeats",
+        "low_credit": "Keep testing eliminated regions",
+        "case_observation": "0.01×10⁻¹²",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Complete proof in reasonable budget",
+        "full_credit": "About 7–9 calls with full evidence",
+        "medium_credit": "10–12 with minor redundancy",
+        "low_credit": ">12 enumerative or insufficient evidence",
+        "case_observation": "Reference 8; alternatives can score equally",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D3_3a_N02_membrane_aging_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D3\\D3_3a_N02_membrane_aging_English.xlsx",
+    "sha256": "ddb522caa25bf1baf431ef30f766b4ff2da80819571a244fb73fd230cca20804",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:36+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D3-3a-n02-membrane-aging",
+    "view_prompt_sha256": "2750089d0e404fd13137d71b859dbeb140cb2e686d821c09f77aa10be6553f4e"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D3-3a-n02-membrane-aging",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "ddd5467b4c402952d95aa6564691356193dad74be89b264c282f6dbded40110c",
+    "view_prompt_sha256": "2750089d0e404fd13137d71b859dbeb140cb2e686d821c09f77aa10be6553f4e",
+    "transformation": {
+      "removed_lines": 0,
+      "removed_cells": 1
+    }
+  }
+}

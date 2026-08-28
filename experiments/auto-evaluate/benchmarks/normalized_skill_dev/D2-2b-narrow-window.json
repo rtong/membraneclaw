@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D2-2b-narrow-window",
+  "task_family": "d2_2b",
+  "title": "D2-2b: Extremely Narrow Pressure Window under a Product-Flow Band",
+  "question_prompt": "D2-2b: Extremely Narrow Pressure Window under a Product-Flow Band\n\nThe SWRO train is healthy, but the downstream post-treatment unit can only accept a permeate-flow band of 6.900–6.910 m³/h. Feed flow is locked at 4.30 kg/s, so only Pressure may be adjusted. At 0.05-bar resolution, locate the Pressure window satisfying the product-flow band, Recovery, Flux, and water quality. A single PASS is not enough; both sides of the window must be demonstrated.\n\nFixed System Parameters | Operating Objectives and Item Constraints\nCategory | Parameter | Value | Note | Item | Requirement / Value | Note\nFeed | NaCl mass fraction | 0.03 | Fixed; ~30.5 g/L | Qp minimum | 6.9 | m³/h\nFeed | Temperature | 32 | °C; fixed | Qp maximum | None | No upper limit\nMembrane | Effective membrane area | 400 | m²; fixed | Recovery maximum | 46 | %\nMembrane | A_comp | 4.2e-12 | m/s/Pa; fixed | Flux maximum | 18 | LMH\nMembrane | B_comp | 3.4e-08 | m/s; fixed | Salt rejection minimum | 98.7 | %\nHydraulics | Permeate pressure | 1.013 | bar | Permeate NaCl maximum | 342.2 | mg/L\nHydraulics | Pressure drop | 0.653 | bar | Current setpoint | 52.90 bar / 4.30 kg/s | Permeate flow is above the downstream band\nChannel | Channel height | 0.002 | m | Feed flow | Fixed at 4.30 kg/s | Not adjustable\nChannel | Spacer porosity | 0.75 | - | Pressure candidates | 52.60 / 52.65 / 52.90 bar | Both sides of the window must be shown\nChannel | Equivalent module length | 20 | m | Objective | Complete feasible window | Do not stop at the first PASS\nModel | Concentration polarization / mass transfer | calculated | WaterTAP calculated\n\nRequired Tasks\n1. Explain why 52.90 bar is unacceptable as the current setpoint.\n2. Search downward and test whether 52.65 bar satisfies every constraint.\n3. Test 52.60 bar to establish whether the lower boundary is Qp-controlled.\n4. Combine the 52.90 upper-side failure with the 52.60 lower-side failure and report the complete feasible Pressure window at 0.05-bar resolution.\n\nTask boundary: In D2-2b, feed conditions, membrane properties, area, and system structure remain fixed. The problem arises from the operating setpoint or the allowed operating envelope. Do not change feed quality, temperature, membrane area, or A/B.",
+  "reference_answer": "D2-2b: Gold Answer — Advanced Operating Setpoint Adjustment\n\nConstraint | Value | Unit\nAt 52.90 bar, Qp≈6.952 m³/h exceeds the 6.910 upper limit; at 52.60 bar, Qp≈6.896 m³/h falls below the 6.900 lower limit. At 52.65 bar, Qp≈6.9055, Recovery≈45.614%, Flux≈17.258 LMH, and permeate NaCl≈341.83 mg/L all pass. Therefore, at the stated 0.05-bar resolution, the feasible Pressure window collapses to the single setpoint 52.65 bar. | Qp min | 6.9 | m³/h\nQp max | 6.91 | m³/h\nRecovery max | 46 | %\nFlux max | 18 | LMH\nContinuous Reasoning Trajectory | Rejection min | 98.7 | %\nNode | Evidence point | Key observation | State update | Engineering meaning | Decision | NaCl max | 342.2 | mg/L\nUpper-side check | E | Qp is above the product-flow band | Upper side FAIL | Need to search downward | Continue\nCandidate center | G | All constraints pass | Tentatively feasible | A PASS alone is not sufficient | Check lower side\nLower-side check | F | Qp is below the product-flow band | Lower side FAIL | Lower boundary is established | Stop search\nWindow conclusion | F/G/E | Only 52.65 bar passes | Single-point feasible window | Full window is proven | Stop\n\nsimulate_ro Evidence and Constraint Checks\nScenario | Pressure bar | Feed kg/s | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Qp | Recovery | Flux | Water quality | Overall\n52.90 / 4.30 | 52.9 | 4.3 | 1.93120516793036 | 6.95233860454928 | 17.3749210345884 | 45.9235695129681 | 98.8886382538251 | 340.919918997431 | =IF(AND(E21>=$P$4,E21<=$P$5),\"PASS\",\"FAIL\") | =IF(G21<=$P$6,\"PASS\",\"FAIL\") | =IF(F21<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H21>=$P$8,I21<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J21=\"PASS\",K21=\"PASS\",L21=\"PASS\",M21=\"PASS\"),\"PASS\",\"FAIL\")\n52.60 / 4.30 | 52.6 | 4.3 | 1.91558437240368 | 6.89610374065324 | 17.2343628712076 | 45.5520729557417 | 98.8850574342909 | 342.018081353824 | =IF(AND(E22>=$P$4,E22<=$P$5),\"PASS\",\"FAIL\") | =IF(G22<=$P$6,\"PASS\",\"FAIL\") | =IF(F22<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H22>=$P$8,I22<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J22=\"PASS\",K22=\"PASS\",L22=\"PASS\",M22=\"PASS\"),\"PASS\",\"FAIL\")\n52.65 / 4.30 | 52.65 | 4.3 | 1.91819493498951 | 6.90550176596225 | 17.2578531058222 | 45.6141578573647 | 98.8856631802543 | 341.832311881989 | =IF(AND(E23>=$P$4,E23<=$P$5),\"PASS\",\"FAIL\") | =IF(G23<=$P$6,\"PASS\",\"FAIL\") | =IF(F23<=$P$7,\"PASS\",\"FAIL\") | =IF(AND(H23>=$P$8,I23<=$P$9),\"PASS\",\"FAIL\") | =IF(AND(J23=\"PASS\",K23=\"PASS\",L23=\"PASS\",M23=\"PASS\"),\"PASS\",\"FAIL\")\n\nFinal Engineering Conclusion\n\nAt 52.90 bar, Qp≈6.952 m³/h exceeds the 6.910 upper limit; at 52.60 bar, Qp≈6.896 m³/h falls below the 6.900 lower limit. At 52.65 bar, Qp≈6.9055, Recovery≈45.614%, Flux≈17.258 LMH, and permeate NaCl≈341.83 mg/L all pass. Therefore, at the stated 0.05-bar resolution, the feasible Pressure window collapses to the single setpoint 52.65 bar.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem framing",
+        "reasoning_or_calculation": "Recognize D2-2b and the item-specific objective",
+        "inputs": "Understands setpoint correction but misses part of the special objective",
+        "key_outputs": "Prove both sides of the narrow feasible window; keep feed, membrane, and area fixed",
+        "full_credit": "Prove both sides of the narrow feasible window; keep feed, membrane, and area fixed",
+        "common_failures": "Changes feed/membrane or turns the task into design",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Plan quality",
+        "reasoning_or_calculation": "Decompose in an information-efficient order",
+        "inputs": "Mostly reasonable but skips a key stage",
+        "key_outputs": "Use evidence-driven branching/boundary logic rather than enumeration",
+        "full_credit": "Use evidence-driven branching/boundary logic rather than enumeration",
+        "common_failures": "Brute-force grid or ignores stated priority",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool-call correctness",
+        "reasoning_or_calculation": "Change only allowed variables in simulate_ro",
+        "inputs": "Minor input/unit issue",
+        "key_outputs": "All comparisons keep identical feed/membrane parameters; Pressure/Flow match the item",
+        "full_credit": "All comparisons keep identical feed/membrane parameters; Pressure/Flow match the item",
+        "common_failures": "Changes salinity, temperature, area, A, or B",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation interpretation",
+        "reasoning_or_calculation": "Read active constraints and FAIL/PASS precisely",
+        "inputs": "Mostly correct but misses one boundary or failure mechanism",
+        "key_outputs": "At 52.90 bar, Qp≈6.952 m³/h exceeds the 6.910 upper limit; at 52.60 bar, Qp≈6.896 m³/h falls below the 6.900 lower limit. At 52.65",
+        "full_credit": "At 52.90 bar, Qp≈6.952 m³/h exceeds the 6.910 upper limit; at 52.60 bar, Qp≈6.896 m³/h falls below the 6.900 lower limit. At 52.65",
+        "common_failures": "Rounds near-fail to PASS or treats one passing metric as overall success",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptation and pruning",
+        "reasoning_or_calculation": "Let each result determine the next action",
+        "inputs": "Some redundancy",
+        "key_outputs": "Prove both sides of the narrow feasible window; stop once evidence is sufficient",
+        "full_credit": "Prove both sides of the narrow feasible window; stop once evidence is sufficient",
+        "common_failures": "Continues disproved branches or performs unstructured enumeration",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Final decision",
+        "reasoning_or_calculation": "Deliver the conclusion required by this objective",
+        "inputs": "Correct endpoint/conclusion with weak rationale",
+        "key_outputs": "eate NaCl≈341.83 mg/L all pass. Therefore, at the stated 0.05-bar resolution, the feasible Pressure window collapses to the single setpoint 52.65 bar.",
+        "full_credit": "eate NaCl≈341.83 mg/L all pass. Therefore, at the stated 0.05-bar resolution, the feasible Pressure window collapses to the single setpoint 52.65 bar.",
+        "common_failures": "Blindly applies the original 'minimum Pressure' objective",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection",
+        "evaluation_focus": "Use only tools relevant to operating setpoints",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Wrong tool or excessive metadata",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Test the most discriminating points first",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Dense full-grid search first",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptation",
+        "evaluation_focus": "Let each result trigger the next call",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Preset enumeration ignores results",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning",
+        "evaluation_focus": "Stop invalid branches once proven",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Keeps testing disproved options",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Use minimal but sufficient evidence",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Too many calls or missing critical evidence",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D2_2b_NarrowWindow_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D2\\D2_2b_NarrowWindow_EN.xlsx",
+    "sha256": "4663b1bcba73c3271dad3f216a3d8b395850e51f32cdcb67ccf36baef1b95fba",
+    "sheets": [
+      "Question",
+      "Gold_Answer",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question",
+      "answer": "Gold_Answer",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:33+00:00"
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D6-6b-n07-multi-simulator-swro-pressure-scaling",
+  "task_family": "d6_6b",
+  "title": "Coupled SWRO Decision: Minimum Pressure and Acid-Dose Window",
+  "question_prompt": "Coupled SWRO Decision: Minimum Pressure and Acid-Dose Window\n\nA coastal-well SWRO unit has operated for two years, and membrane water permeability is 20% below the new-membrane value. Operations require at least 0.380 kg/s permeate-water flow and no more than 350 ppm NaCl without adding membrane area, while preferring the lowest feasible feed pressure. After selecting pressure, pass the actual water recovery from simulate_ro into equilibrate_feed, check concentrate scaling, and identify the unique passing HCl dose from the discrete candidates. Recommend an executable pressure–acid setpoint.\n\nRO operating conditions and model inputs | Hard constraints and candidate points\nParameter | Value | Unit / note | Decision item | Candidate / threshold | Rule\nTotal feed mass flow | 1 | kg/s | Feed pressure | 55, 58, 60, 62, 65 bar | Choose the lowest point meeting both RO criteria\nFeed NaCl mass fraction | 0.032 | kg/kg | Permeate-water flow | ≥0.380 kg/s | Use permeate.water_kg_s\nFeed temperature | 22 | °C | Permeate NaCl | ≤350 ppm | Both RO criteria must pass\nMembrane area | 60 | m² | HCl dose | 0, 0.0020, 0.0021, 0.0022, 0.0023 mol/s | Compare only at selected recovery\nNew-membrane A | 4.2e-12 | m/(Pa·s) | Mineral criteria | Calcite, Dolomite, Gypsum, Anhydrite SI < 0 | All four must pass\nA decline | 0.2 | fraction | pH floor | Equilibrium pH ≥6.30 | Prevents acid overdosing\nAged-membrane A | =B14*(1-B15) | m/(Pa·s) | Selection rule | Minimum pressure + unique passing acid dose | Do not impose recovery manually\nAged-membrane B | 4.2e-08 | m/s\nPermeate pressure | 1.01325 | bar\nModule pressure drop | 3 | bar\n\nIonic feed composition for equilibrate_feed | Required deliverables\nSpecies | Flow | Unit | 1. Calculate aged A and run simulate_ro at all five pressure points.\nH2O | 55.5 | mol/s | 2. Select the lowest pressure satisfying both water-flow and NaCl constraints.\nNa | 0.43 | mol/s | 3. Pass the actual water_recovery at that pressure directly to equilibrate_feed.\nCl | 0.48 | mol/s | 4. Compare all four SIs and pH on the stated HCl grid; prove the unique passing point.\nMg | 0.045 | mol/s | 5. Convert HCl to pure-HCl g/h and 31 wt% acid L/h (density 1.15 kg/L).\nSO4 | 0.035 | mol/s | 6. State the coupled setpoint, adjacent failure evidence, and model boundaries.\nCa | 0.018 | mol/s | Tool requirement: both simulate_ro and equilibrate_feed must be used.\nHCO3 | 0.006 | mol/s | Stop only after adjacent fail/pass evidence locks both decisions.",
+  "reference_answer": "Gold Answer: 62 bar + 0.0022 mol/s HCl\n\nFinal recommendation: 62 bar feed pressure with 0.0022 mol/s HCl. This is the first pressure meeting both 0.38620 kg/s permeate-water flow and 328.35 ppm permeate NaCl; actual water recovery is 39.5623%. At that recovery, 0.0021 mol/s still fails with Dolomite SI=+0.00775, 0.0022 mol/s gives all four SIs below zero and pH=6.3139, while 0.0023 mol/s fails at pH=6.2838. The acid-dose window is therefore unique.\n\nStep 1 | simulate_ro pressure screen\nPressure bar | Permeate total kg/s | Permeate water kg/s | NaCl ppm | Water recovery % | Water flux LMH | Brine NaCl g/L | Decision | Pressure bar | Permeate water | Target\n55 | 0.3200448726 | 0.3199291718 | 361.5142778 | 32.77362834 | 19.19575031 | 48.31963238 | Fail: water flow | =A10 | =C10 | =0.38\n58 | 0.3492312727 | 0.349110891 | 344.7049793 | 35.76286657 | 20.94665346 | 50.55693251 | Fail: water flow | =A11 | =C11 | =0.38\n60 | 0.3680398261 | 0.3679162422 | 335.7893172 | 37.689203 | 22.07497453 | 52.11179516 | Fail: water flow | =A12 | =C12 | =0.38\n62 | 0.3863290181 | 0.3862021683 | 328.346651 | 39.56233558 | 23.1721301 | 53.71819875 | First dual pass / recommend | =A13 | =C13 | =0.38\n65 | 0.4127945411 | 0.4126626757 | 319.445573 | 42.27284469 | 24.75976054 | 56.22615283 | Pass but not minimum | =A14 | =C14 | =0.38\n\nStep 2 | Pass 39.5623% recovery into equilibrate_feed\nHCl mol/s | Calcite SI | Dolomite SI | Gypsum SI | Anhydrite SI | Equilibrium pH | Osmotic bar | Pass? | Decision\n0 | 0.9983140313 | 2.686508967 | -0.1093341788 | -0.4719818152 | 7.511854799 | 37.13324005 | No | No acid: carbonate scaling\n0.002 | -0.3000500995 | 0.0924450237 | -0.1094485972 | -0.4720282766 | 6.375787184 | 37.23957299 | No | Dolomite still supersaturated\n0.0021 | -0.3424577317 | 0.0077520201 | -0.1094613002 | -0.4720376469 | 6.344573364 | 37.24478777 | No | Dolomite SI just above zero\n0.0022 | -0.3846068551 | -0.0764240846 | -0.1094740837 | -0.4720470984 | 6.313926355 | 37.25000139 | Yes | Unique passing point / recommend\n0.0023 | -0.4266004263 | -0.1602891891 | -0.109486939 | -0.4720566223 | 6.283758535 | 37.255214 | No | pH below 6.30\n\nStep 3 | Engineering conversion and boundary proof\nMetric | Formula / source | Result | Key simulation results and final conclusion\n\n• 60 bar: 0.36792 kg/s permeate water; NaCl=335.79 ppm passes, but production fails.\n• 62 bar: 0.38620 kg/s and 328.35 ppm, the first dual pass; 65 bar adds 3 bar unnecessarily.\n• 0.0021 mol/s: Dolomite SI=+0.00775, insufficient acid.\n• 0.0022 mol/s: Calcite −0.38461, Dolomite −0.07642, Gypsum −0.10947, Anhydrite −0.47205, pH=6.31393; all pass.\n• 0.0023 mol/s: pH=6.28376, acid overdose.\n• Final: 62 bar + 0.0022 mol/s HCl; about 288.76 g/h pure HCl or 0.8100 L/h of 31 wt% acid.\nAged-membrane A | 4.2E-12×(1−20%) | =4.2E-12*(1-20%) | Key simulation results and final conclusion\n\n• 60 bar: 0.36792 kg/s permeate water; NaCl=335.79 ppm passes, but production fails.\n• 62 bar: 0.38620 kg/s and 328.35 ppm, the first dual pass; 65 bar adds 3 bar unnecessarily.\n• 0.0021 mol/s: Dolomite SI=+0.00775, insufficient acid.\n• 0.0022 mol/s: Calcite −0.38461, Dolomite −0.07642, Gypsum −0.10947, Anhydrite −0.47205, pH=6.31393; all pass.\n• 0.0023 mol/s: pH=6.28376, acid overdose.\n• Final: 62 bar + 0.0022 mol/s HCl; about 288.76 g/h pure HCl or 0.8100 L/h of 31 wt% acid.\nSelected water recovery | simulate_ro @ 62 bar | =E13/100 | Key simulation results and final conclusion\n\n• 60 bar: 0.36792 kg/s permeate water; NaCl=335.79 ppm passes, but production fails.\n• 62 bar: 0.38620 kg/s and 328.35 ppm, the first dual pass; 65 bar adds 3 bar unnecessarily.\n• 0.0021 mol/s: Dolomite SI=+0.00775, insufficient acid.\n• 0.0022 mol/s: Calcite −0.38461, Dolomite −0.07642, Gypsum −0.10947, Anhydrite −0.47205, pH=6.31393; all pass.\n• 0.0023 mol/s: pH=6.28376, acid overdose.\n• Final: 62 bar + 0.0022 mol/s HCl; about 288.76 g/h pure HCl or 0.8100 L/h of 31 wt% acid.\nConcentration factor | 1/(1−recovery) | =1/(1-C29) | Key simulation results and final conclusion\n\n• 60 bar: 0.36792 kg/s permeate water; NaCl=335.79 ppm passes, but production fails.\n• 62 bar: 0.38620 kg/s and 328.35 ppm, the first dual pass; 65 bar adds 3 bar unnecessarily.\n• 0.0021 mol/s: Dolomite SI=+0.00775, insufficient acid.\n• 0.0022 mol/s: Calcite −0.38461, Dolomite −0.07642, Gypsum −0.10947, Anhydrite −0.47205, pH=6.31393; all pass.\n• 0.0023 mol/s: pH=6.28376, acid overdose.\n• Final: 62 bar + 0.0022 mol/s HCl; about 288.76 g/h pure HCl or 0.8100 L/h of 31 wt% acid.\nPermeate production | water flow×86400/1000 | =C13*86400/1000 | Key simulation results and final conclusion\n\n• 60 bar: 0.36792 kg/s permeate water; NaCl=335.79 ppm passes, but production fails.\n• 62 bar: 0.38620 kg/s and 328.35 ppm, the first dual pass; 65 bar adds 3 bar unnecessarily.\n• 0.0021 mol/s: Dolomite SI=+0.00775, insufficient acid.\n• 0.0022 mol/s: Calcite −0.38461, Dolomite −0.07642, Gypsum −0.10947, Anhydrite −0.47205, pH=6.31393; all pass.\n• 0.0023 mol/s: pH=6.28376, acid overdose.\n• Final: 62 bar + 0.0022 mol/s HCl; about 288.76 g/h pure HCl or 0.8100 L/h of 31 wt% acid.\nPure HCl | dose×36.46×3600 | =A22*36.46*3600 | Key simulation results and final conclusion\n\n• 60 bar: 0.36792 kg/s permeate water; NaCl=335.79 ppm passes, but production fails.\n• 62 bar: 0.38620 kg/s and 328.35 ppm, the first dual pass; 65 bar adds 3 bar unnecessarily.\n• 0.0021 mol/s: Dolomite SI=+0.00775, insufficient acid.\n• 0.0022 mol/s: Calcite −0.38461, Dolomite −0.07642, Gypsum −0.10947, Anhydrite −0.47205, pH=6.31393; all pass.\n• 0.0023 mol/s: pH=6.28376, acid overdose.\n• Final: 62 bar + 0.0022 mol/s HCl; about 288.76 g/h pure HCl or 0.8100 L/h of 31 wt% acid.\n31 wt% HCl solution | pure acid kg/h÷0.31÷1.15 | =C32/1000/0.31/1.15 | Key simulation results and final conclusion\n\n• 60 bar: 0.36792 kg/s permeate water; NaCl=335.79 ppm passes, but production fails.\n• 62 bar: 0.38620 kg/s and 328.35 ppm, the first dual pass; 65 bar adds 3 bar unnecessarily.\n• 0.0021 mol/s: Dolomite SI=+0.00775, insufficient acid.\n• 0.0022 mol/s: Calcite −0.38461, Dolomite −0.07642, Gypsum −0.10947, Anhydrite −0.47205, pH=6.31393; all pass.\n• 0.0023 mol/s: pH=6.28376, acid overdose.\n• Final: 62 bar + 0.0022 mol/s HCl; about 288.76 g/h pure HCl or 0.8100 L/h of 31 wt% acid.\n\nModel boundaries\nsimulate_ro represents salinity as NaCl equivalent, whereas equilibrate_feed uses the specified ions with a Pitzer activity model. The coupling variable is actual water recovery; the osmotic pressures need not match exactly. Equilibrium SI excludes nucleation/kinetics, antiscalant performance, fouling, acid mixing, degassing, corrosion, and control error. The 31 wt% acid conversion is an engineering estimate.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem representation",
+        "reasoning_or_calculation": "Recognize two-stage decision and hard constraints",
+        "inputs": "Main constraints correct but one omitted",
+        "key_outputs": "Separate RO flow/salinity criteria from concentrate SI/pH criteria; pressure before chemistry",
+        "full_credit": "Separate RO flow/salinity criteria from concentrate SI/pH criteria; pressure before chemistry",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 RO tool correctness",
+        "reasoning_or_calculation": "simulate_ro inputs, units, and aging",
+        "inputs": "Minor non-controlling deviation",
+        "key_outputs": "A=3.36E−12; all non-pressure inputs fixed across five calls",
+        "full_credit": "A=3.36E−12; all non-pressure inputs fixed across five calls",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Pressure boundary",
+        "reasoning_or_calculation": "Lowest dual-passing pressure",
+        "inputs": "62 bar only, no adjacent-failure proof",
+        "key_outputs": "60 bar fails flow; 62 bar first dual pass; prune 65 bar by minimum-pressure rule",
+        "full_credit": "60 bar fails flow; 62 bar first dual pass; prune 65 bar by minimum-pressure rule",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Cross-model coupling",
+        "reasoning_or_calculation": "Pass actual recovery",
+        "inputs": "Minor rounding only",
+        "key_outputs": "Pass 39.56233558% from 62 bar directly into equilibrate_feed",
+        "full_credit": "Pass 39.56233558% from 62 bar directly into equilibrate_feed",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Chemistry window",
+        "reasoning_or_calculation": "Joint SI and pH boundary",
+        "inputs": "Right dose but one boundary missing",
+        "key_outputs": "0.0021 fails Dolomite; 0.0022 all pass; 0.0023 fails pH",
+        "full_credit": "0.0021 fails Dolomite; 0.0022 all pass; 0.0023 fails pH",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision and scope",
+        "reasoning_or_calculation": "Executable setpoint, conversions, limitations",
+        "inputs": "Right conclusion but incomplete conversion/scope",
+        "key_outputs": "62 bar + 0.0022 mol/s; 288.76 g/h; 0.8100 L/h; state model differences and omissions",
+        "full_credit": "62 bar + 0.0022 mol/s; 288.76 g/h; 0.8100 L/h; state model differences and omissions",
+        "common_failures": "",
+        "max_score": 15.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool roles",
+        "evaluation_focus": "Choose and sequence the correct models",
+        "full_credit": "simulate_ro for the membrane; equilibrate_feed for ionic equilibrium; recovery is the interface",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Input reuse",
+        "evaluation_focus": "Hold non-target variables fixed",
+        "full_credit": "Only pressure changes in RO calls; only HCl changes in chemistry calls",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Information gain",
+        "evaluation_focus": "Lock pressure before chemistry",
+        "full_credit": "Run acid grid only at actual 62-bar recovery",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Boundary efficiency",
+        "evaluation_focus": "Use adjacent fail/pass proof",
+        "full_credit": "60→62 locks pressure; 0.0021→0.0022→0.0023 locks acid and overdose boundary",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Stop and transparency",
+        "evaluation_focus": "Stop with sufficient evidence and state scope",
+        "full_credit": "About 10 calls; record interface, Pitzer/NaCl-equivalent difference, and omissions",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D6_6b_N07_MultiSimulator_SWRO_pressure_scaling_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D6\\D6_6b_N07_MultiSimulator_SWRO_pressure_scaling_English.xlsx",
+    "sha256": "c6bbefb67ace8fad18597a4c0b1f57fb93335b6db32f8ded8b1cb7f621246c74",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:35+00:00"
+  }
+}

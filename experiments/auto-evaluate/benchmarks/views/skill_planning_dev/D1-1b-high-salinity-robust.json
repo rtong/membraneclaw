@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D1-1b-high-salinity-robust",
+  "task_family": "d1_1b",
+  "title": "D1-1b-HS: Candidate Membrane Screening under High-Salinity Variability",
+  "question_prompt": "D1-1b-HS: Candidate Membrane Screening under High-Salinity Variability\n\nAn SWRO intake experiences substantial salinity variability while membrane area and design pressure are fixed. Procurement offers four membrane candidates. Screen them at a high-salinity nominal condition, stress only the passing shortlist at an even higher salinity, prune failed branches, and verify the survivor(s) at low and high temperature before selection.\n\nFixed parameters | Value | Unit | Notes | Design / stress case | NaCl mass fraction | Temperature °C | Feed pressure bar\nFeed mass flow | 4.073 | kg/s | Fixed | Nominal | 0.033 | 30 | 56\nMembrane area | 390 | m² | Fixed | High salinity stress | 0.036 | 30 | 56\nNominal feed pressure | 56 | bar | Fixed | Low temperature verify | 0.033 | 22 | 56\nPermeate pressure | 1.013 | bar | Fixed | High temperature verify | 0.033 | 36 | 56\nPressure drop | 0.653 | bar | Fixed\nChannel height | 0.002 | m | Fixed | Common hard constraints (all mandatory cases)\nSpacer porosity | 0.75 | - | Fixed | Qp | ≥ 5.70 m³/h\nModule length | 20 | m | Fixed | Recovery | ≤ 48.0%\nFlux | ≤ 17.5 LMH\nFour candidate membranes (new parameter set; not the fixed M1–M4 set) | Rejection | ≥ 99.10%\nMembrane | A_comp | B_comp | Design intent | Permeate NaCl | ≤ 300 mg/L\nHS-X Productivity | 5.1e-12 | 4.6e-08 | High A / high B\nHS-Y Throughput-balanced | 4.7e-12 | 3.4e-08 | High A / medium B\nHS-Z Salt-robust balanced | 4.3e-12 | 2.2e-08 | Balanced A / low B\nHS-W Ultra-rejection | 3.8e-12 | 1.5e-08 | Lower A / ultra-low B\n\n1. E1 — Identify this as a membrane-performance parameter selection problem. Explain the A/B trade-off and the likely failure modes of high-A/high-B and low-A/low-B candidates.\n2. E2 — Screen all four candidates fairly at the nominal condition. Only membranes satisfying every hard constraint may enter the shortlist.\n3. E3 — Run the high-salinity stress only on the shortlist. Eliminate failed candidates immediately and stop those branches.\n4. E4 — Verify the final stress-test survivor(s) at 22/36°C low/high temperature. Recommend only after all mandatory cases pass.\n5. Final recommendation — Use the margins in production, flux, recovery, rejection and permeate NaCl; do not rank membranes only by highest A or lowest B.\n\nTask version: D1-1b-HS; difficulty calibrated to the prior hard D1-1b tasks; candidate parameters and the gold path were verified with ROprocess.simulate_ro.",
+  "reference_answer": "D1-1b-HS：Gold Answer — Screening → Shortlist → Stress Test\n\nReference efficient trajectory: about 8 simulate_ro calls: 4 nominal-screening calls → 2 shortlist stress calls → 2 final temperature-verification calls. The correct final candidate is HS-Z. Equivalent adaptive orders are acceptable if pruning and mandatory evidence are complete.\n\nStage 1: Nominal screening (4 calls)\nMembrane | A | B | Case | Permeate kg/s | Qp m³/h | Flux | Recovery % | Rejection % | NaCl mg/L | Production/Flux | Recovery | Water quality | Overall\nHS-X | 5.1e-12 | 4.6e-08 | Nominal | 1.96168602652901 | 7.06206969550442 | 18.0989186093847 | 49.3522470150075 | 98.5379354963662 | 494.393003033677 | Fail\nHS-Y | 4.7e-12 | 3.4e-08 | Nominal | 1.88991940750932 | 6.80370986703354 | 17.4388461565233 | 47.5510038959967 | 98.887431679975 | 376.245612977396 | Pass | Fail\nHS-Z | 4.3e-12 | 2.2e-08 | Nominal | 1.81780876240517 | 6.54411154465861 | 16.7755696436363 | 45.7410444357672 | 99.2592977408496 | 250.512789895372 | Pass\nHS-W | 3.8e-12 | 1.5e-08 | Nominal | 1.73401162643111 | 6.242441855152 | 16.0034470488606 | 43.6349552035662 | 99.4801936792452 | 175.813587350731 | Pass\n\nStage 2: high-salinity stress on the shortlist (HS-Z/HS-W only)\nMembrane | A | B | Case | Permeate kg/s | Qp m³/h | Flux | Recovery % | Rejection % | NaCl mg/L | Production/Flux | Recovery | Water quality | Overall\nHS-Z | 4.3e-12 | 2.2e-08 | High salinity 0.036 | 1.62287623134092 | 5.84235443282731 | 14.976084190421 | 40.9256529167771 | 99.2215919847248 | 287.828919396263 | Pass\nHS-W | 3.8e-12 | 1.5e-08 | High salinity 0.036 | 1.54534903549411 | 5.56325652777879 | 14.2618654244236 | 38.9730871274797 | 99.4511995794682 | 202.940894048116 | Fail | Pass | Fail\n\nStage 3: Low-/high-temperature verification of final candidate HS-Z (2 calls)\nMembrane | A | B | Case | Permeate kg/s | Qp m³/h | Flux | Recovery % | Rejection % | NaCl mg/L | Production/Flux | Recovery | Water quality | Overall\nHS-Z | 4.3e-12 | 2.2e-08 | 22°C low-temp | 1.87077862259025 | 6.73480304132489 | 17.2644444602074 | 47.0740037827157 | 99.2669612412696 | 247.921406719082 | Pass\nHS-Z | 4.3e-12 | 2.2e-08 | 36°C high-temp | 1.77834519531962 | 6.40204270315063 | 16.4113465479878 | 44.7479600228125 | 99.2529434631173 | 252.661456722499 | Pass\n\nStage | Candidate / result | Key evidence | Keep? | Reason | Next step\nNominal | HS-X, HS-Y eliminated | HS-X: Recovery≈49.35%>48.0%; Flux≈18.10>17.5 LMH; Rejection≈98.538%<99.10%; NaCl≈494.4>300 mg/L; HS-Y: Rejection≈98.887%<99.10%; NaCl≈376.2>300 mg/L | No | Hard-constraint failure | Stop these branches\nNominal | HS-Z, HS-W enter shortlist | All nominal hard constraints pass | Yes | Shortlist formed | Run high-salinity stress only on shortlist\nStress | HS-W eliminated | HS-W: Qp≈5.563<5.70 m³/h | No | Stress hard-constraint failure | Stop failed branches\nStress | HS-Z retained | All stress hard constraints pass | HS-Z | Final survivor | Proceed to low/high-temperature verification\nFinal | HS-Z passes both temperature cases | All mandatory cases pass | HS-Z | HS-X/HS-Y are eliminated mainly by rejection and permeate-quality limits. HS-Z/HS-W survive nominal screening. At 0.036 salinity, HS-W keeps excellent quality but its Qp falls below 5.70 m³/h; HS-Z preserves the required production while maintaining water quality and passes the 22/36°C verification. | Recommend HS-Z\n\nFinal recommendation: HS-Z. The gold answer is not a fixed preference for one A/B pattern; it follows the full nominal → shortlist → stress → temperature-verification evidence chain.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem representation and state understanding",
+        "reasoning_or_calculation": "Correctly represent A/B trade-off, multiple conditions and hard constraints",
+        "inputs": "Understands A/B but misses one constraint or stress requirement",
+        "key_outputs": "Uses Qp≥5.70, Recovery≤48.0%, Flux≤17.5, Rejection≥99.10% and NaCl≤300; does not rank only by A/B",
+        "full_credit": "Uses Qp≥5.70, Recovery≤48.0%, Flux≤17.5, Rejection≥99.10% and NaCl≤300; does not rank only by A/B",
+        "common_failures": "Selects highest A/lowest B only; changes pressure/area as if they were membrane parameters",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning and decomposition",
+        "reasoning_or_calculation": "Build screening → shortlist → stress → final verification",
+        "inputs": "Mostly reasonable but incomplete pruning or final verification",
+        "key_outputs": "Correct nominal shortlist, high-salinity stress only on that shortlist, and 22/36°C verification only on the final survivor(s)",
+        "full_credit": "Correct nominal shortlist, high-salinity stress only on that shortlist, and 22/36°C verification only on the final survivor(s)",
+        "common_failures": "Brute-forces all membranes × all cases or decides from nominal only",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Action / tool-call correctness",
+        "reasoning_or_calculation": "Use simulate_ro with fair, correct inputs and units",
+        "inputs": "Minor input/unit issue that does not change screening",
+        "key_outputs": "Keeps all non-candidate inputs fixed except case-defined changes; correctly reads Qp/Flux/Recovery/Rejection/NaCl",
+        "full_credit": "Keeps all non-candidate inputs fixed except case-defined changes; correctly reads Qp/Flux/Recovery/Rejection/NaCl",
+        "common_failures": "Changes area/pressure between candidates or uses wrong units",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation interpretation and state update",
+        "reasoning_or_calculation": "Maintain the shortlist and failure reasons correctly",
+        "inputs": "Correct final shortlist but incomplete explanation of one failure",
+        "key_outputs": "Nominal and stress keep/eliminate decisions match simulator evidence; only HS-Z reaches the final verification",
+        "full_credit": "Nominal and stress keep/eliminate decisions match simulator evidence; only HS-Z reaches the final verification",
+        "common_failures": "Retains a failed candidate or ignores a hard constraint",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive comparison and replanning",
+        "reasoning_or_calculation": "Make next calls depend on prior observations and prune",
+        "inputs": "Some redundant calls but still adaptive",
+        "key_outputs": "Nominal results determine stress targets; failed stress branches stop; only final survivor(s) get temperature checks",
+        "full_credit": "Nominal results determine stress targets; failed stress branches stop; only final survivor(s) get temperature checks",
+        "common_failures": "Preset enumeration; continues testing eliminated branches",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Stopping and final engineering decision",
+        "reasoning_or_calculation": "Stop with sufficient evidence and recommend correctly",
+        "inputs": "Recommends HS-Z but misses one verification or engineering explanation",
+        "key_outputs": "After all mandatory cases, recommends HS-Z and explains production/selectivity margins",
+        "full_credit": "After all mandatory cases, recommends HS-Z and explains production/selectivity margins",
+        "common_failures": "Stops before stress is complete or recommends the wrong candidate",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Choose the correct tool and avoid irrelevant calls",
+        "full_credit": "Use simulate_ro for the scientific comparisons; every call serves the current decision",
+        "medium_credit": "A few unnecessary metadata/exploratory calls",
+        "low_credit": "Uses irrelevant plant-cost or chemistry tools",
+        "case_observation": "simulate_swro_system and chemistry tools are unnecessary here",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and call ordering",
+        "evaluation_focus": "Prioritize discriminating information",
+        "full_credit": "Run 4 nominal screens first, then stress only the shortlist",
+        "medium_credit": "Mostly reasonable but with low-information calls",
+        "low_credit": "Starts with a full membrane × case grid",
+        "case_observation": "Nominal screening identifies which candidates deserve stress testing",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Make each next call depend on the previous observation",
+        "full_credit": "The shortlist determines stress targets; stress determines final verification targets",
+        "medium_credit": "Partly adaptive with some preset enumeration",
+        "low_credit": "Call sequence is largely independent of results",
+        "case_observation": "Only HS-Z reaches the 22/36°C verification",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning and redundancy control",
+        "evaluation_focus": "Stop failed branches and avoid repetition",
+        "full_credit": "Terminate hard-constraint failures immediately; no equivalent repeat calls",
+        "medium_credit": "Tests 1–2 already-failed branches",
+        "low_credit": "Continues extensive stress tests on eliminated candidates",
+        "case_observation": "Prune immediately after nominal/stress failure",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence and stopping",
+        "evaluation_focus": "Obtain complete evidence within a reasonable call budget",
+        "full_credit": "About 7–9 calls with complete mandatory evidence",
+        "medium_credit": "About 10–12 calls with minor redundancy",
+        "low_credit": ">12 calls with heavy enumeration, or too few calls for a defensible decision",
+        "case_observation": "Reference ≈8 simulate_ro calls",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D1_1b_HighSalinityRobust_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D1\\D1_1b_HighSalinityRobust_EN.xlsx",
+    "sha256": "ebc861d58df1be2dce9dae1b0ab71f9ceb5971947c66968c8fbc953635841e8a",
+    "sheets": [
+      "Question",
+      "Gold_Answer",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question",
+      "answer": "Gold_Answer",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:34+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D1-1b-high-salinity-robust",
+    "view_prompt_sha256": "d81db16f02f29d4b6a8e2a54786a603ba1ee89a37afa2ce1072d6d69cd8c5dfb"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D1-1b-high-salinity-robust",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "fc4433083aad12de6c2d79ad8577d9421ddb6f6f8163b897cdb432bcc68a97f5",
+    "view_prompt_sha256": "d81db16f02f29d4b6a8e2a54786a603ba1ee89a37afa2ce1072d6d69cd8c5dfb",
+    "transformation": {
+      "removed_lines": 2,
+      "removed_cells": 1
+    }
+  }
+}

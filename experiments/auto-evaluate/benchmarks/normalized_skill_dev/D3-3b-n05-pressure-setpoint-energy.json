@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D3-3b-n05-pressure-setpoint-energy",
+  "task_family": "d3_3b",
+  "title": "D3-3a N05: Minimum Contract and Energy-Margin Pressure Setpoints with a PX",
+  "question_prompt": "D3-3a N05: Minimum Contract and Energy-Margin Pressure Setpoints with a PX\n\nWith stable seawater quality, operators want to lower pressure without sacrificing capacity. Hold flow, membrane area and PX efficiency fixed; vary only p1_pressure_bar. Find the minimum basic pressure meeting product≥11,000 m³/d and SEC≤3.00 kWh/m³, and the minimum recommended pressure meeting product≥11,200 m³/d and SEC≤3.00 kWh/m³; prove both with adjacent 0.1-bar points. Estimate ERD inlet pressure as P1 outlet minus 2.7 bar and use a 1.0-bar low-pressure outlet. Report available/equivalent recovered brine power, P1/P2 and net power at both limits, and explain why raising pressure increases both production and brine differential pressure but does not necessarily lower SEC.\n\nFixed case (except decision variable) | Constraints and criteria\nParameter | Value | Unit | Note | Level | Criterion | Evidence\nFeed flow | 0.32 | m³/s | Fixed | Criterion 1 | Product≥11,000 and SEC≤3.00 | 0.1 bar\nFeed TDS | 36.5 | g/L | Fixed | Criterion 2 | Product≥11,200 and SEC≤3.00 | 0.1 bar\nFeed TSS | 0.03 | g/L | Fixed | Decision variable | P1 outlet pressure | Vary this only\nTemperature | 24 | °C | Fixed | Objective | Minimize pressure setpoint | Adjacent proof\nActive RO area | 14400 | m² | Fixed\nP1 outlet pressure | 69 | bar(a) | Decision variable | Required deliverables\nP1 efficiency | 0.82 | - | Fixed | 1. Establish a coarse bracket and control direction.\nPX efficiency | 0.95 | - | Fixed | 2. Prove both adjacent limits or both sides of the diagnostic window.\nP2 efficiency | 0.82 | - | Fixed | 3. Report key simulate_swro_system outputs.\nERD-inlet loss from P1 | 2.7 | bar | Benchmark audit assumption | 4. Calculate brine flow, available pressure power and equivalent recovered power from product flow.\nERD low-pressure outlet | 1 | bar(a) | Benchmark audit assumption | 5. Distinguish pump-train power, net plant power and the engineering decision.\nOperating days | 330 | d/y | Energy conversion\n\nScope: use simulate_swro_system for whole-plant energy. Available brine power is P=Qbrine×ΔP; equivalent recovered power is ηPX×P for an energy audit. It is not PX shaft power and is not one-for-one with the SEC change. All limits are benchmark rules, not universal standards.",
+  "reference_answer": "D3-3a N05: Stepwise Gold Answer — Minimum Contract and Energy-Margin Pressure Setpoints with a PX\n\nThe actual trajectory uses 8 valid simulate_swro_system calls. Sole variable: P1 outlet pressure; final resolution: 0.1 bar. It brackets coarsely, then locks both limits or both sides of the diagnostic window.\n\nReference agent trajectory\nStage | Known state | Action | Key observation | State update | Next step | Capability\n1 Baseline | Control direction unknown | 62 and 73 | low-pressure production short; high-pressure SEC exceeds limit | Establish direction and scale | Test midpoints | State diagnosis\n2 Coarse bracket | Direction known | 65 and 69 | production still short; both targets pass | Locate both targets | Move to final resolution | Adaptive search\n3 Criterion 1 | Boundary unresolved | 67.5↔67.6 | Adjacent points change status | Lock criterion 1 | Switch criterion | Boundary proof\n4 Criterion 2 | Stricter or opposite-side target | 68.4↔68.5 | Adjacent points change status | Lock criterion 2 | Audit pressure energy | Target switch\n5 Energy audit | Key point locked | Calculate Qbrine, QΔP and ηQΔP | Separate equivalent recovery, pump train and net power | Build physical explanation | Conclude | Accounting basis\n6 Decision | Evidence complete | Summarize | Minimum basic pressure 67.6 bar(a) and recommended 68.5 bar(a); more pressure raises production and ERD differential but also HPP power. | Set operating rule | Stop | Engineering decision\n\n8 actual simulate_swro_system calls\nCall | P1 outlet pressure | Product m³/s | Product m³/d | Recovery % | Brine m³/s | ERD ΔP bar | Available power kW | Equivalent recovered kW | P1 kW | P2 kW | Pump train kW | SEC kWh/m³ | Net power kW | LCOW $/m³ | Criterion 1 | Criterion 2 | Observation/decision | P1 outlet pressure | Product m³/d | Target\n1 | 62 | 0.112667280142781 | =C20*86400 | 35.208525044619 | =0.32-C20 | =B20-2.7-1.0 | =F20*G20*100 | =H20*0.95 | 839.501039380498 | 139.572170969838 | =J20+K20 | 2.82212722405662 | =D20/24*M20 | 0.908062043131428 | FAIL | low-pressure production short | =B20 | =D20 | =11200\n2 | 73 | 0.140738026297069 | =C21*86400 | 43.9806332178341 | =0.32-C21 | =B21-2.7-1.0 | =F21*G21*100 | =H21*0.95 | 1237.59504162077 | 129.251575283992 | =J21+K21 | 3.10579219846419 | =D21/24*M21 | 0.818238322072029 | FAIL | high-pressure SEC exceeds limit | =B22 | =D22 | =11200\n3 | 65 | 0.120752874534607 | =C22*86400 | 37.7352732920647 | =0.32-C22 | =B22-2.7-1.0 | =F22*G22*100 | =H22*0.95 | 943.966013216986 | 136.63767185245 | =J22+K22 | 2.89397443432276 | =D22/24*M22 | 0.875677035046664 | FAIL | production still short | =B24 | =D24 | =11200\n4 | 69 | 0.131027244184956 | =C23*86400 | 40.9460138077988 | =0.32-C23 | =B23-2.7-1.0 | =F23*G23*100 | =H23*0.95 | 1088.24863695275 | 132.867583023993 | =J23+K23 | 2.99685311884181 | =D23/24*M23 | 0.842606801356038 | PASS | both targets pass | =B25 | =D25 | =11200\n5 | 67.5 | 0.127241375707018 | =C24*86400 | 39.7629299084432 | =0.32-C24 | =B24-2.7-1.0 | =F24*G24*100 | =H24*0.95 | 1033.51268574699 | 134.262786877276 | =J24+K24 | 2.95746101355873 | =D24/24*M24 | 0.853844581218336 | FAIL | basic fail on product | =B26 | =D26 | =11200\n6 | 67.6 | 0.127496253180925 | =C25*86400 | 39.8425791190391 | =0.32-C25 | =B25-2.7-1.0 | =F25*G25*100 | =H25*0.95 | 1037.13889796971 | 134.169088850349 | =J25+K25 | 2.96005887324131 | =D25/24*M25 | 0.85305484123772 | PASS | FAIL | basic pass | =B27 | =D27 | =11200\n7 | 68.4 | 0.12952246669841 | =C26*86400 | 40.4757708432533 | =0.32-C26 | =B26-2.7-1.0 | =F26*G26*100 | =H26*0.95 | 1066.26689171174 | 133.423035550268 | =J26+K26 | 2.98098942705813 | =D26/24*M26 | 0.846948623407854 | PASS | FAIL | recommended fail on product | =B23 | =D23 | =11200\n8 | 68.5 | 0.129774146715262 | =C27*86400 | 40.5544208485193 | =0.32-C27 | =B27-2.7-1.0 | =F27*G27*100 | =H27*0.95 | 1069.92251583773 | 133.330217970723 | =J27+K27 | 2.98362373483344 | =D27/24*M27 | 0.84621114768713 | PASS | recommended pass | =B21 | =D21 | =11200\n\nBoundaries and final answer | Energy audit and comparison\nLevel | Fail/mismatch | Pass/match | Resolution | Criterion | Recommended variable | Key simulation result | Conclusion | Item | Audit point | Unit | Before | After | Change (after−before) | Unit | Formula basis | Note\nCriterion 1 boundary | 67.5 | 67.6 | 0.1 bar | Product≥11,000 and SEC≤3.00 | 68.5 | Minimum basic pressure 67.6 bar(a) and recommended 68.5 bar(a); more pressure raises production and ERD differential but also HPP power. | Adjacent proof | Decision variable | =B27 | =B25 | =B27 | =B27-B25 | bar(a) | tool input | Minimum pressure\nCriterion 2 boundary | 68.4 | 68.5 | 0.1 bar | Product≥11,200 and SEC≤3.00 | 68.5 | Minimum basic pressure 67.6 bar(a) and recommended 68.5 bar(a); more pressure raises production and ERD differential but also HPP power. | Adjacent proof | Product | =D27 | =D25 | =D27 | =D27-D25 | m³/d | Qp×86400 | Simulation output\nEngineering answer | - | 68.5 | bar(a) | Minimum pressure | 68.5 | Minimum basic pressure is 67.6 bar(a) and minimum recommended pressure 68.5 bar(a). At the recommendation product=11212.49 m³/d, ERD differential=64.8 bar, available/equivalent recovered power=1232.66/1171.03 kW, P1/P2=1069.92/133.33 kW and SEC=2.983624 kWh/m³. | Use benchmark operating rule | Brine flow | =F27 | =F25 | =F27 | =F27-F25 | m³/s | Qfeed−Qp | PX high-pressure side\nPhysical interpretation | - | Pressure energy vs SEC | 68.5 | Minimum basic pressure 67.6 bar(a) and recommended 68.5 bar(a); more pressure raises production and ERD differential but also HPP power. | Do not mix total power and unit energy | Available pressure power | =H27 | =H25 | =H27 | =H27-H25 | kW | Qbrine×ΔP | 100% hydraulic ceiling\nEquivalent recovered power | =I27 | =I25 | =I27 | =I27-I25 | kW | ηPX×QΔP | Audit equivalent\nPump-train power | =L27 | =L25 | =L27 | =L27-L25 | kW | P1+P2 | Excludes other auxiliaries\nSEC | =M27 | =M25 | =M27 | =M27-M25 | kWh/m³ | tool output | Per product volume\nNet plant power | =N27 | =N25 | =N27 | =N27-N25 | kW | SEC×Qproduct | Whole-plant basis\nAnnual energy change | =D27*M27*330 | =D25*M25*330 | =D27*M27*330 | =(D27*M27-D25*M25)*330 | kWh/y | Δ日耗电×330 | Positive means increase\n\nFinal conclusion\n\nMinimum basic pressure is 67.6 bar(a) and minimum recommended pressure 68.5 bar(a). At the recommendation product=11212.49 m³/d, ERD differential=64.8 bar, available/equivalent recovered power=1232.66/1171.03 kW, P1/P2=1069.92/133.33 kW and SEC=2.983624 kWh/m³.\n\nMinimum basic pressure 67.6 bar(a) and recommended 68.5 bar(a); more pressure raises production and ERD differential but also HPP power.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 State",
+        "reasoning_or_calculation": "Identify sole variable and two criteria",
+        "inputs": "Main goal right but strict level mixed",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Changes fixed inputs or wrong direction",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning",
+        "reasoning_or_calculation": "Bracket then prove adjacent points",
+        "inputs": "Limits approximate but one adjacent pair missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Guess or brute-force full grid",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool calls",
+        "reasoning_or_calculation": "Correct tool, parameter domain and units",
+        "inputs": "Minor noncritical deviations",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Use simulate_ro for plant energy or wrong units",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Pressure-energy audit",
+        "reasoning_or_calculation": "Correct brine flow, differential and power",
+        "inputs": "Approximately right but power bases mixed",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Use feed instead of brine, miss conversion or treat PX as shaft power",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Observation",
+        "reasoning_or_calculation": "Explain different effects on product, P1/P2 and SEC",
+        "inputs": "Observation right but explanation incomplete",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Equate larger total recovery directly with lower SEC",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision",
+        "reasoning_or_calculation": "Give actionable boundary and conclusion",
+        "inputs": "Main values right but one key energy metric missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Wrong recommendation or no adjacent proof",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice",
+        "evaluation_focus": "Use full-plant tool",
+        "full_credit": "Primarily simulate_swro_system",
+        "medium_credit": "A few irrelevant metadata calls",
+        "low_credit": "Use single-membrane tool for plant SEC",
+        "case_observation": "P1 outlet pressure",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Establish direction and bracket first",
+        "full_credit": "Endpoints/coarse points before final resolution",
+        "medium_credit": "One or two low-information points",
+        "low_credit": "Dense full-range scan first",
+        "case_observation": "62→73→65→69",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Choose next point from feedback",
+        "full_credit": "Lock criterion 1, then switch to criterion 2 or opposite diagnostic side",
+        "medium_credit": "Partly preset enumeration",
+        "low_credit": "Sequence ignores results",
+        "case_observation": "67.5/67.6; 68.4/68.5",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning",
+        "evaluation_focus": "Stop resolved branches",
+        "full_credit": "Stop after adjacent proof; no equivalent repeats",
+        "medium_credit": "One or two confirmations",
+        "low_credit": "Keep testing eliminated regions",
+        "case_observation": "0.1 bar",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Complete pressure audit within rational budget",
+        "full_credit": "About 7–9 calls with complete evidence",
+        "medium_credit": "10–12 with minor redundancy",
+        "low_credit": "Large enumeration or too few calls to prove result",
+        "case_observation": "Reference 8 calls",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D3_3b_N05_pressure_setpoint_energy_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D3\\D3_3b_N05_pressure_setpoint_energy_English.xlsx",
+    "sha256": "41474f93d367da6bd81e809e5761ed913eaa49037b5eba6f636797bd16ee4e39",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:33+00:00"
+  }
+}

@@ -1,10 +1,41 @@
 {
-  "active_set": "datasets_harness",
+  "active_set": "d1_d6",
   "sets": {
-    "datasets_harness": {
-      "description": "Datasets Harness 中的全部当前题目",
+    "d1_d6": {
+      "description": "Current D1-D6 source workbooks",
       "source_config": "configs/benchmarks.json",
-      "normalized_dir": "benchmarks/normalized"
+      "normalized_dir": "benchmarks/normalized",
+      "evaluation_profile": "d1_d6"
+    },
+    "datasets_harness": {
+      "description": "All current D1-D6 workbooks in Datasets Harness",
+      "source_config": "configs/benchmarks.json",
+      "normalized_dir": "benchmarks/normalized",
+      "evaluation_profile": "d1_d6"
+    },
+    "d7": {
+      "description": "D7 intake entry using the existing four-sheet workbook importer",
+      "source_config": "configs/benchmarks_d7.json",
+      "normalized_dir": "benchmarks/normalized_d7",
+      "evaluation_profile": "d7"
+    },
+    "d7_mock": {
+      "description": "Pipeline-only mixed D7 mock with three R0 and three corpus-grounded derived R2 cases",
+      "source_config": "configs/benchmarks_d7_mock.json",
+      "normalized_dir": "benchmarks/normalized_d7_mock",
+      "evaluation_profile": "d7_mock"
+    },
+    "d7_mock_router_probe": {
+      "description": "Router-only short matched diagnostic with three R2/R0 threshold-supply pairs",
+      "source_config": "configs/benchmarks_d7_mock_router_probe.json",
+      "normalized_dir": "benchmarks/normalized_d7_mock_router_probe",
+      "evaluation_profile": "d7_mock"
+    },
+    "d7_mock_router_natural": {
+      "description": "Router-only natural short matched diagnostic without explicit missing-threshold cues",
+      "source_config": "configs/benchmarks_d7_mock_router_natural.json",
+      "normalized_dir": "benchmarks/normalized_d7_mock_router_natural",
+      "evaluation_profile": "d7_mock"
     }
   }
 }

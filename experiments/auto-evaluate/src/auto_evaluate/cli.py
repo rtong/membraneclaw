@@ -2,18 +2,24 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from .benchmark import import_all, iter_benchmarks, validate_benchmark
-from .codex_automation import run_codex_tasks
-from .io_utils import load_dotenv, read_json, read_jsonl, write_jsonl
+from .codex_automation import run_codex_tasks, validate_stage_environment
+from .evaluation import resolve_profile, write_profile_snapshot
+from .failure_analysis import build_failure_analysis, render_text_analysis
+from .figures import PAPER_FIGURE_IDS, export_all_figures, export_figure
+from .io_utils import load_dotenv, read_json, read_jsonl, utc_now, write_json, write_jsonl
 from .judge import prepare_judge_tasks, prepare_teacher_tasks, validate_ratings
 from .report import build_report
-from .runner import execute_run, load_systems, make_client
-from .skill_gate import DEFAULT_CONFIG, evaluate_skill_gate
+from .reward_analysis import build_reward_analysis, build_router_update_plan
+from .router_evaluation import execute_router_evaluation
+from .runner import execute_run, load_systems, make_client, summarize_run_completeness
 
 def _root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -55,6 +61,11 @@ def _resolve_benchmark_set(
         raise ValueError(
             f"Unknown benchmark set '{selected}'. Available sets: {available}"
         )
+    if entry.get("enabled") is False:
+        raise ValueError(
+            f"Benchmark set '{selected}' is reserved but not enabled. Add its source config "
+            "and normalized data, then set enabled to true in configs/benchmark_sets.json."
+        )
     return selected, entry
 
 
@@ -92,6 +103,20 @@ def _prepare_benchmarks(
 
 def _benchmarks_arg_value(benchmarks_dir: Path) -> str:
     return str(benchmarks_dir)
+
+
+def _ensure_run_benchmark_snapshot(benchmarks_dir: Path, run_dir: Path) -> Path:
+    target = run_dir / "benchmarks"
+    if benchmarks_dir.resolve() == target.resolve():
+        return target
+    if (target / "index.json").exists():
+        return target
+    if not (benchmarks_dir / "index.json").exists():
+        return benchmarks_dir
+    target.mkdir(parents=True, exist_ok=True)
+    for source in benchmarks_dir.glob("*.json"):
+        shutil.copy2(source, target / source.name)
+    return target
 
 
 def _paths(args) -> tuple[Path, Path, Path]:
@@ -154,25 +179,78 @@ def command_validate_benchmarks(args) -> int:
     return 0
 
 
+def _probe_binding_expectations(config: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Resolve physical preset expectations behind direct and virtual systems."""
+    expectations: dict[str, dict[str, Any]] = {}
+
+    def add(model_id: str, alias: str, *, rag_enabled: bool, skill_version: str | None) -> None:
+        expected_skill = (skill_version or "").split("@", 1)[0] or None
+        existing = expectations.get(model_id)
+        signature = (rag_enabled, expected_skill)
+        if existing and (existing["rag_enabled"], existing["expected_skill"]) != signature:
+            raise ValueError(
+                f"Physical preset {model_id!r} has conflicting experiment bindings: "
+                f"{existing['aliases']} versus {alias}"
+            )
+        if existing:
+            existing["aliases"].append(alias)
+            return
+        expectations[model_id] = {
+            "model_id": model_id,
+            "aliases": [alias],
+            "rag_enabled": rag_enabled,
+            "expected_skill": expected_skill,
+        }
+
+    for system in config.get("systems", []):
+        adaptive = system.get("adaptive_rag")
+        if adaptive:
+            add(
+                adaptive["router_model_id"],
+                f"{system['id']}:router",
+                rag_enabled=False,
+                skill_version=None,
+            )
+            add(
+                adaptive["no_rag_model_id"],
+                f"{system['id']}:skip_rag",
+                rag_enabled=False,
+                skill_version=system.get("skill_version"),
+            )
+            add(
+                adaptive["rag_model_id"],
+                f"{system['id']}:use_rag",
+                rag_enabled=True,
+                skill_version=system.get("skill_version"),
+            )
+        else:
+            add(
+                system["model_id"],
+                system["id"],
+                rag_enabled=bool(system.get("rag_enabled", False)),
+                skill_version=system.get("skill_version"),
+            )
+    return expectations
+
+
 def command_probe(args) -> int:
     root = _root()
     load_dotenv(root / ".env")
     _, systems_path, _ = _paths(args)
-    config = load_systems(systems_path)
+    selected_ids = getattr(args, "selected_system_ids", None)
+    if selected_ids is None and getattr(args, "benchmark_set", None):
+        _, entry = _resolve_benchmark_set(root, args.benchmark_set)
+        _, profile = resolve_profile(root, entry, getattr(args, "evaluation_profile", None))
+        selected_ids = profile["system_ids"]
+    config = load_systems(systems_path, selected_ids)
     client = make_client(config["generation"])
     payload = client.list_models()
     data = payload.get("data") if isinstance(payload, dict) else None
     models = data if isinstance(data, list) else payload.get("models", []) if isinstance(payload, dict) else []
-    ids = {
-        row.get("id") or row.get("model") or row.get("name")
-        for row in models
-        if isinstance(row, dict)
-    }
-    expected = {row["model_id"] for row in config["systems"]}
-    output = {
-        "available_model_ids": sorted(x for x in ids if x),
-        "expected": sorted(expected),
-    }
+    ids = {row.get("id") or row.get("model") or row.get("name") for row in models if isinstance(row, dict)}
+    binding_expectations = _probe_binding_expectations(config)
+    expected = set(binding_expectations)
+    output = {"available_model_ids": sorted(x for x in ids if x), "expected": sorted(expected)}
     binding_errors = []
     binding_warnings = []
     if args.details:
@@ -187,70 +265,44 @@ def command_probe(args) -> int:
             info = row.get("info") if isinstance(row.get("info"), dict) else {}
             meta = info.get("meta") if isinstance(info.get("meta"), dict) else {}
             raw_knowledge = meta.get("knowledge") if isinstance(meta.get("knowledge"), list) else []
-            knowledge = [
-                {
-                    "id": item.get("id"),
-                    "name": item.get("name"),
-                    "type": item.get("type"),
-                }
-                for item in raw_knowledge
-                if isinstance(item, dict)
-            ]
             detail = {
-                    "id": row_id,
-                    "name": row.get("name"),
-                    "owned_by": row.get("owned_by"),
-                    "base_model_id": (
-                        row.get("base_model_id")
-                        or info.get("base_model_id")
-                        or meta.get("base_model_id")
-                    ),
-                    "connection_type": row.get("connection_type"),
-                    "capabilities": meta.get("capabilities"),
-                    "knowledge": knowledge,
-                    "skill_ids": meta.get("skillIds"),
-                    "info_keys": sorted(info),
-                    "meta_keys": sorted(meta),
-                }
+                "id": row_id,
+                "name": row.get("name"),
+                "base_model_id": row.get("base_model_id") or info.get("base_model_id") or meta.get("base_model_id"),
+                "capabilities": meta.get("capabilities") or {},
+                "knowledge": [{"id": item.get("id"), "name": item.get("name"), "type": item.get("type")} for item in raw_knowledge if isinstance(item, dict)],
+                "skill_ids": meta.get("skillIds") or [],
+            }
             expected_rows.append(detail)
             details_by_id[row_id] = detail
         output["expected_model_details"] = expected_rows
         if set(details_by_id) == expected:
-            baseline = details_by_id["baseline"]
-            environment = details_by_id["environment"]
-            environment_skill = details_by_id["environment-skill"]
-            baseline_knowledge = {item["id"] for item in baseline["knowledge"] if item.get("id")}
-            environment_knowledge = {
-                item["id"] for item in environment["knowledge"] if item.get("id")
-            }
-            environment_skill_knowledge = {
-                item["id"] for item in environment_skill["knowledge"] if item.get("id")
-            }
-            if baseline_knowledge:
-                binding_errors.append("Baseline must not have Knowledge/RAG attached")
-            if not environment_knowledge:
-                binding_errors.append("Environment must have at least one Knowledge collection")
-            if environment_knowledge != environment_skill_knowledge:
-                binding_errors.append(
-                    "Environment and Environment-Skill must use identical Knowledge IDs"
-                )
-            baseline_skills = set(baseline.get("skill_ids") or [])
-            environment_skills = set(environment.get("skill_ids") or [])
-            environment_skill_skills = set(environment_skill.get("skill_ids") or [])
-            if baseline_skills:
-                binding_errors.append("Baseline must not have Skills attached")
-            if environment_skills:
-                binding_errors.append("Environment must not have Skills attached")
-            if "swro-watertap" not in environment_skill_skills:
-                binding_errors.append("Environment-Skill must attach swro-watertap")
-            noisy = {"vision", "web_search", "image_generation", "code_interpreter", "terminal"}
-            for system_id, detail in details_by_id.items():
-                capabilities = detail.get("capabilities") or {}
-                enabled = sorted(name for name in noisy if capabilities.get(name))
+            rag_knowledge_sets = []
+            for model_id, detail in details_by_id.items():
+                expectation = binding_expectations[model_id]
+                aliases = ", ".join(expectation["aliases"])
+                knowledge = {item["id"] for item in detail["knowledge"] if item.get("id")}
+                skills = set(detail.get("skill_ids") or [])
+                if expectation["rag_enabled"]:
+                    if not knowledge:
+                        binding_errors.append(f"{aliases} must have Knowledge/RAG attached")
+                    rag_knowledge_sets.append((aliases, knowledge))
+                elif knowledge:
+                    binding_errors.append(f"{aliases} must not have Knowledge/RAG attached")
+                expected_skill = expectation["expected_skill"]
+                if expected_skill and expected_skill not in skills:
+                    binding_errors.append(f"{aliases} must attach {expected_skill}")
+                if not expected_skill and skills:
+                    binding_errors.append(f"{aliases} must not have Skills attached")
+                noisy = {"vision", "web_search", "image_generation", "code_interpreter", "terminal"}
+                enabled = sorted(name for name in noisy if detail["capabilities"].get(name))
                 if enabled:
-                    binding_warnings.append(
-                        f"{system_id} has unrelated capabilities enabled: {', '.join(enabled)}"
-                    )
+                    binding_warnings.append(f"{aliases} has unrelated capabilities enabled: {', '.join(enabled)}")
+            if len(rag_knowledge_sets) > 1:
+                first_name, first_ids = rag_knowledge_sets[0]
+                for name, knowledge in rag_knowledge_sets[1:]:
+                    if knowledge != first_ids:
+                        binding_errors.append(f"{first_name} and {name} must use identical Knowledge IDs")
         output["binding_errors"] = binding_errors
         output["binding_warnings"] = binding_warnings
     print(json.dumps(output, ensure_ascii=False, indent=2))
@@ -273,7 +325,12 @@ def command_probe_chat(args) -> int:
     if not args.model and args.system not in systems:
         raise ValueError(f"Unknown system ID: {args.system}")
     generation = dict(config["generation"])
-    generation["max_tokens"] = args.max_tokens
+    if args.max_tokens is None:
+        generation.pop("max_tokens", None)
+    else:
+        generation["max_tokens"] = args.max_tokens
+    if args.no_thinking:
+        generation["enable_thinking"] = False
     generation["timeout_seconds"] = args.timeout
     client = make_client(generation)
     selected = systems.get(args.system, {})
@@ -302,6 +359,8 @@ def command_probe_chat(args) -> int:
                 "model_id": model_id,
                 "case_id": args.case,
                 "stream": args.stream,
+                "max_tokens": generation.get("max_tokens"),
+                "enable_thinking": generation.get("enable_thinking"),
                 "latency_ms": result.latency_ms,
                 "response": result.content,
             },
@@ -316,18 +375,25 @@ def command_run(args) -> int:
     root = _root()
     load_dotenv(root / ".env")
     benchmarks, selected = _prepare_benchmarks(args, sync=True)
+    set_name = selected or getattr(args, "benchmark_set", None)
+    entry = _resolve_benchmark_set(root, set_name)[1] if set_name and _load_benchmark_registry(root) else None
+    profile_id, profile = resolve_profile(root, entry, getattr(args, "evaluation_profile", None))
     if selected:
-        print(f"[benchmarks] Run set '{selected}'")
+        print(f"[benchmarks] Run set '{selected}' with profile '{profile_id}'")
     systems = (root / getattr(args, "systems", "configs/systems.json")).resolve()
     run_id = getattr(args, "run_id", None) or _default_run_id()
     run_dir = (root / "runs" / run_id).resolve()
+    write_profile_snapshot(run_dir, profile_id, profile, set_name)
     counts = execute_run(
         benchmarks_dir=benchmarks,
         systems_path=systems,
         run_dir=run_dir,
         force=args.force,
+        selected_system_ids=profile["system_ids"],
+        evaluation_profile=profile_id,
+        system_concurrency=getattr(args, "system_concurrency", 2),
     )
-    print(json.dumps({"run_dir": str(run_dir), **counts}, ensure_ascii=False, indent=2))
+    print(json.dumps({"run_dir": str(run_dir), "evaluation_profile": profile_id, **counts}, ensure_ascii=False, indent=2))
     return 1 if counts["error"] else 0
 
 
@@ -350,102 +416,338 @@ def command_report(args) -> int:
     return 0
 
 
-def command_skill_gate(args) -> int:
+def command_router_eval(args) -> int:
     root = _root()
-    _, _, run_dir = _paths(args)
-    config_path = root / args.config
-    config = read_json(config_path) if config_path.exists() else DEFAULT_CONFIG
-    result = evaluate_skill_gate(run_dir, config)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result.get("passed") else 1
-
-
-def command_auto(args) -> int:
+    load_dotenv(root / ".env")
     benchmarks, selected = _prepare_benchmarks(args, sync=True)
-    benchmark_dir_arg = _benchmarks_arg_value(benchmarks)
-    if selected:
-        print(f"[benchmarks] Auto set '{selected}'")
-    run_id = getattr(args, "run_id", None) or _default_run_id()
-    root = _root()
-    run_dir = (root / "runs" / run_id).resolve()
-    auto_run_id = run_dir.name
-    run_dir.mkdir(parents=True, exist_ok=True)
-    print(f"[auto] Run ID: {auto_run_id}")
-
-    validate_args = argparse.Namespace(
-        benchmarks_dir=benchmark_dir_arg,
-        benchmark_set=None,
+    set_name = selected or getattr(args, "benchmark_set", None)
+    entry = (
+        _resolve_benchmark_set(root, set_name)[1]
+        if set_name and _load_benchmark_registry(root)
+        else None
     )
-    _run_auto_step("validate benchmarks", command_validate_benchmarks, validate_args)
-
-    probe_args = argparse.Namespace(systems=args.systems, details=True)
-    _run_auto_step("probe remote presets", command_probe, probe_args)
-
-    run_args = argparse.Namespace(
-        run_id=auto_run_id,
-        benchmarks_dir=benchmark_dir_arg,
-        benchmark_set=None,
-        systems=args.systems,
+    profile_id, profile = resolve_profile(
+        root, entry, getattr(args, "evaluation_profile", None)
+    )
+    route_spec = profile.get("adaptive_rag_analysis") or {}
+    default_expected_route = route_spec.get("default_expected_route")
+    run_id = getattr(args, "run_id", None) or _default_run_id()
+    run_dir = (root / "runs" / run_id).resolve()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    benchmarks = _ensure_run_benchmark_snapshot(benchmarks, run_dir)
+    config_path = (root / args.config).resolve()
+    config = read_json(config_path)
+    selected_cases = config.get("pilot_case_ids") if args.pilot else None
+    print(
+        f"[router-eval] Run ID: {run_id}; set: {set_name}; "
+        f"profile: {profile_id}; pilot: {bool(args.pilot)}"
+    )
+    result = execute_router_evaluation(
+        benchmarks_dir=benchmarks,
+        config_path=config_path,
+        run_dir=run_dir,
+        benchmark_set=set_name,
+        default_expected_route=default_expected_route,
+        selected_variant_ids=args.variant,
+        selected_case_ids=selected_cases,
         force=args.force,
     )
-    _run_auto_step("run evaluated systems", command_run, run_args)
-
-    print("[auto] Generate blind teacher answers with fresh Codex tasks...")
-    teacher_batch = prepare_teacher_tasks(benchmarks, run_dir)
-    teacher_tasks = read_jsonl(teacher_batch)
-    teacher_outputs = run_codex_tasks(
-        stage="teacher",
-        tasks=teacher_tasks,
-        run_dir=run_dir,
-        project_root=root,
-        model=args.codex_model,
-        concurrency=args.codex_concurrency,
-        retries=args.codex_retries,
-        timeout_seconds=args.codex_timeout,
-        force=args.force_codex,
-    )
-    write_jsonl(run_dir / "teacher_responses.jsonl", teacher_outputs)
-
-    print("[auto] Score anonymous candidates with one fresh Codex task per response...")
-    judge_batch = prepare_judge_tasks(benchmarks, run_dir, seed=args.seed)
-    judge_tasks = read_jsonl(judge_batch)
-    ratings = run_codex_tasks(
-        stage="judge",
-        tasks=judge_tasks,
-        run_dir=run_dir,
-        project_root=root,
-        model=args.codex_model,
-        concurrency=args.codex_concurrency,
-        retries=args.codex_retries,
-        timeout_seconds=args.codex_timeout,
-        force=args.force_codex,
-    )
-    write_jsonl(run_dir / "ratings.jsonl", ratings)
-
-    ratings_args = argparse.Namespace(run_id=auto_run_id)
-    _run_auto_step("validate ratings", command_validate_ratings, ratings_args)
-
-    report_args = argparse.Namespace(run_id=auto_run_id, output=args.output)
-    _run_auto_step("build report", command_report, report_args)
-
-    gate_args = argparse.Namespace(run_id=auto_run_id, config=args.config)
-    print("[auto] evaluate skill gate...")
-    gate_code = int(command_skill_gate(gate_args))
-    report_path = Path(args.output).resolve() if args.output else run_dir / "report.html"
     print(
         json.dumps(
             {
-                "status": "complete",
                 "run_dir": str(run_dir),
-                "report": str(report_path),
-                "skill_gate_passed": gate_code == 0,
-                "codex_model": args.codex_model,
+                "router_summary": str(run_dir / "router_summary.json"),
+                **result,
             },
             ensure_ascii=False,
             indent=2,
         )
     )
-    return gate_code if args.fail_on_gate else 0
+    return 1 if result["error"] else 0
+
+
+def command_auto(args) -> int:
+    benchmarks, selected = _prepare_benchmarks(args, sync=True)
+    benchmark_dir_arg = _benchmarks_arg_value(benchmarks)
+    root = _root()
+    set_name = selected or getattr(args, "benchmark_set", None)
+    entry = _resolve_benchmark_set(root, set_name)[1] if set_name and _load_benchmark_registry(root) else None
+    profile_id, profile = resolve_profile(root, entry, getattr(args, "evaluation_profile", None))
+    if selected:
+        print(f"[benchmarks] Auto set '{selected}' with profile '{profile_id}'")
+    run_id = getattr(args, "run_id", None) or _default_run_id()
+    load_dotenv(root / ".env")
+    run_dir = (root / "runs" / run_id).resolve()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    benchmarks = _ensure_run_benchmark_snapshot(benchmarks, run_dir)
+    benchmark_dir_arg = _benchmarks_arg_value(benchmarks)
+    write_profile_snapshot(run_dir, profile_id, profile, set_name)
+    auto_run_id = run_dir.name
+    stage = getattr(args, "stage", "all")
+    print(f"[auto] Run ID: {auto_run_id}; stage: {stage}; profile: {profile_id}")
+
+    timing = {"run_id": auto_run_id, "stage": stage, "started_at": utc_now()}
+    timing_started = time.perf_counter()
+
+    def _finish_timing(status: str) -> None:
+        timing["status"] = status
+        timing["completed_at"] = utc_now()
+        timing["duration_seconds"] = round(time.perf_counter() - timing_started, 1)
+        timing_path = run_dir / "timing.jsonl"
+        rows = read_jsonl(timing_path)
+        rows.append(timing)
+        write_jsonl(timing_path, rows)
+        print(f"[auto] {status} in {timing['duration_seconds']}s (see runs/{auto_run_id}/timing.jsonl)")
+
+    try:
+        validate_args = argparse.Namespace(benchmarks_dir=benchmark_dir_arg, benchmark_set=None)
+        _run_auto_step("validate benchmarks", command_validate_benchmarks, validate_args)
+
+        legacy_concurrency = getattr(args, "codex_concurrency", None)
+        teacher_general_concurrency = legacy_concurrency or getattr(args, "teacher_general_concurrency", 2)
+        teacher_tools_concurrency = legacy_concurrency or getattr(args, "teacher_tools_concurrency", 1)
+        judge_concurrency = legacy_concurrency or getattr(args, "judge_concurrency", 4)
+        system_concurrency = getattr(args, "system_concurrency", 2)
+
+        if stage in {"all", "systems"}:
+            probe_args = argparse.Namespace(
+                systems=args.systems,
+                details=True,
+                selected_system_ids=profile["system_ids"],
+                benchmark_set=None,
+                evaluation_profile=profile_id,
+            )
+            _run_auto_step("probe remote presets", command_probe, probe_args)
+            run_args = argparse.Namespace(
+                run_id=auto_run_id,
+                benchmarks_dir=benchmark_dir_arg,
+                benchmark_set=set_name,
+                evaluation_profile=profile_id,
+                systems=args.systems,
+                force=args.force,
+                system_concurrency=system_concurrency,
+            )
+            print(f"[auto] Run evaluated OpenWebUI systems (concurrency={system_concurrency}; independent conversations)...")
+            system_run_code = int(command_run(run_args))
+            if system_run_code:
+                print("[auto] One or more system requests failed; preserving them and continuing.")
+
+        completeness = None
+        if getattr(args, "require_complete_systems", False) and stage in {"all", "systems", "teachers", "judges"}:
+            completeness = summarize_run_completeness(
+                benchmarks_dir=benchmarks,
+                run_dir=run_dir,
+                system_ids=profile["system_ids"],
+            )
+            if completeness["incomplete"]:
+                examples = "; ".join(
+                    f"{row['case_id']}/{row['system_id']}={row['status']}"
+                    + (f"[{row['error_type']}]" if row.get("error_type") else "")
+                    for row in completeness["items"][:8]
+                )
+                raise RuntimeError(
+                    "OpenWebUI system stage is incomplete: "
+                    f"{completeness['success']}/{completeness['expected']} successful; "
+                    f"examples: {examples}. Re-run the same run ID to reuse successful cache entries."
+                )
+            print(
+                f"[auto] OpenWebUI completeness check passed: "
+                f"{completeness['success']}/{completeness['expected']} "
+                f"(native={completeness['native_success']}, "
+                f"recovered={completeness['recovered_success']}, "
+                f"policy_replay={completeness.get('policy_replay_success', 0)})"
+            )
+
+        if stage in {"all", "teachers"}:
+            teacher_outputs = []
+            for teacher in profile["teachers"]:
+                if teacher.get("system_id") == "gpt-5.6-teacher":
+                    batch = prepare_teacher_tasks(benchmarks, run_dir)
+                else:
+                    batch = prepare_teacher_tasks(benchmarks, run_dir, teacher)
+                tasks = read_jsonl(batch)
+                validate_stage_environment("teacher", tasks)
+                concurrency = teacher_tools_concurrency if teacher.get("tools_enabled") else teacher_general_concurrency
+                print(f"[auto] Generate {teacher['display_name']} answers (concurrency={concurrency})...")
+                outputs = run_codex_tasks(
+                    stage="teacher", tasks=tasks, run_dir=run_dir, project_root=root,
+                    model=args.codex_model, concurrency=concurrency, retries=args.codex_retries,
+                    timeout_seconds=args.codex_timeout, force=args.force_codex,
+                )
+                if teacher.get("system_id") != "gpt-5.6-teacher":
+                    display_by_task = {task["task_id"]: task.get("display_name") for task in tasks}
+                    for output in outputs:
+                        output["display_name"] = display_by_task.get(output.get("task_id")) or teacher["display_name"]
+                teacher_outputs.extend(outputs)
+            write_jsonl(run_dir / "teacher_responses.jsonl", teacher_outputs)
+
+        if stage in {"all", "judges"}:
+            if profile["teachers"] and not (run_dir / "teacher_responses.jsonl").exists():
+                raise FileNotFoundError("teacher_responses.jsonl is missing; run --stage teachers first")
+            print(f"[auto] Score anonymous candidates (concurrency={judge_concurrency}; Judge tools forbidden)...")
+            judge_batch = prepare_judge_tasks(benchmarks, run_dir, seed=args.seed)
+            judge_tasks = read_jsonl(judge_batch)
+            validate_stage_environment("judge", judge_tasks)
+            ratings = run_codex_tasks(
+                stage="judge", tasks=judge_tasks, run_dir=run_dir, project_root=root,
+                model=args.codex_model, concurrency=judge_concurrency, retries=args.codex_retries,
+                timeout_seconds=args.codex_timeout, force=args.force_codex,
+            )
+            write_jsonl(run_dir / "ratings.jsonl", ratings)
+
+        if stage in {"all", "judges", "report"}:
+            ratings_args = argparse.Namespace(run_id=auto_run_id)
+            _run_auto_step("validate ratings", command_validate_ratings, ratings_args)
+            reward_args = argparse.Namespace(
+                run_id=auto_run_id,
+                output=None,
+                router_plan_output=None,
+            )
+            _run_auto_step("build reward analysis", command_reward_analysis, reward_args)
+        if stage in {"all", "report"}:
+            report_args = argparse.Namespace(run_id=auto_run_id, output=args.output)
+            _run_auto_step("build report", command_report, report_args)
+
+        report_path = Path(args.output).resolve() if args.output else run_dir / "report.html"
+        print(json.dumps({
+            "status": "complete", "completed_stage": stage, "run_dir": str(run_dir),
+            "report": str(report_path) if report_path.exists() else None,
+            "evaluation_profile": profile_id,
+            "codex_model": args.codex_model,
+            "system_concurrency": system_concurrency,
+            "system_completeness": completeness,
+        }, ensure_ascii=False, indent=2))
+        _finish_timing("complete")
+        return 0
+    except (FileNotFoundError, ValueError, RuntimeError):
+        _finish_timing("error")
+        raise
+
+
+def command_failure_analysis(args) -> int:
+    root = _root()
+    run_dir = (root / "runs" / args.run_id).resolve()
+    if not run_dir.exists():
+        raise FileNotFoundError(f"Run directory not found: {run_dir}")
+    analysis = build_failure_analysis(run_dir)
+    if args.output:
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps(analysis, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        print(json.dumps({"status": "ok", "output": str(output), "run_id": run_dir.name}, ensure_ascii=False))
+        return 0
+    print(render_text_analysis(analysis))
+    return 0
+
+
+def command_plot(args) -> int:
+    _, _, run_dir = _paths(args)
+    if args.figure == "all":
+        if args.output:
+            raise ValueError("--output can be used only when exporting one figure")
+        outputs = export_all_figures(run_dir)
+        print(json.dumps({key: str(value) for key, value in outputs.items()}, ensure_ascii=False, indent=2))
+        return 0
+    output = Path(args.output).resolve() if args.output else None
+    result = export_figure(run_dir, args.figure, output)
+    print(f"wrote {result}")
+    return 0
+
+
+def command_reward_analysis(args) -> int:
+    root = _root()
+    run_dir = (root / "runs" / args.run_id).resolve()
+    if not run_dir.exists():
+        raise FileNotFoundError(f"Run directory not found: {run_dir}")
+    analysis = build_reward_analysis(run_dir)
+    update_plan = build_router_update_plan(run_dir, analysis)
+    analysis_path = Path(args.output).resolve() if args.output else run_dir / "reward_analysis.json"
+    update_path = (
+        Path(args.router_plan_output).resolve()
+        if args.router_plan_output
+        else run_dir / "router_update_plan.json"
+    )
+    write_json(analysis_path, analysis)
+    write_json(update_path, update_plan)
+    print(
+        json.dumps(
+            {
+                "status": "ok",
+                "run_id": run_dir.name,
+                "reward_analysis": str(analysis_path),
+                "router_update_plan": str(update_path),
+                "adaptive_rag": analysis.get("adaptive_rag", {}),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    return 0
+
+
+
+def command_cleanup_codex_threads(args) -> int:
+    """Archive Codex teacher/judge threads recorded for a run (recoverable).
+
+    Results are already persisted under runs/<run-id>, so archiving the source
+    conversations is safe cleanup: they leave the active UI list and can still
+    be restored from the app's archive until manually deleted there.
+    """
+    root = _root()
+    run_dir = (root / "runs" / args.run_id).resolve()
+    if not run_dir.exists():
+        raise FileNotFoundError(f"Run directory not found: {run_dir}")
+    records_dir = run_dir / "codex" / "records"
+    thread_rows: list[tuple[str, str, str]] = []
+    if records_dir.exists():
+        for path in sorted(records_dir.glob("*/*.json")):
+            record = read_json(path)
+            thread_id = record.get("thread_id")
+            if thread_id:
+                thread_rows.append(
+                    (
+                        str(record.get("stage", "?")),
+                        str(record.get("task_id", "?")),
+                        str(thread_id),
+                    )
+                )
+    seen: set[str] = set()
+    unique: list[tuple[str, str, str]] = []
+    for stage, task_id, thread_id in thread_rows:
+        if thread_id not in seen:
+            seen.add(thread_id)
+            unique.append((stage, task_id, thread_id))
+    if not unique:
+        print(f"[cleanup-codex-threads] no thread IDs recorded for run {args.run_id}")
+        return 0
+    if args.dry_run:
+        for stage, task_id, thread_id in unique:
+            print(f"[cleanup-codex-threads] would archive {thread_id} ({stage} :: {task_id})")
+        print(f"[cleanup-codex-threads] dry-run: {len(unique)} thread(s)")
+        return 0
+    try:
+        from openai_codex import Codex
+    except ImportError as exc:
+        raise RuntimeError(
+            "openai_codex is not installed in the active environment; run: python -m pip install -e ."
+        ) from exc
+    errors: list[str] = []
+    archived = 0
+    with Codex() as codex:
+        for stage, task_id, thread_id in unique:
+            try:
+                codex.thread_archive(thread_id)
+                archived += 1
+                print(f"[cleanup-codex-threads] archived {thread_id} ({stage} :: {task_id})")
+            except Exception as exc:
+                errors.append(f"{thread_id} ({stage} :: {task_id}): {exc}")
+    print(f"[cleanup-codex-threads] archived {archived}/{len(unique)}")
+    for error in errors[:10]:
+        print(f"[cleanup-codex-threads] error: {error}")
+    return 0 if not errors else 1
 
 
 def command_list_benchmark_sets(args) -> int:
@@ -463,7 +765,11 @@ def command_list_benchmark_sets(args) -> int:
                 "active": name == active,
                 "description": entry.get("description", ""),
                 "source_config": entry.get("source_config"),
+                "view_config": entry.get("view_config"),
+                "view_id": entry.get("view_id"),
                 "normalized_dir": entry.get("normalized_dir"),
+                "evaluation_profile": entry.get("evaluation_profile"),
+                "enabled": entry.get("enabled", True),
             }
         )
     print(json.dumps({"active_set": active, "sets": rows}, ensure_ascii=False, indent=2))
@@ -495,6 +801,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_probe = sub.add_parser("probe", help="list remote OpenWebUI models and check preset IDs")
     p_probe.add_argument("--systems", default="configs/systems.json")
     p_probe.add_argument("--details", action="store_true")
+    p_probe.add_argument("--benchmark-set", default=None)
+    p_probe.add_argument("--evaluation-profile", default=None)
     p_probe.set_defaults(func=command_probe)
 
     p_probe_chat = sub.add_parser(
@@ -504,51 +812,127 @@ def build_parser() -> argparse.ArgumentParser:
     p_probe_chat.add_argument("--system", default="agent")
     p_probe_chat.add_argument("--model", default=None)
     p_probe_chat.add_argument("--case", default=None)
-    p_probe_chat.add_argument("--max-tokens", type=int, default=32)
+    p_probe_chat.add_argument(
+        "--max-tokens",
+        type=int,
+        default=None,
+        help="client-side output cap; omit to use the server/model limit",
+    )
+    p_probe_chat.add_argument(
+        "--no-thinking",
+        action="store_true",
+        help="request chat-template thinking mode to be disabled",
+    )
     p_probe_chat.add_argument("--timeout", type=int, default=60)
     p_probe_chat.add_argument("--stream", action="store_true")
     _add_benchmark_selection_args(p_probe_chat)
     p_probe_chat.set_defaults(func=command_probe_chat)
 
-    p_run = sub.add_parser("run", help="run every benchmark against the three OpenWebUI presets")
+    p_run = sub.add_parser("run", help="run every benchmark against the selected OpenWebUI presets")
     p_run.add_argument("--run-id", default=None)
     _add_benchmark_selection_args(p_run)
     p_run.add_argument("--systems", default="configs/systems.json")
+    p_run.add_argument("--evaluation-profile", default=None)
     p_run.add_argument("--force", action="store_true")
+    p_run.add_argument("--system-concurrency", type=int, default=2)
     p_run.set_defaults(func=command_run)
+
+    p_router = sub.add_parser(
+        "router-eval",
+        help="compare zero-shot and Skill-guided RAG routing without running the solver",
+    )
+    p_router.add_argument("--run-id", default=None)
+    _add_benchmark_selection_args(p_router)
+    p_router.add_argument("--evaluation-profile", default=None)
+    p_router.add_argument("--config", default="configs/router_evaluation.json")
+    p_router.add_argument(
+        "--variant",
+        action="append",
+        default=None,
+        help="router variant ID; repeat to select multiple variants",
+    )
+    p_router.add_argument(
+        "--pilot",
+        action="store_true",
+        help="run the fixed 12-case D1-D6 routing pilot from the router config",
+    )
+    p_router.add_argument("--force", action="store_true")
+    p_router.set_defaults(func=command_router_eval)
 
     p_auto = sub.add_parser(
         "auto",
-        help="run systems, Codex teacher/judge tasks, validation and HTML reporting",
+        help="run resumable systems, dual-teacher, judge, and report stages",
     )
     p_auto.add_argument("--run-id", default=None)
     _add_benchmark_selection_args(p_auto)
     p_auto.add_argument("--systems", default="configs/systems.json")
+    p_auto.add_argument("--evaluation-profile", default=None)
+    p_auto.add_argument("--stage", choices=("all", "systems", "teachers", "judges", "report"), default="all")
     p_auto.add_argument("--force", action="store_true", help="rerun successful OpenWebUI responses")
     p_auto.add_argument("--force-codex", action="store_true", help="rerun successful Codex tasks")
     p_auto.add_argument("--seed", type=int, default=20260806)
     p_auto.add_argument("--output", default=None)
-    p_auto.add_argument("--config", default="configs/skill_promotion.json")
-    p_auto.add_argument("--codex-model", default="gpt-5.6-terra")
-    p_auto.add_argument("--codex-concurrency", type=int, default=1)
+    p_auto.add_argument("--codex-model", default="gpt-5.6-sol")
+    p_auto.add_argument("--codex-concurrency", type=int, default=None, help="legacy override for all Codex stages")
+    p_auto.add_argument("--system-concurrency", type=int, default=2, help="parallel independent OpenWebUI requests (1-8)")
+    p_auto.add_argument("--teacher-general-concurrency", type=int, default=2)
+    p_auto.add_argument("--teacher-tools-concurrency", type=int, default=1)
+    p_auto.add_argument("--judge-concurrency", type=int, default=4, help="parallel independent Judge tasks (default: 4)")
     p_auto.add_argument("--codex-retries", type=int, default=2)
     p_auto.add_argument("--codex-timeout", type=int, default=3600)
-    p_auto.add_argument("--fail-on-gate", action="store_true")
+    p_auto.add_argument("--require-complete-systems", action="store_true", help="stop before Teacher/Judge when any OpenWebUI response is missing or failed")
     p_auto.set_defaults(func=command_auto)
 
     p_ratings = sub.add_parser("validate-ratings", help="check score bounds, sums and failure codes")
     p_ratings.add_argument("--run-id", required=True)
     p_ratings.set_defaults(func=command_validate_ratings)
 
+    p_analysis = sub.add_parser(
+        "failure-analysis",
+        help="aggregate scores, failure codes and tool/RAG utilization of a run",
+    )
+    p_analysis.add_argument("--run-id", required=True)
+    p_analysis.add_argument(
+        "--output",
+        default=None,
+        help="write the full analysis as JSON instead of printing the text view",
+    )
+    p_analysis.set_defaults(func=command_failure_analysis)
+
+    p_reward = sub.add_parser(
+        "reward-analysis",
+        help="build paired rubric rewards, adaptive-RAG regret and a Router update plan",
+    )
+    p_reward.add_argument("--run-id", required=True)
+    p_reward.add_argument("--output", default=None)
+    p_reward.add_argument("--router-plan-output", default=None)
+    p_reward.set_defaults(func=command_reward_analysis)
+
     p_report = sub.add_parser("report", help="generate a self-contained HTML report")
     p_report.add_argument("--run-id", required=True)
     p_report.add_argument("--output", default=None)
     p_report.set_defaults(func=command_report)
 
-    p_gate = sub.add_parser("skill-gate", help="compare Environment-Skill with Environment")
-    p_gate.add_argument("--run-id", required=True)
-    p_gate.add_argument("--config", default="configs/skill_promotion.json")
-    p_gate.set_defaults(func=command_skill_gate)
+    p_plot = sub.add_parser(
+        "plot",
+        help="export one paper-ready SVG figure from an evaluated run",
+    )
+    p_plot.add_argument("--run-id", required=True)
+    p_plot.add_argument(
+        "--figure",
+        required=True,
+        choices=(*PAPER_FIGURE_IDS, "all"),
+    )
+    p_plot.add_argument("--output", default=None)
+    p_plot.set_defaults(func=command_plot)
+
+    p_cleanup = sub.add_parser(
+        "cleanup-codex-threads",
+        help="archive Codex teacher/judge threads recorded for a run (keeps them recoverable)",
+    )
+    p_cleanup.add_argument("--run-id", required=True)
+    p_cleanup.add_argument("--dry-run", action="store_true")
+    p_cleanup.set_defaults(func=command_cleanup_codex_threads)
     return parser
 
 

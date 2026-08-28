@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D6-6a-n05",
+  "task_family": "d6_6a",
+  "title": "D6_6a-N05 | Joint selection of winter/summer pressure tiers and one year-round acid dose",
+  "question_prompt": "D6_6a-N05 | Joint selection of winter/summer pressure tiers and one year-round acid dose\n\nAn SWRO plant may use different winter and summer pressures, while membrane area, PX configuration and the acid metering setpoint remain fixed year-round. Determine the minimum compliant pressure in each season, then use the two actual recoveries to find one common acid dose without over-dosing solely for the harsh season.\n\nEngineering inputs and design boundary | Hard constraints and decision rule\nModule area 70 m², PX efficiency 95%, A=4.0×10⁻¹² m/s/Pa and B=3.0×10⁻⁸ m/s. Winter is 15°C and 36 g/kg with 62–70 bar; summer is 31°C and 40 g/kg with 66–74 bar. Build a reproducible pressure grid for each season. | Each season must meet module water≥0.400 kg/s, NaCl≤350 mg/L, CP≤1.34; plant product≥0.043 m³/s and SEC≤3.00 kWh/m³. One common dose must keep both seasons at pH≥6.15 with all four SI≤0. Minimize seasonal pressures first, then the common dose.\n\nEngineering dependency | Required engineering answer\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 1 | Define a reproducible discrete search within the stated bounds.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 2 | Evaluate membrane and plant constraints without mixing design identities.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 3 | Transfer actual recovery into concentrate chemistry.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 4 | Show the controlling failure immediately outside the feasible boundary.\nMembrane performance and whole-plant performance must be evaluated for the same design identity. Only jointly feasible designs proceed to concentrate chemistry, whose recovery must inherit the actual membrane result. | 5 | Report the final setting, decisive values and model limitations.\n\nBoundary note\nDo not substitute nominal recovery, mix outputs from different design packages, or average away a failed season/state. The answer must preserve engineering lineage from design identity to final chemistry verification.",
+  "reference_answer": "Gold Answer | D6_6a-N05\n\nRecommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\n\nParallel membrane + whole-plant join (key rows from 10 + 10 calls) | Joint-decision summary\nID | Setting | Water kg/s | NaCl mg/L | Recovery | CP | Plant m³/s | SEC | LCOW | Status | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nW62 | Winter / 62 bar | 0.4061794 | 295.298 | 0.4173192 | 1.302423 | 0.0444529 | 2.613432 | 1.091622 | =IF(AND(C10>=0.4,D10<=350,F10<=1.34,G10>=0.043,H10<=3),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nW64 | Winter / 64 bar | 0.4254321 | 289.6326 | 0.4370993 | 1.322744 | 0.0462097 | 2.675283 | 1.068707 | =IF(AND(C11>=0.4,D11<=350,F11<=1.34,G11>=0.043,H11<=3),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nW66 | Winter / 66 bar | 0.4440126 | 284.9819 | 0.4561888 | 1.343279 | 0.0479043 | 2.737639 | 1.048843 | =IF(AND(C12>=0.4,D12<=350,F12<=1.34,G12>=0.043,H12<=3),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nS68 | Summer / 68 bar | 0.3872472 | 335.441 | 0.3990486 | 1.295409 | 0.0426391 | 2.846131 | 1.14752 | =IF(AND(C13>=0.4,D13<=350,F13<=1.34,G13>=0.043,H13<=3),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nS70 | Summer / 70 bar | 0.4051803 | 328.44 | 0.4175275 | 1.31456 | 0.0442578 | 2.90782 | 1.124569 | =IF(AND(C14>=0.4,D14<=350,F14<=1.34,G14>=0.043,H14<=3),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nS72 | Summer / 72 bar | 0.4225426 | 322.538 | 0.4354183 | 1.33389 | 0.0458234 | 2.97003 | 1.104533 | =IF(AND(C15>=0.4,D15<=350,F15<=1.34,G15>=0.043,H15<=3),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nS74 | Summer / 74 bar | 0.4393525 | 317.5624 | 0.4527399 | 1.353398 | 0.0473379 | 3.03269 | 1.087011 | =IF(AND(C16>=0.4,D16<=350,F16<=1.34,G16>=0.043,H16<=3),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nRecommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nSerial concentrate chemistry (actual recovery inherited) | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nID | Parent | Recovery | HCl mol/s | pH | Calcite SI | Dolomite SI | Gypsum SI | Anhydrite SI | Status | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nW-D0.0003 | W62 | 0.4173192 | 0.0003 | 6.5951 | -0.733 | -0.5185 | -0.4078 | -0.8564 | =IF(AND(E20>=6.15,F20<=0,G20<=0,H20<=0,I20<=0),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nW-D0.0006 | W62 | 0.4173192 | 0.0006 | 6.3474 | -1.0601 | -1.1723 | -0.4078 | -0.8565 | =IF(AND(E21>=6.15,F21<=0,G21<=0,H21<=0,I21<=0),\"PASS\",\"FAIL\") | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nW-D0.0009 | W62 | 0.4173192 | 0.0009 | 6.128 | -1.3777 | -1.807 | -0.4079 | -0.8565 | =IF(AND(E22>=6.15,F22<=0,G22<=0,H22<=0,I22<=0),\"PASS\",\"FAIL\")\nS-D0.0003 | S70 | 0.4175275 | 0.0003 | 6.6078 | -0.3167 | 0.4314 | -0.3799 | -0.6271 | =IF(AND(E23>=6.15,F23<=0,G23<=0,H23<=0,I23<=0),\"PASS\",\"FAIL\")\nS-D0.0006 | S70 | 0.4175275 | 0.0006 | 6.3816 | -0.5996 | -0.1341 | -0.3799 | -0.6271 | =IF(AND(E24>=6.15,F24<=0,G24<=0,H24<=0,I24<=0),\"PASS\",\"FAIL\")\nS-D0.0009 | S70 | 0.4175275 | 0.0009 | 6.1928 | -0.855 | -0.6445 | -0.38 | -0.6272 | =IF(AND(E25>=6.15,F25<=0,G25<=0,H25<=0,I25<=0),\"PASS\",\"FAIL\")\nID | LCOW\nEngineering conversion / final KPI | Boundary evidence\nSelected HCl mol/s | 0.0006 | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\nPure HCl g/h | =B28*36.46*3600 | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\n31 wt% HCl L/h | =B29/(31%*1150) | Recommend 62 bar in winter, 70 bar in summer and one 0.0006 mol/s HCl setpoint. Winter module water is 0.40618 kg/s and plant product 0.04445 m³/s; summer values are 0.40518 kg/s and 0.04426 m³/s. At 0.0003 mol/s summer Dolomite SI=+0.4314; at 0.0006 mol/s both seasons pass.\n\nModel scope and audit note\nAll numeric rows are direct outputs from connected ROprocess tools. simulate_ro supplies membrane flow, salinity, CP and actual recovery; simulate_swro_system supplies plant product, SEC, CAPEX and LCOW; equilibrate_feed uses Pitzer activity corrections at inherited recovery. Osmotic pressures from different tools are not forced to match.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Formulation",
+        "reasoning_or_calculation": "Common candidate identity",
+        "inputs": "",
+        "key_outputs": "Defines variables, units, constraints and objective.",
+        "full_credit": "Defines variables, units, constraints and objective.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Parallel membrane branch",
+        "reasoning_or_calculation": "simulate_ro fidelity",
+        "inputs": "",
+        "key_outputs": "Runs the declared grid and applies all module constraints.",
+        "full_credit": "Runs the declared grid and applies all module constraints.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Parallel plant branch",
+        "reasoning_or_calculation": "simulate_swro_system fidelity",
+        "inputs": "",
+        "key_outputs": "Uses matching design IDs and applies product/SEC/economic rules.",
+        "full_credit": "Uses matching design IDs and applies product/SEC/economic rules.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Join logic",
+        "reasoning_or_calculation": "Joint feasibility",
+        "inputs": "",
+        "key_outputs": "Intersects both branches before ranking.",
+        "full_credit": "Intersects both branches before ranking.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Serial chemistry",
+        "reasoning_or_calculation": "Inherited recovery",
+        "inputs": "",
+        "key_outputs": "Transfers actual recovery and evaluates dose/state boundaries.",
+        "full_credit": "Transfers actual recovery and evaluates dose/state boundaries.",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision and scope",
+        "reasoning_or_calculation": "Final recommendation",
+        "inputs": "",
+        "key_outputs": "Reports winner, controlling failure, conversion and model limits.",
+        "full_credit": "Reports winner, controlling failure, conversion and model limits.",
+        "common_failures": "",
+        "max_score": 20.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Choose simulator and metadata tools that match the requested outputs.",
+        "full_credit": "Every selected tool is necessary and scientifically appropriate.",
+        "medium_credit": "The main tools are correct, with limited unnecessary metadata or exploratory calls.",
+        "low_credit": "Wrong simulator scope, missing required tool types, or many irrelevant calls.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and call ordering",
+        "evaluation_focus": "Order calls so each stage or branch resolves a decision boundary.",
+        "full_credit": "Call order follows the reference dependencies or an equally informative alternative.",
+        "medium_credit": "Mostly useful ordering with minor low-information calls.",
+        "low_credit": "Dense or serial enumeration without regard to dependencies or information gain.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 State lineage and adaptive iteration",
+        "evaluation_focus": "Preserve candidate identity and exact upstream outputs across coupled calls.",
+        "full_credit": "Downstream calls inherit the correct candidate state and adapt to observed results.",
+        "medium_credit": "Lineage is mostly preserved, with minor rounding or weak adaptation.",
+        "low_credit": "Mixes candidates, substitutes target values for actual outputs, or ignores prior results.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Parallelization, pruning and redundancy control",
+        "evaluation_focus": "Parallelize independent branches, prune resolved candidates, and avoid repetition.",
+        "full_credit": "Independent work is parallelized and redundant/equivalent calls are avoided.",
+        "medium_credit": "Some avoidable serialization or repetition, without changing the conclusion.",
+        "low_credit": "Unnecessary serial execution, repeated equivalent calls, or no pruning.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence, stopping and evidence sufficiency",
+        "evaluation_focus": "Stop after constraints and ranking are supported by auditable evidence.",
+        "full_credit": "Converges within the reference budget or justifies an efficient alternative budget.",
+        "medium_credit": "Minor extra calls or a weakly justified sensitivity check.",
+        "low_credit": "Stops too early to support the answer or continues after the decision is resolved.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "reference_trajectory",
+    "reference_trajectory": "D6_6a-N05 | Tool efficiency (100 points)\n\nReference trajectory: 10 simulate_ro calls and 10 simulate_swro_system calls in parallel, followed by 10 equilibrate_feed calls on inherited recoveries. Efficiency means each call changes a feasibility boundary or ranking.\n\nStage | Tool | Calls | Key input | Key observation | State update | Next step\n1 Metadata | describe_* | 0 | Units, species and valid parameter combinations | Lock common candidate identity | Create auditable search table | Fork\n2A Parallel membrane | simulate_ro | 10 | Pressure, area, A/B, temperature and salinity | Water, NaCl, CP and actual recovery | Mark membrane-feasible IDs | Join\n2B Parallel plant | simulate_swro_system | 10 | Same ID, plant area, ERD and pump settings | Product, SEC, CAPEX and LCOW | Mark plant-feasible IDs | Join\n3 Join | — | 0 | Two aligned branch tables | Intersection and ranking boundary | Create chemistry shortlist | Transfer recovery\n4 Serial chemistry | equilibrate_feed | 10 | Inherited recovery, ion analysis and dose/state | pH and mineral SI | Lock final feasible set | Check adjacent failure\n5 Stop | — | 0 | Winner plus decisive failure evidence | No unresolved boundary | Report recommendation and limits | Stop\n\nHybrid-trajectory audit\nCritical rule: both parallel branches must use the same design identity. Chemistry must inherit the exact actual recovery associated with that identity. Re-running chemistry with a rounded target recovery, or combining the membrane result of one package with the ERD/economics of another, breaks the trajectory even if the final recommendation happens to match.",
+    "derivation_note": "The source sheet defines a 100-point reference trajectory and call budget but no numeric dimension allocation. The project-standard five 20-point efficiency dimensions are applied while preserving the complete task-specific trajectory as Judge evidence."
+  },
+  "source": {
+    "filename": "D6_6a_N05_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D6\\D6_6a_N05_EN.xlsx",
+    "sha256": "3a1e3709a16b2a0a714638bb357bef89fa0a8d4b44bb1c719ae76d3214efc7b7",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:34+00:00"
+  }
+}

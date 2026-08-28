@@ -1,0 +1,156 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D7-mock-04-capex-sensitivity",
+  "task_family": "d7_mock",
+  "title": "D4_4a: SWRO Concept-Design CAPEX and Key-Parameter Sensitivity",
+  "question_prompt": "D4_4a: SWRO Concept-Design CAPEX and Key-Parameter Sensitivity\n\nA coastal municipality is planning Phase 1 SWRO with a pressure exchanger (PX): feed 0.420 m³/s, TDS 38.0 g/L, TSS 0.030 g/L, 25°C, active RO area 18,000 m², P1 outlet 70 bar(a), P1 efficiency 0.83, PX efficiency 0.96 and P2 efficiency 0.82. Required product is at least 14,000 m³/d and concept-design CAPEX must not exceed USD 30.0 million in 2018 dollars. Use simulate_swro_system to determine base total capital cost and capital intensity per m³/d of design production. Then run the specified one-at-a-time sensitivities, calculate CAPEX change and elasticity, and rank the drivers. Treat PAT as a discrete equipment configuration and exclude it from continuous elasticity ranking. Conclude on budget risk and equipment configuration.\n\nBase design inputs | Specified one-at-a-time cases\nParameter | Value | Unit | Status | Case | Change | Analysis basis\nDesign feed | 0.42 | m³/s | Fixed | S1 Scale | Feed +10%: 0.420→0.462 m³/s | Continuous elasticity\nFeed TDS | 38 | g/L | Fixed | S2 Membranes | Area +10%: 18,000→19,800 m² | Continuous elasticity\nFeed TSS | 0.03 | g/L | Fixed | S3 High pressure | Pressure +10%: 70→77 bar(a) | Continuous elasticity\nTemperature | 25 | °C | Fixed | S4 Pretreatment load | TSS +50%: 0.030→0.045 g/L | Continuous elasticity\nActive RO area | 18000 | m² | Fixed | S5 PX performance | Efficiency 0.96→0.91 | Signed continuous elasticity\nP1 outlet pressure | 70 | bar(a) | Fixed | S6 ERD configuration | PX→PAT; PAT efficiency 0.85 | Discrete scenario\nP1 efficiency | 0.83 | - | Fixed\nERD type | pressure_exchanger | - | Fixed | Required deliverables\nPX efficiency | 0.96 | - | Fixed | 1. Report key results from seven valid full-plant simulations.\nP2 efficiency | 0.82 | - | Fixed | 2. Base CAPEX, product capacity and capital intensity.\nCAPEX ceiling | 30000000 | USD_2018 | Criterion | 3. CAPEX elasticities and absolute-value ranking for continuous inputs.\nMinimum product | 14000 | m³/d | Criterion | 4. Discrete PAT-versus-PX CAPEX increment.\n5. Test the USD 30.0 million ceiling and explain model scope.\n\nBasis: use total_capital_cost_usd from simulate_swro_system in USD_2018. Capital intensity equals CAPEX divided by product capacity (m³/d). Elasticity=(ΔCAPEX/CAPEX₀)/(Δx/x₀); a PX-efficiency decrease creates a negative sign. PAT is a configuration switch, not a continuous parameter. A lower LCOW does not automatically mean lower CAPEX. Results exclude any off-model escalation, financing, owner contingency or offsite adjustment.",
+  "reference_answer": "D4_4a: Stepwise Gold Answer — CAPEX Scale, Sensitivity and Configuration Decision\n\nActual tool trajectory: seven valid simulate_swro_system calls. Establish the base design and budget headroom, then run five continuous one-at-a-time changes and one discrete PAT comparison. Rank continuous variables by absolute elasticity and report the equipment switch separately.\n\nReference agent trajectory\nStage | State | Action | Tool observation | Calculation | State update | Next step | Capability\n1 Model | Cost basis undefined | Run base PX case | CAPEX=$28.034m; product≈14,074 m³/d | Capital intensity | Base passes both criteria | Test scale and equipment inputs | State representation\n2 Scale | Base locked | Increase feed and area separately by 10% | Both raise CAPEX but production responds differently | ΔCAPEX and elasticity | Identify scale effects | Test high-pressure system | One-at-a-time control\n3 High pressure | Pump scale effect unresolved | Increase P1 pressure by 10% | CAPEX rises 5.53% | Elasticity 0.553 | Largest continuous driver | Test water quality and PX performance | Sensitivity\n4 Quality/efficiency | Separate capital from performance inputs | TSS +50%; lower PX efficiency | TSS negligible; PX degradation raises P2 duty | Signed elasticity | Continuous ranking complete | Switch ERD configuration | Causal distinction\n5 Configuration | Discrete option unresolved | Replace PX with PAT at η=0.85 | CAPEX=$33.987m; SEC=6.351 | Increment versus base | PAT breaches budget | Recommend | Discrete decision\n6 Decision | Evidence complete | Summarize | All continuous cases are below $30m; pressure case has least headroom | Budget headroom | Retain PX; revisit contingency before pressure uprate | Stop | Engineering judgment\n\nSeven actual simulate_swro_system calls and CAPEX calculations | Scenario | CAPEX $m | Budget\nCall | Scenario | Variable | Base input | Test input | Product m³/s | Product m³/d | Recovery % | CAPEX USD_2018 | ΔCAPEX | ΔCAPEX % | Δinput % | CAPEX elasticity | Capital intensity | SEC | LCOW | P1 kW | P2/ERD kW | =B20 | =I20/1000000 | =30000000/1000000\n1 | Base PX design | Base | 0.162890064615805 | =F20*86400 | 38.9701005454175 | 28034333.1702819 | =I20-$I$20 | =J20/$I$20 | =I20/G20 | 3.11501471411781 | 0.830396492118328 | 1356.50575959948 | 230.815241808692 | =B21 | =I21/1000000 | =30000000/1000000\n2 | Design feed +10% | Feed flow m³/s | 0.42 | 0.462 | 0.167795908398865 | =F21*86400 | 36.4946826610507 | 29242093.0736449 | =I21-$I$20 | =J21/$I$20 | =E21/D21-1 | =K21/L21 | =I21/G21 | 3.21038149166892 | 0.852628912611636 | 1397.43172036289 | 295.259333457291 | =B22 | =I22/1000000 | =30000000/1000000\n3 | Membrane area +10% | RO area m² | 18000 | 19800 | 0.172550284985191 | =F22*86400 | 41.2808512278627 | 28599371.9147623 | =I22-$I$20 | =J22/$I$20 | =E22/D22-1 | =K22/L22 | =I22/G22 | 3.09696907182489 | 0.804917049305212 | 1436.88007953178 | 233.40485605316 | =B23 | =I23/1000000 | =30000000/1000000\n4 | P1 pressure +10% | P1 pressure bar(a) | 70 | 77 | 0.185024865414839 | =F23*86400 | 44.2660283794122 | 29584575.9359054 | =I23-$I$20 | =J23/$I$20 | =E23/D23-1 | =K23/L23 | =I23/G23 | 3.27661871264454 | 0.787711772645473 | 1696.99362709801 | 213.753240246634 | =B24 | =I24/1000000 | =30000000/1000000\n5 | Feed TSS +50% | TSS g/L | 0.03 | 0.045 | 0.162886865960008 | =F24*86400 | 38.9699219910668 | 28035007.9652223 | =I24-$I$20 | =J24/$I$20 | =E24/D24-1 | =K24/L24 | =I24/G24 | 3.11501416370302 | 0.830418628973829 | 1356.47907411403 | 230.809290510578 | =B25 | =I25/1000000 | =30000000/1000000\n6 | PX efficiency 0.96→0.91 | PX efficiency | 0.96 | 0.91 | 0.162890064615805 | =F25*86400 | 38.9701005454175 | 28416664.0574949 | =I25-$I$20 | =J25/$I$20 | =E25/D25-1 | =K25/L25 | =I25/G25 | 3.28587216485859 | 0.847558555844293 | 1356.50575959948 | 331.006774097219 | =B26 | =I26/1000000 | =30000000/1000000\n7 | Replace PX with PAT, η=0.85 | ERD configuration | PX | PAT | 0.162890064615805 | =F26*86400 | 38.9701005454176 | 33987087.6638949 | =I26-$I$20 | =J26/$I$20 | =I26/G26 | 6.3512118141256 | 1.13162790334787 | 3485.04067843526 | 1396.38159374911\n\nContinuous-parameter sensitivity ranking (by |elasticity|) | Budget and configuration decision\nRank | Design input | Δinput | ΔCAPEX | ΔCAPEX % | Elasticity | |Elasticity| | Engineering interpretation | Item | Base | Worst continuous | PAT | Budget | Base headroom | Pressure-case headroom | PAT overrun | Conclusion\n1 | P1 pressure | =L23 | =J23 | =K23 | =M23 | =ABS(M23) | Largest combined effect from pump duty and high-pressure equipment rating | CAPEX | =I20 | =I23 | =I26 | 30000000 | =N31-K31 | =N31-L31 | =M31-N31 | All continuous cases remain below the stated ceiling\n2 | Design feed | =L21 | =J21 | =K21 | =M21 | =ABS(M21) | Larger intake, pretreatment and pumping capacity | Product | =G20 | =G23 | =G26 | 14000 | Base meets minimum product\n3 | PX efficiency | =L25 | =J25 | =K25 | =M25 | =ABS(M25) | Lower efficiency raises booster-pump duty and cost, so the sign is negative | SEC | =O20 | =O23 | =O26 | PAT energy is materially higher\n4 | Membrane area | =L22 | =J22 | =K22 | =M22 | =ABS(M22) | More membrane and pressure-vessel capacity, with more product | Equipment recommendation | PX | PAT | Retain PX; reassess contingency/offsites before pressure uprate\n5 | Feed TSS | =L24 | =J24 | =K24 | =M24 | =ABS(M24) | Nearly insensitive within the current simplified pretreatment model\n\nFinal conclusion\n\nThe base PX design has total capital cost of USD 28.034 million (2018), product capacity of 14,073.70 m³/d and capital intensity of USD 1,991.97 per m³/d, satisfying both the 14,000 m³/d requirement and USD 30.0 million ceiling. Continuous inputs ranked by |CAPEX elasticity| are P1 pressure 0.553 > design feed 0.431 > PX efficiency 0.262 > membrane area 0.202 >> TSS about 0.00005; signed PX-efficiency elasticity is -0.262. PAT CAPEX is USD 33.987 million, USD 5.953 million (21.23%) above PX, while SEC rises to 6.351 kWh/m³, so PAT breaches the budget and PX should be retained. The 77-bar case is still below USD 30 million but leaves only about USD 0.415 million before off-model contingency and offsites, so pressure uprating should not be approved from this result alone.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 State",
+        "reasoning_or_calculation": "Identify base, budget and minimum production",
+        "inputs": "Main objective right but one criterion missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Mix currencies or ignore design scale",
+        "max_score": 10.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Tool calls",
+        "reasoning_or_calculation": "Use whole-plant costing tool",
+        "inputs": "Minor noncritical deviations",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Use simulate_ro for whole-plant CAPEX",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 CAPEX calculation",
+        "reasoning_or_calculation": "Correct base investment and intensity",
+        "inputs": "Approximately right but units incomplete",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Treat LCOW or OPEX as CAPEX",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Sensitivity",
+        "reasoning_or_calculation": "Normalize different perturbation sizes",
+        "inputs": "Compare absolute increments but acknowledge unequal sizes",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Rank dollar changes from unequal perturbations directly",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Input/configuration distinction",
+        "reasoning_or_calculation": "Separate continuous elasticity from PAT option",
+        "inputs": "Conclusion right but presentation mixed",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Invent a continuous elasticity for PAT",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Engineering decision",
+        "reasoning_or_calculation": "Give budget risk and recommendation",
+        "inputs": "Mostly right but headroom/scope missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Recommend over-budget PAT or unconditional pressure uprate",
+        "max_score": 15.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice",
+        "evaluation_focus": "Choose whole-plant cost tool",
+        "full_credit": "Primarily simulate_swro_system",
+        "medium_credit": "A few irrelevant metadata calls",
+        "low_credit": "Use single-membrane tool for plant investment",
+        "case_observation": "costing.total_capital_cost_usd",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Base first",
+        "evaluation_focus": "Establish a common baseline first",
+        "full_credit": "Run the base first and confirm production/budget",
+        "medium_credit": "One or two cases before backfilling base",
+        "low_credit": "Compare without a common baseline",
+        "case_observation": "Base PX",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 One-at-a-time control",
+        "evaluation_focus": "Change only the target input",
+        "full_credit": "All five continuous cases hold other inputs fixed",
+        "medium_credit": "One noncritical co-change",
+        "low_credit": "Multiple co-changes prevent attribution",
+        "case_observation": "flow/area/pressure/TSS/PX efficiency",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Normalization/pruning",
+        "evaluation_focus": "Use elasticity rather than dense scanning",
+        "full_credit": "One specified run per perturbation is sufficient",
+        "medium_credit": "One or two extra confirmations",
+        "low_credit": "Large enumeration or rank unequal dollar changes directly",
+        "case_observation": "5 continuous calls",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Configuration/stopping",
+        "evaluation_focus": "Report PAT separately and stop",
+        "full_credit": "Seventh call completes configuration and budget decision",
+        "medium_credit": "Minor repeated calls",
+        "low_credit": "Omit PAT or continue low-information calls",
+        "case_observation": "7 total calls",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D4_4a_CAPEX_design_sensitivity_English.xlsx",
+    "absolute_path": "D:\\PhD_Work\\auto-evaluate\\benchmarks\\Datasets Harness\\D4\\D4_4a_CAPEX_design_sensitivity_English.xlsx",
+    "sha256": "3018d152ebe60fb8d656def1f201569332d6286c2dc390f54503b0f00132353b",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-25T10:23:13+00:00",
+    "derived_overlay": {
+      "overlay_id": "d7-mock-r0-original-v1",
+      "sha256": "be42b7963d92dcd4c5387510cf27134f8cdcf2282ae2d520d198b055002bcb82"
+    }
+  },
+  "benchmark_view": {
+    "rag_need": "R0",
+    "expected_route": "skip_rag"
+  }
+}
