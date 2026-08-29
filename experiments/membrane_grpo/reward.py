@@ -91,6 +91,26 @@ PROBE = Weights(
     action=0.05,
 )
 
+#: The ablation. On Qwen3-1.7B, PROBE improved held-out `root_cause` far more
+#: than MAIN did (0.235 -> 0.440 against 0.235 -> 0.290) despite weighting it
+#: at 0.10 against 0.45. But PROBE differs from MAIN on four components at
+#: once, so "raising `numeric` is what did it" is only one of the candidate
+#: explanations; "lowering `root_cause` is what did it" is another, and a large
+#: weight on a component the policy cannot reach may simply be noisy gradient.
+#:
+#: This isolates the first: `numeric` at PROBE's 0.35, `root_cause` still
+#: substantial at 0.25. If the upstream weight is what matters it should behave
+#: like PROBE; if the low downstream weight is what matters it should behave
+#: like MAIN.
+ABLATE = Weights(
+    format=0.10,
+    numeric=0.35,
+    flags=0.12,
+    stage=0.03,
+    root_cause=0.25,
+    action=0.15,
+)
+
 
 @dataclass
 class Reward:

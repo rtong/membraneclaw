@@ -1,0 +1,219 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "backend": "hf",
+  "split": "dev",
+  "split_sha256": "94b32d0557f6962d5be8f5b33cebb5303c4137475f3292a34e9fd8b8018da6c2",
+  "prompt_version": "v2",
+  "thinking_requested": false,
+  "weights": "MAIN",
+  "mode": "sample",
+  "k": 8,
+  "temperature": 1.0,
+  "max_tokens": 640,
+  "seed": 0,
+  "adapter": null,
+  "elapsed_seconds": 756.2,
+  "overall": {
+    "n_cases": 200,
+    "k": 8,
+    "reward": 0.12675,
+    "exact_match": 0.0,
+    "validity_gate": 0.93,
+    "schema_ok": 0.08,
+    "cause_acc": 0.13,
+    "action_acc": 0.085,
+    "numeric_acc": 0.008333333333333333,
+    "flags_acc": 0.2866666666666666,
+    "cause_given_flags": 0.3333333333333333,
+    "components": {
+      "format": 0.008,
+      "numeric": 0.0012499999999999998,
+      "flags": 0.03439999999999999,
+      "stage": 0.011850000000000001,
+      "root_cause": 0.0585,
+      "action": 0.01275
+    },
+    "reward_mean_all": 0.11986875,
+    "completion_tokens_mean": 124.935,
+    "completion_chars_mean": 347.446875,
+    "pass_at_k": 0.0,
+    "unique_answers_mean": 7.34,
+    "unique_completions_mean": 8.0,
+    "distinct_4": 0.5289083469001628,
+    "adv_zero_frac": 0.0,
+    "parse_errors": {
+      "no_json": 14
+    },
+    "schema_errors": {
+      "not_a_number": 294,
+      "flags.bad_value": 165,
+      "bad_value": 114,
+      "missing": 43,
+      "extra": 41,
+      "flags.extra": 7,
+      "flags.missing": 5
+    },
+    "predicted_cause_hist": {
+      "biofouling": 86,
+      "colloidal_fouling": 17,
+      "null": 37,
+      "scaling": 37,
+      "compaction": 17,
+      "organic_fouling": 2,
+      "mechanical_leak": 4
+    }
+  },
+  "by_tier": {
+    "easy": {
+      "n_cases": 129,
+      "k": 8,
+      "reward": 0.13170542635658913,
+      "exact_match": 0.0,
+      "validity_gate": 0.9302325581395349,
+      "schema_ok": 0.06201550387596899,
+      "cause_acc": 0.13953488372093023,
+      "action_acc": 0.10077519379844961,
+      "numeric_acc": 0.005167958656330749,
+      "flags_acc": 0.28940568475452194,
+      "cause_given_flags": 0.42857142857142855,
+      "components": {
+        "format": 0.006201550387596899,
+        "numeric": 0.0007751937984496124,
+        "flags": 0.03472868217054263,
+        "stage": 0.012093023255813955,
+        "root_cause": 0.0627906976744186,
+        "action": 0.015116279069767442
+      },
+      "reward_mean_all": 0.1220251937984496,
+      "completion_tokens_mean": 126.98062015503876,
+      "completion_chars_mean": 353.98837209302326,
+      "pass_at_k": 0.0,
+      "unique_answers_mean": 7.364341085271318,
+      "unique_completions_mean": 8.0,
+      "distinct_4": 0.5592037142189118,
+      "adv_zero_frac": 0.0,
+      "parse_errors": {
+        "no_json": 9
+      },
+      "schema_errors": {
+        "not_a_number": 210,
+        "flags.bad_value": 117,
+        "bad_value": 66,
+        "missing": 20,
+        "extra": 18,
+        "flags.extra": 6,
+        "flags.missing": 1
+      },
+      "predicted_cause_hist": {
+        "biofouling": 55,
+        "colloidal_fouling": 10,
+        "null": 22,
+        "scaling": 24,
+        "compaction": 13,
+        "organic_fouling": 2,
+        "mechanical_leak": 3
+      }
+    },
+    "hard": {
+      "n_cases": 71,
+      "k": 8,
+      "reward": 0.11774647887323943,
+      "exact_match": 0.0,
+      "validity_gate": 0.9295774647887324,
+      "schema_ok": 0.11267605633802817,
+      "cause_acc": 0.11267605633802817,
+      "action_acc": 0.056338028169014086,
+      "numeric_acc": 0.014084507042253521,
+      "flags_acc": 0.28169014084507044,
+      "cause_given_flags": 0.0,
+      "components": {
+        "format": 0.011267605633802818,
+        "numeric": 0.002112676056338028,
+        "flags": 0.03380281690140844,
+        "stage": 0.01140845070422535,
+        "root_cause": 0.05070422535211268,
+        "action": 0.008450704225352112
+      },
+      "reward_mean_all": 0.11595070422535211,
+      "completion_tokens_mean": 121.21830985915493,
+      "completion_chars_mean": 335.5616197183099,
+      "pass_at_k": 0.0,
+      "unique_answers_mean": 7.295774647887324,
+      "unique_completions_mean": 8.0,
+      "distinct_4": 0.5720915243312923,
+      "adv_zero_frac": 0.0,
+      "parse_errors": {
+        "no_json": 5
+      },
+      "schema_errors": {
+        "not_a_number": 84,
+        "flags.bad_value": 48,
+        "bad_value": 48,
+        "missing": 23,
+        "extra": 23,
+        "flags.missing": 4,
+        "flags.extra": 1
+      },
+      "predicted_cause_hist": {
+        "null": 15,
+        "colloidal_fouling": 7,
+        "biofouling": 31,
+        "scaling": 13,
+        "compaction": 4,
+        "mechanical_leak": 1
+      }
+    }
+  },
+  "by_slice": {
+    "main": {
+      "n_cases": 200,
+      "k": 8,
+      "reward": 0.12675,
+      "exact_match": 0.0,
+      "validity_gate": 0.93,
+      "schema_ok": 0.08,
+      "cause_acc": 0.13,
+      "action_acc": 0.085,
+      "numeric_acc": 0.008333333333333333,
+      "flags_acc": 0.2866666666666666,
+      "cause_given_flags": 0.3333333333333333,
+      "components": {
+        "format": 0.008,
+        "numeric": 0.0012499999999999998,
+        "flags": 0.03439999999999999,
+        "stage": 0.011850000000000001,
+        "root_cause": 0.0585,
+        "action": 0.01275
+      },
+      "reward_mean_all": 0.11986875,
+      "completion_tokens_mean": 124.935,
+      "completion_chars_mean": 347.446875,
+      "pass_at_k": 0.0,
+      "unique_answers_mean": 7.34,
+      "unique_completions_mean": 8.0,
+      "distinct_4": 0.5289083469001628,
+      "adv_zero_frac": 0.0,
+      "parse_errors": {
+        "no_json": 14
+      },
+      "schema_errors": {
+        "not_a_number": 294,
+        "flags.bad_value": 165,
+        "bad_value": 114,
+        "missing": 43,
+        "extra": 41,
+        "flags.extra": 7,
+        "flags.missing": 5
+      },
+      "predicted_cause_hist": {
+        "biofouling": 86,
+        "colloidal_fouling": 17,
+        "null": 37,
+        "scaling": 37,
+        "compaction": 17,
+        "organic_fouling": 2,
+        "mechanical_leak": 4
+      }
+    }
+  }
+}
