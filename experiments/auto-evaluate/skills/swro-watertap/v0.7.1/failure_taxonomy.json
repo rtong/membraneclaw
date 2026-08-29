@@ -1,0 +1,9 @@
+{
+  "version": "0.7.1",
+  "prevention_checks": {
+    "TOOL_ARGUMENT": ["all stated fixed inputs explicit", "echoed inputs verified", "one corrected retry"],
+    "SEARCH_STRATEGY": ["controlling case first", "adjacent boundary proof", "no resolved-case rescan"],
+    "CONSTRAINT_OMISSION": ["every hard constraint included in final check"],
+    "OUTPUT_OMISSION": ["complete decision before further exploration"]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "default_profile": "d1_d6",
+  "profiles": {
+    "d1_d6": {
+      "description": "Paper-ready D1-D6 R0 matrix: tools, RAG availability, and adaptive routing without the solver Skill",
+      "system_ids": ["baseline", "tools", "tools-rag", "tools-adaptive-rag"],
+      "teachers": [
+        {"id": "general", "system_id": "gpt-5.6-teacher-general", "display_name": "GPT-5.6 Teacher (General)", "tools_enabled": false},
+        {"id": "tools", "system_id": "gpt-5.6-teacher-tools", "display_name": "GPT-5.6 Teacher + Tools", "tools_enabled": true, "mcp_server": "watertap"}
+      ],
+      "comparisons": [
+        {"id": "tools_gain", "label": "Tools gain", "baseline_system": "baseline", "candidate_system": "tools"},
+        {"id": "rag_availability_gain", "label": "RAG-available effect", "baseline_system": "tools", "candidate_system": "tools-rag"},
+        {"id": "adaptive_gain_over_tools", "label": "Adaptive RAG over Tools", "baseline_system": "tools", "candidate_system": "tools-adaptive-rag"},
+        {"id": "adaptive_gain_over_rag", "label": "Adaptive RAG over RAG-available", "baseline_system": "tools-rag", "candidate_system": "tools-adaptive-rag"},
+        {"id": "teacher_tools_gain", "label": "Teacher tools gain", "baseline_system": "gpt-5.6-teacher-general", "candidate_system": "gpt-5.6-teacher-tools"}
+      ],
+      "adaptive_rag_analysis": {
+        "no_rag_system": "tools",
+        "always_rag_system": "tools-rag",
+        "adaptive_system": "tools-adaptive-rag",
+        "minimum_gain_for_rag": 0,
+        "use_benchmark_expected_route": true,
+        "default_expected_route": "skip_rag",
+        "default_rag_need": "R0"
+      }
+    },
+    "d7": {
+      "description": "Provisional D7 matrix; routing labels remain unset until delivered workbooks are audited",
+      "system_ids": ["baseline", "tools", "tools-rag", "tools-adaptive-rag"],
+      "teachers": [
+        {"id": "general", "system_id": "gpt-5.6-teacher-general", "display_name": "GPT-5.6 Teacher (General)", "tools_enabled": false},
+        {"id": "tools", "system_id": "gpt-5.6-teacher-tools", "display_name": "GPT-5.6 Teacher + Tools", "tools_enabled": true, "mcp_server": "watertap"}
+      ],
+      "comparisons": [
+        {"id": "tools_gain", "label": "Tools gain", "baseline_system": "baseline", "candidate_system": "tools"},
+        {"id": "rag_availability_gain", "label": "RAG-available effect", "baseline_system": "tools", "candidate_system": "tools-rag"},
+        {"id": "adaptive_gain_over_tools", "label": "Adaptive RAG over Tools", "baseline_system": "tools", "candidate_system": "tools-adaptive-rag"},
+        {"id": "adaptive_gain_over_rag", "label": "Adaptive RAG over RAG-available", "baseline_system": "tools-rag", "candidate_system": "tools-adaptive-rag"},
+        {"id": "teacher_tools_gain", "label": "Teacher tools gain", "baseline_system": "gpt-5.6-teacher-general", "candidate_system": "gpt-5.6-teacher-tools"}
+      ],
+      "adaptive_rag_analysis": {
+        "no_rag_system": "tools",
+        "always_rag_system": "tools-rag",
+        "adaptive_system": "tools-adaptive-rag",
+        "minimum_gain_for_rag": 0,
+        "use_benchmark_expected_route": true,
+        "default_expected_route": null,
+        "default_rag_need": null
+      }
+    },
+    "d7_mock": {
+      "description": "Pipeline-only mixed D7 mock; per-case derived R2 labels override the R0 default",
+      "system_ids": ["baseline", "tools", "tools-rag", "tools-adaptive-rag"],
+      "teachers": [
+        {"id": "general", "system_id": "gpt-5.6-teacher-general", "display_name": "GPT-5.6 Teacher (General)", "tools_enabled": false},
+        {"id": "tools", "system_id": "gpt-5.6-teacher-tools", "display_name": "GPT-5.6 Teacher + Tools", "tools_enabled": true, "mcp_server": "watertap"}
+      ],
+      "comparisons": [
+        {"id": "tools_gain", "label": "Tools gain", "baseline_system": "baseline", "candidate_system": "tools"},
+        {"id": "rag_availability_gain", "label": "RAG-available effect", "baseline_system": "tools", "candidate_system": "tools-rag"},
+        {"id": "adaptive_gain_over_tools", "label": "Adaptive RAG over Tools", "baseline_system": "tools", "candidate_system": "tools-adaptive-rag"},
+        {"id": "adaptive_gain_over_rag", "label": "Adaptive RAG over RAG-available", "baseline_system": "tools-rag", "candidate_system": "tools-adaptive-rag"},
+        {"id": "teacher_tools_gain", "label": "Teacher tools gain", "baseline_system": "gpt-5.6-teacher-general", "candidate_system": "gpt-5.6-teacher-tools"}
+      ],
+      "adaptive_rag_analysis": {
+        "no_rag_system": "tools",
+        "always_rag_system": "tools-rag",
+        "adaptive_system": "tools-adaptive-rag",
+        "minimum_gain_for_rag": 0,
+        "use_benchmark_expected_route": true,
+        "default_expected_route": "skip_rag",
+        "default_rag_need": "R0"
+      }
+    }
+  }
+}

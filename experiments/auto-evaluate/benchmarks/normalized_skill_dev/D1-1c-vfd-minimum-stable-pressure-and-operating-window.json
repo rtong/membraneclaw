@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D1-1c-vfd-minimum-stable-pressure-and-operating-window",
+  "task_family": "d1_1c",
+  "title": "D1-1c | VFD Minimum Stable Pressure and Operating Window",
+  "question_prompt": "D1-1c | VFD Minimum Stable Pressure and Operating Window\n\nA mobile SWRO unit uses a variable-frequency-drive high-pressure pump. Each intake condition must meet minimum production without violating recovery, flux, rejection, or permeate-salinity limits. Determine each condition's Pmin, then compare it with the VFD minimum stable pressure of 47.0 bar and the pump upper limit of 63.0 bar to select the actual operating setpoint and operating window.\n\nFixed parameter | Value | Unit | Status | Intake condition | NaCl mass fraction | Temperature (deg C)\nFeed mass flow | 3 | kg/s | Fixed / locked | A Low-Salinity Warm Water | 0.03 | 32\nMembrane area | 300 | m^2 | Fixed / locked | B Normal Seawater | 0.035 | 25\nA_comp | 4.3e-12 | m/s/Pa | Fixed / locked | C High-Salinity Cold Water | 0.039 | 12\nB_comp | 3.4e-08 | m/s | Fixed / locked\nPermeate pressure | 1 | bar | Fixed / locked | Acceptance constraints\nPressure drop | 0.9 | bar | Fixed / locked | Permeate production, Qp | A >= 4.15; B >= 4.20; C >= 4.40 m^3/h | Each condition\nChannel height | 0.002 | m | Fixed / locked | Water recovery | <= 55.0% | Each condition\nSpacer porosity | 0.75 | - | Fixed / locked | Average water flux | <= 20.0 LMH | Each condition\nModule length | 20 | m | Fixed / locked | Salt rejection | >= 98.70% | Each condition\nPermeate NaCl | <= 500 mg/L | Each condition\n\nRequired work\n1. Treat this as a multi-condition pressure-sizing and feasibility problem. Do not change locked membrane or hydraulic parameters while searching pressure.\n2. For each condition, begin from a reasonable pressure and use Qp, recovery, flux, rejection, and permeate NaCl to identify the active failing constraint.\n3. Establish an independent fail/pass bracket for every condition and refine adaptively to 0.05 bar. Do not use a mechanical dense grid scan.\n4. Compare all Pmin values or infeasibility evidence with the stated equipment margin, limits, or control window, then make the engineering decision.\n5. Distinguish equipment rating/limits from operating setpoints. Do not hide a membrane-flux or water-quality violation by blindly increasing pressure.\n\nRequired pressure resolution: 0.05 bar. Any design margin, pump limit, VFD lower limit, maintenance reserve, or equipment selection increment in this benchmark is a stated rule used to produce a unique, auditable answer.",
+  "reference_answer": "D1-1c | VFD Minimum Stable Pressure and Operating Window | Stepwise Answer\n\nReference efficient trajectory: about 9-11 calls to simulate_ro. Coarsely bracket each condition, refine only the live interval to 0.05 bar, preserve adjacent fail/pass evidence, and then complete the equipment-versus-operation decision.\n\nCondition | Pressure (bar) | NaCl fraction | T (deg C) | Qp (m^3/h) | Flux (LMH) | Recovery (%) | Rejection (%) | NaCl (mg/L) | Production | Recovery / Flux | Water quality | Overall | Boundary interpretation\nA Low-Salinity Warm Water | 46.6 | 0.03 | 32 | 4.144 | 13.8078 | 39.233 | 98.7297 | 389.66 | Fail | Pass | Fail | Last failed point\nA Low-Salinity Warm Water | 46.65 | 0.03 | 32 | 4.1517 | 13.8335 | 39.306 | 98.7309 | 389.28 | Pass | First passing point\nB Normal Seawater | 52.3 | 0.035 | 25 | 4.1938 | 13.9729 | 39.8501 | 98.7427 | 451.6 | Fail | Pass | Fail | Last failed point\nB Normal Seawater | 52.35 | 0.035 | 25 | 4.2008 | 13.9963 | 39.9169 | 98.7438 | 451.2 | Pass | First passing point\nC High-Salinity Cold Water | 56.85 | 0.039 | 12 | 4.3944 | 14.6407 | 41.8786 | 98.7765 | 491.13 | Fail | Pass | Fail | Last failed point\nC High-Salinity Cold Water | 56.9 | 0.039 | 12 | 4.4009 | 14.6625 | 41.9411 | 98.7774 | 490.76 | Pass | First passing point\n\nPressure boundaries and engineering decision | Calculation audit\nItem | A Low-Salinity Warm Water | B Normal Seawater | C High-Salinity Cold Water | Comparison / calculation | Conclusion | Calculated item | Calculated result | Unit | Expected result\nLast failed pressure (bar) | 46.6 | 52.3 | 56.85 | Adjacent 0.05 bar evidence | - | Condition A setpoint | =MAX(B23,47) | bar | 47\nMinimum feasible pressure, Pmin (bar) | 46.65 | 52.35 | 56.9 | Actual setpoint = MAX(Pmin, 47.0) | Condition A is clamped by VFD minimum | Condition B setpoint | =MAX(C23,47) | bar | 52.35\nRecommended operating setpoint (bar) | 47 | 52.35 | 56.9 | All values <= 63.0 bar | All three conditions are operable | Condition C setpoint | =MAX(D23,47) | bar | 56.9\nEngineering meaning | Do not operate below 47.0 bar | Operate near its own boundary | Highest required process setpoint | Setpoint changes with intake condition | Do not run all conditions at 63 bar | Upper-window check | =63-MAX(H22:H24) | bar reserve | 6.1\n\nThe calculated Pmin values are 46.65, 52.35, and 56.90 bar. Condition A is clamped upward to the 47.0 bar VFD minimum stable pressure, while B and C operate at 52.35 and 56.90 bar. All three setpoints lie within the 47-63 bar equipment window; the correct operating strategy is condition-dependent, not a single 63 bar setpoint.\n\nSimulator evidence note: Each intake condition has an adjacent 0.05 bar fail/pass pair, including both VFD-window edge cases.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem framing and state understanding",
+        "reasoning_or_calculation": "Recognizes multi-condition boundaries and equipment meaning",
+        "inputs": "Pressure search is recognized but equipment meaning is incomplete",
+        "key_outputs": "Locked inputs remain fixed; each condition is solved independently; equipment rating/limit is not treated as one universal setpoint",
+        "full_credit": "Locked inputs remain fixed; each condition is solved independently; equipment rating/limit is not treated as one universal setpoint",
+        "common_failures": "Only one condition is solved, or rating is confused with operating pressure",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning and decomposition",
+        "reasoning_or_calculation": "Builds brackets and a cross-condition decision",
+        "inputs": "Direction is correct but an adjacent confirmation is missing",
+        "key_outputs": "Coarse bracket -> 0.05 bar boundary -> cross-condition comparison -> engineering action",
+        "full_credit": "Coarse bracket -> 0.05 bar boundary -> cross-condition comparison -> engineering action",
+        "common_failures": "Dense blind scan or no independent boundaries",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool-call correctness",
+        "reasoning_or_calculation": "simulate_ro inputs match the active condition",
+        "inputs": "Minor input issue that does not change the conclusion",
+        "key_outputs": "Only pressure changes within a condition; all stated condition differences and units are preserved",
+        "full_credit": "Only pressure changes within a condition; all stated condition differences and units are preserved",
+        "common_failures": "Membrane area/A/B is altered or units are mixed",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation interpretation",
+        "reasoning_or_calculation": "Records pass/fail and the actual failing constraint",
+        "inputs": "Pmin is close but the active constraint is unclear",
+        "key_outputs": "Adjacent evidence plus production, flux/recovery, and water-quality status are all interpreted correctly",
+        "full_credit": "Adjacent evidence plus production, flux/recovery, and water-quality status are all interpreted correctly",
+        "common_failures": "Only passing points are kept or constraints are misclassified",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive comparison and replanning",
+        "reasoning_or_calculation": "Next call follows from the previous observation",
+        "inputs": "Partly adaptive with some unnecessary enumeration",
+        "key_outputs": "Pressure choices narrow the live bracket; converged conditions are pruned promptly",
+        "full_credit": "Pressure choices narrow the live bracket; converged conditions are pruned promptly",
+        "common_failures": "Calls follow a fixed list regardless of results",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Final engineering decision",
+        "reasoning_or_calculation": "Produces the task-specific decision",
+        "inputs": "Numerical answer is close but operating implications are incomplete",
+        "key_outputs": "The calculated Pmin values are 46.65, 52.35, and 56.90 bar. Condition A is clamped upward to the 47.0 bar VFD minimum stable pressure, while B and C operate at 52.35 and 56.90 bar. All three setpoints lie within the 47-63 bar equipment window; the correct operating strategy is condition-dependent, not a single 63 bar setpoint.",
+        "full_credit": "The calculated Pmin values are 46.65, 52.35, and 56.90 bar. Condition A is clamped upward to the 47.0 bar VFD minimum stable pressure, while B and C operate at 52.35 and 56.90 bar. All three setpoints lie within the 47-63 bar equipment window; the correct operating strategy is condition-dependent, not a single 63 bar setpoint.",
+        "common_failures": "Averages pressures, blindly raises pressure, or ignores infeasibility",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Uses the correct scientific tool",
+        "full_credit": "simulate_ro directly supports pressure-boundary testing",
+        "medium_credit": "A few irrelevant calls are made",
+        "low_credit": "Wrong tool or many irrelevant calls",
+        "case_observation": "A whole-plant cost model is not needed",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and ordering",
+        "evaluation_focus": "Prioritizes discriminating pressures",
+        "full_credit": "Coarse bracket first, then boundary refinement",
+        "medium_credit": "Mostly reasonable with some low-value points",
+        "low_credit": "Dense grid from the start",
+        "case_observation": "Bracket each condition before sampling adjacent points",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Lets observations determine the next pressure",
+        "full_credit": "Fail/pass state dynamically narrows the interval",
+        "medium_credit": "Partly adaptive",
+        "low_credit": "Prewritten enumeration ignores results",
+        "case_observation": "The previous status directly selects the next pressure",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning and redundancy",
+        "evaluation_focus": "Avoids repeated evidence",
+        "full_credit": "Switches condition after convergence and does not repeat known inputs",
+        "medium_credit": "One or two unnecessary confirmations",
+        "low_credit": "Repeatedly tests a known interval",
+        "case_observation": "Reuse the adjacent boundary pair as final evidence",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence and stopping",
+        "evaluation_focus": "Stops after sufficient evidence",
+        "full_credit": "about 9-11 calls produces the boundary and engineering decision",
+        "medium_credit": "A few additional calls remain defensible",
+        "low_credit": "Too many calls or insufficient evidence",
+        "case_observation": "Stop after reaching 0.05 bar resolution and completing the decision",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D1-1c_VFD-Minimum-Stable-Pressure-and-Operating-Window_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D1\\D1-1c_VFD-Minimum-Stable-Pressure-and-Operating-Window_English.xlsx",
+    "sha256": "44b085c78f6eae5d7c623ca74074a73eb13954e122402567317dd4cfedd0856b",
+    "sheets": [
+      "Question_Q",
+      "Stepwise Answer_A",
+      "Trajectory Rubric",
+      "Tool Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Stepwise Answer_A",
+      "rubric": "Trajectory Rubric",
+      "tool_efficiency": "Tool Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:32+00:00"
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "backend": "hf",
+  "split": "dev",
+  "split_sha256": "94b32d0557f6962d5be8f5b33cebb5303c4137475f3292a34e9fd8b8018da6c2",
+  "prompt_version": "v2",
+  "thinking_requested": false,
+  "weights": "MAIN",
+  "mode": "greedy",
+  "k": 1,
+  "temperature": 0.0,
+  "max_tokens": 640,
+  "seed": 0,
+  "adapter": null,
+  "elapsed_seconds": 45.7,
+  "overall": {
+    "n_cases": 200,
+    "k": 1,
+    "reward": 0.20895,
+    "exact_match": 0.0,
+    "validity_gate": 1.0,
+    "schema_ok": 0.0,
+    "cause_acc": 0.215,
+    "action_acc": 0.14,
+    "numeric_acc": 0.0,
+    "flags_acc": 0.515,
+    "cause_given_flags": 0.75,
+    "components": {
+      "format": 0.0,
+      "numeric": 0.0,
+      "flags": 0.06179999999999999,
+      "stage": 0.0294,
+      "root_cause": 0.09675,
+      "action": 0.021
+    },
+    "reward_mean_all": 0.20895,
+    "completion_tokens_mean": 107.9,
+    "completion_chars_mean": 297.265,
+    "parse_errors": {},
+    "schema_errors": {
+      "not_a_number": 600,
+      "bad_value": 4
+    },
+    "predicted_cause_hist": {
+      "scaling": 38,
+      "biofouling": 136,
+      "colloidal_fouling": 26
+    }
+  },
+  "by_tier": {
+    "easy": {
+      "n_cases": 129,
+      "k": 1,
+      "reward": 0.21077519379844958,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.21705426356589147,
+      "action_acc": 0.14728682170542637,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.5142118863049095,
+      "cause_given_flags": 0.75,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.06170542635658914,
+        "stage": 0.029302325581395346,
+        "root_cause": 0.09767441860465116,
+        "action": 0.022093023255813953
+      },
+      "reward_mean_all": 0.21077519379844958,
+      "completion_tokens_mean": 107.93798449612403,
+      "completion_chars_mean": 297.2093023255814,
+      "parse_errors": {},
+      "schema_errors": {
+        "not_a_number": 387,
+        "bad_value": 3
+      },
+      "predicted_cause_hist": {
+        "scaling": 26,
+        "biofouling": 84,
+        "colloidal_fouling": 19
+      }
+    },
+    "hard": {
+      "n_cases": 71,
+      "k": 1,
+      "reward": 0.2056338028169014,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.2112676056338028,
+      "action_acc": 0.1267605633802817,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.5164319248826291,
+      "cause_given_flags": 0.75,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.06197183098591549,
+        "stage": 0.029577464788732397,
+        "root_cause": 0.09507042253521127,
+        "action": 0.019014084507042252
+      },
+      "reward_mean_all": 0.2056338028169014,
+      "completion_tokens_mean": 107.83098591549296,
+      "completion_chars_mean": 297.36619718309856,
+      "parse_errors": {},
+      "schema_errors": {
+        "not_a_number": 213,
+        "bad_value": 1
+      },
+      "predicted_cause_hist": {
+        "scaling": 12,
+        "biofouling": 52,
+        "colloidal_fouling": 7
+      }
+    }
+  },
+  "by_slice": {
+    "main": {
+      "n_cases": 200,
+      "k": 1,
+      "reward": 0.20895,
+      "exact_match": 0.0,
+      "validity_gate": 1.0,
+      "schema_ok": 0.0,
+      "cause_acc": 0.215,
+      "action_acc": 0.14,
+      "numeric_acc": 0.0,
+      "flags_acc": 0.515,
+      "cause_given_flags": 0.75,
+      "components": {
+        "format": 0.0,
+        "numeric": 0.0,
+        "flags": 0.06179999999999999,
+        "stage": 0.0294,
+        "root_cause": 0.09675,
+        "action": 0.021
+      },
+      "reward_mean_all": 0.20895,
+      "completion_tokens_mean": 107.9,
+      "completion_chars_mean": 297.265,
+      "parse_errors": {},
+      "schema_errors": {
+        "not_a_number": 600,
+        "bad_value": 4
+      },
+      "predicted_cause_hist": {
+        "scaling": 38,
+        "biofouling": 136,
+        "colloidal_fouling": 26
+      }
+    }
+  }
+}

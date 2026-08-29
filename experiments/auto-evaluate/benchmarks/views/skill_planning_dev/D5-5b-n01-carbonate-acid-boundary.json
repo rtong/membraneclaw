@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D5-5b-n01-carbonate-acid-boundary",
+  "task_family": "d5_5b",
+  "title": "N01 — High-Alkalinity BWRO: Minimum Passing Acid Dose",
+  "question_prompt": "N01 — High-Alkalinity BWRO: Minimum Passing Acid Dose\n\nAn inland BWRO plant operates at a fixed 70% recovery. Calcite and Dolomite control the concentrate risk, while sulfate scales are safe. The site cannot dispose of softener regenerant but permits RO-feed pH down to 6.10. Use equilibrate_feed to choose among acidification, softening and other pretreatment, and identify the minimum passing HCl dose on a 0.001 mol/s grid.\n\nFixed conditions and engineering constraints | Candidate routes and decision questions\nParameter | Value | Unit | Note | Route | Specified configuration/constraint | Question\nTemperature | 25 | °C | Fixed | Acid only | HCl; pH≥6.10 | Find minimum passing dose\nPressure | 1.013 | bar | Equilibrium pressure | Sodium softening | No regenerant disposal route | Rejected by hard constraint\nFeed pH | 7.7 | - | Specified feed | Antiscalant | Backup protection only | Cannot replace SI margin\nWater recovery | 0.7 | - | Given by RO design | Hybrid | Avoid added unit without need | Prevent overdesign\nControl minerals | Calcite, Dolomite, Gypsum | - | Evaluate together\nPrimary criterion | Calcite SI ≤ -0.10 | - | See scope note | Required deliverables\n4 | - | 1. Use the zero-dose baseline to identify the true controlling mineral; do not assume Calcite.\n2. Choose the most informative acid, softening or targeted-treatment counterfactual by mechanism.\nFeed composition (equilibrate_feed input) | 3. Hold non-target inputs fixed and record SI, pH and osmotic pressure for every equilibrate_feed call.\nSpecies | Flow mol/s | Role | Status\nH2O | 220 | Required water | Fixed | 5. Give an executable route, key values, hard constraints and explicit model limitations.\nNa | 0.3 | Feed analysis | Fixed | Scope: equilibrium scaling only; acidification is represented by HCl. Criteria: Calcite SI≤-0.10, Dolomite SI≤-0.10, Gypsum SI<0 and pH≥6.10. Chemical storage, corrosion materials and degassing are outside the model.\nCa | 0.025 | Feed analysis | Fixed | Scope: equilibrium scaling only; acidification is represented by HCl. Criteria: Calcite SI≤-0.10, Dolomite SI≤-0.10, Gypsum SI<0 and pH≥6.10. Chemical storage, corrosion materials and degassing are outside the model.\nMg | 0.01 | Feed analysis | Fixed | Scope: equilibrium scaling only; acidification is represented by HCl. Criteria: Calcite SI≤-0.10, Dolomite SI≤-0.10, Gypsum SI<0 and pH≥6.10. Chemical storage, corrosion materials and degassing are outside the model.\nCl | 0.32 | Feed analysis | Fixed | Scope: equilibrium scaling only; acidification is represented by HCl. Criteria: Calcite SI≤-0.10, Dolomite SI≤-0.10, Gypsum SI<0 and pH≥6.10. Chemical storage, corrosion materials and degassing are outside the model.\nHCO3 | 0.03 | Feed analysis | Fixed | Scope: equilibrium scaling only; acidification is represented by HCl. Criteria: Calcite SI≤-0.10, Dolomite SI≤-0.10, Gypsum SI<0 and pH≥6.10. Chemical storage, corrosion materials and degassing are outside the model.\nSO4 | 0.01 | Feed analysis | Fixed | Scope: equilibrium scaling only; acidification is represented by HCl. Criteria: Calcite SI≤-0.10, Dolomite SI≤-0.10, Gypsum SI<0 and pH≥6.10. Chemical storage, corrosion materials and degassing are outside the model.\nScope: equilibrium scaling only; acidification is represented by HCl. Criteria: Calcite SI≤-0.10, Dolomite SI≤-0.10, Gypsum SI<0 and pH≥6.10. Chemical storage, corrosion materials and degassing are outside the model.",
+  "reference_answer": "N01 — Stepwise Gold Answer: High-Alkalinity BWRO: Minimum Passing Acid Dose\n\nThe efficient reference trajectory uses 4 equilibrate_feed calls: zero-dose diagnosis, mechanism-based counterfactual pruning, then adjacent fail/pass points or a stated guarantee envelope to lock the stopping boundary. Other reasonable orders are acceptable if the information gain of each call is explained.\n\nHuman-readable continuous trajectory\nStage | Current problem | Action | Key observation | State update | Next step | Role\n1 Baseline | Controlling mineral unknown | Zero-dose equilibrium | Calcite SI=1.640 | Identify dominant risk | Choose mechanism counterfactual | Diagnosis\n2 Mechanism screen | Differentiate acid, softening and targeted routes | HCl 0.015 | Calcite misses margin by 0.00173 | Reject ineffective or infeasible route | Search target variable | Mechanism\n3 Lower boundary | Minimum treatment intensity not proven | HCl 0.015 | Calcite SI=-0.0983 | At least one constraint still fails | Test adjacent stronger point | Boundary search\n4 Passing point | Adjacent point needs confirmation | HCl 0.016 | Calcite SI=-0.1883; pH=6.108 | Passing point locked | Check engineering constraints | Convergence proof\n5 Decision | Evidence sufficient | Combine SI, pH and site constraints | All criteria pass; minimum point | Form recommendation | Stop | Engineering decision\n\nDirect equilibrate_feed results\nCall | Route/case | Recovery | HCl mol/s | HCO3 mol/s | HCO3 removal | Calcite SI | Dolomite SI | Gypsum SI | pH | Osmotic bar | Pure HCl g/h | 30% HCl L/h | Decision/next step | Case | Calcite SI | Criterion\n1 | Untreated baseline | 0.7 | 0 | 0.03 | =1-E18/0.03 | 1.6401629865 | 3.1461099537 | -0.6114227541 | 7.6001379304 | 13.0561308731 | =D18*36.46*3600 | =L18/1000/0.30/1.15 | Carbonate scales control | =B18 | =G18 | =-0.1\n2 | HCl 0.015 | 0.7 | 0.015 | 0.03 | =1-E19/0.03 | -0.0982713091 | -0.3145799646 | -0.6074425812 | 6.1661017709 | 13.4009431983 | =D19*36.46*3600 | =L19/1000/0.30/1.15 | Calcite misses margin by 0.00173 | =B19 | =G19 | =-0.1\n3 | HCl 0.016 | 0.7 | 0.016 | 0.03 | =1-E20/0.03 | -0.188272738 | -0.4936516882 | -0.607196731 | 6.1079073215 | 13.4237601621 | =D20*36.46*3600 | =L20/1000/0.30/1.15 | All criteria pass; minimum point | =B20 | =G20 | =-0.1\n4 | HCl 0.018 | 0.7 | 0.018 | 0.03 | =1-E21/0.03 | -0.3798801454 | -0.8750079417 | -0.6067060068 | 5.9879188363 | 13.4693811919 | =D21*36.46*3600 | =L21/1000/0.30/1.15 | pH below limit; overdosing | =B21 | =G21 | =-0.1\n\nKey boundary check | Final conclusion\n\nRecommend HCl acidification alone at 0.016 mol/s. It gives Calcite SI=-0.18827, Dolomite SI=-0.49365, Gypsum SI=-0.60720 and equilibrium pH=6.108. At 0.015 mol/s, Calcite SI=-0.09827 narrowly misses the -0.10 margin; at 0.018 mol/s, pH falls to 5.988. The selected dose equals about 2,100.10 g/h pure HCl or 6.087 L/h of 30 wt% HCl at 1.15 kg/L. Softening is rejected by the regenerant-disposal constraint.\nCase | Key point | Calcite SI | Dolomite SI | pH | Conclusion | Final conclusion\n\nRecommend HCl acidification alone at 0.016 mol/s. It gives Calcite SI=-0.18827, Dolomite SI=-0.49365, Gypsum SI=-0.60720 and equilibrium pH=6.108. At 0.015 mol/s, Calcite SI=-0.09827 narrowly misses the -0.10 margin; at 0.018 mol/s, pH falls to 5.988. The selected dose equals about 2,100.10 g/h pure HCl or 6.087 L/h of 30 wt% HCl at 1.15 kg/L. Softening is rejected by the regenerant-disposal constraint.\nUntreated baseline | Carbonate scales control | =G18 | =H18 | =J18 | Reject/Fail | Final conclusion\n\nRecommend HCl acidification alone at 0.016 mol/s. It gives Calcite SI=-0.18827, Dolomite SI=-0.49365, Gypsum SI=-0.60720 and equilibrium pH=6.108. At 0.015 mol/s, Calcite SI=-0.09827 narrowly misses the -0.10 margin; at 0.018 mol/s, pH falls to 5.988. The selected dose equals about 2,100.10 g/h pure HCl or 6.087 L/h of 30 wt% HCl at 1.15 kg/L. Softening is rejected by the regenerant-disposal constraint.\nHCl 0.015 | Calcite misses margin by 0.00173 | =G19 | =H19 | =J19 | Reject/Fail | Final conclusion\n\nRecommend HCl acidification alone at 0.016 mol/s. It gives Calcite SI=-0.18827, Dolomite SI=-0.49365, Gypsum SI=-0.60720 and equilibrium pH=6.108. At 0.015 mol/s, Calcite SI=-0.09827 narrowly misses the -0.10 margin; at 0.018 mol/s, pH falls to 5.988. The selected dose equals about 2,100.10 g/h pure HCl or 6.087 L/h of 30 wt% HCl at 1.15 kg/L. Softening is rejected by the regenerant-disposal constraint.\nHCl 0.016 | All criteria pass; minimum point | =G20 | =H20 | =J20 | Recommend | Final conclusion\n\nRecommend HCl acidification alone at 0.016 mol/s. It gives Calcite SI=-0.18827, Dolomite SI=-0.49365, Gypsum SI=-0.60720 and equilibrium pH=6.108. At 0.015 mol/s, Calcite SI=-0.09827 narrowly misses the -0.10 margin; at 0.018 mol/s, pH falls to 5.988. The selected dose equals about 2,100.10 g/h pure HCl or 6.087 L/h of 30 wt% HCl at 1.15 kg/L. Softening is rejected by the regenerant-disposal constraint.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem representation",
+        "reasoning_or_calculation": "Identify controlling mineral and hard constraints",
+        "inputs": "Main risk correct but one constraint omitted",
+        "key_outputs": "Correctly identify Calcite and list SI, pH and site constraints",
+        "full_credit": "Correctly identify Calcite and list SI, pH and site constraints",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Plan quality",
+        "reasoning_or_calculation": "Order calls by mechanism",
+        "inputs": "Reasonable order but unclear stopping rule",
+        "key_outputs": "Baseline, high-information counterfactual, then boundary search",
+        "full_credit": "Baseline, high-information counterfactual, then boundary search",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool correctness",
+        "reasoning_or_calculation": "Inputs, units and fixed variables",
+        "inputs": "Minor non-controlling deviation",
+        "key_outputs": "4 equilibrate_feed calls keep non-target inputs consistent",
+        "full_credit": "4 equilibrate_feed calls keep non-target inputs consistent",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation and pruning",
+        "reasoning_or_calculation": "Reject branches from evidence",
+        "inputs": "Correct conclusion with incomplete mechanism",
+        "key_outputs": "Calcite misses margin by 0.00173",
+        "full_credit": "Calcite misses margin by 0.00173",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Boundary proof",
+        "reasoning_or_calculation": "Adjacent fail/pass evidence",
+        "inputs": "Passing point only; no adjacent failure",
+        "key_outputs": "HCl 0.015 fails; HCl 0.016 passes",
+        "full_credit": "HCl 0.015 fails; HCl 0.016 passes",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision and scope",
+        "reasoning_or_calculation": "Executable recommendation and model boundary",
+        "inputs": "Right route but missing value or limitation",
+        "key_outputs": "HCl 0.016; Calcite SI=-0.18827; pH=6.108",
+        "full_credit": "HCl 0.016; Calcite SI=-0.18827; pH=6.108",
+        "common_failures": "",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice",
+        "evaluation_focus": "Use the correct chemistry tool",
+        "full_credit": "Use equilibrate_feed; do not re-solve fixed RO recovery",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Prioritize discriminating calls",
+        "full_credit": "Go from baseline directly to mechanism counterfactual",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive pruning",
+        "evaluation_focus": "Stop failed branches",
+        "full_credit": "Use SI, pH and hard constraints to prune",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Boundary efficiency",
+        "evaluation_focus": "Prove boundary with few adjacent points",
+        "full_credit": "HCl 0.015 to HCl 0.016",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Stop and transparency",
+        "evaluation_focus": "Stop with sufficient evidence and state scope",
+        "full_credit": "About 4 calls plus explicit limitations",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D5_5b_N01_carbonate_acid_boundary_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D5\\D5_5b_N01_carbonate_acid_boundary_English.xlsx",
+    "sha256": "4a380ed4d89224c1cede62037e7ae0bddfa64d806320a80d0c8e9694829e2412",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:36+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D5-5b-n01-carbonate-acid-boundary",
+    "view_prompt_sha256": "5af35f2a487e0d0c4c73e41649f3218bb5d82fc9b19b8c35ffac056ea97ea749"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D5-5b-n01-carbonate-acid-boundary",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "2af2483bf265d9771255c4d626b27d0bb5cc777fb38d3857d95953c8e5659091",
+    "view_prompt_sha256": "5af35f2a487e0d0c4c73e41649f3218bb5d82fc9b19b8c35ffac056ea97ea749",
+    "transformation": {
+      "removed_lines": 0,
+      "removed_cells": 3
+    }
+  }
+}

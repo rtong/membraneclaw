@@ -315,6 +315,43 @@ def test_weight_decay_would_move_the_policy_even_with_no_gradient():
     ), "decay moved the policy anyway — this is the behaviour Config disables"
 
 
+def test_groups_of_different_prompt_lengths_can_be_updated_together():
+    """The crash the first real run hit, and the reason for not padding around it.
+
+    Two prompts tokenize to different lengths, so their groups cannot be
+    concatenated. Padding them to a common width would work and would also
+    corrupt the log-probs, since completion_logprobs passes no attention mask
+    and a padded row attends to the pads. The update iterates groups instead.
+    """
+    torch.manual_seed(0)
+    policy = _tiny_policy()
+    trainable = [p for p in policy.parameters() if p.requires_grad]
+    optimizer = torch.optim.AdamW(trainable, lr=0.05, weight_decay=0.0)
+    before = [p.detach().clone() for p in trainable]
+
+    completion_len = 5
+    groups = [
+        (torch.randint(0, 64, (3, prompt_len + completion_len)), advantage)
+        for prompt_len, advantage in ((11, [1.0, -1.0, 0.0]), (17, [0.5, 0.5, -1.0]))
+    ]
+    assert groups[0][0].shape[1] != groups[1][0].shape[1], "widths must actually differ"
+    with pytest.raises(RuntimeError):
+        torch.cat([g[0] for g in groups], dim=0)
+
+    total = sum(g[0].shape[0] for g in groups)
+    optimizer.zero_grad(set_to_none=True)
+    for sequences, adv in groups:
+        mask = torch.ones(sequences.shape[0], completion_len)
+        with torch.no_grad():
+            old = completion_logprobs(policy, sequences, completion_len)
+        logprobs = completion_logprobs(policy, sequences, completion_len)
+        loss, _ = grpo_surrogate(logprobs, old, torch.tensor(adv), mask)
+        (loss * sequences.shape[0] / total).backward()
+    optimizer.step()
+
+    assert any(not torch.equal(b, p.detach()) for b, p in zip(before, trainable))
+
+
 @pytest.mark.parametrize(
     "predicts,confident",
     [

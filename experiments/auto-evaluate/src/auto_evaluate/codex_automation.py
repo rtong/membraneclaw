@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import math
 import os
@@ -13,14 +14,20 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .io_utils import read_json, stable_hash, utc_now, write_json, write_jsonl
-from .judge import FAILURE_CODES
+from .taxonomy import FAILURE_CODES
 
 
 class CodexAutomationError(RuntimeError):
     """Raised when a Codex teacher or judge task cannot be completed safely."""
 
+    def __init__(self, message: str, diagnostics: dict[str, Any] | None = None):
+        super().__init__(message)
+        self.diagnostics = diagnostics or {}
 
+
+_REQUEST_B64_PREFIX = "__AE_CODEX_REQUEST_B64__"
 _RESULT_PREFIX = "__AE_CODEX_RESULT__"
+_RESULT_B64_PREFIX = "__AE_CODEX_RESULT_B64__"
 _API_KEY_ENV_VARS = ("OPENAI_API_KEY", "CODEX_API_KEY")
 
 
@@ -32,6 +39,10 @@ def require_chatgpt_auth_environment() -> None:
             f"Refusing to run with Platform API credentials present ({names}). "
             "Remove them from this shell and authenticate Codex with the ChatGPT account login instead."
         )
+
+
+def validate_stage_environment(stage: str, tasks: list[dict[str, Any]]) -> None:
+    require_chatgpt_auth_environment()
 
 
 def parse_json_object(text: str) -> dict[str, Any]:
@@ -68,18 +79,77 @@ def _is_number(value: Any) -> bool:
     )
 
 
+def _tool_event_matches_server(event: dict[str, Any], server: str) -> bool:
+    server_id = server.lower()
+    metadata = event.get("metadata") or {}
+    return (
+        str(metadata.get("server") or "").lower() == server_id
+        or str(event.get("tool_name") or "").lower().startswith(server_id + ".")
+    )
+
+
+def _has_nonempty_observation(event: dict[str, Any]) -> bool:
+    observation = event.get("observation")
+    if observation is None:
+        return False
+    if isinstance(observation, str):
+        return bool(observation.strip())
+    if isinstance(observation, (dict, list, tuple, set)):
+        return bool(observation)
+    return True
+
+
 def validate_teacher_output(task: dict[str, Any], output: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     expected = {
         "task_id": task["task_id"],
         "case_id": task["case_id"],
-        "system_id": "gpt-5.6-teacher",
+        "system_id": task.get("expected_output", {}).get("system_id") or task.get("model") or "gpt-5.6-teacher",
     }
     for field, value in expected.items():
         if output.get(field) != value:
             errors.append(f"{field} must equal {value!r}")
     if not isinstance(output.get("response_text"), str) or not output["response_text"].strip():
         errors.append("response_text must be a non-empty string")
+    tool_policy = task.get("tool_policy") or {}
+    trajectory = output.get("trajectory") or {}
+    tool_events = [
+        event
+        for event in trajectory.get("events", [])
+        if isinstance(event, dict) and event.get("event_type") == "tool_interaction"
+    ]
+    if tool_policy.get("forbid_observable_calls") and tool_events:
+        errors.append("tool-free teacher must not make observable tool calls")
+    if tool_policy.get("require_observable_call"):
+        server = str(tool_policy.get("mcp_server") or "configured MCP")
+        matching_calls = [
+            event
+            for event in tool_events
+            if isinstance(event, dict)
+            and _tool_event_matches_server(event, server)
+        ]
+        unexpected_calls = [
+            event
+            for event in tool_events
+            if isinstance(event, dict) and not _tool_event_matches_server(event, server)
+        ]
+        if unexpected_calls:
+            names = sorted({str(event.get("tool_name") or "unknown") for event in unexpected_calls})
+            errors.append(
+                f"tools teacher may call only {server} tools; observed unexpected tools: {names}"
+            )
+        if not matching_calls:
+            errors.append(
+                f"teacher must make at least one observable {server} tool call before answering"
+            )
+        elif not any(
+            event.get("status") == "success" and _has_nonempty_observation(event)
+            for event in matching_calls
+        ):
+            errors.append(
+                f"teacher must complete at least one successful {server} tool call "
+                "with a non-empty observation before answering"
+            )
     return errors
 
 
@@ -141,9 +211,192 @@ def validate_judge_output(task: dict[str, Any], output: dict[str, Any]) -> list[
         errors.append(f"total_score {float(total)} does not equal step sum {score_sum}")
     if not isinstance(output.get("overall_diagnosis"), str) or not output["overall_diagnosis"].strip():
         errors.append("overall_diagnosis must be a non-empty string")
+    efficiency_rubric = task.get("tool_efficiency_rubric")
+    if efficiency_rubric is not None:
+        dimensions = efficiency_rubric.get("dimensions", [])
+        dimensions_by_id = {item["dimension_id"]: item for item in dimensions}
+        efficiency_rows = output.get("tool_efficiency_dimensions")
+        if not isinstance(efficiency_rows, list):
+            errors.append("tool_efficiency_dimensions must be an array")
+            efficiency_rows = []
+        efficiency_seen: set[Any] = set()
+        efficiency_sum = 0.0
+        for index, row in enumerate(efficiency_rows):
+            prefix = f"tool_efficiency_dimensions[{index}]"
+            if not isinstance(row, dict):
+                errors.append(f"{prefix} must be an object")
+                continue
+            dimension_id = row.get("dimension_id")
+            if dimension_id not in dimensions_by_id:
+                errors.append(f"{prefix}.dimension_id is unknown: {dimension_id!r}")
+                continue
+            if dimension_id in efficiency_seen:
+                errors.append(f"duplicate tool efficiency dimension: {dimension_id!r}")
+                continue
+            efficiency_seen.add(dimension_id)
+            maximum = float(dimensions_by_id[dimension_id]["max_score"])
+            if not _is_number(row.get("max_score")) or abs(float(row["max_score"]) - maximum) > 1e-6:
+                errors.append(f"{prefix}.max_score must equal {maximum}")
+            score = row.get("score")
+            if not _is_number(score):
+                errors.append(f"{prefix}.score must be a number")
+            else:
+                score_value = float(score)
+                efficiency_sum += score_value
+                if score_value < 0 or score_value > maximum:
+                    errors.append(f"{prefix}.score {score_value} is outside 0..{maximum}")
+            for field in ("evidence", "diagnosis"):
+                if not isinstance(row.get(field), str) or not row[field].strip():
+                    errors.append(f"{prefix}.{field} must be a non-empty string")
+        missing_dimensions = sorted(set(dimensions_by_id) - efficiency_seen)
+        if missing_dimensions:
+            errors.append(
+                "tool_efficiency_dimensions is missing dimension IDs: "
+                f"{missing_dimensions}"
+            )
+        efficiency_score = output.get("tool_efficiency_score")
+        if not _is_number(efficiency_score):
+            errors.append("tool_efficiency_score must be a number")
+        elif abs(float(efficiency_score) - efficiency_sum) > 1e-6:
+            errors.append(
+                f"tool_efficiency_score {float(efficiency_score)} does not equal "
+                f"dimension sum {efficiency_sum}"
+            )
+        if (
+            not isinstance(output.get("tool_efficiency_overall_diagnosis"), str)
+            or not output["tool_efficiency_overall_diagnosis"].strip()
+        ):
+            errors.append("tool_efficiency_overall_diagnosis must be a non-empty string")
+    trajectory_expected = "trajectory_analysis" in task.get("expected_output", {})
+    trajectory_analysis = output.get("trajectory_analysis")
+    if trajectory_expected and trajectory_analysis is None:
+        errors.append("trajectory_analysis is required by this judge task")
+    if trajectory_analysis is not None:
+        if not isinstance(trajectory_analysis, dict):
+            errors.append("trajectory_analysis must be an object when present")
+        else:
+            observable = task.get("observable_trajectory") or {}
+            observable_event_ids = {
+                event.get("event_id")
+                for event in observable.get("events", [])
+                if isinstance(event, dict) and event.get("event_id")
+            }
+            if trajectory_analysis.get("trajectory_source") != observable.get("source"):
+                errors.append("trajectory_analysis.trajectory_source must match observable_trajectory.source")
+            path_classification = trajectory_analysis.get("path_classification")
+            if path_classification not in {
+                "golden_aligned", "valid_alternative", "invalid", "insufficient_trace"
+            }:
+                errors.append("trajectory_analysis.path_classification is invalid")
+            if not isinstance(trajectory_analysis.get("summary"), str) or not trajectory_analysis["summary"].strip():
+                errors.append("trajectory_analysis.summary must be a non-empty string")
+            first_event = trajectory_analysis.get("first_error_event_id")
+            if first_event is not None and first_event not in observable_event_ids:
+                errors.append("trajectory_analysis.first_error_event_id must be an observable event ID or null")
+            recovery_attempted = trajectory_analysis.get("recovery_attempted")
+            recovery_succeeded = trajectory_analysis.get("recovery_succeeded")
+            if not isinstance(recovery_attempted, bool):
+                errors.append("trajectory_analysis.recovery_attempted must be boolean")
+            if recovery_attempted and not isinstance(recovery_succeeded, bool):
+                errors.append("trajectory_analysis.recovery_succeeded must be boolean when recovery was attempted")
+            if recovery_attempted is False and recovery_succeeded is not None:
+                errors.append("trajectory_analysis.recovery_succeeded must be null when no recovery was attempted")
+            assessments = trajectory_analysis.get("event_assessments")
+            if not isinstance(assessments, list):
+                errors.append("trajectory_analysis.event_assessments must be an array")
+                assessments = []
+            assessment_seen: set[Any] = set()
+            attributed_loss = 0.0
+            for index, assessment in enumerate(assessments):
+                prefix = f"trajectory_analysis.event_assessments[{index}]"
+                if not isinstance(assessment, dict):
+                    errors.append(f"{prefix} must be an object")
+                    continue
+                event_id = assessment.get("event_id")
+                if event_id not in observable_event_ids:
+                    errors.append(f"{prefix}.event_id must be an observable event ID")
+                elif event_id in assessment_seen:
+                    errors.append(f"duplicate trajectory event assessment: {event_id!r}")
+                assessment_seen.add(event_id)
+                if assessment.get("verdict") not in {
+                    "correct", "incorrect", "redundant", "recovered", "insufficient_evidence"
+                }:
+                    errors.append(f"{prefix}.verdict is invalid")
+                codes = assessment.get("failure_codes")
+                if not isinstance(codes, list) or any(not isinstance(code, str) for code in codes):
+                    errors.append(f"{prefix}.failure_codes must be an array of strings")
+                else:
+                    invalid = sorted(set(codes) - set(FAILURE_CODES))
+                    if invalid:
+                        errors.append(f"{prefix}.failure_codes contains invalid values: {invalid}")
+                primary_code = assessment.get("primary_failure_code")
+                if primary_code is not None and primary_code not in FAILURE_CODES:
+                    errors.append(f"{prefix}.primary_failure_code is invalid")
+                if isinstance(codes, list) and primary_code is not None and primary_code not in codes:
+                    errors.append(f"{prefix}.primary_failure_code must appear in failure_codes")
+                for field in ("evidence", "diagnosis"):
+                    if not isinstance(assessment.get(field), str) or not assessment[field].strip():
+                        errors.append(f"{prefix}.{field} must be a non-empty string")
+                affected_steps = assessment.get("affected_rubric_steps")
+                if not isinstance(affected_steps, list) or any(
+                    step_id not in rubric_steps for step_id in affected_steps
+                ):
+                    errors.append(f"{prefix}.affected_rubric_steps must contain rubric step IDs")
+                loss = assessment.get("attributed_task_loss")
+                if not _is_number(loss) or float(loss) < 0:
+                    errors.append(f"{prefix}.attributed_task_loss must be a non-negative number")
+                else:
+                    loss_value = float(loss)
+                    attributed_loss += loss_value
+                    if loss_value > 0 and primary_code is None:
+                        errors.append(f"{prefix}.primary_failure_code is required when attributed_task_loss > 0")
+            if _is_number(total):
+                expected_loss = max(0.0, 100.0 - float(total))
+                if abs(attributed_loss - expected_loss) > 1e-6:
+                    errors.append(
+                        f"trajectory attributed task loss {attributed_loss} does not equal "
+                        f"100 - total_score ({expected_loss})"
+                    )
     suggestions = output.get("skill_improvement_suggestions")
     if not isinstance(suggestions, list) or any(not isinstance(item, str) for item in suggestions):
         errors.append("skill_improvement_suggestions must be an array of strings")
+    causal = output.get("causal_analysis")
+    expected_output = task.get("expected_output", {})
+    if "causal_analysis" in expected_output and causal is None:
+        errors.append("causal_analysis is required by this judge task")
+    if causal is not None:
+        if not isinstance(causal, dict):
+            errors.append("causal_analysis must be an object when present")
+        else:
+            first_error = causal.get("first_error_step_id")
+            if first_error is not None and first_error not in rubric_steps:
+                errors.append("causal_analysis.first_error_step_id must be a rubric step ID or null")
+            for field in ("root_cause", "minimal_fix", "counterfactual_outcome"):
+                if not isinstance(causal.get(field), str) or not causal[field].strip():
+                    errors.append(f"causal_analysis.{field} must be a non-empty string")
+            strength = causal.get("evidence_strength")
+            if strength not in {"direct", "inferred", "insufficient"}:
+                errors.append(
+                    "causal_analysis.evidence_strength must be direct, inferred, or insufficient"
+                )
+            propagation = causal.get("error_propagation")
+            if not isinstance(propagation, list) or any(
+                not isinstance(item, str) or not item.strip() for item in propagation
+            ):
+                errors.append("causal_analysis.error_propagation must be an array of strings")
+            affected = causal.get("downstream_affected_steps")
+            if not isinstance(affected, list) or any(item not in rubric_steps for item in affected):
+                errors.append(
+                    "causal_analysis.downstream_affected_steps must contain rubric step IDs"
+                )
+    research_tags = output.get("research_tags")
+    if "research_tags" in expected_output and research_tags is None:
+        errors.append("research_tags is required by this judge task")
+    if research_tags is not None and (
+        not isinstance(research_tags, list)
+        or any(not isinstance(item, str) or not item.strip() for item in research_tags)
+    ):
+        errors.append("research_tags must be an array of non-empty strings when present")
     return errors
 
 
@@ -157,25 +410,48 @@ def validate_task_output(stage: str, task: dict[str, Any], output: dict[str, Any
 
 def build_task_prompt(stage: str, task: dict[str, Any]) -> str:
     if stage == "teacher":
+        tool_policy = task.get("tool_policy") or {}
+        server = tool_policy.get("mcp_server", "watertap")
         role = (
             "You are the blind upper-reference teacher for an SWRO engineering benchmark. "
             "Solve only from the supplied question. Do not use a reference answer or rubric. "
             "Preserve units, state assumptions, show the calculation path, check every constraint, "
             "and never claim a simulation or tool call that did not occur."
         )
+        if tool_policy.get("forbid_observable_calls"):
+            isolation_rules = (
+                "Isolation rules:\n"
+                "- This is one independent task in a fresh conversation.\n"
+                "- Use only the JSON task below as benchmark content; do not inspect local benchmark, "
+                "reference-answer, rubric, response, rating, or report files.\n"
+                "- Do not run shell commands, browse the web, or call any tool or MCP server.\n"
+            )
+        else:
+            isolation_rules = (
+                "Isolation rules:\n"
+                "- This is one independent task in a fresh conversation.\n"
+                "- Use only the JSON task below as benchmark content; do not inspect local benchmark, "
+                "reference-answer, rubric, response, rating, or report files.\n"
+                "- Do not run shell commands or browse the web.\n"
+                f"- You are allowed to call the configured MCP server `{server}` and must do so; base reported numerical "
+                "results on returned observations.\n"
+            )
     elif stage == "judge":
         role = (
             "You are the anonymous rubric judge for one SWRO benchmark response. "
-            "Score only against the supplied reference and rubric, award partial credit step by step, "
+            "Use the supplied reference as a correctness anchor, not a mandatory trajectory. Award partial credit step by step, "
             "cite concise response evidence, and never infer candidate identity."
+        )
+        isolation_rules = (
+            "Isolation rules:\n"
+            "- This is one independent task in a fresh conversation.\n"
+            "- Use only the JSON task below. Do not inspect files, run commands, browse, or call tools.\n"
         )
     else:
         raise ValueError(f"unknown Codex stage: {stage}")
     return (
         f"{role}\n\n"
-        "Isolation rules:\n"
-        "- This is one independent task in a fresh conversation.\n"
-        "- Use only the JSON task below. Do not inspect files, run commands, browse, or call tools.\n"
+        f"{isolation_rules}"
         "- Return exactly one JSON object matching expected_output.\n"
         "- Do not use Markdown fences or add text outside the JSON object.\n"
         "- Preserve all identifier fields exactly.\n\n"
@@ -183,13 +459,22 @@ def build_task_prompt(stage: str, task: dict[str, Any]) -> str:
         + json.dumps(task, ensure_ascii=False, indent=2)
     )
 
-
 def build_repair_prompt(stage: str, task: dict[str, Any], errors: list[str]) -> str:
+    tool_instruction = ""
+    tool_policy = task.get("tool_policy") or {}
+    if stage == "teacher" and tool_policy.get("require_observable_call"):
+        server = tool_policy.get("mcp_server", "watertap")
+        tool_instruction = (
+            f"Before returning the corrected object, call the configured `{server}` MCP tools "
+            "needed to solve the benchmark; a text-only claim is not sufficient.\n"
+        )
     return (
         "Your previous response failed machine validation. Correct it in this same conversation.\n"
         "Validation errors:\n- "
         + "\n- ".join(errors)
-        + "\n\nReturn exactly one corrected JSON object and no other text. "
+        + "\n\n"
+        + tool_instruction
+        + "Return exactly one corrected JSON object and no other text. "
         "Use the original task identifiers and expected_output structure.\n\nOriginal task:\n"
         + json.dumps(task, ensure_ascii=False, indent=2)
         + f"\n\nStage: {stage}"
@@ -204,10 +489,13 @@ def invoke_codex_worker(request: dict[str, Any], project_root: Path, timeout_sec
     env = dict(os.environ)
     existing = env.get("PYTHONPATH")
     env["PYTHONPATH"] = str(src_dir) + (os.pathsep + existing if existing else "")
+    request = {**request, "timeout_seconds": timeout_seconds}
+    request_bytes = json.dumps(request, ensure_ascii=False).encode("utf-8")
+    request_payload = _REQUEST_B64_PREFIX + base64.b64encode(request_bytes).decode("ascii")
     with tempfile.TemporaryDirectory(prefix="swro-ae-codex-") as temp_dir:
         completed = subprocess.run(
             [sys.executable, "-m", "auto_evaluate.codex_worker"],
-            input=json.dumps(request, ensure_ascii=False),
+            input=request_payload,
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -219,15 +507,33 @@ def invoke_codex_worker(request: dict[str, Any], project_root: Path, timeout_sec
             check=False,
         )
     result_line = next(
-        (line for line in reversed(completed.stdout.splitlines()) if line.startswith(_RESULT_PREFIX)),
+        (
+            line
+            for line in reversed(completed.stdout.splitlines())
+            if line.startswith((_RESULT_B64_PREFIX, _RESULT_PREFIX))
+        ),
         None,
     )
     if result_line is None:
         detail = completed.stderr.strip() or completed.stdout.strip() or "no worker output"
         raise CodexAutomationError(f"Codex worker failed (exit {completed.returncode}): {detail[-2000:]}")
-    result = json.loads(result_line[len(_RESULT_PREFIX) :])
+    if result_line.startswith(_RESULT_B64_PREFIX):
+        encoded = result_line[len(_RESULT_B64_PREFIX) :]
+        try:
+            result_bytes = base64.b64decode(encoded, validate=True)
+            result = json.loads(result_bytes.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise CodexAutomationError(
+                f"Codex worker returned an invalid encoded result: {exc}"
+            ) from exc
+    else:
+        result = json.loads(result_line[len(_RESULT_PREFIX) :])
     if not result.get("ok"):
-        raise CodexAutomationError(result.get("error") or "Codex worker returned an unknown error")
+        error = CodexAutomationError(
+            result.get("error") or "Codex worker returned an unknown error",
+            result.get("diagnostics") if isinstance(result.get("diagnostics"), dict) else None,
+        )
+        raise error
     return result
 
 
@@ -276,16 +582,17 @@ def run_codex_tasks(
     invoker: Invoker = invoke_codex_worker,
 ) -> list[dict[str, Any]]:
     require_chatgpt_auth_environment()
-    if concurrency < 1 or concurrency > 4:
-        raise ValueError("codex concurrency must be between 1 and 4")
+    if concurrency < 1 or concurrency > 8:
+        raise ValueError("codex concurrency must be between 1 and 8")
     if retries < 0:
         raise ValueError("codex retries cannot be negative")
-
     results: dict[str, dict[str, Any]] = {}
     pending: list[tuple[dict[str, Any], Path, str, str]] = []
     for task in tasks:
         prompt = build_task_prompt(stage, task)
-        input_hash = stable_hash({"schema": "2.0", "stage": stage, "model": model, "task": task})
+        input_hash = stable_hash(
+            {"schema": "2.1", "stage": stage, "model": model, "task": task, "prompt": prompt}
+        )
         record_path = _record_path(run_dir, stage, task)
         if not force and record_path.exists():
             record = read_json(record_path)
@@ -300,6 +607,8 @@ def run_codex_tasks(
                 print(f"[codex:{stage}] cache {task['task_id']}")
                 continue
         pending.append((task, record_path, input_hash, prompt))
+
+    validate_stage_environment(stage, [item[0] for item in pending])
 
     def execute(item: tuple[dict[str, Any], Path, str, str]) -> tuple[str, dict[str, Any]]:
         task, record_path, input_hash, prompt = item
@@ -335,9 +644,13 @@ def run_codex_tasks(
                 "completed_at": utc_now(),
                 "output": output,
             }
+            diagnostics = worker_result.get("diagnostics")
+            if isinstance(diagnostics, dict) and diagnostics:
+                record["diagnostics"] = diagnostics
             write_json(record_path, record)
             return task["task_id"], output
         except Exception as exc:
+            diagnostics = getattr(exc, "diagnostics", None)
             write_json(
                 record_path,
                 {
@@ -347,11 +660,17 @@ def run_codex_tasks(
                     "status": "error",
                     "model": model,
                     "input_hash": input_hash,
-                    "attempts": None,
+                    "thread_id": diagnostics.get("thread_id") if isinstance(diagnostics, dict) else None,
+                    "attempts": diagnostics.get("attempt") if isinstance(diagnostics, dict) else None,
                     "latency_ms": round((time.perf_counter() - started) * 1000),
                     "started_at": started_at,
                     "completed_at": utc_now(),
                     "error": str(exc),
+                    **(
+                        {"diagnostics": diagnostics}
+                        if isinstance(diagnostics, dict) and diagnostics
+                        else {}
+                    ),
                 },
             )
             raise

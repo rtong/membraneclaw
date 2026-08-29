@@ -1,0 +1,9 @@
+{
+  "version": "0.7.2",
+  "prevention_checks": {
+    "TOOL_ARGUMENT": ["all stated fixed inputs explicit", "visible call checked before send", "echoed inputs verified"],
+    "SEARCH_STRATEGY": ["numeric interpolation", "controlling case first", "eight-result hard stop"],
+    "CONSTRAINT_OMISSION": ["every hard constraint included in final check"],
+    "OUTPUT_OMISSION": ["decision first", "answer after result eight", "required trailer reserved"]
+  }
+}

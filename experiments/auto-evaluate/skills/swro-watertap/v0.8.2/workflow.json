@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.2",
+  "modules": [
+    "separate question-stated inputs from output constraints",
+    "gate chemistry calls on complete locked arguments",
+    "reject mismatched tool echoes before using evidence",
+    "stop at a proved boundary and report the supported decision"
+  ]
+}

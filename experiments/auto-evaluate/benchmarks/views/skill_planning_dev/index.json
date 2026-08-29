@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.1",
+  "generated_at": "2026-08-23T14:27:38+00:00",
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "mode": "skill_de_scaffold",
+    "source_normalized_dir": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\normalized",
+    "config_sha256": "39a58d624cc79517e7672d6ece4685bf583cf65a97a097f4455581f80882ada6"
+  },
+  "cases": [
+    {
+      "case_id": "D1-1a-feasibility",
+      "task_family": "d1_1a",
+      "title": "D1-1a-R4: Robust Membrane-Area Feasibility — Design Feasibility Check",
+      "file": "D1-1a-feasibility.json",
+      "source_sha256": "8b93a9080cce783c1fc7c69b51fd02a13cd754c9e53b756a3eed78b48fe2305f",
+      "view_prompt_sha256": "abd01a5b6712205014daafee91f84a924c0be3abb5025b5415387f9c69765f77",
+      "source_case_id": "D1-1a-feasibility",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D1-1b-high-salinity-robust",
+      "task_family": "d1_1b",
+      "title": "D1-1b-HS: Candidate Membrane Screening under High-Salinity Variability",
+      "file": "D1-1b-high-salinity-robust.json",
+      "source_sha256": "ebc861d58df1be2dce9dae1b0ab71f9ceb5971947c66968c8fbc953635841e8a",
+      "view_prompt_sha256": "d81db16f02f29d4b6a8e2a54786a603ba1ee89a37afa2ce1072d6d69cd8c5dfb",
+      "source_case_id": "D1-1b-high-salinity-robust",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D1-1c-existing-pump-reuse-and-cleaning-trigger",
+      "task_family": "d1_1c",
+      "title": "D1-1c | Existing Pump Reuse and Cleaning Trigger",
+      "file": "D1-1c-existing-pump-reuse-and-cleaning-trigger.json",
+      "source_sha256": "49f92d782ec4fa40490f246526fed790b0c0fff177419e91ca1a35013fe40ead",
+      "view_prompt_sha256": "91b64af5ff41a5a29cb300a5b5325651d5799d22ad7f1993a04bcdb6ca5f0014",
+      "source_case_id": "D1-1c-existing-pump-reuse-and-cleaning-trigger",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D2-2a-feed-flow-min-flow",
+      "task_family": "d2_2a",
+      "title": "D2-2a: Minimum Operable Feed Flow with Adjustable Pressure",
+      "file": "D2-2a-feed-flow-min-flow.json",
+      "source_sha256": "9b93cb9d5408c7719cdc750616fddf3364ce85fba3e2d2706d1f29d193304dd5",
+      "view_prompt_sha256": "e35c377a6f209bfcdb3ad18f8c8a07272f6bda18bc871fc79f5785fbc229dd28",
+      "source_case_id": "D2-2a-feed-flow-min-flow",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution",
+      "task_family": "d2_2b",
+      "title": "D2-2b: Feasibility Determination under Red-Tide High Salinity and Pump Limit",
+      "file": "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution.json",
+      "source_sha256": "2ddb9278297836e2a0d2779baededb27494b3f4c0d8ad40217e709f93ef9ff0a",
+      "view_prompt_sha256": "2be80386bb0337b2fa200909fb29a59a0c9d8043a9ad14606b37e478005b79c0",
+      "source_case_id": "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D2-2b-constraint-conflict",
+      "task_family": "d2_2b",
+      "title": "D2-2b: Pressure–Flow Correction under Conflicting Constraints",
+      "file": "D2-2b-constraint-conflict.json",
+      "source_sha256": "a449a24e4ae0cd61fec0642bcd613a36cb0d05707da704d4bc4cff09f2ef084c",
+      "view_prompt_sha256": "70c3e56ca45b6f5d24d5f5a8d91b0b092d73d11bd5a3c19097ff5ab667959519",
+      "source_case_id": "D2-2b-constraint-conflict",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D3-3a-n01-salinity-intrusion",
+      "task_family": "d3_3a",
+      "title": "D3-3a N01: Maximum Tolerable Salinity During a Post-Algal High-Salinity Intrusion",
+      "file": "D3-3a-n01-salinity-intrusion.json",
+      "source_sha256": "ab4456dd90a5567b3bd7e852747c61b3ff9c7910b6f6fb0a5b2ce5e9ec35a84a",
+      "view_prompt_sha256": "74cda2ddb10e547bd050a2ee410da39279eabeb57a748f594ac7847cfcf1566e",
+      "source_case_id": "D3-3a-n01-salinity-intrusion",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D3-3a-n02-membrane-aging",
+      "task_family": "d3_3a",
+      "title": "D3-3a N02: Minimum Effective Water Permeability and Cleaning Trigger for Aged Membranes",
+      "file": "D3-3a-n02-membrane-aging.json",
+      "source_sha256": "ddb522caa25bf1baf431ef30f766b4ff2da80819571a244fb73fd230cca20804",
+      "view_prompt_sha256": "2750089d0e404fd13137d71b859dbeb140cb2e686d821c09f77aa10be6553f4e",
+      "source_case_id": "D3-3a-n02-membrane-aging",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D5-5a-n01-recovery-limit",
+      "task_family": "d5_5a",
+      "title": "D5-5a N01: Maximum Safe Recovery for High-Sulfate Summer Seawater",
+      "file": "D5-5a-n01-recovery-limit.json",
+      "source_sha256": "20c66950f8d2fceb74e03bf62fd0fd2ec653e4db7aa4a606046027e0dbe8ebf7",
+      "view_prompt_sha256": "7d2c9b0c7de3a6f30fa1fd02d1ae70d2dae82557b8bd295f1b97677218bf3a35",
+      "source_case_id": "D5-5a-n01-recovery-limit",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D5-5a-n06-pressure-scaling",
+      "task_family": "d5_5a",
+      "title": "D5-5a N06: Maximum Safe Feed Pressure with Pressure–Recovery–Scaling Coupling",
+      "file": "D5-5a-n06-pressure-scaling.json",
+      "source_sha256": "7a8a64aff0134b44d7e8760c210dc6a1c95a6c304d7601447150ccf6584b2a17",
+      "view_prompt_sha256": "09bf7aa963f7fa9cf10237f53c8484b3b40b40dc0a5508c46199382f3fe16963",
+      "source_case_id": "D5-5a-n06-pressure-scaling",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D5-5b-n01-carbonate-acid-boundary",
+      "task_family": "d5_5b",
+      "title": "N01 — High-Alkalinity BWRO: Minimum Passing Acid Dose",
+      "file": "D5-5b-n01-carbonate-acid-boundary.json",
+      "source_sha256": "4a380ed4d89224c1cede62037e7ae0bddfa64d806320a80d0c8e9694829e2412",
+      "view_prompt_sha256": "5af35f2a487e0d0c4c73e41649f3218bb5d82fc9b19b8c35ffac056ea97ea749",
+      "source_case_id": "D5-5b-n01-carbonate-acid-boundary",
+      "rag_need": "R0"
+    },
+    {
+      "case_id": "D5-5b-n03-barite-selective-ix",
+      "task_family": "d5_5b",
+      "title": "N03 — Trace-Barium SWRO: Selective Ba Removal Instead of Acid",
+      "file": "D5-5b-n03-barite-selective-ix.json",
+      "source_sha256": "d03ee1d53a371174ab15fc7f4eda11e670819dd2d928e733f545bf4d2a52c536",
+      "view_prompt_sha256": "dd58bd797cc0c3fa19d14b093b97ac5ad4a4bd1a93c96175dddb8defd5e7bfa6",
+      "source_case_id": "D5-5b-n03-barite-selective-ix",
+      "rag_need": "R0"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D1-1b",
+  "task_family": "d1_1b",
+  "title": "D1-1b: Candidate Membrane Screening + Stress Testing + Final Selection",
+  "question_prompt": "D1-1b: Candidate Membrane Screening + Stress Testing + Final Selection\n\nAn SWRO project has a fixed membrane area and design pressure. Procurement has provided four candidate membranes. The agent must first screen all candidates under the nominal condition, then send only the passing shortlist to a high-salinity stress test. Eliminated membranes should not receive further tool calls. If any candidates remain after the salinity stress test, verify them under the low- and high-temperature design conditions before making the final selection.\n\nFixed parameters | Value | Unit | Notes | Design / stress case | NaCl mass fraction | Temperature °C\nFeed mass flow | 4.073 | kg/s | Fixed | Nominal | 0.03 | 32\nMembrane area | 400 | m² | Fixed | High salinity stress | 0.032 | 32\nFeed pressure | 52 | bar | Fixed | Low temperature verify | 0.03 | 25\nPermeate pressure | 1.013 | bar | Fixed | High temperature verify | 0.03 | 35\nPressure drop | 0.653 | bar | Fixed\nChannel height | 0.002 | m | Fixed | Common hard constraints\nSpacer porosity | 0.75 | - | Fixed | Qp | ≥ 6.10 m³/h | All mandatory cases\nModule length | 20 | m | Fixed | Recovery | ≤ 48% | All mandatory cases\nFlux | ≤ 18 LMH | All mandatory cases\nFour candidate membranes | Rejection | ≥ 98.7% | All mandatory cases\nMembrane | A_comp | B_comp | Design intent | Permeate NaCl | ≤ 400 mg/L | All mandatory cases\nM1 High-flux | 5e-12 | 5e-08 | High A / high B\nM2 High-productivity | 4.5e-12 | 3.6e-08 | Higher A / medium-high B\nM3 Balanced-high rejection | 4.35e-12 | 2.8e-08 | Medium-high A / low B\nM4 High-rejection | 3.3e-12 | 2.4e-08 | Low A / very low B\n\nRequired tasks\n1. E1 — Identify this as a membrane-performance parameter selection problem. Explain the A/B trade-off and anticipate typical risks for high-A/high-B and low-A/low-B candidates.\n2. E2 — Screen all four membranes under the nominal condition. Only membranes that satisfy every hard constraint may enter the shortlist.\n3. E3 — Run the high-salinity stress test on the shortlist. Eliminate any membrane that fails and stop that branch.\n4. E4 — For the final surviving candidate(s), run both the 25°C low-temperature and 35°C high-temperature verification cases. Do not make a procurement decision from a single temperature.\n5. Final recommendation — Base the decision on all mandatory cases and explain why the best choice is not simply the membrane with the highest A or the lowest B.\n\nMulti-call principle: nominal screening → shortlist → high-salinity stress → low/high-temperature verification of the final candidate(s). Other reasonable orders are acceptable, but eliminated membranes should not receive low-information stress tests.",
+  "reference_answer": "D1-1b: Gold Answer — Screening → Shortlist → Stress Test\n\nReference efficient trajectory: about 8 simulate_ro calls. Nominal screening uses 4 calls and retains M2/M3. High-salinity stress uses 2 calls; M2 is eliminated because permeate NaCl > 400 mg/L. Only M3 then receives the 25°C low-temperature and 35°C high-temperature verification calls.\n\nStage 1: Nominal screening (4 calls)\nMembrane | A | B | Case | Permeate kg/s | Qp m³/h | Flux | Recovery % | Rejection % | NaCl mg/L | Production | Recovery | Water quality | Overall\nM1 | 5e-12 | 5e-08 | Nominal | 1.96766872528549 | =E9*3.6 | 17.7001631264954 | 49.3924715211225 | 98.3696933371944 | 500.050359103307 | Pass | Fail\nM2 | 4.5e-12 | 3.6e-08 | Nominal | 1.87903362634196 | =E10*3.6 | 16.905008317413 | 47.1721316919922 | 98.7866527259845 | 372.196027692939 | Pass\nM3 | 4.35e-12 | 2.8e-08 | Nominal | 1.84745517568963 | =E11*3.6 | 16.6222195239462 | 46.3821505188094 | 99.043843901433 | 293.319837088049 | Pass\nM4 | 3.3e-12 | 2.4e-08 | Nominal | 1.66427228443478 | =E12*3.6 | 14.9744669524367 | 41.7840352549384 | 99.1330621083723 | 265.955911819047 | Fail | Pass | Fail\n\nStage 2: High-salinity stress test on the shortlist (M2/M3 only)\nMembrane | A | B | Case | Permeate kg/s | Qp m³/h | Flux | Recovery % | Rejection % | NaCl mg/L | Production | Recovery | Water quality | Overall\nM2 | 4.5e-12 | 3.6e-08 | High salinity | 1.73873735919748 | =E16*3.6 | 15.6422228589854 | 43.7136716405171 | 98.7492734494736 | 409.835956089127 | Pass | Fail\nM3 | 4.35e-12 | 2.8e-08 | High salinity | 1.70810622542011 | =E17*3.6 | 15.3679838681415 | 42.9463913940417 | 99.0130126744224 | 323.435559840423 | Pass\n\nStage 3: Low-/high-temperature verification of final candidate M3 (2 calls)\nMembrane | A | B | Case | Permeate kg/s | Qp m³/h | Flux | Recovery % | Rejection % | NaCl mg/L | Production | Recovery | Water quality | Overall\nM3 | 4.35e-12 | 2.8e-08 | 25°C low-temp | 1.89254311276884 | =E21*3.6 | 17.0279332183991 | 47.5142143135153 | 99.0517472792879 | 290.895854897604 | Pass\nM3 | 4.35e-12 | 2.8e-08 | 35°C high-temp | 1.82822351480366 | =E22*3.6 | 16.4491669383598 | 45.8992820514608 | 99.0401964255317 | 294.438522414662 | Pass\n\nStage | Candidate / result | Key evidence | Keep? | Reason | Next step\nNominal | M1 | Recovery 49.39%; NaCl 500 mg/L | Eliminate | High A is accompanied by high B; both recovery and water quality violate limits | Stop M1\nNominal | M2 | Qp≈6.765; Recovery 47.17%; NaCl 372 mg/L | Keep | Passes all nominal constraints | Proceed to high-salinity stress\nNominal | M3 | Qp≈6.651; Recovery 46.38%; NaCl 293 mg/L | Keep | Passes all nominal constraints | Proceed to high-salinity stress\nNominal | M4 | Qp≈5.991 m³/h | Eliminate | High rejection but insufficient production | Stop M4\nHigh salinity | M2 eliminated; M3 passes | M2 NaCl≈409.84>400; M3 NaCl≈323.44 | M3 | Retain M3 only | Proceed to temperature verification\nFinal verify | M3 passes at both 25°C and 35°C | 25°C Recovery≈47.51%; 35°C Recovery≈45.90%; water quality passes in both cases | M3 | Only candidate that passes all mandatory cases | Recommend M3",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem representation and state understanding",
+        "reasoning_or_calculation": "Correctly identify the decision variables, the A/B trade-off, and the multi-condition requirement",
+        "inputs": "Understands the roles of A/B but incompletely handles the multi-condition requirement or one hard constraint",
+        "key_outputs": "Recognizes that A mainly controls water permeability/production and B mainly controls salt passage/water quality; candidates must pass both nominal and stress conditions",
+        "full_credit": "Recognizes that A mainly controls water permeability/production and B mainly controls salt passage/water quality; candidates must pass both nominal and stress conditions",
+        "common_failures": "Ranks only by highest A or lowest B; treats pressure/area as candidate-specific comparison variables",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning and decomposition quality",
+        "reasoning_or_calculation": "Build a causal screening → shortlist → stress → final-verification plan",
+        "inputs": "Overall plan is reasonable but lacks shortlist pruning or one final verification",
+        "key_outputs": "Screen 4 membranes at nominal → retain M2/M3 only → high-salinity stress → eliminate M2 → verify M3 at both low and high temperature",
+        "full_credit": "Screen 4 membranes at nominal → retain M2/M3 only → high-salinity stress → eliminate M2 → verify M3 at both low and high temperature",
+        "common_failures": "Brute-force all 4 membranes × all cases, or select a membrane from nominal results alone",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Action / tool-call correctness",
+        "reasoning_or_calculation": "Use fair and consistent simulate_ro settings across candidates and stress cases",
+        "inputs": "Minor parameter/unit errors that do not change elimination outcomes",
+        "key_outputs": "All inputs remain fixed except candidate A/B and the case-specific salinity/temperature; Qp, Recovery, Flux, Rejection, and NaCl are read correctly",
+        "full_credit": "All inputs remain fixed except candidate A/B and the case-specific salinity/temperature; Qp, Recovery, Flux, Rejection, and NaCl are read correctly",
+        "common_failures": "Changes pressure/area across candidates, or uses incorrect units/thresholds and creates an unfair comparison",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation interpretation and state update",
+        "reasoning_or_calculation": "Correctly maintain shortlist state from the observations",
+        "inputs": "Final shortlist is correct, but one elimination reason or metric interpretation is incomplete",
+        "key_outputs": "M1 is eliminated by recovery/water quality; M4 by production; M2/M3 enter the shortlist; M2 fails high salinity at NaCl≈409.84 mg/L; M3 continues",
+        "full_credit": "M1 is eliminated by recovery/water quality; M4 by production; M2/M3 enter the shortlist; M2 fails high salinity at NaCl≈409.84 mg/L; M3 continues",
+        "common_failures": "Incorrect keep/eliminate state; ignores the salinity failure and keeps M2",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive comparison and replanning",
+        "reasoning_or_calculation": "Let screening results drive later stress tests and prune branches promptly",
+        "inputs": "Some pruning is applied, but unnecessary verification remains or stress ordering is unclear",
+        "key_outputs": "Run high-salinity stress only on M2/M3; stop M2 after failure; test only M3 at 25/35°C; then compare engineering margins",
+        "full_credit": "Run high-salinity stress only on M2/M3; stop M2 after failure; test only M3 at 25/35°C; then compare engineering margins",
+        "common_failures": "Continues extensive testing of eliminated membranes; call order is unrelated to previous states",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Stopping and final engineering decision",
+        "reasoning_or_calculation": "Stop after all mandatory evidence is complete and make the correct membrane decision",
+        "inputs": "Recommends M3 but omits one verification or part of the engineering explanation",
+        "key_outputs": "M3 is the only candidate that passes nominal, high-salinity, 25°C, and 35°C cases; recommend M3 and explain the balanced A/B trade-off",
+        "full_credit": "M3 is the only candidate that passes nominal, high-salinity, 25°C, and 35°C cases; recommend M3 and explain the balanced A/B trade-off",
+        "common_failures": "Recommends M1/M2/M4, or stops before stress testing is complete",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Choose the correct tool and avoid irrelevant tools",
+        "full_credit": "Use simulate_ro for the scientific calculations, with each call directly serving the current decision",
+        "medium_credit": "A few unnecessary metadata or exploratory calls",
+        "low_credit": "Wrong tools or many irrelevant calls",
+        "case_observation": "simulate_ro is sufficient for fair membrane comparison; no plant-cost or chemistry tools are needed",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and call ordering",
+        "evaluation_focus": "Prioritize high-information calls",
+        "full_credit": "Establish the baseline/screening structure first, then refine only where uncertainty remains",
+        "medium_credit": "Mostly reasonable ordering but with some low-information calls",
+        "low_credit": "Starts with dense grid testing without first structuring the problem",
+        "case_observation": "Nominal screening provides the highest initial discrimination",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Make each next call depend on prior observations",
+        "full_credit": "Dynamically choose inputs from fail/pass status, shortlist state, and risk type",
+        "medium_credit": "Partly adaptive, mixed with preset enumeration",
+        "low_credit": "Call sequence is largely independent of previous results",
+        "case_observation": "The shortlist determines salinity stress; salinity elimination determines the final verification target",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning and redundancy control",
+        "evaluation_focus": "Prune failed branches and avoid redundant calls",
+        "full_credit": "Stop branches once failure evidence is sufficient; do not repeat equivalent inputs",
+        "medium_credit": "A small amount of repetition or 1–2 extra tests on known branches",
+        "low_credit": "Continues extensive testing of eliminated options or brute-forces all combinations",
+        "case_observation": "Stop M1/M4 after nominal elimination and M2 after salinity failure; do not run unnecessary temperature stress tests",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence and stopping",
+        "evaluation_focus": "Converge with a reasonable call budget and stop when evidence is sufficient",
+        "full_credit": "About 7–9 calls with complete evidence and no obvious redundancy",
+        "medium_credit": "About 10–12 calls with minor redundancy but still adaptive",
+        "low_credit": ">12 calls with heavy enumeration/repetition, or too few calls to support the decision",
+        "case_observation": "Reference trajectory ≈8 calls; different efficient adaptive paths can receive full credit",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D1_1b_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D1\\D1_1b_EN.xlsx",
+    "sha256": "63c9e3ff90396ea0a0340e767ea7c71de7ddd63d1ce996fa0c1ab5c882b2b473",
+    "sheets": [
+      "Question",
+      "Gold_Answer",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question",
+      "answer": "Gold_Answer",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:32+00:00"
+  }
+}

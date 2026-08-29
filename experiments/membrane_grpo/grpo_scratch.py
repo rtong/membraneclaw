@@ -63,7 +63,8 @@ from typing import Any
 
 import torch
 
-from reward import MAIN, PROBE, Weights, group_advantages, score
+from eval import supports_thinking_toggle
+from reward import ABLATE, MAIN, PROBE, Weights, group_advantages, score
 from task.prompt import PROMPT_VERSION, build_messages
 
 ROOT = Path(__file__).resolve().parent
@@ -200,10 +201,14 @@ def rollout(
     temperature: float,
     weights: Weights,
     device: str,
+    template_kwargs: dict[str, Any] | None = None,
 ) -> Group:
     """Sample one group, score it, and centre the rewards within the group."""
     text = tokenizer.apply_chat_template(
-        build_messages(case["record"]), tokenize=False, add_generation_prompt=True
+        build_messages(case["record"]),
+        tokenize=False,
+        add_generation_prompt=True,
+        **(template_kwargs or {}),
     )
     encoded = tokenizer([text] * group_size, return_tensors="pt", padding=True).to(device)
     prompt_len = encoded["input_ids"].shape[1]
@@ -271,6 +276,16 @@ class Config:
     dtype: str = "bfloat16"
     split: str = "train"
     prompt_version: str = PROMPT_VERSION
+    # Held-out evaluation during training. Without it the run produces a reward
+    # curve and nothing to read it against, and "reward rose" cannot be
+    # separated from "the policy got better" -- which is the question.
+    eval_every: int = 25
+    # The full dev split, so step 0 is directly comparable to the frozen
+    # baseline rather than to a subset of it with a different denominator.
+    eval_cases: int = 200
+    eval_batch: int = 32
+    eval_split: str = "dev"
+    eval_max_tokens: int = 640
 
 
 def load_policy(cfg: Config, device: str):
@@ -294,14 +309,65 @@ def load_policy(cfg: Config, device: str):
     return policy, tokenizer
 
 
+def evaluate(policy, tokenizer, cfg: Config, cases: list[dict], step: int) -> dict[str, Any]:
+    """Greedy pass over a fixed held-out slice, through eval.py's own code path.
+
+    Fixed slice and fixed decoding, so successive evaluations differ only by the
+    policy. Comparable to the frozen baseline because it is literally the same
+    function that produced it.
+    """
+    from eval import generate_hf, summarise
+
+    weights = {"MAIN": MAIN, "PROBE": PROBE, "ABLATE": ABLATE}[cfg.weights]
+    # generate_hf still moves the encoded batch onto a device, so it needs the
+    # one the live policy is already on rather than a re-derived guess.
+    device = str(next(policy.parameters()).device)
+    results = generate_hf(
+        cases,
+        model=cfg.model,
+        device=device,
+        dtype=cfg.dtype,
+        n=1,
+        temperature=0.0,
+        max_tokens=cfg.eval_max_tokens,
+        seed=cfg.seed,
+        batch_size=cfg.eval_batch,
+        adapter=None,
+        prompt_version=cfg.prompt_version,
+        loaded=(policy, tokenizer),
+    )
+    metrics = summarise(results, weights)
+    return {
+        "step": step,
+        "reward": metrics["reward"],
+        "exact_match": metrics["exact_match"],
+        "validity_gate": metrics["validity_gate"],
+        "schema_ok": metrics["schema_ok"],
+        "cause_acc": metrics["cause_acc"],
+        "flags_acc": metrics["flags_acc"],
+        "numeric_acc": metrics["numeric_acc"],
+        "action_acc": metrics["action_acc"],
+        "completion_tokens": metrics["completion_tokens_mean"],
+    }
+
+
 def train(cfg: Config, out_dir: Path, device: str) -> None:
     torch.manual_seed(cfg.seed)
     rng = random.Random(cfg.seed)
 
     cases = [json.loads(line) for line in (DATA / f"{cfg.split}.jsonl").read_text().splitlines()]
-    weights = {"MAIN": MAIN, "PROBE": PROBE}[cfg.weights]
+    weights = {"MAIN": MAIN, "PROBE": PROBE, "ABLATE": ABLATE}[cfg.weights]
 
     policy, tokenizer = load_policy(cfg, device)
+
+    # Same gap eval.py had: a Qwen3 chat template defaults thinking *on*, and
+    # on this task that means the policy spends its budget inside <think> and
+    # returns nothing to score. Training against that would optimise a policy
+    # for a format we never intend to sample in.
+    template_kwargs: dict[str, Any] = {}
+    if supports_thinking_toggle(tokenizer):
+        template_kwargs["enable_thinking"] = False
+        print("  chat template honours enable_thinking; set to False")
     optimizer = torch.optim.AdamW(
         [p for p in policy.parameters() if p.requires_grad],
         lr=cfg.lr,
@@ -312,8 +378,27 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
     (out_dir / "config.json").write_text(json.dumps(asdict(cfg), indent=2) + "\n")
     metrics_path = out_dir / "metrics.jsonl"
     metrics_path.write_text("")
+    eval_path = out_dir / "eval.jsonl"
+    eval_path.write_text("")
+
+    eval_cases = [
+        json.loads(line)
+        for line in (DATA / f"{cfg.eval_split}.jsonl").read_text().splitlines()
+    ][: cfg.eval_cases]
+
+    def run_eval(step: int) -> None:
+        record = evaluate(policy, tokenizer, cfg, eval_cases, step)
+        with eval_path.open("a") as fh:
+            fh.write(json.dumps(record) + "\n")
+        print(
+            f"    eval @{step:<4} reward {record['reward']:.4f} "
+            f"cause {record['cause_acc']:.3f} flags {record['flags_acc']:.3f} "
+            f"EM {record['exact_match']:.3f} valid {record['validity_gate']:.3f}"
+        )
 
     print(f"{cfg.model} | {cfg.steps} steps | {cfg.prompts_per_step}x{cfg.group_size} | {device}")
+    if cfg.eval_every:
+        run_eval(0)  # step 0 must reproduce the frozen baseline
 
     for step in range(cfg.steps):
         started = time.perf_counter()
@@ -330,61 +415,76 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
                 temperature=cfg.temperature,
                 weights=weights,
                 device=device,
+                template_kwargs=template_kwargs,
             )
             for case in batch
         ]
         gen_seconds = time.perf_counter() - started
 
-        sequences = torch.cat([g.sequences for g in groups], dim=0)
-        masks = torch.cat([g.mask for g in groups], dim=0)
-        advantages = torch.tensor(
-            [a for g in groups for a in g.advantages], device=device, dtype=torch.float32
-        )
-        completion_len = masks.shape[1]
+        # Groups are kept apart rather than concatenated. Different prompts
+        # tokenize to different lengths, so one batch would need padding -- and
+        # a padded batch through `model(input_ids=...)` with no attention mask
+        # attends to the pad tokens and starts RoPE at the pad, silently
+        # corrupting the very log-probs that are the training signal. Within a
+        # group there is no padding at all, because a group is G samples of one
+        # prompt. That is a structural convenience of GRPO worth not throwing
+        # away for the sake of one `torch.cat`.
+        total_sequences = sum(len(g.rewards) for g in groups)
+
+        def micro_batches(group: Group):
+            for i in range(0, group.sequences.shape[0], cfg.micro_batch):
+                yield slice(i, i + cfg.micro_batch)
 
         policy.train()
         with torch.no_grad():
-            old_logprobs = torch.cat(
-                [
-                    completion_logprobs(policy, sequences[i : i + cfg.micro_batch], completion_len)
-                    for i in range(0, len(sequences), cfg.micro_batch)
-                ]
-            )
-            ref_logprobs = None
+            old_by_group = [
+                torch.cat(
+                    [
+                        completion_logprobs(policy, g.sequences[sl], g.mask.shape[1])
+                        for sl in micro_batches(g)
+                    ]
+                )
+                for g in groups
+            ]
+            ref_by_group: list[torch.Tensor] | None = None
             if cfg.beta > 0:
                 # The reference policy is the base model: disabling the adapters
                 # gives it for free, with no second copy of the weights.
                 with policy.disable_adapter():
-                    ref_logprobs = torch.cat(
-                        [
-                            completion_logprobs(
-                                policy, sequences[i : i + cfg.micro_batch], completion_len
-                            )
-                            for i in range(0, len(sequences), cfg.micro_batch)
-                        ]
-                    )
+                    ref_by_group = [
+                        torch.cat(
+                            [
+                                completion_logprobs(policy, g.sequences[sl], g.mask.shape[1])
+                                for sl in micro_batches(g)
+                            ]
+                        )
+                        for g in groups
+                    ]
 
         step_stats: dict[str, float] = {}
         for _ in range(cfg.inner_epochs):
             optimizer.zero_grad(set_to_none=True)
             accumulated = 0.0
-            for i in range(0, len(sequences), cfg.micro_batch):
-                sl = slice(i, i + cfg.micro_batch)
-                logprobs = completion_logprobs(policy, sequences[sl], completion_len)
-                loss, stats = grpo_surrogate(
-                    logprobs,
-                    old_logprobs[sl],
-                    advantages[sl],
-                    masks[sl],
-                    ref_logprobs=None if ref_logprobs is None else ref_logprobs[sl],
-                    clip_eps=cfg.clip_eps,
-                    beta=cfg.beta,
-                    normalize=cfg.normalize,
-                )
-                # Each micro-batch carries an equal share of the step.
-                (loss * cfg.micro_batch / len(sequences)).backward()
-                accumulated += stats["loss"] * cfg.micro_batch / len(sequences)
-                step_stats = stats
+            for gi, g in enumerate(groups):
+                completion_len = g.mask.shape[1]
+                advantages = torch.tensor(g.advantages, device=device, dtype=torch.float32)
+                for sl in micro_batches(g):
+                    logprobs = completion_logprobs(policy, g.sequences[sl], completion_len)
+                    loss, stats = grpo_surrogate(
+                        logprobs,
+                        old_by_group[gi][sl],
+                        advantages[sl],
+                        g.mask[sl],
+                        ref_logprobs=None if ref_by_group is None else ref_by_group[gi][sl],
+                        clip_eps=cfg.clip_eps,
+                        beta=cfg.beta,
+                        normalize=cfg.normalize,
+                    )
+                    # Each micro-batch carries an equal share of the step.
+                    share = logprobs.shape[0] / total_sequences
+                    (loss * share).backward()
+                    accumulated += stats["loss"] * share
+                    step_stats = stats
             grad_norm = torch.nn.utils.clip_grad_norm_(
                 [p for p in policy.parameters() if p.requires_grad], 1.0
             )
@@ -396,13 +496,16 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
             "reward_mean": sum(rewards) / len(rewards),
             "reward_max": max(rewards),
             "adv_zero_frac": sum(g.degenerate for g in groups) / len(groups),
-            "completion_tokens": float(masks.sum() / masks.shape[0]),
+            "completion_tokens": float(
+                sum(float(g.mask.sum()) for g in groups) / total_sequences
+            ),
             "unique_completions": sum(len(set(g.completions)) for g in groups) / len(groups),
             "loss": accumulated,
             "grad_norm": float(grad_norm),
             "clip_frac": step_stats.get("clip_frac", 0.0),
             "ratio_mean": step_stats.get("ratio_mean", 1.0),
             "kl": step_stats.get("kl", 0.0),
+            "entropy_proxy": step_stats.get("entropy_proxy", 0.0),
             "gen_seconds": round(gen_seconds, 2),
             "step_seconds": round(time.perf_counter() - started, 2),
         }
@@ -414,6 +517,9 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
             f"tok {record['completion_tokens']:.0f} clip {record['clip_frac']:.3f} "
             f"{record['step_seconds']:.1f}s"
         )
+
+        if cfg.eval_every and (step + 1) % cfg.eval_every == 0:
+            run_eval(step + 1)
 
     policy.save_pretrained(out_dir / "adapter")
     print(f"\nwrote {out_dir}")

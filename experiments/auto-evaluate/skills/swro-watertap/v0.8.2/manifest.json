@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.2",
+  "status": "candidate",
+  "design": "planning protocol with separate input and constraint locks, mandatory chemistry call validation, and task-shaped stopping gates",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}
