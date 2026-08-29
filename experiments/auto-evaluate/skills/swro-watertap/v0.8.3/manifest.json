@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.3",
+  "status": "candidate",
+  "design": "compact tool-call template with variable pH example, echo validation, and task-shaped stopping",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}

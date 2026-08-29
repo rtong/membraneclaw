@@ -1,0 +1,14 @@
+{
+  "version": "0.8.0",
+  "targets": {
+    "TASK_CLASSIFICATION": "00_core.md",
+    "PARAMETER_EXTRACTION": "00_core.md",
+    "UNIT_CONVERSION": "00_core.md",
+    "TOOL_ARGUMENT": "00_core.md",
+    "SEARCH_STRATEGY": "10_plan.md",
+    "CONSTRAINT_OMISSION": "20_answer.md",
+    "OUTPUT_OMISSION": "20_answer.md",
+    "OVERCLAIM": "20_answer.md",
+    "ENGINEERING_JUDGMENT": "20_answer.md"
+  }
+}

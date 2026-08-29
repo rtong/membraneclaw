@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution",
+  "task_family": "d2_2b",
+  "title": "D2-2b: Feasibility Determination under Red-Tide High Salinity and Pump Limit",
+  "question_prompt": "D2-2b: Feasibility Determination under Red-Tide High Salinity and Pump Limit\n\nRed tide and strong evaporation have raised feed NaCl mass fraction to 4.5%, while water temperature has fallen to 18 °C. A high-pressure-pump maintenance condition limits feed pressure to 65 bar. The train is still required to deliver Qp≥7.00 m³/h and permeate NaCl≤550 mg/L, with recovery≤40% and flux≤18 LMH. The allowable operating domain is 58–65 bar and 4.2–6.0 kg/s. Do not assume that a feasible setpoint must exist: compare informative boundary points and determine whether any pressure–flow combination is feasible.\n\nConfirmed RO System and Current Operating State | Operating Targets and Adjustable Range\nCategory | Parameter | Value | Unit / notes | Item | Requirement | Notes\nCurrent setpoint | Feed pressure | 58 | bar | Permeate flow | ≥ 7.00 m³/h | Minimum supply\nCurrent setpoint | Feed mass flow | 4.2 | kg/s | Water recovery | ≤ 40.0% | Concentration risk\nFeed | NaCl mass fraction | 0.045 | about 46.31 g/L NaCl | Water flux | ≤ 18.0 LMH | Operating envelope\nFeed | Temperature | 18 | °C | Salt rejection | ≥ 98.7% | Water-quality requirement\nMembrane system | A_comp | 4e-12 | m/s/Pa; fixed | Permeate NaCl | ≤ 550 mg/L | Permeate quality\nMembrane system | B_comp | 3.8e-08 | m/s; fixed | Adjustable pressure | 58.0–65.0 bar | Pump limit; 0.05 bar resolution\nMembrane system | Active membrane area | 400 | m²; fixed | Adjustable feed mass flow | 4.200–6.000 kg/s | Pretreatment limit\nHydraulics | Permeate-side pressure | 1.013 | bar | Decision rule | Establish feasibility before optimizing a setpoint | No-feasible-solution is allowed\nHydraulics | Module pressure drop | 0.8 | bar\nChannel | Channel height | 0.002 | m | Tasks to Complete\nChannel | Spacer porosity | 0.75 | - | 1. Calculate the high-salinity / low-temperature baseline and identify both production and quality failures.\nChannel | Equivalent channel length | 20 | m | 2. Use physical monotonicity to select the most informative operating boundaries rather than a two-dimensional exhaustive scan.\nModel | Concentration polarization / mass transfer coefficient | calculated | WaterTAP calculated | 3. Check maximum pressure, maximum flow, and the corner point to determine whether Qp and NaCl constraints can be met together.\n4. If infeasible, give derating or hardware-upgrade recommendations; do not fabricate a setpoint.\n\nThis is a feasibility proof, not a boundary-optimization task. Pressure and flow both have hard upper limits. If the maximum-pressure / maximum-flow corner—most favorable for Qp—still misses production or quality, there is no feasible point in the operating domain. The correct engineering action is derating, added membrane area, a membrane change, or restoring pump capability.",
+  "reference_answer": "D2-2b: Stepwise Gold Answer — Feasibility Determination under Red-Tide High Salinity and Pump Limit\nPressure bar | Feed kg/s | Qp m³/h\nReference efficient trajectory: about 5 simulate_ro calls—baseline diagnosis → branch screening/pruning → fail/pass boundary or corner evidence → final engineering decision. Every follow-on call should be triggered by the preceding observation. | 58 | 4.2 | 4.6438384572\nReference efficient trajectory: about 5 simulate_ro calls—baseline diagnosis → branch screening/pruning → fail/pass boundary or corner evidence → final engineering decision. Every follow-on call should be triggered by the preceding observation. | 65 | 4.2 | 5.8217115636\n58 | 6 | 5.4509930784\nHuman view: solve along one continuous reasoning chain | 62 | 6 | 6.3117347832\nStep | What the analyst does | Input for this step | Tool call / action | Key output | How output informs next step | Evaluation dimension | 65 | 6 | 6.9261239988\n1 | Recognize abnormality and hard limits | 45 g/kg; 18 °C; P≤65; F≤6.0 | Engineering assessment | High osmotic pressure and low temperature suppress Qp; B_comp also challenges quality | Screen feasibility at high-information corners | Problem characterization\n2 | Calculate baseline | 58/4.2 | simulate_ro #1 | Qp=4.644; NaCl=715.9; both production and quality fail | Higher P/F may help, but both have limits | First tool call\n3 | Test maximum pressure only | 65/4.2 | simulate_ro #2 | Qp=5.822; NaCl=624.7; both still fail | Prune pressure-only | Branch pruning\n4 | Test maximum flow only | 58/6.0 | simulate_ro #3 | Qp=5.451; NaCl=594.1; both still fail | Prune flow-only | Branch pruning\n5 | Check most favorable production corner | 65/6.0 | simulate_ro #4 | Qp=6.926<7.00; NaCl=508.7 passes; recovery and flux pass | Maximum P and F still fail production; domain is infeasible | Infeasibility proof\n6 | Add an intermediate-pressure corner | 62/6.0 | simulate_ro #5 | Qp=6.312; NaCl=538.6; confirms Qp improves with pressure but remains insufficient at 65 bar | No further grid search needed | Evidence closure\n7 | Form engineering decision | All results | Integrated comparison | No feasible pressure–flow setpoint; derate to ≤6.926 m³/h, restore pump capability, add area, or use improved membrane | Stop | Final decision\n8 | Tool usage efficiency | About 5 calls | Evaluate call path | Use monotonicity and corners instead of an exhaustive grid | High information gain | Scored separately\n\nDirect simulate_ro results and constraint checks\nScenario | Pressure bar | Feed kg/s | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Qp | Recovery | Flux | Overall\nCurrent high-salinity baseline | 58 | 4.2 | 1.289955127 | 4.6438384572 | 11.601285 | 31.746064 | 98.460946 | 715.864649 | Fail | Pass | Fail\nPressure-only upper limit | 65 | 4.2 | 1.617142101 | 5.8217115636 | 14.545186 | 39.800959 | 98.65698 | 624.726186 | Fail | Pass | Fail\nFlow-only upper limit | 58 | 6 | 1.514164744 | 5.4509930784 | 13.619387 | 26.08715 | 98.72291 | 594.071346 | Fail | Pass | Fail\nIntermediate corner | 62 | 6 | 1.753259662 | 6.3117347832 | 15.770838 | 30.207725 | 98.842135 | 538.633643 | Fail | Pass | Fail\nMost favorable production corner | 65 | 6 | 1.923923333 | 6.9261239988 | 17.306503 | 33.148925 | 98.906548 | 508.680772 | Fail | Pass | Fail\n\nKey comparison and final recommendation\nAt 58 bar / 4.2 kg/s, Qp is only 4.644 m³/h and NaCl is 715.9 mg/L. Maximum pressure at 65 bar / 4.2 kg/s still gives only 5.822 m³/h and 624.7 mg/L NaCl; maximum flow at 58 bar / 6.0 kg/s gives only 5.451 m³/h and 594.1 mg/L. At the most favorable production corner, 65 bar / 6.0 kg/s, NaCl improves to 508.7 mg/L, recovery=33.149%, and flux=17.307 LMH, but Qp=6.926 m³/h remains below 7.00. Since both P and F are at hard upper limits, no feasible setpoint exists. Recommend temporary derating, restoring pump capability, adding membrane area, or selecting a higher-rejection/high-flux membrane.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem representation and state understanding",
+        "reasoning_or_calculation": "Understands abnormality, adjustable variables, and hard constraints",
+        "inputs": "Identifies the topic but misses a key constraint or priority",
+        "key_outputs": "High salinity/low temperature with hard pressure and flow limits; establish feasibility first; no solution is allowed",
+        "full_credit": "High salinity/low temperature with hard pressure and flow limits; establish feasibility first; no solution is allowed",
+        "common_failures": "Changes area/A/B/feed quality, or assumes a solution exists",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Plan and decomposition quality",
+        "reasoning_or_calculation": "Screens branches/boundaries before minimum necessary search",
+        "inputs": "Overall plan is sound but misses a pruning step or second layer",
+        "key_outputs": "Baseline → maximum pressure → maximum flow → Pmax/Fmax corner → one intermediate corner; use monotonicity to prune",
+        "full_credit": "Baseline → maximum pressure → maximum flow → Pmax/Fmax corner → one intermediate corner; use monotonicity to prune",
+        "common_failures": "Exhaustive 2D grid search; stops at the first feasible point",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Action / tool-call correctness",
+        "reasoning_or_calculation": "Every simulate_ro call respects the current subproblem and fixed conditions",
+        "inputs": "Minor input deviation without changing branch decision",
+        "key_outputs": "Correct units, fixed parameters, operating bounds, and tool inputs",
+        "full_credit": "Correct units, fixed parameters, operating bounds, and tool inputs",
+        "common_failures": "Changes membrane parameters during operating correction or compares inconsistent baselines",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation and state update",
+        "reasoning_or_calculation": "Records fail/pass and reason for failure correctly",
+        "inputs": "Final boundary is correct but one failure explanation is incomplete",
+        "key_outputs": "65/4.2 and 58/6 both fail; 65/6 passes quality but Qp=6.926<7.00; most favorable corner still fails",
+        "full_credit": "65/4.2 and 58/6 both fail; 65/6 passes quality but Qp=6.926<7.00; most favorable corner still fails",
+        "common_failures": "Uses one improved metric as proof of success; does not maintain boundaries",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive comparison and replanning",
+        "reasoning_or_calculation": "Next action is informed by the preceding observation",
+        "inputs": "Some unnecessary retests but remains adaptive",
+        "key_outputs": "Prunes branches once evidence is sufficient; uses high-information next points",
+        "full_credit": "Prunes branches once evidence is sufficient; uses high-information next points",
+        "common_failures": "Continues failed branches or mechanically executes a preset grid",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Stopping and final engineering decision",
+        "reasoning_or_calculation": "Stops with a unique setpoint or justified no-solution decision",
+        "inputs": "Conclusion is correct but one boundary/evidence explanation is missing",
+        "key_outputs": "No feasible pressure–flow setpoint; recommend derating/restoring pump/adding area or changing membrane",
+        "full_credit": "No feasible pressure–flow setpoint; recommend derating/restoring pump/adding area or changing membrane",
+        "common_failures": "Stops at an intermediate point, confuses operating and design pressure, or fabricates a solution",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Uses the correct tool and avoids unrelated tools",
+        "full_credit": "Uses simulate_ro for the scientific decision; each call is directly relevant",
+        "medium_credit": "A few unnecessary metadata/probe calls",
+        "low_credit": "Wrong tool or many unrelated calls",
+        "case_observation": "Use simulate_ro to validate the operating setpoint; do not substitute cost or chemistry tools",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and ordering",
+        "evaluation_focus": "Obtains the most discriminating information first",
+        "full_credit": "Baseline/boundary/corner first, then refine uncertainty",
+        "medium_credit": "Generally reasonable but includes low-information calls",
+        "low_credit": "Dense grid scan from the outset",
+        "case_observation": "Screen branch limits or corners first, then use one-dimensional boundaries",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Each next call follows the previous observation",
+        "full_credit": "Uses fail/pass to select next input dynamically",
+        "medium_credit": "Partly adaptive but includes preset enumeration",
+        "low_credit": "Call sequence is largely unaffected by results",
+        "case_observation": "After a branch fails, switch; after a boundary forms, refine only the relevant variable",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning and redundancy control",
+        "evaluation_focus": "Stops ineffective branches and avoids repetition",
+        "full_credit": "Stops once failure evidence is sufficient; no equivalent repeat inputs",
+        "medium_credit": "A small number of repeats or extra known points",
+        "low_credit": "Continues large tests of eliminated branches or full 2D brute force",
+        "case_observation": "Do not scan failed branches; avoid an entire 2D grid",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence and stopping",
+        "evaluation_focus": "Uses a reasonable call budget for sufficient evidence",
+        "full_credit": "About 5 calls with sufficient evidence and no clear redundancy",
+        "medium_credit": "2–3 extra calls while remaining adaptive",
+        "low_credit": ">13 broad/repetitive calls, or too few calls for evidence",
+        "case_observation": "Different well-justified trajectories can receive equal high efficiency scores",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D2_2b_04_Red_Tide_High_Salinity_Pump_Limit_No_Feasible_Solution_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D2\\D2_2b_04_Red_Tide_High_Salinity_Pump_Limit_No_Feasible_Solution_EN.xlsx",
+    "sha256": "2ddb9278297836e2a0d2779baededb27494b3f4c0d8ad40217e709f93ef9ff0a",
+    "sheets": [
+      "Question_Q",
+      "Stepwise_Gold_Answer",
+      "Evaluation_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Stepwise_Gold_Answer",
+      "rubric": "Evaluation_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:35+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution",
+    "view_prompt_sha256": "2be80386bb0337b2fa200909fb29a59a0c9d8043a9ad14606b37e478005b79c0"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "81d62eea5164d8b55c74298f16b2a4e5ddb6aa770d719d615731f288c4122e61",
+    "view_prompt_sha256": "2be80386bb0337b2fa200909fb29a59a0c9d8043a9ad14606b37e478005b79c0",
+    "transformation": {
+      "removed_lines": 1,
+      "removed_cells": 1
+    }
+  }
+}

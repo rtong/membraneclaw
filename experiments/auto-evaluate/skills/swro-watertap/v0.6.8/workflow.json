@@ -1,0 +1,89 @@
+{
+  "workflow_id": "swro-watertap-environment-use-protocol",
+  "version": "0.6.0",
+  "default_call_budget": 5,
+  "states": [
+    {
+      "id": "task_framing",
+      "required": [
+        "task_family",
+        "decision_variables",
+        "fixed_inputs",
+        "constraints",
+        "mandatory_outputs",
+        "source_plan"
+      ]
+    },
+    {
+      "id": "retrieval_gate",
+      "required": [
+        "retrieval_needed_or_skipped",
+        "retrieval_purpose",
+        "actionable_facts_only"
+      ]
+    },
+    {
+      "id": "tool_plan",
+      "required": [
+        "correct_tool",
+        "explicit_arguments",
+        "fixed_inputs_locked"
+      ]
+    },
+    {
+      "id": "bounded_execution",
+      "required": [
+        "explicit_candidates_first",
+        "minimal_search",
+        "post_call_echo_check",
+        "respect_required_resolution",
+        "unfinished_stages_not_ignored"
+      ]
+    },
+    {
+      "id": "evidence_arbitration",
+      "required": [
+        "question_overrides_retrieval",
+        "tool_overrides_case_specific_retrieval",
+        "unsupported_claims_removed",
+        "unit_consistency_checked",
+        "internal_contradictions_reconciled"
+      ]
+    },
+    {
+      "id": "final_auditable_answer",
+      "required": [
+        "source_usage_disclosed",
+        "complete_constraint_check",
+        "alternatives_rejected",
+        "trailer_matches_actual_actions",
+        "pass_fail_uses_unrounded_values"
+      ]
+    }
+  ],
+  "recipe_requirements": {
+    "environment_orchestration": [
+      "question_first",
+      "retrieval_only_if_needed",
+      "tools_for_case_specific_numbers",
+      "evidence_hierarchy"
+    ],
+    "swro_design_and_feasibility": [
+      "decision_variable_lock",
+      "bounded_candidate_comparison",
+      "direct_feasibility_check",
+      "explicit_unit_conversion_for_screening_metrics",
+      "consistency_check_before_candidate_elimination"
+    ],
+    "scaling_analysis": [
+      "retrieval_for_species_or_interpretation_if_needed",
+      "scaling_tool_for_case_decision",
+      "dose_or_pressure_candidates_compared"
+    ],
+    "multi_stage_pressure_selection": [
+      "stop_at_required_resolution",
+      "advance_to_next_stage_after_resolution",
+      "final_design_based_on_hardest_stage"
+    ]
+  }
+}

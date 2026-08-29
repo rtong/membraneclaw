@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.10",
+  "modules": [
+    "print and freeze PRECALL BASE_ARGS",
+    "reject mismatched echoed inputs",
+    "validate mass and charge transforms",
+    "reuse the six-result state machine"
+  ]
+}

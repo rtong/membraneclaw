@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-rag-router",
+  "version": "0.1.0",
+  "status": "candidate",
+  "purpose": "two-stage adaptive RAG routing",
+  "benchmark_answer_values_allowed": false,
+  "runtime_artifact": "SKILL.md"
+}

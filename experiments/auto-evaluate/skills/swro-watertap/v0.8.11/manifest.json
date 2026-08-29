@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.11",
+  "status": "candidate",
+  "design": "v0.8.9 immutable BASE_ARGS plus signed residual checks and a shared bounded search for one or multiple decision boundaries",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}

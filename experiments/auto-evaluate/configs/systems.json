@@ -1,13 +1,38 @@
 {
   "schema_version": "1.0",
-  "shared_system_prompt": "You are solving a scientific engineering benchmark. Use the tools and context available to your configured system when they improve accuracy. Preserve units, state assumptions, show the calculation path, check every stated constraint, and distinguish direct simulation results from estimates. Do not claim that a tool was called unless it was actually called. After the complete natural-language answer, append a machine-readable trailer exactly once using the tags [SCORE_POINTS_BEGIN] and [SCORE_POINTS_END]. The enclosed content must be valid JSON with these top-level keys: task_type, decision_variables, fixed_inputs, tool_calls, constraint_checks, final_answer. Keep the trailer factual and derived only from what you actually reasoned or simulated.",
+  "shared_system_prompt": "You are solving a scientific engineering benchmark. Use the tools and context available to your configured system when they improve accuracy. Preserve units, state assumptions, show the calculation path, check every stated constraint, and distinguish direct simulation results from estimates. Do not claim that a tool was called unless it was actually called. Return a concise and complete natural-language answer.",
   "generation": {
     "stream": true,
-    "temperature": 0.0,
-    "top_p": 1.0,
-    "max_tokens": 6000,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "max_tokens": 2048,
+    "enable_thinking": false,
     "timeout_seconds": 600,
-    "max_retries": 2
+    "max_retries": 3,
+    "connection_retry_base_seconds": 10,
+    "connection_retry_max_seconds": 60
+  },
+  "context_recovery": {
+    "enabled": true,
+    "policy_version": "context-reset-finalizer@0.2.0",
+    "trigger_error_types": [
+      "context_window_exceeded",
+      "incomplete_response",
+      "output_budget_exhausted"
+    ],
+    "finalizer_model_env": "OPENWEBUI_MODEL_BASELINE",
+    "require_partial_response": true,
+    "max_partial_response_chars": 12000,
+    "max_prompt_chars": 24000,
+    "system_prompt": "You are the terminal context-reset finalizer for a scientific engineering benchmark. Tools are unavailable. Put the final engineering decision or conclusion first and produce one concise, complete answer using only the original question and observations already present in the partial execution. Do not invent, rerun, or claim unobserved simulations. Preserve units and every stated constraint. If the evidence does not prove an exact value, report the best observed bracket and explicitly state what remains unverified. Do not narrate planning, trial-and-error, or this recovery instruction. Keep the answer under 600 words.",
+    "generation": {
+      "stream": true,
+      "temperature": 0.0,
+      "top_p": 0.9,
+      "max_tokens": 2048,
+      "enable_thinking": false,
+      "max_retries": 0
+    }
   },
   "systems": [
     {
@@ -19,22 +44,50 @@
       "skill_version": null
     },
     {
-      "id": "environment",
-      "display_name": "Environment",
-      "model_env": "OPENWEBUI_MODEL_ENVIRONMENT",
+      "id": "tools",
+      "display_name": "Tools",
+      "model_env": "OPENWEBUI_MODEL_TOOLS",
       "tools_enabled": true,
-      "rag_enabled": true,
-      "rag_version_env": "OPENWEBUI_RAG_VERSION",
+      "require_observable_tool_call": true,
+      "rag_enabled": false,
       "skill_version": null
     },
     {
-      "id": "environment-skill",
-      "display_name": "Environment-Skill",
-      "model_env": "OPENWEBUI_MODEL_ENVIRONMENT_SKILL",
+      "id": "tools-rag",
+      "display_name": "Tools + RAG",
+      "model_env": "OPENWEBUI_MODEL_TOOLS_RAG",
+      "tools_enabled": true,
+      "require_observable_tool_call": true,
+      "rag_enabled": true,
+      "rag_version_env": "OPENWEBUI_RAG_VERSION",
+      "skill_version": null,
+      "rag_policy": "model_decides"
+    },
+    {
+      "id": "tools-adaptive-rag",
+      "display_name": "Tools + Adaptive RAG",
+      "model_env": "OPENWEBUI_MODEL_TOOLS",
       "tools_enabled": true,
       "rag_enabled": true,
       "rag_version_env": "OPENWEBUI_RAG_VERSION",
-      "skill_version": "swro-watertap@0.6.0"
+      "skill_version": null,
+      "rag_policy": "two_stage_router_skill",
+      "adaptive_rag": {
+        "execution_mode": "policy_replay",
+        "no_rag_system_id": "tools",
+        "rag_system_id": "tools-rag",
+        "router_model_env": "OPENWEBUI_MODEL_BASELINE",
+        "no_rag_model_env": "OPENWEBUI_MODEL_TOOLS",
+        "rag_model_env": "OPENWEBUI_MODEL_TOOLS_RAG",
+        "router_skill_version": "swro-rag-router@0.1.2",
+        "fallback_action": "skip_rag",
+        "generation_overrides": {
+          "max_tokens": 128,
+          "temperature": 0.0,
+          "stream": true,
+          "enable_thinking": false
+        }
+      }
     }
   ]
 }

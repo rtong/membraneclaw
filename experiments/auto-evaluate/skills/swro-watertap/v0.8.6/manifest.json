@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.6",
+  "status": "candidate",
+  "design": "complete fixed-input template, constraint-count-independent one-variable boundary stop, pre-call result cap, and trailer-first completion contract",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}

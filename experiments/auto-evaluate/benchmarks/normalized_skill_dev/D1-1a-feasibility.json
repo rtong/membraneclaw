@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D1-1a-feasibility",
+  "task_family": "d1_1a",
+  "title": "D1-1a-R4: Robust Membrane-Area Feasibility — Design Feasibility Check",
+  "question_prompt": "D1-1a-R4: Robust Membrane-Area Feasibility — Design Feasibility Check\n\nAn SWRO project has already procured the high-pressure pump and membrane elements, but during detailed design the owner increases the minimum production requirement and tightens the permeate-salinity limit. Because the major equipment is fixed, Feed pressure, A_comp, and B_comp cannot be changed; the engineering team can only vary total effective membrane area. Use simulate_ro across the three design-feed cases to determine whether any membrane-area range can simultaneously satisfy production, Recovery, Flux, Salt rejection, and permeate-NaCl requirements. The correct conclusion may be “no robust feasible area.” If no common interval exists, locate the production-driven area boundary and the water-quality/operational area boundary separately and prove the conflict numerically rather than forcing a recommendation.\n\nFixed model and equipment parameters | Three design cases\nParameter | Value | Unit | Notes | Case | NaCl mass fraction | Temperature °C\nFeed mass flow | 4.3 | kg/s | Same for all three cases | A Normal | 0.031 | 30\nFeed pressure | 51 | bar | High-pressure pump setting is fixed and cannot be adjusted | B High salinity | 0.035 | 23\nA_comp | 4e-12 | m/s/Pa | Membrane type is fixed | C High temperature | 0.031 | 38\nB_comp | 4.2e-08 | m/s | Membrane type is fixed\nPermeate pressure | 1.013 | bar | Fixed | Common design constraints\nPressure drop | 0.653 | bar | Fixed | Metric | Requirement | Notes\nChannel height | 0.002 | m | Fixed | Permeate production | ≥ 5.15 m³/h | Must be met in all three cases\nSpacer porosity | 0.75 | - | Fixed | Recovery | ≤ 48.0% | Benchmark constraint\nModule length | 20 | m | Fixed | Flux | ≤ 18.0 LMH | Benchmark constraint\nCP / mass transfer | calculated | - | Use WaterTAP calculated option for both | Salt rejection | ≥ 98.65% | Benchmark constraint\nPermeate NaCl | ≤ 475 mg/L | Benchmark constraint\n\nTask requirements: use multi-round tool reasoning to assess robust feasibility of one common membrane area across multiple operating cases\n1. E1 — Identify this as a robust membrane-area feasibility-window problem. Area is the only design variable; do not assume that larger area is always safer.\n2. E2 — Start from a reasonable initial area (400 m² is suggested), simulate at least one design case, and correctly interpret Qp, Recovery, Flux, Rejection, and NaCl.\n3. E3 — Screen A/B/C at the same initial area to identify the currently most limiting case and constraint. Then prioritize the boundary with the highest information gain rather than brute-forcing every area × case combination.\n4. E4 — Lower boundary / production requirement: use multiple simulate_ro calls to locate the integer-area transition from insufficient production to the first point satisfying the relevant constraints, with 1 m² resolution.\n5. E4 — Upper boundary / conflict search: continue varying area and actively check whether Recovery, Flux, Rejection, or NaCl develops a new failure. Do not assume the upper boundary is controlled by the same metric as in another item.\n6. E4 — Robust verification: if a feasible set exists, recheck its boundary points and the final recommended area under A/B/C. If the feasible set is empty, provide sufficient boundary evidence to prove there is no overlap.\n7. Final recommendation rule: if a robust integer feasible window exists, choose the area that maximizes the minimum distance to the first failing boundary on either side; if tied, choose the smaller area. If the window is empty, report “no feasible area” and do not recommend an Area.",
+  "reference_answer": "D1-1a-R4: Gold Answer — Constraint Conflict and Empty Feasible Window\n\nReference efficient trajectory: screen A/B/C at 400 m² and identify the water-quality risk; move toward smaller areas to confirm that water quality improves while production falls; use 308→309 m² to determine the maximum area allowed by water quality and 354→355 m² to determine the minimum area required by production. The intervals do not overlap, so stop and report no feasible Area.\n\nStage 1: Screen all three design cases at 400 m²\nCase | Area m² | NaCl frac | T °C | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Production | Recovery | Water quality | Overall\nA Normal | 400 | 0.031 | 30 | 1.74839021597589 | 6.29420477751322 | 15.7283786607175 | 41.6036096780105 | 98.5708237643645 | 453.323863309487 | Pass | Fail\nB High salinity | 400 | 0.035 | 23 | 1.52475025429506 | 5.48910091546223 | 13.7152032674226 | 36.3870675674988 | 98.4683322071782 | 550.109852178199 | Pass | Fail\nC High temperature | 400 | 0.031 | 38 | 1.69532294232515 | 6.10316259237055 | 15.2508912087274 | 40.340655931472 | 98.5504643116777 | 459.779472873023 | Pass | Fail\n\nStage 2: Explore smaller areas — water quality improves while production declines\nCase | Area m² | NaCl frac | T °C | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Production | Recovery | Water quality | Overall\nB High salinity | 300 | 0.035 | 23 | 1.30225813578422 | 4.6881292888232 | 15.6197806353026 | 31.0793861042004 | 98.6964054757646 | 468.224764547474 | Fail | Pass | Fail\n\nStage 3: Locate the maximum area allowed by water quality\nCase | Area m² | NaCl frac | T °C | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Production | Recovery | Water quality | Overall\nB High salinity | 308 | 0.035 | 23 | 1.32202593145463 | 4.75929335323666 | 15.4449126254509 | 31.5509993139111 | 98.6777695241984 | 474.916007489824 | Fail | Pass | Fail\nB High salinity | 309 | 0.035 | 23 | 1.3244681650216 | 4.76808539407775 | 15.4233558952848 | 31.6092647373172 | 98.6754433442051 | 475.751218209378 | Fail | Pass | Fail\n\nStage 4: Locate the minimum area required to meet production\nCase | Area m² | NaCl frac | T °C | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Production | Recovery | Water quality | Overall\nB High salinity | 354 | 0.035 | 23 | 1.42841067706917 | 5.14227843744903 | 14.5187583708622 | 34.0889537309645 | 98.5717051668267 | 512.997146283539 | Fail | Pass | Fail\nB High salinity | 355 | 0.035 | 23 | 1.43060031331955 | 5.15016112795038 | 14.5000419526464 | 34.141188066267 | 98.5694246436824 | 513.815916657828 | Pass | Fail\n\nFinal conclusion and design logic\nItem | Result | Key evidence | Limiting mechanism | Engineering interpretation | Decision\nMaximum area allowed by water quality | 308 m² | NaCl≈474.916≤475; at 309 m²≈475.751>475 | Case B water quality | Water-quality requirement implies Area≤308 | Boundary | Gold answer\nNo robust feasible membrane area; no area should be recommended.\n\nLower-bound production evidence: Case B production boundary — 354 m² = 5.142 m³/h (fail), 355 m² = 5.150 m³/h (pass)\nUpper-bound conflict evidence: Case B water-quality boundary — 308 m² NaCl = 474.916 mg/L (pass), 309 m² = 475.751 mg/L (fail). Thus water quality requires Area≤308 while production requires Area≥355.\nMinimum area required for production | 355 m² | 354 m² Qp≈5.142<5.15; 355 m²≈5.150≥5.15 | Case B production | Production requirement implies Area≥355 | Boundary\nInterval intersection | Empty set | [355,∞) and (-∞,308] do not overlap | Production–water-quality conflict | Changing membrane area alone cannot satisfy both requirements | Infeasible\nFinal recommendation | None | No robust feasible Area exists | Design infeasible | Pressure, membrane type, or quality targets would need to change, but they are locked in this task | Do not recommend",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem representation and state understanding",
+        "reasoning_or_calculation": "Identify the single design variable and the shared multi-case constraints",
+        "inputs": "Identifies Area but omits a case or constraint",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Changes pressure/A/B without permission, or searches only for a minimum Area",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning and decomposition quality",
+        "reasoning_or_calculation": "Form a causal screen → boundary search → verification plan",
+        "inputs": "Overall plan is reasonable but one stage is missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Brute-force enumeration without a plan, or stops at the first passing point",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool-call correctness",
+        "reasoning_or_calculation": "Keep parameters, units, and comparison conditions consistent",
+        "inputs": "Minor errors that do not affect the conclusion",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Wrong units, inconsistent inputs, or changes a locked variable",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation and state update",
+        "reasoning_or_calculation": "Maintain lower/upper-bound or conflict state from outputs",
+        "inputs": "Conclusion is mostly correct but boundary evidence is incomplete",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Misclassifies pass/fail or ignores a newly emerging limiting mechanism",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive comparison and replanning",
+        "reasoning_or_calculation": "Let each next call be triggered by the previous observation",
+        "inputs": "Partly adaptive but mixed with preset enumeration",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Call sequence is largely unaffected by results",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Stopping and engineering decision",
+        "reasoning_or_calculation": "Stop correctly once evidence is sufficient",
+        "inputs": "Conclusion is basically correct but verification is incomplete",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Reports only one Area, forces an infeasible recommendation, or stops too early",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Use the correct tool and avoid irrelevant calls",
+        "full_credit": "Primarily use simulate_ro; each call directly serves the current boundary or verification question",
+        "medium_credit": "A few irrelevant exploratory calls",
+        "low_credit": "Many wrong or irrelevant tools",
+        "case_observation": "No cost/chemistry tools are needed; RO performance simulation is sufficient",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and call ordering",
+        "evaluation_focus": "Prioritize the most discriminating information",
+        "full_credit": "First screen cases at a common Area, then refine the most likely controlling boundary",
+        "medium_credit": "Ordering is mostly reasonable but includes low-information points",
+        "low_credit": "Starts with dense all-combination scanning",
+        "case_observation": "Case screening → bracketing → 1 m² boundary confirmation",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Make the next call depend on observations",
+        "full_credit": "Pass/fail and newly emerging limiting mechanisms directly determine the next Area/Case",
+        "medium_credit": "Partly adaptive",
+        "low_credit": "Uses a preset fixed sequence and ignores observations",
+        "case_observation": "Pay special attention to lower and upper boundaries being controlled by different cases/constraints",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning and redundancy control",
+        "evaluation_focus": "Stop branches that are already resolved",
+        "full_credit": "Move immediately to the unknown boundary once evidence is sufficient; avoid equivalent repeats",
+        "medium_credit": "Minor redundancy",
+        "low_credit": "Continues large scans in already resolved regions",
+        "case_observation": "Recheck only the necessary cases and the recommended point at the end",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence and stopping",
+        "evaluation_focus": "Obtain sufficient evidence within a reasonable call budget",
+        "full_credit": "Stop after fully proving the window / single point / empty set; do not enumerate extra points",
+        "medium_credit": "1–3 extra calls but evidence is complete",
+        "low_credit": "Too many calls, or too few calls to support the boundaries",
+        "case_observation": "Reference call budget: about 8–12 calls",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D1_a1_Feasibility_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D1\\D1_a1_Feasibility_EN.xlsx",
+    "sha256": "8b93a9080cce783c1fc7c69b51fd02a13cd754c9e53b756a3eed78b48fe2305f",
+    "sheets": [
+      "Question",
+      "Gold_Answer",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question",
+      "answer": "Gold_Answer",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:33+00:00"
+  }
+}

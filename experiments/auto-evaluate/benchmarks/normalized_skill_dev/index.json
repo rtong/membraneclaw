@@ -1,0 +1,141 @@
+{
+    "schema_version":  "1.0",
+    "generated_at":  "2026-08-20T08:40:18Z",
+    "selection_note":  "Skill-dev curated subset: 6 baseline anchors + 13 mechanism-distinct cases across all families",
+    "case_count":  19,
+    "cases":  [
+                  {
+                      "case_id":  "D1-1a-feasibility",
+                      "task_family":  "d1_1a",
+                      "title":  "D1-1a-R4: Robust Membrane-Area Feasibility — Design Feasibility Check",
+                      "file":  "D1-1a-feasibility.json",
+                      "source_sha256":  "8b93a9080cce783c1fc7c69b51fd02a13cd754c9e53b756a3eed78b48fe2305f"
+                  },
+                  {
+                      "case_id":  "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution",
+                      "task_family":  "d2_2b",
+                      "title":  "D2-2b: Feasibility Determination under Red-Tide High Salinity and Pump Limit",
+                      "file":  "D2-2b-04-red-tide-high-salinity-pump-limit-no-feasible-solution.json",
+                      "source_sha256":  "2ddb9278297836e2a0d2779baededb27494b3f4c0d8ad40217e709f93ef9ff0a"
+                  },
+                  {
+                      "case_id":  "D3-3a-n01-salinity-intrusion",
+                      "task_family":  "d3_3a",
+                      "title":  "D3-3a N01: Maximum Tolerable Salinity During a Post-Algal High-Salinity Intrusion",
+                      "file":  "D3-3a-n01-salinity-intrusion.json",
+                      "source_sha256":  "ab4456dd90a5567b3bd7e852747c61b3ff9c7910b6f6fb0a5b2ce5e9ec35a84a"
+                  },
+                  {
+                      "case_id":  "D4-4a-capex-design-sensitivity",
+                      "task_family":  "d4_4a",
+                      "title":  "D4_4a: SWRO Concept-Design CAPEX and Key-Parameter Sensitivity",
+                      "file":  "D4-4a-capex-design-sensitivity.json",
+                      "source_sha256":  "3018d152ebe60fb8d656def1f201569332d6286c2dc390f54503b0f00132353b"
+                  },
+                  {
+                      "case_id":  "D5-5a-n01-recovery-limit",
+                      "task_family":  "d5_5a",
+                      "title":  "D5-5a N01: Maximum Safe Recovery for High-Sulfate Summer Seawater",
+                      "file":  "D5-5a-n01-recovery-limit.json",
+                      "source_sha256":  "20c66950f8d2fceb74e03bf62fd0fd2ec653e4db7aa4a606046027e0dbe8ebf7"
+                  },
+                  {
+                      "case_id":  "D6-6a-n01",
+                      "task_family":  "d6_6a",
+                      "title":  "D6_6a-N01 | Joint optimization of area, pressure, PX and acidification for a high-salinity summer expansion",
+                      "file":  "D6-6a-n01.json",
+                      "source_sha256":  "b2dc850d6cb29fd4212406b23dfe377636ca2ddc093143075859dfd182974905"
+                  },
+                  {
+                      "case_id":  "D1-1c-vfd-minimum-stable-pressure-and-operating-window",
+                      "task_family":  "d1_1c",
+                      "title":  "D1-1c | VFD Minimum Stable Pressure and Operating Window",
+                      "file":  "D1-1c-vfd-minimum-stable-pressure-and-operating-window.json",
+                      "source_sha256":  "44b085c78f6eae5d7c623ca74074a73eb13954e122402567317dd4cfedd0856b"
+                  },
+                  {
+                      "case_id":  "D1-1b",
+                      "task_family":  "d1_1b",
+                      "title":  "D1-1b: Candidate Membrane Screening + Stress Testing + Final Selection",
+                      "file":  "D1-1b.json",
+                      "source_sha256":  "63c9e3ff90396ea0a0340e767ea7c71de7ddd63d1ce996fa0c1ab5c882b2b473"
+                  },
+                  {
+                      "case_id":  "D2-2b-constraint-conflict",
+                      "task_family":  "d2_2b",
+                      "title":  "D2-2b: Pressure–Flow Correction under Conflicting Constraints",
+                      "file":  "D2-2b-constraint-conflict.json",
+                      "source_sha256":  "a449a24e4ae0cd61fec0642bcd613a36cb0d05707da704d4bc4cff09f2ef084c"
+                  },
+                  {
+                      "case_id":  "D2-2b-narrow-window",
+                      "task_family":  "d2_2b",
+                      "title":  "D2-2b: Extremely Narrow Pressure Window under a Product-Flow Band",
+                      "file":  "D2-2b-narrow-window.json",
+                      "source_sha256":  "4663b1bcba73c3271dad3f216a3d8b395850e51f32cdcb67ccf36baef1b95fba"
+                  },
+                  {
+                      "case_id":  "D2-2a-feed-salinity-salt-shock",
+                      "task_family":  "d2_2a",
+                      "title":  "D2-2a: Minimum Pressure Compensation after a Salinity Shock",
+                      "file":  "D2-2a-feed-salinity-salt-shock.json",
+                      "source_sha256":  "0ae4251d93da0364cdd684f3a7d3a00cb25192e5635bf2862b5e2463ba4cda27"
+                  },
+                  {
+                      "case_id":  "D3-3a-n02-membrane-aging",
+                      "task_family":  "d3_3a",
+                      "title":  "D3-3a N02: Minimum Effective Water Permeability and Cleaning Trigger for Aged Membranes",
+                      "file":  "D3-3a-n02-membrane-aging.json",
+                      "source_sha256":  "ddb522caa25bf1baf431ef30f766b4ff2da80819571a244fb73fd230cca20804"
+                  },
+                  {
+                      "case_id":  "D3-3b-n05-pressure-setpoint-energy",
+                      "task_family":  "d3_3b",
+                      "title":  "D3-3a N05: Minimum Contract and Energy-Margin Pressure Setpoints with a PX",
+                      "file":  "D3-3b-n05-pressure-setpoint-energy.json",
+                      "source_sha256":  "41474f93d367da6bd81e809e5761ed913eaa49037b5eba6f636797bd16ee4e39"
+                  },
+                  {
+                      "case_id":  "D4-4a-n03-temperature-model-margin",
+                      "task_family":  "d4_4a",
+                      "title":  "D4_4a N03: Seasonal-Temperature CAPEX Trap Under Fixed Membrane Permeability",
+                      "file":  "D4-4a-n03-temperature-model-margin.json",
+                      "source_sha256":  "4856b911dd055f09c39a43da4d16d63434c05d0d2305be389650cd1fd52438fa"
+                  },
+                  {
+                      "case_id":  "D5-5a-n06-pressure-scaling",
+                      "task_family":  "d5_5a",
+                      "title":  "D5-5a N06: Maximum Safe Feed Pressure with Pressure–Recovery–Scaling Coupling",
+                      "file":  "D5-5a-n06-pressure-scaling.json",
+                      "source_sha256":  "7a8a64aff0134b44d7e8760c210dc6a1c95a6c304d7601447150ccf6584b2a17"
+                  },
+                  {
+                      "case_id":  "D5-5b-n01-carbonate-acid-boundary",
+                      "task_family":  "d5_5b",
+                      "title":  "N01 — High-Alkalinity BWRO: Minimum Passing Acid Dose",
+                      "file":  "D5-5b-n01-carbonate-acid-boundary.json",
+                      "source_sha256":  "4a380ed4d89224c1cede62037e7ae0bddfa64d806320a80d0c8e9694829e2412"
+                  },
+                  {
+                      "case_id":  "D6-6a-n05",
+                      "task_family":  "d6_6a",
+                      "title":  "D6_6a-N05 | Joint selection of winter/summer pressure tiers and one year-round acid dose",
+                      "file":  "D6-6a-n05.json",
+                      "source_sha256":  "3a1e3709a16b2a0a714638bb357bef89fa0a8d4b44bb1c719ae76d3214efc7b7"
+                  },
+                  {
+                      "case_id":  "D6-6b-n07-multi-simulator-swro-pressure-scaling",
+                      "task_family":  "d6_6b",
+                      "title":  "Coupled SWRO Decision: Minimum Pressure and Acid-Dose Window",
+                      "file":  "D6-6b-n07-multi-simulator-swro-pressure-scaling.json",
+                      "source_sha256":  "c6bbefb67ace8fad18597a4c0b1f57fb93335b6db32f8ded8b1cb7f621246c74"
+                  },
+                  {
+                      "case_id":  "D6-6c-06",
+                      "task_family":  "d6_6c",
+                      "title":  "D6_6c-06 | ERD retrofit decision: new PX, degraded PX, PaT or low-pressure expansion",
+                      "file":  "D6-6c-06.json",
+                      "source_sha256":  "cbb9dd042f198a4ca75d7d806a4fa6dd4fd4131058a32e5b327b7f814651f52c"
+                  }
+              ]
+}

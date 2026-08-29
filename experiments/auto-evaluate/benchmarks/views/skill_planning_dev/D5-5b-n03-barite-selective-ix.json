@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D5-5b-n03-barite-selective-ix",
+  "task_family": "d5_5b",
+  "title": "N03 — Trace-Barium SWRO: Selective Ba Removal Instead of Acid",
+  "question_prompt": "N03 — Trace-Barium SWRO: Selective Ba Removal Instead of Acid\n\nA coastal-well SWRO plant operates at 70% recovery. Alkalinity is low, but trace Ba coexists with sulfate. Bulk Ca softening is costly, while a small chelating-resin guard bed is feasible. Use equilibrate_feed to identify the controlling mineral, test whether acid helps, and choose the lowest feasible Ba removal among 99%, 99.9% and 99.99% that meets Barite SI≤-0.10.\n\nFixed conditions and engineering constraints | Candidate routes and decision questions\nParameter | Value | Unit | Note | Route | Specified configuration/constraint | Question\nTemperature | 27 | °C | Fixed | Acidification | HCl 0.002 mol/s | Test pH-insensitive Barite\nPressure | 1.013 | bar | Equilibrium pressure | Bulk Ca softening | Does not target Ba | Avoid treating the wrong ion\nFeed pH | 6.8 | - | Specified feed | Selective Ba removal | Chelating-resin guard bed | Search residual-Ba boundary\nWater recovery | 0.7 | - | Given by RO design | Antiscalant | Backup only | Needs Barite-specific validation\nControl minerals | Barite, Calcite, Gypsum | - | Evaluate together\nPrimary criterion | Barite SI ≤ -0.10 | - | See scope note | Required deliverables\n5 | - | 1. Use the zero-dose baseline to identify the true controlling mineral; do not assume Calcite.\n2. Choose the most informative acid, softening or targeted-treatment counterfactual by mechanism.\nFeed composition (equilibrate_feed input) | 3. Hold non-target inputs fixed and record SI, pH and osmotic pressure for every equilibrate_feed call.\nSpecies | Flow mol/s | Role | Status\nH2O | 220 | Required water | Fixed | 5. Give an executable route, key values, hard constraints and explicit model limitations.\nNa | 0.4 | Feed analysis | Fixed | Ba removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.\nCa | 0.03 | Feed analysis | Fixed | Ba removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.\nMg | 0.015 | Feed analysis | Fixed | Ba removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.\nBa | 0.0002 | Feed analysis | Fixed | Ba removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.\nCl | 0.4084 | Feed analysis | Fixed | Ba removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.\nHCO3 | 0.002 | Feed analysis | Fixed | Ba removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.\nSO4 | 0.04 | Feed analysis | Fixed | Ba removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.\nBa removal is represented by lowering Ba and adding charge-equivalent Na. Criteria: Barite SI≤-0.10, Calcite and Gypsum SI<0 and pH≥6.50. Resin selectivity, breakthrough and regeneration frequency are not modeled.",
+  "reference_answer": "N03 — Stepwise Gold Answer: Trace-Barium SWRO: Selective Ba Removal Instead of Acid\n\nThe efficient reference trajectory uses 5 equilibrate_feed calls: zero-dose diagnosis, mechanism-based counterfactual pruning, then adjacent fail/pass points or a stated guarantee envelope to lock the stopping boundary. Other reasonable orders are acceptable if the information gain of each call is explained.\n\nHuman-readable continuous trajectory\nStage | Current problem | Action | Key observation | State update | Next step | Role\n1 Baseline | Controlling mineral unknown | Zero-dose equilibrium | Barite SI=2.902 | Identify dominant risk | Choose mechanism counterfactual | Diagnosis\n2 Mechanism screen | Differentiate acid, softening and targeted routes | Acid only 0.002 | Barite unchanged; pH unacceptable | Reject ineffective or infeasible route | Search target variable | Mechanism\n3 Lower boundary | Minimum treatment intensity not proven | Ba removal 99.9% | Barite SI=-0.0979 | At least one constraint still fails | Test adjacent stronger point | Boundary search\n4 Passing point | Adjacent point needs confirmation | Ba removal 99.99% | Barite SI=-1.0979; pH=6.717 | Passing point locked | Check engineering constraints | Convergence proof\n5 Decision | Evidence sufficient | Combine SI, pH and site constraints | All pass; recommend | Form recommendation | Stop | Engineering decision\n\nDirect equilibrate_feed results\nCall | Route/case | Recovery | HCl mol/s | Ba mol/s | Ba removal | Barite SI | Calcite SI | Gypsum SI | pH | Osmotic bar | Pure HCl g/h | 30% HCl L/h | Decision/next step | Case | Barite SI | Criterion\n1 | Untreated baseline | 0.7 | 0 | 0.0002 | =1-E18/0.0002 | 2.9018576509 | -0.5165892439 | -0.0958604156 | 6.7169718057 | 16.6266039619 | =D18*36.46*3600 | =L18/1000/0.30/1.15 | Barite is the sole controlling risk | =B18 | =G18 | =-0.1\n2 | Acid only 0.002 | 0.7 | 0.002 | 0.0002 | =1-E19/0.0002 | 2.901839293 | -5.8404325288 | -0.0971197661 | 3.7274755047 | 16.6803908242 | =D19*36.46*3600 | =L19/1000/0.30/1.15 | Barite unchanged; pH unacceptable | =B19 | =G19 | =-0.1\n3 | Ba removal 99% | 0.7 | 0 | 2e-06 | =1-E20/0.0002 | 0.902132337 | -0.5164328457 | -0.0955786028 | 6.7169679468 | 16.6317034259 | =D20*36.46*3600 | =L20/1000/0.30/1.15 | Still strongly supersaturated | =B20 | =G20 | =-0.1\n4 | Ba removal 99.9% | 0.7 | 0 | 2e-07 | =1-E21/0.0002 | -0.097865166 | -0.516431424 | -0.0955760411 | 6.7169679117 | 16.6317497859 | =D21*36.46*3600 | =L21/1000/0.30/1.15 | Misses -0.10 by 0.00213 | =B21 | =G21 | =-0.1\n5 | Ba removal 99.99% | 0.7 | 0 | 2e-08 | =1-E22/0.0002 | -1.0978649163 | -0.5164312818 | -0.0955757849 | 6.7169679082 | 16.6317544219 | =D22*36.46*3600 | =L22/1000/0.30/1.15 | All pass; recommend | =B22 | =G22 | =-0.1\n\nKey boundary check | Final conclusion\n\nRecommend a Ba-selective chelating-resin guard bed that reduces Ba from 2.0×10^-4 to 2.0×10^-8 mol/s, or 99.99% removal. This yields Barite SI=-1.09786, Calcite SI=-0.51643, Gypsum SI=-0.09558 and pH=6.717. At 99.9% removal, Barite SI=-0.09787 still misses the -0.10 margin. HCl at 0.002 mol/s barely changes Barite SI (2.90186 to 2.90184) but drives pH to 3.727; acidification and bulk Ca softening therefore target the wrong mechanism.\nCase | Key point | Barite SI | Calcite SI | pH | Conclusion | Final conclusion\n\nRecommend a Ba-selective chelating-resin guard bed that reduces Ba from 2.0×10^-4 to 2.0×10^-8 mol/s, or 99.99% removal. This yields Barite SI=-1.09786, Calcite SI=-0.51643, Gypsum SI=-0.09558 and pH=6.717. At 99.9% removal, Barite SI=-0.09787 still misses the -0.10 margin. HCl at 0.002 mol/s barely changes Barite SI (2.90186 to 2.90184) but drives pH to 3.727; acidification and bulk Ca softening therefore target the wrong mechanism.\nUntreated baseline | Barite is the sole controlling risk | =G18 | =H18 | =J18 | Reject/Fail | Final conclusion\n\nRecommend a Ba-selective chelating-resin guard bed that reduces Ba from 2.0×10^-4 to 2.0×10^-8 mol/s, or 99.99% removal. This yields Barite SI=-1.09786, Calcite SI=-0.51643, Gypsum SI=-0.09558 and pH=6.717. At 99.9% removal, Barite SI=-0.09787 still misses the -0.10 margin. HCl at 0.002 mol/s barely changes Barite SI (2.90186 to 2.90184) but drives pH to 3.727; acidification and bulk Ca softening therefore target the wrong mechanism.\nBa removal 99.9% | Misses -0.10 by 0.00213 | =G21 | =H21 | =J21 | Reject/Fail | Final conclusion\n\nRecommend a Ba-selective chelating-resin guard bed that reduces Ba from 2.0×10^-4 to 2.0×10^-8 mol/s, or 99.99% removal. This yields Barite SI=-1.09786, Calcite SI=-0.51643, Gypsum SI=-0.09558 and pH=6.717. At 99.9% removal, Barite SI=-0.09787 still misses the -0.10 margin. HCl at 0.002 mol/s barely changes Barite SI (2.90186 to 2.90184) but drives pH to 3.727; acidification and bulk Ca softening therefore target the wrong mechanism.\nBa removal 99.99% | All pass; recommend | =G22 | =H22 | =J22 | Recommend | Final conclusion\n\nRecommend a Ba-selective chelating-resin guard bed that reduces Ba from 2.0×10^-4 to 2.0×10^-8 mol/s, or 99.99% removal. This yields Barite SI=-1.09786, Calcite SI=-0.51643, Gypsum SI=-0.09558 and pH=6.717. At 99.9% removal, Barite SI=-0.09787 still misses the -0.10 margin. HCl at 0.002 mol/s barely changes Barite SI (2.90186 to 2.90184) but drives pH to 3.727; acidification and bulk Ca softening therefore target the wrong mechanism.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem representation",
+        "reasoning_or_calculation": "Identify controlling mineral and hard constraints",
+        "inputs": "Main risk correct but one constraint omitted",
+        "key_outputs": "Correctly identify Barite and list SI, pH and site constraints",
+        "full_credit": "Correctly identify Barite and list SI, pH and site constraints",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Plan quality",
+        "reasoning_or_calculation": "Order calls by mechanism",
+        "inputs": "Reasonable order but unclear stopping rule",
+        "key_outputs": "Baseline, high-information counterfactual, then boundary search",
+        "full_credit": "Baseline, high-information counterfactual, then boundary search",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool correctness",
+        "reasoning_or_calculation": "Inputs, units and fixed variables",
+        "inputs": "Minor non-controlling deviation",
+        "key_outputs": "5 equilibrate_feed calls keep non-target inputs consistent",
+        "full_credit": "5 equilibrate_feed calls keep non-target inputs consistent",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation and pruning",
+        "reasoning_or_calculation": "Reject branches from evidence",
+        "inputs": "Correct conclusion with incomplete mechanism",
+        "key_outputs": "Barite unchanged; pH unacceptable",
+        "full_credit": "Barite unchanged; pH unacceptable",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Boundary proof",
+        "reasoning_or_calculation": "Adjacent fail/pass evidence",
+        "inputs": "Passing point only; no adjacent failure",
+        "key_outputs": "Ba removal 99.9% fails; Ba removal 99.99% passes",
+        "full_credit": "Ba removal 99.9% fails; Ba removal 99.99% passes",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision and scope",
+        "reasoning_or_calculation": "Executable recommendation and model boundary",
+        "inputs": "Right route but missing value or limitation",
+        "key_outputs": "Ba removal 99.99%; Barite SI=-1.09786; pH=6.717",
+        "full_credit": "Ba removal 99.99%; Barite SI=-1.09786; pH=6.717",
+        "common_failures": "",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice",
+        "evaluation_focus": "Use the correct chemistry tool",
+        "full_credit": "Use equilibrate_feed; do not re-solve fixed RO recovery",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Prioritize discriminating calls",
+        "full_credit": "Go from baseline directly to mechanism counterfactual",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive pruning",
+        "evaluation_focus": "Stop failed branches",
+        "full_credit": "Use SI, pH and hard constraints to prune",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Boundary efficiency",
+        "evaluation_focus": "Prove boundary with few adjacent points",
+        "full_credit": "Ba removal 99.9% to Ba removal 99.99%",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Stop and transparency",
+        "evaluation_focus": "Stop with sufficient evidence and state scope",
+        "full_credit": "About 5 calls plus explicit limitations",
+        "medium_credit": "",
+        "low_credit": "",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D5_5b_N03_barite_selective_ix_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D5\\D5_5b_N03_barite_selective_ix_English.xlsx",
+    "sha256": "d03ee1d53a371174ab15fc7f4eda11e670819dd2d928e733f545bf4d2a52c536",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:36+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D5-5b-n03-barite-selective-ix",
+    "view_prompt_sha256": "dd58bd797cc0c3fa19d14b093b97ac5ad4a4bd1a93c96175dddb8defd5e7bfa6"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D5-5b-n03-barite-selective-ix",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "d701f7709e84b94e07ed28abeef902bb856cf7dac4c595eea3b0bbbcba02d3cd",
+    "view_prompt_sha256": "dd58bd797cc0c3fa19d14b093b97ac5ad4a4bd1a93c96175dddb8defd5e7bfa6",
+    "transformation": {
+      "removed_lines": 0,
+      "removed_cells": 3
+    }
+  }
+}

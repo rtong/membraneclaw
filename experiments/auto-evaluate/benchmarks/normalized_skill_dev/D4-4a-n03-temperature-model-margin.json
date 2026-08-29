@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D4-4a-n03-temperature-model-margin",
+  "task_family": "d4_4a",
+  "title": "D4_4a N03: Seasonal-Temperature CAPEX Trap Under Fixed Membrane Permeability",
+  "question_prompt": "D4_4a N03: Seasonal-Temperature CAPEX Trap Under Fixed Membrane Permeability\n\nAn SWRO train has feed 0.360 m³/s, TDS 36.5 g/L, TSS 0.03 g/L, P1=69 bar(a), ηP1=ηP2=0.82 and PX efficiency 0.95, with year-round product ≥12,900 m³/d. An engineer proposes sizing 16,000 m² using only the 15°C case. Use simulate_swro_system to check 15/25/32°C and test 17,000 and 18,000 m² at 32°C. The model holds A_comp=4.2×10⁻¹² constant with temperature. Determine the year-round area on the specified discrete grid, the CAPEX increment, and explain why the temperature trend must not be generalized as a universal membrane rule.\n\nDesign inputs and constraints | Specified cases/trajectory\nParameter | Value | Unit | Note | Option | Case change | Purpose\nFeed | 0.36 | m³/s | Fixed | Temperature scan | 16,000 m² at 15/25/32°C | Find controlling temperature\nTDS | 36.5 | g/L | Fixed | Warm-case area | 32°C at 17,000/18,000 m² | Lock area\nTSS | 0.03 | g/L | Fixed | Counterexample | 15°C appears to pass | Identify model basis\nP1 pressure | 69 | bar(a) | Fixed\nP1/P2 efficiency | 0.82 | - | Fixed\nPX efficiency | 0.95 | - | Fixed\nBase area | 16000 | m² | Candidate | Required deliverables\nTemperature range | 15/25/32 | °C | Seasonal | 1. Record every valid simulate_swro_system call.\nA_comp | 4.2e-12 | m/s/Pa | Held constant | 2. Calculate product scale, total CAPEX and capital intensity consistently.\nMinimum product | 12900 | m³/d | Criterion | 3. Complete the specified increment, boundary or premium calculation.\nArea step | 1000 | m² | Discrete candidates | 4. Separate tool outputs, external procurement add-ons and approval adjustments.\nModel check | Vendor TCF separate | - | Must explain | 5. Give an actionable decision and model boundary.\n\nThis is a model-identification benchmark: the answer must state both the model result and why it cannot be generalized.",
+  "reference_answer": "D4_4a N03: Stepwise Gold Answer — Seasonal-Temperature CAPEX Trap Under Fixed Membrane Permeability\n\nThe actual trajectory contains 9 valid simulate_swro_system calls. Gold Answer retains tool-reported CAPEX, product, SEC and LCOW, while train multipliers, procurement premiums or approval adjustments are calculated transparently in separate formulas.\n\nReference agent trajectory\nStage | Known state | Action | Key observation | Calculation | State update | Next step | Capability\n1 Base | Capital basis unlocked | Run first design point | Obtain product, CAPEX, SEC and LCOW | Create common base | Identify constraint direction | Run alternatives | State representation\n2 Candidates | Discrete set known | Vary each specified input | Hold non-target inputs fixed | Product and total CAPEX | Eliminate obvious failures | Complete key boundary | One-at-a-time control\n3 Boundary | Passing region formed | Compare adjacent/alternative cases | Identify controlling criterion | Increment or capital intensity | Lock candidate | Handle external add-ons | Boundary proof\n4 External basis | Tool outputs locked | Add multiplier/premium/index/contingency | Do not rewrite tool facts | Transparent formulas | Create approval basis | Test budget | Basis distinction\n5 Decision | Evidence complete | Rank and screen | This is a model-identification benchmark: the answer must state both the model result and why it cannot be generalized. | Hard constraints before objective | Recommend | Check model boundary | Engineering judgment\n6 Stop | Unique result or explicit tradeoff | Summarize | Checking only 15°C would falsely accept 16,000 m² because product is 12,954.88 m³/d; the fixed-A_comp model gives only 12,396.04 m³/d at 32°C. At 32°C, 17,000 m² still produces only 12,867.00 m³/d, while 18,000 m² reaches 13,312.24 m³/d. The specified discrete year-round design is therefore 18,000 m² at CAPEX USD 26.286 million (2018), about USD 0.309 million above the apparent 15°C/16,000 m² design. This counterintuitive trend reflects fixed membrane-permeability assumptions and must be rechecked with vendor temperature-correction factors for procurement. | Recheck units and currency | Complete Gold Answer | Stop | Convergence\n\n9 actual simulate_swro_system calls | Scenario | Total CAPEX $m | Reference\nCall | Scenario | Decision variable | Input/configuration | Product m³/s | Total product m³/d | Recovery % | Modeled CAPEX per call | Train/multiplier | Total CAPEX | ΔCAPEX | Capital intensity | SEC | LCOW | P1 kW | P2/ERD kW | Decision | Observation | =B20 | =J20/1000000 | =26500000/1000000\n1 | 15°C/16,000 m² | Temperature / area | 15/16000 | 0.149940725902566 | =E20*86400*I20 | 41.8228937657799 | 25977118.833942 | 1 | =H20*I20 | =J20-$J$20 | =J20/F20 | 3.03631387972036 | 0.815856123781404 | 1243.090015813 | 175.601169922359 | PASS | This point alone under-sizes area | =B21 | =J21/1000000 | =26500000/1000000\n2 | 25°C/16,000 m² | Temperature / area | 25/16000 | 0.146065234118074 | =E21*86400*I21 | 40.7247738858689 | 25787234.8798944 | 1 | =H21*I21 | =J21-$J$20 | =J21/F21 | 3.03996873177056 | 0.829091209709881 | 1213.45857829744 | 170.471884657698 | FAIL | Mid-temperature shortfall | =B22 | =J22/1000000 | =26500000/1000000\n3 | 32°C/16,000 m² | Temperature / area | 32/16000 | 0.143472663159303 | =E22*86400*I22 | 39.9931069522695 | 25668415.1000415 | 1 | =H22*I22 | =J22-$J$20 | =J22/F22 | 3.04660146803488 | 0.838758907336375 | 1194.30497914157 | 168.477810039924 | FAIL | Controlling point in specified model | =B23 | =J23/1000000 | =26500000/1000000\n4 | 15°C/17,000 m² | Temperature / area | 15/17000 | 0.155568024952702 | =E23*86400*I23 | 43.3922576196659 | 26299539.9497361 | 1 | =H23*I23 | =J23-$J$20 | =J23/F23 | 3.02383303391372 | 0.799500421185548 | 1289.69773679619 | 175.267512950355 | PASS | Supporting trend point | =B24 | =J24/1000000 | =26500000/1000000\n5 | 15°C/18,000 m² | Temperature / area | 15/18000 | 0.160878045584863 | =E24*86400*I24 | 44.8731021851559 | 26605619.9059762 | 1 | =H24*I24 | =J24-$J$20 | =J24/F24 | 3.01280807703851 | 0.78521880290762 | 1333.67222867112 | 174.929984073632 | PASS | Supporting trend point | =B25 | =J25/1000000 | =26500000/1000000\n6 | 15°C/19,000 m² | Temperature / area | 15/19000 | 0.165892569148643 | =E25*86400*I25 | 46.2715045567392 | 26896720.6832171 | 1 | =H25*I25 | =J25-$J$20 | =J25/F25 | 3.00301367685011 | 0.772674235923768 | 1375.19440291113 | 174.59794408606 | PASS | Supporting trend point | =B26 | =J26/1000000 | =26500000/1000000\n7 | 32°C/17,000 m² | Temperature / area | 32/17000 | 0.148923568384388 | =E26*86400*I26 | 41.512316936251 | 25984934.1593905 | 1 | =H26*I26 | =J26-$J$20 | =J26/F26 | 3.03385184284243 | 0.821504558798597 | 1239.64087425047 | 168.10268305735 | FAIL | Adjacent area fails | =B27 | =J27/1000000 | =26500000/1000000\n8 | 32°C/18,000 m² | Temperature / area | 32/18000 | 0.154076888993137 | =E27*86400*I27 | 42.9485557986137 | 26285919.3954844 | 1 | =H27*I27 | =J27-$J$20 | =J27/F27 | 3.02259101667521 | 0.806418932971324 | 1282.49717954749 | 167.732147726724 | PASS; recommended | Adjacent area passes | =B28 | =J28/1000000 | =26500000/1000000\n9 | 32°C/19,000 m² | Temperature / area | 32/19000 | 0.158952762246346 | =E28*86400*I28 | 44.307438270058 | 26572652.6403577 | 1 | =H28*I28 | =J28-$J$20 | =J28/F28 | 3.01258670390425 | 0.793150069400018 | 1323.04179910807 | 167.37333224312 | PASS | Larger than required\n\nDecision calculations\nItem | Option A | Option B | Option C | Formula/basis | Constraint | Result | Engineering interpretation\nSeasonal product at 16,000 m² | =F20 | =F21 | =F22 | Qp × 86,400 | >= 12,900 | Only 15°C passes | 32°C controls in specified model\n32°C area boundary | =F26 | =F27 | 17,000 fails / 18,000 passes | >= 12,900 | 18,000 m² | 1,000 m² grid\nCAPEX increment | =J27-J20 | Recommended − apparent design | — | About $0.309m | Avoid seasonal undersizing\nModel boundary | Fixed A_comp | Temperature changes net driving pressure | Verify vendor TCF separately | Do not generalize | Explicit caveat | Model result + external check | Counterintuitive is not universal\n\nFinal conclusion\n\nChecking only 15°C would falsely accept 16,000 m² because product is 12,954.88 m³/d; the fixed-A_comp model gives only 12,396.04 m³/d at 32°C. At 32°C, 17,000 m² still produces only 12,867.00 m³/d, while 18,000 m² reaches 13,312.24 m³/d. The specified discrete year-round design is therefore 18,000 m² at CAPEX USD 26.286 million (2018), about USD 0.309 million above the apparent 15°C/16,000 m² design. This counterintuitive trend reflects fixed membrane-permeability assumptions and must be rechecked with vendor temperature-correction factors for procurement.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 State",
+        "reasoning_or_calculation": "Identify design boundary and hard constraints",
+        "inputs": "One non-controlling constraint missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Mix scale or currency",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Tool calls",
+        "reasoning_or_calculation": "Use whole-plant cost tool",
+        "inputs": "Minor noncritical deviations",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Use simulate_ro for whole-plant CAPEX",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Capital calculation",
+        "reasoning_or_calculation": "Handle multipliers and units correctly",
+        "inputs": "Mostly right with one unclear basis",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Treat per-call/per-train cost as total",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Specialized calculation",
+        "reasoning_or_calculation": "Complete case-specific increment/premium/escalation formula",
+        "inputs": "Close but one external add-on missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Present external add-on as tool output",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Interpretation",
+        "reasoning_or_calculation": "Separate CAPEX, SEC, LCOW and model boundary",
+        "inputs": "Conclusion right but explanation incomplete",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Substitute LCOW for CAPEX or omit model boundary",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision",
+        "reasoning_or_calculation": "Give actionable conclusion",
+        "inputs": "Key result right but one number missing",
+        "key_outputs": "",
+        "full_credit": "",
+        "common_failures": "Recommend failing or over-budget option",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice",
+        "evaluation_focus": "Use whole-plant cost tool",
+        "full_credit": "Primarily simulate_swro_system",
+        "medium_credit": "A few irrelevant metadata calls",
+        "low_credit": "Use single-membrane tool for plant CAPEX",
+        "case_observation": "total_capital_cost_usd",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Base/invariants",
+        "evaluation_focus": "Maintain comparability",
+        "full_credit": "Change only the specified input or configuration",
+        "medium_credit": "One noncritical co-change",
+        "low_credit": "Multiple co-changes prevent attribution",
+        "case_observation": "N03",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Information gain",
+        "evaluation_focus": "Cover every required decision boundary",
+        "full_credit": "Each call supports screening, adjacent proof or configuration comparison",
+        "medium_credit": "One or two extra confirmations",
+        "low_credit": "Blind large-grid scan",
+        "case_observation": "9 calls",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 External basis",
+        "evaluation_focus": "Calculate multiplier/premium/index transparently outside tool",
+        "full_credit": "Preserve raw tool facts and show separate formulas",
+        "medium_credit": "Correct result but unclear source",
+        "low_credit": "Rewrite tool output",
+        "case_observation": "This is a model-identification benchmark: the answer must state both the model result and why it cannot be generalized.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Stop when evidence is sufficient",
+        "full_credit": "About 8–10 calls",
+        "medium_credit": "Minor redundancy",
+        "low_credit": "Too few calls or excessive enumeration",
+        "case_observation": "Timely stop",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D4_4a_N03_temperature_model_margin_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D4\\D4_4a_N03_temperature_model_margin_English.xlsx",
+    "sha256": "4856b911dd055f09c39a43da4d16d63434c05d0d2305be389650cd1fd52438fa",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:34+00:00"
+  }
+}

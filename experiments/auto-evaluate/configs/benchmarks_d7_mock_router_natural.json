@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Router-only natural matched diagnostic set: three short R2/R0 pairs without explicit missing-knowledge cues; not valid for solver, Judge, or paper evidence",
+  "sources": [
+    {
+      "case_id": "D7-natural-01-pressure-missing",
+      "path": "benchmarks/Datasets Harness/D1/D1_a1_Feasibility_EN.xlsx",
+      "task_family": "d7_mock_router_natural",
+      "benchmark_overlay": {
+        "overlay_id": "d7-natural-pressure-r2-v1",
+        "question_replace": "An RO plant reports an RO feed/high-pressure-pump discharge pressure of 78 bar. Classify the state as normal, warning, or immediate shutdown according to the applicable site operating policy, and state the immediate action.",
+        "benchmark_view": {
+          "rag_need": "R2",
+          "expected_route": "use_rag"
+        },
+        "rag_evidence": {
+          "source_document": "Safety file.xlsx",
+          "source_locator": "Sheet1, RO feed/high-pressure-pump discharge pressure row",
+          "missing_knowledge": "site normal, warning, and immediate-shutdown pressure thresholds",
+          "decision_impact": "classifies 78 bar and determines the immediate action"
+        }
+      }
+    },
+    {
+      "case_id": "D7-natural-02-pressure-supplied",
+      "path": "benchmarks/Datasets Harness/D2/D2_2b_ConstraintConflict_EN.xlsx",
+      "task_family": "d7_mock_router_natural",
+      "benchmark_overlay": {
+        "overlay_id": "d7-natural-pressure-r0-v1",
+        "question_replace": "An RO plant reports an RO feed/high-pressure-pump discharge pressure of 78 bar. Classify the state as normal, warning, or immediate shutdown according to the applicable site operating policy, and state the immediate action. The applicable policy defines 55-70 bar as normal, above 75 bar as warning, and 80 bar as HH/immediate shutdown.",
+        "benchmark_view": {
+          "rag_need": "R0",
+          "expected_route": "skip_rag"
+        }
+      }
+    },
+    {
+      "case_id": "D7-natural-03-cleaning-missing",
+      "path": "benchmarks/Datasets Harness/D3/D3_3a_N01_salinity_intrusion_English.xlsx",
+      "task_family": "d7_mock_router_natural",
+      "benchmark_overlay": {
+        "overlay_id": "d7-natural-cleaning-r2-v1",
+        "question_replace": "After normalization to reference conditions, permeate flow has declined by 12%, salt passage is unchanged, and normalized stage pressure drop has increased by 4%. Decide whether membrane cleaning is required under the manufacturer's operating criteria.",
+        "benchmark_view": {
+          "rag_need": "R2",
+          "expected_route": "use_rag"
+        },
+        "rag_evidence": {
+          "source_document": "RO-operational Manual.pdf",
+          "source_locator": "page 135, section 6.3 Cleaning Requirements",
+          "missing_knowledge": "manufacturer cleaning thresholds and the one-or-more trigger rule",
+          "decision_impact": "determines whether the observed normalized changes require cleaning"
+        }
+      }
+    },
+    {
+      "case_id": "D7-natural-04-cleaning-supplied",
+      "path": "benchmarks/Datasets Harness/D4/D4_4a_CAPEX_design_sensitivity_English.xlsx",
+      "task_family": "d7_mock_router_natural",
+      "benchmark_overlay": {
+        "overlay_id": "d7-natural-cleaning-r0-v1",
+        "question_replace": "After normalization to reference conditions, permeate flow has declined by 12%, salt passage is unchanged, and normalized stage pressure drop has increased by 4%. Decide whether membrane cleaning is required under the manufacturer's operating criteria. Cleaning is required when one or more of these occurs: normalized permeate flow drops 10%, normalized salt passage rises 5-10%, or normalized pressure drop rises 10-15%.",
+        "benchmark_view": {
+          "rag_need": "R0",
+          "expected_route": "skip_rag"
+        }
+      }
+    },
+    {
+      "case_id": "D7-natural-05-recovery-missing",
+      "path": "benchmarks/Datasets Harness/D5/D5_5a_N01_recovery_limit_EN.xlsx",
+      "task_family": "d7_mock_router_natural",
+      "benchmark_overlay": {
+        "overlay_id": "d7-natural-recovery-r2-v1",
+        "question_replace": "An RO plant is proposed to operate at 48% system recovery. Classify this point as normal, warning, or critical under the applicable site operating policy, and state whether unchanged operation is acceptable.",
+        "benchmark_view": {
+          "rag_need": "R2",
+          "expected_route": "use_rag"
+        },
+        "rag_evidence": {
+          "source_document": "Safety file.xlsx",
+          "source_locator": "Sheet1, system Recovery row",
+          "missing_knowledge": "site recommended, warning, and critical recovery bands",
+          "decision_impact": "classifies 48% recovery and determines whether unchanged operation is acceptable"
+        }
+      }
+    },
+    {
+      "case_id": "D7-natural-06-recovery-supplied",
+      "path": "benchmarks/Datasets Harness/D6/D6_6b_N07_MultiSimulator_SWRO_pressure_scaling_English.xlsx",
+      "task_family": "d7_mock_router_natural",
+      "benchmark_overlay": {
+        "overlay_id": "d7-natural-recovery-r0-v1",
+        "question_replace": "An RO plant is proposed to operate at 48% system recovery. Classify this point as normal, warning, or critical under the applicable site operating policy, and state whether unchanged operation is acceptable. The applicable policy defines 40-45% as recommended, 45-50% as warning, and above 50% as critical and generally requiring special design or pretreatment.",
+        "benchmark_view": {
+          "rag_need": "R0",
+          "expected_route": "skip_rag"
+        }
+      }
+    }
+  ]
+}

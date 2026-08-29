@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D6-6c-06",
+  "task_family": "d6_6c",
+  "title": "D6_6c-06 | ERD retrofit decision: new PX, degraded PX, PaT or low-pressure expansion",
+  "question_prompt": "D6_6c-06 | ERD retrofit decision: new PX, degraded PX, PaT or low-pressure expansion\n\nParallel benchmark: simulate_ro ∥ simulate_swro_system → joint feasibility and ranking\n\nOperating context\nThe membrane train can meet production, but the plant must choose an energy-recovery retrofit. The first three packages share identical membrane conditions and differ only in ERD; the fourth uses low-pressure expansion. The membrane branch confirms quality while the plant branch differentiates energy.\n\nCandidate design packages (same row sent independently to both simulators)\nID | Package / season | Pressure (bar) | RO module area (m²) | Plant RO area (m²) | Temp. (°C) | A (m/s/Pa) | B (m/s) | ERD | Efficiency | Annual weight\nA | New PX, 95% | 65 | 60 | 6000 | 25 | 4.2e-12 | 3.5e-08 | PX | 0.95\nB | Degraded PX, 86% | 65 | 60 | 6000 | 25 | 4.2e-12 | 3.5e-08 | PX | 0.86\nC | PaT, 85% | 65 | 60 | 6000 | 25 | 4.2e-12 | 3.5e-08 | PaT | 0.85\nD | Low-pressure expansion PX | 60 | 70 | 7000 | 25 | 4.2e-12 | 3.5e-08 | PX | 0.95\n\nTask and decision rule\nMeet membrane water ≥0.390 kg/s, NaCl ≤320 mg/L and inlet CP ≤1.35, plus plant product flow ≥0.043 m³/s and SEC ≤3.10 kWh/m³; choose the feasible package with the lowest SEC.\n\nRequired deliverables\n1 | Run simulate_ro once for every candidate/season row and report water flux, membrane water flow, permeate NaCl, recovery and inlet CP.\n2 | Independently run simulate_swro_system once for every candidate/season row and report plant product flow, SEC, LCOW and CAPEX.\n3 | Join the two result branches by candidate ID, apply all constraints, and recommend one package.\n4 | Explain why at least two non-selected alternatives fail or rank lower. Do not infer plant energy from membrane flux.",
+  "reference_answer": "Gold answer | D6_6c-06\n\nValidated simulator outputs and joint decision\n\nFinal engineering conclusion\nRecommend A, a new 95% PX. A and B have identical compliant membrane results, but A uses 2.786 kWh/m³ versus 3.044 for the degraded PX; the PaT package is rejected at 5.503 kWh/m³. D has the lowest SEC at 2.605 but cannot be selected because its 338.6 mg/L permeate exceeds the 320 mg/L contract limit.\n\nBranch A — simulate_ro (independent membrane-unit calls)\nID | Water flux (LMH) | Water (kg/s) | NaCl (mg/L) | Recovery (%) | Inlet CP | Membrane result\nA | 24.546262 | 0.40910436 | 291.4844 | 42.0013 | 1.329562 | =IF(AND(C12>=0.39,D12<=320,F12<=1.35),\"PASS\",\"FAIL\")\nB | 24.546262 | 0.40910436 | 291.4844 | 42.0013 | 1.329562 | =IF(AND(C13>=0.39,D13<=320,F13<=1.35),\"PASS\",\"FAIL\")\nC | 24.546262 | 0.40910436 | 291.4844 | 42.0013 | 1.329562 | =IF(AND(C14>=0.39,D14<=320,F14<=1.35),\"PASS\",\"FAIL\")\nD | 20.207423 | 0.39292211 | 338.567 | 40.3404 | 1.291782 | =IF(AND(C15>=0.39,D15<=320,F15<=1.35),\"PASS\",\"FAIL\")\n\nBranch B — simulate_swro_system (independent plant calls)\nID | Product (m³/s) | Product (m³/d) | SEC (kWh/m³) | LCOW ($/m³) | CAPEX ($M) | Plant result | Call\nA | 0.04362749 | =B19*86400 | 2.786261 | 1.115029 | 13.04738609 | =IF(AND(B19>=0.043,D19<=3.1),\"PASS\",\"FAIL\") | simulate_swro_system\nB | 0.04362749 | =B20*86400 | 3.043659 | 1.140884 | 13.20165381 | =IF(AND(B20>=0.043,D20<=3.1),\"PASS\",\"FAIL\") | simulate_swro_system\nC | 0.04362749 | =B21*86400 | 5.503233 | 1.367974 | 14.38657993 | =IF(AND(B21>=0.043,D21<=3.1),\"PASS\",\"FAIL\") | simulate_swro_system\nD | 0.04328678 | =B22*86400 | 2.604544 | 1.111408 | 12.97794212 | =IF(AND(B22>=0.043,D22<=3.1),\"PASS\",\"FAIL\") | simulate_swro_system\n\nJoint constraints and ranking (join key: candidate/policy ID)\nID | Water kg/s | NaCl mg/L | CP | Plant m³/s | Plant m³/d | SEC | LCOW | Membrane | Plant | Joint\n=A12 | =C12 | =D12 | =F12 | =B19 | =E26*86400 | =D19 | =E19 | =G12 | =G19 | =IF(AND(I26=\"PASS\",J26=\"PASS\"),\"PASS\",\"FAIL\")\n=A13 | =C13 | =D13 | =F13 | =B20 | =E27*86400 | =D20 | =E20 | =G13 | =G20 | =IF(AND(I27=\"PASS\",J27=\"PASS\"),\"PASS\",\"FAIL\")\n=A14 | =C14 | =D14 | =F14 | =B21 | =E28*86400 | =D21 | =E21 | =G14 | =G21 | =IF(AND(I28=\"PASS\",J28=\"PASS\"),\"PASS\",\"FAIL\")\n=A15 | =C15 | =D15 | =F15 | =B22 | =E29*86400 | =D22 | =E22 | =G15 | =G22 | =IF(AND(I29=\"PASS\",J29=\"PASS\"),\"PASS\",\"FAIL\")\n\nAudit notes\nAll numeric rows above are direct outputs from the connected ROprocess simulators. Daily product and joint status are spreadsheet formulas. Branches are parallel: the same candidate inputs are used independently, and results are joined only after both calls finish.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "Parallel setup",
+        "reasoning_or_calculation": "",
+        "inputs": "Minor unit or mapping omission.",
+        "key_outputs": "Defines 4 candidate/season rows, preserves identical shared inputs, and states that the branches are independent.",
+        "full_credit": "Defines 4 candidate/season rows, preserves identical shared inputs, and states that the branches are independent.",
+        "common_failures": "",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "simulate_ro branch",
+        "reasoning_or_calculation": "",
+        "inputs": "Most calls/results correct with one small transcription error.",
+        "key_outputs": "Runs 4 membrane calls and correctly reports flux, water, NaCl, recovery and CP.",
+        "full_credit": "Runs 4 membrane calls and correctly reports flux, water, NaCl, recovery and CP.",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "simulate_swro_system branch",
+        "reasoning_or_calculation": "",
+        "inputs": "Most calls/results correct with one small transcription error.",
+        "key_outputs": "Runs 4 plant calls and correctly reports product flow, SEC, LCOW and CAPEX.",
+        "full_credit": "Runs 4 plant calls and correctly reports product flow, SEC, LCOW and CAPEX.",
+        "common_failures": "",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "Join and constraints",
+        "reasoning_or_calculation": "",
+        "inputs": "One non-decisive criterion omitted.",
+        "key_outputs": "Joins by candidate ID and applies every membrane and plant constraint before ranking.",
+        "full_credit": "Joins by candidate ID and applies every membrane and plant constraint before ranking.",
+        "common_failures": "",
+        "max_score": 25.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "Engineering conclusion",
+        "reasoning_or_calculation": "",
+        "inputs": "Correct winner with limited explanation.",
+        "key_outputs": "Selects A, cites decisive values, and explains at least two rejected alternatives.",
+        "full_credit": "Selects A, cites decisive values, and explains at least two rejected alternatives.",
+        "common_failures": "",
+        "max_score": 20.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Choose simulator and metadata tools that match the requested outputs.",
+        "full_credit": "Every selected tool is necessary and scientifically appropriate.",
+        "medium_credit": "The main tools are correct, with limited unnecessary metadata or exploratory calls.",
+        "low_credit": "Wrong simulator scope, missing required tool types, or many irrelevant calls.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and call ordering",
+        "evaluation_focus": "Order calls so each stage or branch resolves a decision boundary.",
+        "full_credit": "Call order follows the reference dependencies or an equally informative alternative.",
+        "medium_credit": "Mostly useful ordering with minor low-information calls.",
+        "low_credit": "Dense or serial enumeration without regard to dependencies or information gain.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 State lineage and adaptive iteration",
+        "evaluation_focus": "Preserve candidate identity and exact upstream outputs across coupled calls.",
+        "full_credit": "Downstream calls inherit the correct candidate state and adapt to observed results.",
+        "medium_credit": "Lineage is mostly preserved, with minor rounding or weak adaptation.",
+        "low_credit": "Mixes candidates, substitutes target values for actual outputs, or ignores prior results.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Parallelization, pruning and redundancy control",
+        "evaluation_focus": "Parallelize independent branches, prune resolved candidates, and avoid repetition.",
+        "full_credit": "Independent work is parallelized and redundant/equivalent calls are avoided.",
+        "medium_credit": "Some avoidable serialization or repetition, without changing the conclusion.",
+        "low_credit": "Unnecessary serial execution, repeated equivalent calls, or no pruning.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence, stopping and evidence sufficiency",
+        "evaluation_focus": "Stop after constraints and ranking are supported by auditable evidence.",
+        "full_credit": "Converges within the reference budget or justifies an efficient alternative budget.",
+        "medium_credit": "Minor extra calls or a weakly justified sensitivity check.",
+        "low_credit": "Stops too early to support the answer or continues after the decision is resolved.",
+        "case_observation": "Use the task-specific reference trajectory and call budget below.",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "reference_trajectory",
+    "reference_trajectory": "Tool efficiency | D6_6c-06\n\nReference trajectory for parallel multi-simulator work\n\nPreferred tool trajectory\nStep | Branch | Action | Calls | Why it is efficient | Common failure\n1 | Shared | Create candidate packages and lock the module-to-plant scale mapping. | 0 | Prevents package drift between branches. | Changing pressure, area or membrane between calls.\n2 | A | Dispatch all simulate_ro calls independently; retain package IDs. | 4 | One call per row; no unnecessary serial dependency. | Using simulate_ro for SEC or LCOW.\n3 | B | Dispatch all simulate_swro_system calls independently; retain the same IDs. | 4 | Plant energy and cost come from the proper whole-system model. | Estimating plant energy from flux.\n4 | Join | Join by candidate ID and evaluate all hard constraints. | 0 | Only combines results after both branches finish. | Mixing results from different candidates.\n5 | Decision | Filter infeasible options, rank the survivors, and explain rejections. | 0 | Produces an auditable engineering recommendation. | Ranking by SEC/LCOW before quality filtering.\n\nEfficiency verdict\nReference budget: 4 simulate_ro calls + 4 simulate_swro_system calls. Extra calls are justified only for correcting an error or testing a clearly stated sensitivity. equilibrate_feed is not needed because no mineral-speciation or scaling constraint is present.",
+    "derivation_note": "The source sheet defines a 100-point reference trajectory and call budget but no numeric dimension allocation. The project-standard five 20-point efficiency dimensions are applied while preserving the complete task-specific trajectory as Judge evidence."
+  },
+  "source": {
+    "filename": "D6_6c_06_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D6\\D6_6c_06_EN.xlsx",
+    "sha256": "cbb9dd042f198a4ca75d7d806a4fa6dd4fd4131058a32e5b327b7f814651f52c",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-20T08:04:35+00:00"
+  }
+}

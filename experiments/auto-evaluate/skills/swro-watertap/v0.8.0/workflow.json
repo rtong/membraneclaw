@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.0",
+  "modules": [
+    "compile evidence ledger",
+    "select task-shaped search plan",
+    "execute only decision-relevant calls",
+    "report decision with constraints and provenance"
+  ]
+}

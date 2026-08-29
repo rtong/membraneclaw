@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "discovery": {
+    "root": "benchmarks/Datasets Harness",
+    "domains": [
+      "D7"
+    ],
+    "extensions": [
+      ".xlsx"
+    ],
+    "ignore_prefixes": [
+      "~$"
+    ]
+  },
+  "overrides": {}
+}

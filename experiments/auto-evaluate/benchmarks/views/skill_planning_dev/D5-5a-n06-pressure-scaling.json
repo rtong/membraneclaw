@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D5-5a-n06-pressure-scaling",
+  "task_family": "d5_5a",
+  "title": "D5-5a N06: Maximum Safe Feed Pressure with Pressure–Recovery–Scaling Coupling",
+  "question_prompt": "D5-5a N06: Maximum Safe Feed Pressure with Pressure–Recovery–Scaling Coupling\n\nA single-stage SWRO train increases production by raising high-pressure-pump discharge pressure at fixed feed, membrane area and flow. Actual recovery is not prescribed; it is determined by the RO process model. Use analyze_ro_scaling (which couples the RO model to equilibrate_feed), varying only feed_pressure_bar. Find the maximum pressure for which all specified minerals have SI<0, then the recommended maximum with Gypsum SI≤-0.05. Prove both limits with adjacent pass/fail points at 1 bar resolution and report actual recovery, flux and concentrate osmotic pressure.\n\nFixed Operating Conditions and Constraints | Criteria and Optimization Objective\nParameter | Value | Unit | Notes | Criterion | Requirement | Engineering meaning\nFeed temperature | 30 | °C | fixed | Basic safety | All concentrate mineral SI<0 | Thermodynamically undersaturated\nFeed flow | 1 | kg/s | fixed | Recommended margin | Gypsum SI≤-0.05 | Benchmark-specific; not a universal standard\nMembrane area | 80 | m² | fixed | Objective | Maximize feed pressure without scaling\nFeed pH | 6.3 | - | fixed\nPressure | decision variable | bar | 1 bar resolution | Required Tasks\nMinerals | Gypsum, Celestite, Calcite | - | evaluate concentrate | 1. Run a low-pressure baseline and a high-pressure failure point.\nPrimary tool | analyze_ro_scaling | - | RO + chemistry coupling | 2. Use the simulated recovery—not an assumed recovery—to interpret scaling.\n3. Locate the maximum basic-safe feed pressure at 1 bar resolution.\nFeed Composition (simulator input) | 4. Locate the stricter Gypsum SI≤-0.05 pressure limit.\nSpecies | Flow mol/s | Note | Status | 5. Report pressure, actual recovery, water flux, salt rejection and concentrate osmotic pressure.\nH2O | 55.5 | required | fixed\nNa | 0.469 | fixed | Decision Variable and Search Requirement\nCl | 0.546 | fixed | Variable | Feed pressure bar | bar\nMg | 0.0528 | fixed | Resolution | 1 bar | Final boundary\nSO4 | 0.04 | elevated | fixed | Primary tool | analyze_ro_scaling\nCa | 0.016 | elevated | fixed | Controlling mineral | Gypsum | Confirmed from baseline/probes\nHCO3 | 0.002 | fixed\nSr | 0.00012 | fixed | Scope: analyze_ro_scaling is required. Using equilibrate_feed with an assumed recovery would lose the pressure–flux–recovery coupling.\nScope: analyze_ro_scaling is required. Using equilibrate_feed with an assumed recovery would lose the pressure–flux–recovery coupling.",
+  "reference_answer": "D5-5a N06: Stepwise Gold Answer — Maximum Safe Feed Pressure with Pressure–Recovery–Scaling Coupling\n\nReference efficient trajectory: 8 analyze_ro_scaling calls: 50.00 → 75.00 → 65.00 → 70.00 → 68.00 → 69.00 → 63.00 → 64.00. Alternative rational bracketing orders are acceptable, but both the basic and recommended-margin boundaries must be proven.\n\nHuman-readable continuous tool trajectory\nStage | Current state/problem | Action | Key observation | State update | Next step | Trajectory role\n1 Baseline | Pressure effect needs RO solution | 50 bar | R=30.64%; Gypsum SI=-0.171 | Low pressure safe | Increase pressure | Process diagnosis\n2 Coarse bracket | Need high-pressure failure | 75 bar | R=57.12%; Gypsum/Celestite fail | Upper bound created | Return to 65–70 bar | Plan→observe\n3 Basic limit | 65 safe; 70 fails | 68→69 bar | Gypsum -0.00538→+0.00427 | 68 pass / 69 fail | Basic maximum 68 bar | Coupled boundary search\n4 Safety margin | Need SI≤-0.05 | 63→64 bar | -0.05270→-0.04334 | 63 pass / 64 fail | Recommended maximum 63 bar | Second boundary\n5 Decision | Pressure, recovery and flux verified | Summarize RO and chemistry | Recommend 63 bar | Corresponding R=45.86% | Set pump-pressure cap | Stop/decide\n\nDirect ROprocess simulator results\n# | Feed pressure bar | Actual recovery % | Water flux LMH | Gypsum SI | Celestite SI | Calcite SI | pH | Osmotic bar | Basic safe | Margin | Trajectory role | Feed pressure bar | Gypsum SI\n1 | 50 | 30.63818396 | 13.43068846 | -0.1710205374 | -0.2243794852 | -0.9901603608 | 6.257551356 | 36.45093115 | PASS | Low-pressure baseline | 50 | -0.1710205374\n2 | 75 | 57.12023644 | 25.04012076 | 0.06432448 | 0.0101184856 | -0.6999538373 | 6.190948391 | 60.8708327 | FAIL | High pressure fails | 75 | 0.06432448\n3 | 65 | 47.8955005 | 20.99613846 | -0.033931505 | -0.0885666412 | -0.8206039471 | 6.21961845 | 49.32006637 | PASS | FAIL | Basic-safe; move upward | 65 | -0.033931505\n4 | 70 | 52.68014465 | 23.09365747 | 0.0140017568 | -0.0406045644 | -0.7616178179 | 6.205758279 | 54.69813705 | FAIL | Fails; narrow bracket | 70 | 0.0140017568\n5 | 68 | 50.81446043 | 22.2757698 | -0.0053775298 | -0.0600328777 | -0.785440106 | 6.21139366 | 52.46583452 | PASS | FAIL | Basic-boundary pass | 68 | -0.0053775298\n6 | 69 | 51.75479699 | 22.6879993 | 0.004272329 | -0.0503653014 | -0.7735732261 | 6.208592692 | 53.56746239 | FAIL | Basic-boundary fail | 69 | 0.004272329\n7 | 63 | 45.86111278 | 20.10428861 | -0.052700947 | -0.1072683571 | -0.8437522379 | 6.224969136 | 47.34377511 | PASS | Margin-boundary pass | 63 | -0.052700947\n8 | 64 | 46.88755379 | 20.55426764 | -0.043339164 | -0.0979454522 | -0.832203692 | 6.222306229 | 48.32048568 | PASS | FAIL | Margin-boundary fail | 64 | -0.043339164\n\nFinal Boundaries and Engineering Conclusion | Final conclusion\n\nBasic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).\n\nKey simulation evidence: basic fail/pass=69/68; recommended-margin fail/pass=64/63. Eight analyze_ro_scaling calls are recorded.\nItem | Adjacent failing point | Adjacent passing point | Controlling SI (fail→pass) | Conclusion | 工程单位 / Engineering units | Final conclusion\n\nBasic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).\n\nKey simulation evidence: basic fail/pass=69/68; recommended-margin fail/pass=64/63. Eight analyze_ro_scaling calls are recorded.\nBasic-safe boundary | 69 | 68 | 0.00427 → -0.00538 | Adjacent points prove basic boundary | Basic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar). | Final conclusion\n\nBasic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).\n\nKey simulation evidence: basic fail/pass=69/68; recommended-margin fail/pass=64/63. Eight analyze_ro_scaling calls are recorded.\nRecommended-margin boundary | 64 | 63 | -0.04334 → -0.05270 | Adjacent points prove recommended boundary | Basic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar). | Final conclusion\n\nBasic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).\n\nKey simulation evidence: basic fail/pass=69/68; recommended-margin fail/pass=64/63. Eight analyze_ro_scaling calls are recorded.\nControlling mineral | Gypsum | - | Other mineral SIs are lower | Control confirmed by trajectory | analyze_ro_scaling | Final conclusion\n\nBasic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).\n\nKey simulation evidence: basic fail/pass=69/68; recommended-margin fail/pass=64/63. Eight analyze_ro_scaling calls are recorded.\nFinal recommendation | - | 63 | SI=-0.05270 | Basic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar). | Use recommended-margin boundary | Final conclusion\n\nBasic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).\n\nKey simulation evidence: basic fail/pass=69/68; recommended-margin fail/pass=64/63. Eight analyze_ro_scaling calls are recorded.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem framing and state",
+        "reasoning_or_calculation": "Identify decision variable, controlling mineral and two safety targets",
+        "inputs": "Identifies main risk but mixes stopping criteria",
+        "key_outputs": "Vary only Feed pressure bar; basic=All concentrate mineral SI<0; margin=Gypsum SI≤-0.05",
+        "full_credit": "Vary only Feed pressure bar; basic=All concentrate mineral SI<0; margin=Gypsum SI≤-0.05",
+        "common_failures": "Changes fixed conditions, misreads SI, or chooses wrong control variable",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning and decomposition",
+        "reasoning_or_calculation": "Separate baseline, coarse bracket, basic boundary and margin boundary",
+        "inputs": "Iterates but misses one adjacent boundary proof",
+        "key_outputs": "Establish direction/bracket, then prove adjacent limits at 1 bar resolution",
+        "full_credit": "Establish direction/bracket, then prove adjacent limits at 1 bar resolution",
+        "common_failures": "Gives final answer directly, brute-force scans, or mixes targets",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Action/tool-call correctness",
+        "reasoning_or_calculation": "Correct tool, inputs, units and invariant conditions",
+        "inputs": "Minor unit/input deviations without changing limit",
+        "key_outputs": "Primarily uses analyze_ro_scaling; holds composition/T/pH/fixed conditions and changes only the specified variable",
+        "full_credit": "Primarily uses analyze_ro_scaling; holds composition/T/pH/fixed conditions and changes only the specified variable",
+        "common_failures": "Wrong tool, multiple variables changed, wrong units, or omitted mineral",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation and state update",
+        "reasoning_or_calculation": "Use SI outputs to update bounds correctly",
+        "inputs": "Limit roughly correct but one adjacent point/output is missing",
+        "key_outputs": "Basic 68 pass / 69 fail; margin 63 pass / 64 fail",
+        "full_credit": "Basic 68 pass / 69 fail; margin 63 pass / 64 fail",
+        "common_failures": "Treats any negative SI as meeting -0.05 or updates bounds incorrectly",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive comparison and replanning",
+        "reasoning_or_calculation": "Choose each next call from the prior observation",
+        "inputs": "Partly adaptive with some low-information enumeration",
+        "key_outputs": "Adaptive coarse-to-fine search; switch to SI≤-0.05 after basic limit is proven",
+        "full_credit": "Adaptive coarse-to-fine search; switch to SI≤-0.05 after basic limit is proven",
+        "common_failures": "Sequence ignores feedback or repeats resolved branches",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Stop and engineering decision",
+        "reasoning_or_calculation": "Stop after sufficient proof and give an actionable conclusion",
+        "inputs": "Correct number but missing conversion, process output or one boundary proof",
+        "key_outputs": "Basic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).",
+        "full_credit": "Basic-safe pressure maximum: 68 bar (actual recovery 50.81%, flux 22.276 LMH, salt rejection 99.035%). Recommended maximum: 63 bar (recovery 45.86%, flux 20.104 LMH, salt rejection 99.001%, concentrate osmotic pressure 47.34 bar).",
+        "common_failures": "Recommends the basic limit rather than margin, or stops without evidence",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool choice and necessity",
+        "evaluation_focus": "Use the correct tool and avoid irrelevant tools",
+        "full_credit": "Scientific calculation primarily uses analyze_ro_scaling; each call supports the current decision",
+        "medium_credit": "A few unnecessary metadata/probe calls",
+        "low_credit": "Wrong tool or many irrelevant calls",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and call order",
+        "evaluation_focus": "Prioritize the most discriminating information",
+        "full_credit": "Establish direction/baseline and a coarse bracket, then refine uncertainty",
+        "medium_credit": "Mostly rational with some low-information calls",
+        "low_credit": "Dense grid scan before structuring the problem",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Let each observation determine the next call",
+        "full_credit": "Select the next input from fail/pass feedback and switch to the margin target after the basic limit",
+        "medium_credit": "Partly adaptive with preset enumeration",
+        "low_credit": "Call sequence barely responds to prior results",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning and redundancy",
+        "evaluation_focus": "Stop resolved branches and avoid repeats",
+        "full_credit": "Stop once adjacent fail/pass points lock each boundary",
+        "medium_credit": "A few repeats or 1–2 extra resolved points",
+        "low_credit": "Keeps testing eliminated branches or brute-force combinations",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence and stopping",
+        "evaluation_focus": "Obtain sufficient evidence with a reasonable call budget",
+        "full_credit": "About 7–9 calls, sufficient evidence, no clear redundancy",
+        "medium_credit": "About 10–12 calls with minor redundancy",
+        "low_credit": ">12 enumerative/repeated calls, or too few calls to prove limits",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D5_5a_N06_pressure_scaling_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D5\\D5_5a_N06_pressure_scaling_EN.xlsx",
+    "sha256": "7a8a64aff0134b44d7e8760c210dc6a1c95a6c304d7601447150ccf6584b2a17",
+    "sheets": [
+      "Question_Q",
+      "Gold_Answer_A",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Gold_Answer_A",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:36+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D5-5a-n06-pressure-scaling",
+    "view_prompt_sha256": "09bf7aa963f7fa9cf10237f53c8484b3b40b40dc0a5508c46199382f3fe16963"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D5-5a-n06-pressure-scaling",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "8e2e31c3c4c22efc10c148e80543ec28bba460ccdd5e6352ca6a6b891c06308a",
+    "view_prompt_sha256": "09bf7aa963f7fa9cf10237f53c8484b3b40b40dc0a5508c46199382f3fe16963",
+    "transformation": {
+      "removed_lines": 0,
+      "removed_cells": 2
+    }
+  }
+}

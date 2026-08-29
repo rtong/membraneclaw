@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.9",
+  "modules": [
+    "freeze complete BASE_ARGS",
+    "validate echoed inputs",
+    "run the six-result treatment state machine",
+    "stop on adjacent proof"
+  ]
+}

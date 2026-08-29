@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "generation": {
+    "stream": true,
+    "temperature": 0.0,
+    "max_tokens": 128,
+    "enable_thinking": false,
+    "timeout_seconds": 120,
+    "max_retries": 0
+  },
+  "pilot_case_ids": [
+    "D1-1a-feasibility",
+    "D1-1c-existing-pump-reuse-and-cleaning-trigger",
+    "D2-2a-feed-flow-min-flow",
+    "D2-2b-constraint-conflict",
+    "D3-3a-n01-salinity-intrusion",
+    "D3-3a-n02-membrane-aging",
+    "D4-4a-capex-design-sensitivity",
+    "D4-4a-n01-train-modularity-economy",
+    "D5-5a-n01-recovery-limit",
+    "D5-5b-n01-carbonate-acid-boundary",
+    "D6-6a-n01",
+    "D6-6a-n02"
+  ],
+  "variants": [
+    {
+      "id": "zero-shot",
+      "display_name": "9B Zero-shot Router",
+      "model_env": "OPENWEBUI_MODEL_BASELINE",
+      "skill_version": null,
+      "prompt": "Decide whether the user question requires external retrieved knowledge before a separate tool-based solver runs. Do not solve the task. Return exactly one JSON object and no Markdown or commentary: {\"action\":\"use_rag|skip_rag\",\"reason_code\":\"MISSING_TOOL_CONTRACT|MISSING_PARAMETER_MAPPING|MISSING_DOMAIN_KNOWLEDGE|FULLY_SPECIFIED_NUMERIC_TASK|SIMULATION_EVIDENCE_DOMINATES\",\"confidence\":0.0,\"retrieval_need\":null}. For use_rag, retrieval_need must be a short string. For skip_rag, retrieval_need must be null."
+    },
+    {
+      "id": "router-skill",
+      "display_name": "9B + Router Skill",
+      "model_env": "OPENWEBUI_MODEL_BASELINE",
+      "skill_version": "swro-rag-router@0.1.2"
+    }
+  ]
+}

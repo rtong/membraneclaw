@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.7",
+  "modules": [
+    "copy all stated fixed inputs before the first call",
+    "separate feed inputs from returned-value limits",
+    "use only integer-grid candidates and gate every call",
+    "stop on adjacent proof and answer concisely"
+  ]
+}

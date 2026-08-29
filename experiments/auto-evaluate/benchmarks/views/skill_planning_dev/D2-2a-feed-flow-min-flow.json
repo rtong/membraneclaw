@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D2-2a-feed-flow-min-flow",
+  "task_family": "d2_2a",
+  "title": "D2-2a: Minimum Operable Feed Flow with Adjustable Pressure",
+  "question_prompt": "D2-2a: Minimum Operable Feed Flow with Adjustable Pressure\n\nAn intake-system fault progressively reduces SWRO feed flow. The control room may adjust pressure within 50.5–58 bar but wants to avoid shutdown. This is an inverse feasibility problem: determine when no pressure can simultaneously satisfy production and Recovery, then identify the minimum verified feed flow needed to recover an operating window.\n\nFixed System Parameters and Normal Operating Point | Disturbance Scenario, Constraints, and Control Ranges\nCategory | Parameter | Value | Unit / Note | Item | Requirement / Value | Note\nNormal feed | NaCl mass fraction | 0.03 | WaterTAP equivalent | Severe-flow candidate | 3.8 | kg/s\nNormal setpoint | Feed pressure | 52 | bar | Recovery-flow candidates | 3.845 and 3.850 | kg/s\nNormal setpoint | Feed mass flow | 4.073 | kg/s | Permeate flow | ≥ 6.30 m³/h | Defines pressure lower bound\nFeed | Temperature | 32 | °C, fixed | Recovery | ≤ 46.5% | Defines pressure upper bound\nMembrane | Effective membrane area | 400 | m², fixed | Flux | ≤ 18.0 LMH | Operating limit\nMembrane | A_comp | 4.2e-12 | m/s/Pa, fixed | Water quality | Rejection≥98.7%; NaCl≤380 mg/L | Must also pass\nMembrane | B_comp | 3.4e-08 | m/s, fixed | Pressure range | 50.5–58 bar | Adjustable\nHydraulics | Permeate pressure | 1.013 | bar | Flow-boundary resolution | 0.005 kg/s | Determine minimum verified operable flow at this resolution\nHydraulics | Pressure drop | 0.653 | bar\nChannel | Channel height | 0.002 | m\nChannel | Spacer porosity | 0.75 | - | Required Tasks\nChannel | Equivalent channel length | 20 | m | 1. At 3.80 kg/s, separately find the minimum pressure needed for Qp and the maximum pressure allowed by Recovery.\nModel | Concentration polarization / mass transfer | calculated | WaterTAP calculated | 2. Use the 51.62-bar and 51.20-bar results to prove Pmin,Qp > Pmax,Recovery; therefore 3.80 kg/s has no pressure-only solution.\n4. If 3.845 kg/s remains infeasible, test 3.850 kg/s and confirm its narrow pressure window of approximately 51.40–51.42 bar.\n5. At 0.005 kg/s search resolution, report the minimum verified operable feed flow and a recommended pressure near 51.41 bar.\n6. Explain why the deliverable is a minimum feed-capacity boundary rather than ordinary pressure-setpoint optimization.\n\nTask boundary: D2-2a is triggered by a feed-flow disturbance. Membrane, area, salinity, and temperature remain fixed. Pressure is the primary operating variable; feed-flow restoration is enabled only after pressure-only control is disproved.",
+  "reference_answer": "D2-2a: Gold Answer — Feed-Flow Disturbance Response\n\nEfficient reference path: ~6 simulate_ro calls. Prove no pressure intersection at 3.80 using Qp and Recovery bounds, then restore flow at 0.005 kg/s resolution: 3.845 fails and 3.850 first passes.\n\nHuman View: Continuous Reasoning Chain\nStep | Human action | Input | Tool Call / Action | Key output | How it informs next step | Primary evaluation\n1 | Establish normal baseline | 4.073 kg/s; 52 bar | simulate_ro #1 | All pass | Confirm reference state | First tool call\n2 | Diagnose 3.80 at same setpoint | 3.80 kg/s; 52 bar | simulate_ro #2 | Qp≈6.370 passes; Recovery≈47.579% fails | Determine whether any pressure-only window exists | State understanding\n3 | Find minimum pressure required by Qp | 3.80 kg/s; 51.62 bar | simulate_ro #3 | Qp≈6.3005 just passes; Recovery≈47.065% fails | Pmin,Qp≈51.62 | Lower bound\n4 | Find maximum pressure allowed by Recovery | 3.80 kg/s; 51.20 bar | simulate_ro #4 | Recovery≈46.497% passes; Qp≈6.224 fails | Pmax,Recovery≈51.20 | Upper bound\n5 | Prove 3.80 infeasible | Compare 51.62 vs 51.20 | Logic | Pmin,Qp>Pmax,Recovery | Partial flow restoration is required | Infeasibility proof\n6 | Test minimum flow restoration | 3.845 kg/s; 51.40 bar | simulate_ro #5 | Qp≈6.2976 FAIL; Recovery≈46.502% FAIL | 3.845 remains infeasible; restore slightly more | Adaptive step\n7 | Verify 3.850 | 3.850 kg/s; 51.41 bar | simulate_ro #6 | Qp≈6.3035; Recovery≈46.486%; all pass | Minimum verified flow at 0.005 kg/s resolution =3.850 | Final decision\n\nDirect simulate_ro Results\nScenario | Feed kg/s | Pressure bar | Permeate kg/s | Qp m³/h | Flux LMH | Recovery % | Rejection % | NaCl mg/L | Qp | Recovery | Flux | Quality | Overall\nNormal baseline | 4.073 | 52 | 1.83170240778751 | 6.59412866803502 | 16.4794406954646 | 45.9844466906034 | 98.8370523486472 | 356.740058859896 | PASS\n3.80 unchanged | 3.8 | 52 | 1.76935648049664 | 6.36968332978792 | 15.9242083244698 | 47.578692843865 | 98.78819305205 | 371.761383177988 | PASS | FAIL | PASS | FAIL\n3.80 Qp lower bound | 3.8 | 51.62 | 1.75013491655009 | 6.30048569958033 | 15.7512142489508 | 47.0649079943397 | 98.7820602693098 | 373.635518203142 | PASS | FAIL | PASS | FAIL\n3.80 Recovery upper bound | 3.8 | 51.2 | 1.72889003008285 | 6.22400410829827 | 15.5600102707457 | 46.4970405290749 | 98.7752819304917 | 375.706930599364 | FAIL | PASS | FAIL\nRestore 3.845 | 3.845 | 51.4 | 1.74932560915447 | 6.29757219295609 | 15.7439304823902 | 46.5019802810721 | 98.7870978808769 | 372.080929080549 | FAIL | PASS | FAIL\nRestore 3.850 recommended | 3.85 | 51.41 | 1.75097912201388 | 6.30352483924996 | 15.7588120981249 | 46.4861700181189 | 98.7882062620034 | 371.740521961846 | PASS\n\nRecommended Operating Response | Final Conclusion\n\nAt 3.80 kg/s, Qp requires P≥~51.62 bar while Recovery requires P≤~51.20 bar, so no pressure intersection exists. 3.845 kg/s at 51.40 bar still fails both constraints; 3.850 kg/s at 51.41 bar is the first verified feasible point. At 0.005 kg/s search resolution, the minimum verified operable feed flow is 3.850 kg/s.\nFeed state / rule | Pressure | Feed flow | Key evidence | Decision | Note\n3.80 kg/s | No pressure-only solution | 3.80 kg/s | Pmin,Qp≈51.62>Pmax,Recovery≈51.20 | Restore flow | Constraint conflict\nMinimum verified operable | ≈51.41 bar | 3.850 kg/s | 3.845 still FAIL; 3.850 PASS | Recommended | 0.005 kg/s resolution",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem framing",
+        "reasoning_or_calculation": "Recognize inverse operability boundary",
+        "inputs": "Mostly correct but treats as ordinary setpoint problem",
+        "key_outputs": "Goal is minimum operable feed flow, not one pressure",
+        "full_credit": "Goal is minimum operable feed flow, not one pressure",
+        "common_failures": "Arbitrarily optimizes flow as a design variable",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Plan quality",
+        "reasoning_or_calculation": "Prove 3.80 infeasible before restoring flow",
+        "inputs": "Incomplete infeasibility proof",
+        "key_outputs": "Construct Pmin,Qp and Pmax,Recovery separately",
+        "full_credit": "Construct Pmin,Qp and Pmax,Recovery separately",
+        "common_failures": "Starts with 2D enumeration",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool correctness",
+        "reasoning_or_calculation": "Keep system fixed and respect flow step",
+        "inputs": "Minor precision issue",
+        "key_outputs": "3.80 bounds→3.845→3.850",
+        "full_credit": "3.80 bounds→3.845→3.850",
+        "common_failures": "Changes salinity/temperature/membrane parameters",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation",
+        "reasoning_or_calculation": "Identify no intersection",
+        "inputs": "Conclusion mostly correct but weak boundary relation",
+        "key_outputs": "51.62>51.20; 3.845 still double-FAIL",
+        "full_credit": "51.62>51.20; 3.845 still double-FAIL",
+        "common_failures": "Assumes pressure can solve 3.80",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptation",
+        "reasoning_or_calculation": "Increase flow only after proof",
+        "inputs": "Some redundancy",
+        "key_outputs": "3.845 FAIL→3.850 PASS",
+        "full_credit": "3.845 FAIL→3.850 PASS",
+        "common_failures": "Large flow×pressure grid from start",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Decision",
+        "reasoning_or_calculation": "Minimum verified flow",
+        "inputs": "Correct number but no resolution qualifier",
+        "key_outputs": "3.850 kg/s, recommend ≈51.41 bar; state 0.005 resolution",
+        "full_credit": "3.850 kg/s, recommend ≈51.41 bar; state 0.005 resolution",
+        "common_failures": "Still recommends 3.80/3.845",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection",
+        "evaluation_focus": "Use simulate_ro appropriately",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Wrong tool / many irrelevant calls",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain",
+        "evaluation_focus": "Prioritize discriminating calls",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Dense 2D scanning",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptation",
+        "evaluation_focus": "Let each result determine the next step",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Preset enumeration ignores results",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning",
+        "evaluation_focus": "Stop branches once evidence is sufficient",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Keeps testing known failed regions",
+        "case_observation": "",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence",
+        "evaluation_focus": "Complete evidence within reasonable budget",
+        "full_credit": "",
+        "medium_credit": "",
+        "low_credit": "Far above reference budget with little new information",
+        "case_observation": "",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D2_2a_进水量_MinFlow_EN.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D2\\D2_2a_进水量_MinFlow_EN.xlsx",
+    "sha256": "9b93cb9d5408c7719cdc750616fddf3364ce85fba3e2d2706d1f29d193304dd5",
+    "sheets": [
+      "Question",
+      "Gold_Answer",
+      "Trajectory_Rubric",
+      "Tool_Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question",
+      "answer": "Gold_Answer",
+      "rubric": "Trajectory_Rubric",
+      "tool_efficiency": "Tool_Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:35+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D2-2a-feed-flow-min-flow",
+    "view_prompt_sha256": "e35c377a6f209bfcdb3ad18f8c8a07272f6bda18bc871fc79f5785fbc229dd28"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D2-2a-feed-flow-min-flow",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "495d0826aff7b4e6b54ab2d698f439b64c7e59ec1a1d9ce0e8ac199577b0cf53",
+    "view_prompt_sha256": "e35c377a6f209bfcdb3ad18f8c8a07272f6bda18bc871fc79f5785fbc229dd28",
+    "transformation": {
+      "removed_lines": 1,
+      "removed_cells": 1
+    }
+  }
+}

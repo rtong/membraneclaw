@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "case_id": "D1-1c-existing-pump-reuse-and-cleaning-trigger",
+  "task_family": "d1_1c",
+  "title": "D1-1c | Existing Pump Reuse and Cleaning Trigger",
+  "question_prompt": "D1-1c | Existing Pump Reuse and Cleaning Trigger\n\nAn expansion project proposes to reuse an existing pump with a maximum continuous discharge pressure of 65.0 bar. Membrane A-value and channel pressure drop differ among clean, aged, and fouled states. Determine the minimum pressure meeting all constraints in each state, decide whether the pump can be reused, and define a cleaning trigger. Site policy requires cleaning when the modeled pressure requirement reaches 64.50 bar, leaving only 0.50 bar reserve to the continuous limit.\n\nFixed parameter | Value | Unit | Status | Membrane state | A_comp (m/s/Pa) | Pressure drop (bar)\nFeed mass flow | 3.9 | kg/s | Fixed / locked | A Clean | 4.2e-12 | 0.8\nMembrane area | 390 | m^2 | Fixed / locked | B Aged | 3.5e-12 | 1.5\nFeed NaCl | 0.036 | mass fraction | Fixed / locked | C Fouled | 3e-12 | 2.6\nTemperature | 20 | deg C | Fixed / locked\nB_comp | 3.5e-08 | m/s | Fixed / locked | Acceptance constraints\nPermeate pressure | 1.013 | bar | Fixed / locked | Permeate production, Qp | >= 6.70 m^3/h | Each condition\nChannel height | 0.002 | m | Fixed / locked | Water recovery | <= 55.0% | Each condition\nSpacer porosity | 0.75 | - | Fixed / locked | Average water flux | <= 21.0 LMH | Each condition\nModule length | 20 | m | Fixed / locked | Salt rejection | >= 98.75% | Each condition\nPermeate NaCl | <= 450 mg/L | Each condition\n\nRequired work\n1. Treat this as a multi-condition pressure-sizing and feasibility problem. Do not change locked membrane or hydraulic parameters while searching pressure.\n4. Compare all Pmin values or infeasibility evidence with the stated equipment margin, limits, or control window, then make the engineering decision.\n5. Distinguish equipment rating/limits from operating setpoints. Do not hide a membrane-flux or water-quality violation by blindly increasing pressure.\n\nRequired pressure resolution: 0.05 bar. Any design margin, pump limit, VFD lower limit, maintenance reserve, or equipment selection increment in this benchmark is a stated rule used to produce a unique, auditable answer.",
+  "reference_answer": "D1-1c | Existing Pump Reuse and Cleaning Trigger | Stepwise Answer\n\nReference efficient trajectory: about 9-11 calls to simulate_ro. Coarsely bracket each condition, refine only the live interval to 0.05 bar, preserve adjacent fail/pass evidence, and then complete the equipment-versus-operation decision.\n\nCondition | Pressure (bar) | NaCl fraction | T (deg C) | Qp (m^3/h) | Flux (LMH) | Recovery (%) | Rejection (%) | NaCl (mg/L) | Production | Recovery / Flux | Water quality | Overall | Boundary interpretation\nA Clean | 60.45 | 0.036 | 20 | 6.6929 | 17.1538 | 48.958 | 98.8239 | 434.85 | Fail | Pass | Fail | Last failed point\nA Clean | 60.5 | 0.036 | 20 | 6.7008 | 17.1741 | 49.016 | 98.8244 | 434.64 | Pass | First passing point\nB Aged | 63.6 | 0.036 | 20 | 6.6953 | 17.1598 | 48.9751 | 98.8115 | 439.41 | Fail | Pass | Fail | Last failed point\nB Aged | 63.65 | 0.036 | 20 | 6.7024 | 17.178 | 49.0271 | 98.812 | 439.24 | Pass | First passing point\nC Fouled | 66.75 | 0.036 | 20 | 6.6981 | 17.167 | 48.9956 | 98.8044 | 442.05 | Fail | Pass | Fail | Last failed point\nC Fouled | 66.8 | 0.036 | 20 | 6.7047 | 17.1838 | 49.0437 | 98.8048 | 441.91 | Pass | First passing point\n\nPressure boundaries and engineering decision | Calculation audit\nItem | A Clean | B Aged | C Fouled | Comparison / calculation | Conclusion | Calculated item | Calculated result | Unit | Expected result\nLast failed pressure (bar) | 60.45 | 63.6 | 66.75 | Adjacent 0.05 bar evidence | - | Clean-state reserve | =65-B23 | bar | 4.5\nMinimum feasible pressure, Pmin (bar) | 60.5 | 63.65 | 66.8 | Pump continuous limit = 65.0 bar | Fouled state is not covered | Aged-state reserve | =65-C23 | bar | 1.35\nAvailable pressure reserve (bar) | 4.5 | 1.35 | -1.8 | 65.0 - Pmin | Negative reserve in fouled state | Fouled-state reserve | =65-D23 | bar | -1.8\nEngineering decision | Reuse permitted | Reuse permitted; approaching trigger | Cleaning required before this state | Cleaning trigger at modeled Pmin >= 64.50 bar | Do not use 65 bar as a universal setpoint | Cleaning trigger | =65-0.5 | bar | 64.5\n\nThe existing pump covers the clean and aged states, but the fouled-state Pmin is 66.80 bar, which exceeds the 65.0 bar continuous limit by 1.80 bar. Under the stated reserve policy, cleaning is triggered when the modeled Pmin reaches 64.50 bar; the aged state is still operable, while continued degradation toward the fouled state is not acceptable.\n\nSimulator evidence note: The fouled-state boundary was simulator-verified at 66.75 bar fail and 66.80 bar pass.",
+  "rubric": {
+    "total_points": 100.0,
+    "steps": [
+      {
+        "step_id": 1,
+        "step_label": "TQ1 Problem framing and state understanding",
+        "reasoning_or_calculation": "Recognizes multi-condition boundaries and equipment meaning",
+        "inputs": "Pressure search is recognized but equipment meaning is incomplete",
+        "key_outputs": "Locked inputs remain fixed; each condition is solved independently; equipment rating/limit is not treated as one universal setpoint",
+        "full_credit": "Locked inputs remain fixed; each condition is solved independently; equipment rating/limit is not treated as one universal setpoint",
+        "common_failures": "Only one condition is solved, or rating is confused with operating pressure",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 2,
+        "step_label": "TQ2 Planning and decomposition",
+        "reasoning_or_calculation": "Builds brackets and a cross-condition decision",
+        "inputs": "Direction is correct but an adjacent confirmation is missing",
+        "key_outputs": "Coarse bracket -> 0.05 bar boundary -> cross-condition comparison -> engineering action",
+        "full_credit": "Coarse bracket -> 0.05 bar boundary -> cross-condition comparison -> engineering action",
+        "common_failures": "Dense blind scan or no independent boundaries",
+        "max_score": 15.0
+      },
+      {
+        "step_id": 3,
+        "step_label": "TQ3 Tool-call correctness",
+        "reasoning_or_calculation": "simulate_ro inputs match the active condition",
+        "inputs": "Minor input issue that does not change the conclusion",
+        "key_outputs": "Only pressure changes within a condition; all stated condition differences and units are preserved",
+        "full_credit": "Only pressure changes within a condition; all stated condition differences and units are preserved",
+        "common_failures": "Membrane area/A/B is altered or units are mixed",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 4,
+        "step_label": "TQ4 Observation interpretation",
+        "reasoning_or_calculation": "Records pass/fail and the actual failing constraint",
+        "inputs": "Pmin is close but the active constraint is unclear",
+        "key_outputs": "Adjacent evidence plus production, flux/recovery, and water-quality status are all interpreted correctly",
+        "full_credit": "Adjacent evidence plus production, flux/recovery, and water-quality status are all interpreted correctly",
+        "common_failures": "Only passing points are kept or constraints are misclassified",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 5,
+        "step_label": "TQ5 Adaptive comparison and replanning",
+        "reasoning_or_calculation": "Next call follows from the previous observation",
+        "inputs": "Partly adaptive with some unnecessary enumeration",
+        "key_outputs": "Pressure choices narrow the live bracket; converged conditions are pruned promptly",
+        "full_credit": "Pressure choices narrow the live bracket; converged conditions are pruned promptly",
+        "common_failures": "Calls follow a fixed list regardless of results",
+        "max_score": 20.0
+      },
+      {
+        "step_id": 6,
+        "step_label": "TQ6 Final engineering decision",
+        "reasoning_or_calculation": "Produces the task-specific decision",
+        "inputs": "Numerical answer is close but operating implications are incomplete",
+        "key_outputs": "The existing pump covers the clean and aged states, but the fouled-state Pmin is 66.80 bar, which exceeds the 65.0 bar continuous limit by 1.80 bar. Under the stated reserve policy, cleaning is triggered when the modeled Pmin reaches 64.50 bar; the aged state is still operable, while continued degradation toward the fouled state is not acceptable.",
+        "full_credit": "The existing pump covers the clean and aged states, but the fouled-state Pmin is 66.80 bar, which exceeds the 65.0 bar continuous limit by 1.80 bar. Under the stated reserve policy, cleaning is triggered when the modeled Pmin reaches 64.50 bar; the aged state is still operable, while continued degradation toward the fouled state is not acceptable.",
+        "common_failures": "Averages pressures, blindly raises pressure, or ignores infeasibility",
+        "max_score": 10.0
+      }
+    ],
+    "global_criteria": []
+  },
+  "tool_efficiency_rubric": {
+    "total_points": 100.0,
+    "dimensions": [
+      {
+        "dimension_id": "E1",
+        "dimension_label": "E1 Tool selection and necessity",
+        "evaluation_focus": "Uses the correct scientific tool",
+        "full_credit": "simulate_ro directly supports pressure-boundary testing",
+        "medium_credit": "A few irrelevant calls are made",
+        "low_credit": "Wrong tool or many irrelevant calls",
+        "case_observation": "A whole-plant cost model is not needed",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E2",
+        "dimension_label": "E2 Information gain and ordering",
+        "evaluation_focus": "Prioritizes discriminating pressures",
+        "full_credit": "Coarse bracket first, then boundary refinement",
+        "medium_credit": "Mostly reasonable with some low-value points",
+        "low_credit": "Dense grid from the start",
+        "case_observation": "Bracket each condition before sampling adjacent points",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E3",
+        "dimension_label": "E3 Adaptive iteration",
+        "evaluation_focus": "Lets observations determine the next pressure",
+        "full_credit": "Fail/pass state dynamically narrows the interval",
+        "medium_credit": "Partly adaptive",
+        "low_credit": "Prewritten enumeration ignores results",
+        "case_observation": "The previous status directly selects the next pressure",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E4",
+        "dimension_label": "E4 Pruning and redundancy",
+        "evaluation_focus": "Avoids repeated evidence",
+        "full_credit": "Switches condition after convergence and does not repeat known inputs",
+        "medium_credit": "One or two unnecessary confirmations",
+        "low_credit": "Repeatedly tests a known interval",
+        "case_observation": "Reuse the adjacent boundary pair as final evidence",
+        "max_score": 20.0
+      },
+      {
+        "dimension_id": "E5",
+        "dimension_label": "E5 Convergence and stopping",
+        "evaluation_focus": "Stops after sufficient evidence",
+        "full_credit": "about 9-11 calls produces the boundary and engineering decision",
+        "medium_credit": "A few additional calls remain defensible",
+        "low_credit": "Too many calls or insufficient evidence",
+        "case_observation": "Stop after reaching 0.05 bar resolution and completing the decision",
+        "max_score": 20.0
+      }
+    ],
+    "source_format": "scored_dimensions"
+  },
+  "source": {
+    "filename": "D1-1c_Existing-Pump-Reuse-and-Cleaning-Trigger_English.xlsx",
+    "absolute_path": "F:\\MembraneClaw\\ScrapingPipe\\auto-evaluate\\benchmarks\\Datasets Harness\\D1\\D1-1c_Existing-Pump-Reuse-and-Cleaning-Trigger_English.xlsx",
+    "sha256": "49f92d782ec4fa40490f246526fed790b0c0fff177419e91ca1a35013fe40ead",
+    "sheets": [
+      "Question_Q",
+      "Stepwise Answer_A",
+      "Trajectory Rubric",
+      "Tool Efficiency"
+    ],
+    "sheet_roles": {
+      "question": "Question_Q",
+      "answer": "Stepwise Answer_A",
+      "rubric": "Trajectory Rubric",
+      "tool_efficiency": "Tool Efficiency"
+    },
+    "imported_at": "2026-08-23T14:27:34+00:00",
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D1-1c-existing-pump-reuse-and-cleaning-trigger",
+    "view_prompt_sha256": "91b64af5ff41a5a29cb300a5b5325651d5799d22ad7f1993a04bcdb6ca5f0014"
+  },
+  "benchmark_view": {
+    "view_id": "skill_planning_dev",
+    "source_case_id": "D1-1c-existing-pump-reuse-and-cleaning-trigger",
+    "variant_type": "skill_de_scaffold",
+    "rag_need": "R0",
+    "expected_route": "skip_rag",
+    "knowledge_refs": [],
+    "original_prompt_sha256": "a0bf94f6d15f403fec8b119541ff40fa029e80b6639862ecf1b6e58ab471587a",
+    "view_prompt_sha256": "91b64af5ff41a5a29cb300a5b5325651d5799d22ad7f1993a04bcdb6ca5f0014",
+    "transformation": {
+      "removed_lines": 2,
+      "removed_cells": 2
+    }
+  }
+}
