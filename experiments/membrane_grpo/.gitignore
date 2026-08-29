@@ -14,6 +14,13 @@ __pycache__/
 runs/**/*.safetensors
 !runs/grpo-main-s0/adapter/adapter_model.safetensors
 !runs/grpo-probe-s0/adapter/adapter_model.safetensors
+# The three Qwen3-1.7B runs, 25 MiB each. All three, because the ablation's
+# claim is that ABLATE and PROBE behave alike while MAIN differs, and checking
+# that independently means loading all three -- keeping only the winner would
+# leave the comparison assertable but not verifiable.
+!runs/q3-main-s0/adapter/adapter_model.safetensors
+!runs/q3-ablate-s0/adapter/adapter_model.safetensors
+!runs/q3-probe-s0/adapter/adapter_model.safetensors
 # PEFT regenerates this boilerplate on every save_pretrained
 runs/**/adapter/README.md
 runs/**/*.bin
