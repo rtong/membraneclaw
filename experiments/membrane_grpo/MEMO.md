@@ -1,229 +1,204 @@
 # What My First LLM RL Run Actually Improved
 
-**Scope.** Two 200-step GRPO runs on Qwen2.5-0.5B-Instruct over a structured
-membrane-troubleshooting task with a deterministic reward, on one RTX 5070 Ti.
-This is a smoke test. Every number below is from a run that took under an hour,
-and nothing here should be read as a claim about GRPO in general.
+**Scope.** GRPO on a structured membrane-troubleshooting task with a
+deterministic reward, on one RTX 5070 Ti. Five 200-step runs: two on
+Qwen2.5-0.5B-Instruct, three on Qwen3-1.7B. Each took about an hour. Single
+seed throughout — see Limits, which is the part of this memo I would attack
+first.
 
 ---
 
-## The short answer
+## The short answer, in two parts
 
-It improved JSON formatting and vocabulary compliance, and nothing else.
+**On the 0.5B: formatting, and nothing else.** Held-out reward rose 3.2x while
+the model's ability to diagnose the fault did not move at all.
 
-Held-out reward on the frozen dev split went **0.086 → 0.279**, a 3.2x rise. The
-model's ability to diagnose the fault did not change at all:
+**On the 1.7B: the diagnosis moved — but only under a reward I had built to be
+wrong.** The run I designed as the *control*, deliberately weighted away from
+the thing being measured, produced a policy five times better on that thing than
+the run I designed as correct.
 
-| held-out, greedy | frozen | after 200 steps | |
-| --- | --- | --- | --- |
-| reward | 0.086 | **0.279** | +224% |
-| schema valid | 0.005 | **1.000** | saturated |
-| `flags` correct | 0.005 | **0.562** | +112x |
-| **`root_cause` correct** | **0.145** | **0.145** | **unchanged** |
-| `numeric` correct | 0.000 | 0.000 | unchanged |
-| `action` correct | 0.130 | 0.110 | worse |
-| exact match | 0.000 | 0.000 | unchanged |
+The second result is why this memo is longer than it was. The first conclusion
+was not wrong; it was a statement about a model that could not do the task at
+all, and I had mistaken it for a statement about RL.
+
+---
+
+## Part 1 — Qwen2.5-0.5B: reward without capability
+
+| held-out, greedy | frozen | after 200 steps |
+| --- | --- | --- |
+| reward | 0.086 | **0.279** |
+| schema valid | 0.005 | **1.000** |
+| `flags` correct | 0.005 | **0.562** |
+| **`root_cause` correct** | **0.145** | **0.145** |
+| `numeric` correct | 0.000 | 0.000 |
+| exact match | 0.000 | 0.000 |
 
 `root_cause` read **0.145 at all nine evaluation points**, identical to three
-decimals across 200 steps. A uniform guess over seven balanced labels scores
-1/7 = 0.143. The policy began at chance and ended at chance.
+decimals across 200 steps, against a 1/7 = 0.143 chance floor. Decomposed
+against the weights, the entire +0.193 is `format` (52%), `flags` vocabulary
+(35%) and `stage` — a field the prompt states outright (16%). `numeric` and
+`action` went slightly *down*.
 
-Decomposing the +0.193 against the reward weights:
+Two reference lines make this readable. `baselines.constant` — valid JSON, the
+same guess every time, never reading the record — scores **0.245**. The trained
+policy reached 0.279. It spent an hour of a 5070 Ti to get 0.034 past a strategy
+that ignores its input.
 
-| component | contribution | share |
-| --- | --- | --- |
-| `format` — schema compliance | +0.0995 | **52%** |
-| `flags` — right vocabulary | +0.0668 | **35%** |
-| `stage` — copying a field the prompt states outright | +0.030 | **16%** |
-| `action` | −0.003 | |
-| `numeric` | 0.000 | |
-| **`root_cause`** | **0.000** | **0%** |
+A second run, identical but for the reward weights, reported the same policy as
+a **19x** improvement instead of 3.2x. Behaviourally the two were
+indistinguishable on every axis measured.
 
-What the policy learned, concretely: the base model wrote the *threshold text*
-into the flag field — `"flow": "<-10"` — and copied threshold constants into the
-numbers. After training it writes `"down"`, and copies the stage from the prompt
-instead of inventing one. That is the whole of it.
+The mechanism was clear: `root_cause` carries the largest weight (0.45) and
+requires computing three percent changes, thresholding them, and reading a
+table. `numeric` accuracy was 0.000, so that 0.45 was unreachable, and gradient
+ascent took the reachable 0.25 instead. Not adversarial reward hacking — the
+reward is a faithful description of a good answer. The policy maximised the part
+within reach, and the part within reach did not matter.
 
----
-
-## The same policy, two headline numbers
-
-The second run is identical to the first in code, data, model, seed and
-hyperparameters. One thing differs: the reward weights move away from
-`root_cause` and toward `format` and `numeric`.
-
-| | main | probe |
-| --- | --- | --- |
-| held-out reward | 0.086 → 0.279 | 0.024 → **0.463** |
-| **reported as** | **3.2x** | **19x** |
-| `root_cause` | 0.145 → 0.145 | 0.145 → 0.145 |
-| `flags` | 0.005 → 0.562 | 0.005 → 0.523 |
-| `numeric` | 0.000 → 0.000 | 0.000 → 0.000 |
-| schema valid | 0.005 → 1.000 | 0.005 → 1.000 |
-| exact match | 0.000 | 0.000 |
-| completion length | 106 → 101 | 106 → 101 |
-
-The two policies are behaviourally indistinguishable on every measured axis. The
-headline improvement differs by **6x**, and the difference is entirely a property
-of the weight vector I chose.
-
-"Held-out reward improved 19x" would be a true sentence about the probe run. It
-describes my spreadsheet, not the model.
-
----
-
-## Reference lines, and why 0.279 is not good news
-
-Before training, three strategies that do not solve the task were priced
-(`baselines.py`):
-
-| | reward |
-| --- | --- |
-| `constant` — valid JSON, same guess every time | **0.245** |
-| `skip_correction` — everything right but the temperature correction | 0.890 |
-| `oracle` | 1.000 |
-
-The trained policy scores **0.279**. It has spent 200 steps and roughly an hour
-of an RTX 5070 Ti to arrive just past a strategy that ignores the input
-entirely. The frozen baseline at 0.086 was *below* that line, so the honest
-description of the run is: it closed the gap to a constant guesser and went
-0.034 past it.
-
-Read against zero, +224% is a result. Read against 0.245, it is most of the way
-to nothing. Building the reference lines before the run, rather than after, is
-the single practice from this project I would keep unchanged.
-
----
-
-## The five pre-registered predictions
-
-Written before the first gradient step, and scored as they fell.
-
-**1. Format saturation dominates the reward curve. — Hit.** Schema validity went
-0.005 → 1.000 by step 50 and is the largest single contributor at 52% of the
-gain. Reward plateaued at the same time.
-
-**2. The probe control separates reward from capability. — Hit, decisively.**
-See above. This was the prediction I was least sure could be demonstrated inside
-one experiment rather than argued about; the 6x gap on indistinguishable
-policies settles it.
-
-**3. The hard tier will not move. — Not testable as stated.** I predicted that
-any exact-match gain would come from `easy` cases. There was no exact-match gain
-anywhere: EM was 0.000 at every evaluation of both runs. What can be said is
-that the reward gain was tier-*independent*: easy 0.093 → 0.284 and hard
-0.072 → 0.270, a rise of +0.191 against +0.197. That is itself confirmation
-that nothing arithmetic was learned. A gain that does not
-care whether the temperature correction is needed is not a gain in arithmetic.
-
-**4. pass@1 rises while pass@8 is flat or falls, with diversity collapsing. —
-Falsified, and instructively.** pass@8 was 0.000 before and after; both sit on
-the floor, so the comparison is empty. Diversity did the opposite of collapsing
-on one metric and collapsed hard on another:
-
-| sampled, k=8 | frozen | trained |
-| --- | --- | --- |
-| unique answers per group | 5.54 / 8 | **7.97 / 8** |
-| distinct-4 (lexical) | 0.727 | **0.256** |
-| validity under sampling | 0.665 | **0.995** |
-
-Both numbers are correct. The model converged onto a single rigid output
-template — hence distinct-4 falling by two thirds — while the *values* it fills
-in stayed noisy, which is why nearly every sample is now a distinct object. The
-form collapsed; the content did not. **Which diversity metric I had chosen would
-have determined which conclusion I reached**, and I had pre-registered only the
-one that says diversity fell.
-
-**5. A visible fraction of groups will have zero reward variance. — Falsified
-during training.** True at the frozen baseline, where 16% of groups were
-degenerate. During both runs `adv_zero_frac` was 0.00 at every step after the
-first. Format variation under sampling supplied reward variance immediately, so
-the degenerate-group risk I had built the whole reward around avoiding never
-materialised once training started.
-
-Two hits, two falsified, one unanswerable. The two falsified ones taught me more
-than the two hits.
-
----
-
-## Where reward and capability came apart, mechanically
-
-The reward has six components. Five of them are cheap: schema compliance, flag
-vocabulary, stage-copying. One of them — `root_cause`, at 0.45, the largest
-single weight — requires actually computing three percent changes, thresholding
-them, and reading a table.
-
-A 0.5B model can learn the cheap five from a scalar reward in 50 steps. It
-cannot learn the expensive one at all, and the run shows why: `numeric` accuracy
-is 0.000. `root_cause` depends on flags, flags depend on the numbers, and the
-numbers are never right. The 0.45 weight was unreachable, so gradient ascent did
-what gradient ascent does and took the reachable 0.25.
-
-This is not reward hacking in the adversarial sense. The reward function is a
-faithful description of what a good answer looks like. The policy simply
-maximised the part of it that was within reach, and the part within reach
-happened to be the part that does not matter.
-
-For context, Qwen3.5-9B under the same prompt reaches exact match 0.325 and
-`numeric` around 0.86. The task is solvable. It is not solvable by this model,
-and reinforcement learning on the final answer did not change that — RL
+pass@8 was 0.000 across 1,600 samples before training and 1,600 after. **RL
 sharpens what a policy can already sometimes do, and this policy could never
-once produce a correct answer: pass@8 was 0.000 across 1,600 samples before
-training and 1,600 after. The fraction of sampled groups with no reward
-variance was 0.160 both before and after — identical.
+once do it.**
+
+---
+
+## Part 2 — Qwen3-1.7B: where the weight goes decides whether anything moves
+
+The obvious next question is what happens with a model that *can* partly do the
+task. Three candidates, measured on the same 200 dev cases rather than argued
+about:
+
+| | reward | cause | numeric | schema |
+| --- | --- | --- | --- | --- |
+| Qwen2.5-Math-1.5B | 0.000 | 0.000 | 0.000 | 0.000 |
+| Qwen2.5-1.5B-Instruct | 0.209 | 0.215 | 0.000 | 0.000 |
+| **Qwen3-1.7B** | **0.315** | **0.255** | **0.038** | **0.970** |
+
+Three unrelated failure modes. Math-1.5B writes 638 tokens of arithmetic and
+never emits a JSON object — 200/200 `no_json` — trading instruction-following
+for exactly the capability I wanted. Qwen2.5-1.5B has one mechanical defect: the
+numeric fields come out as strings, so `not_a_number` fires exactly 600 times
+over 200 cases.
+
+Qwen3-1.7B was chosen less for its score than because **its schema validity
+starts at 0.970**. The 0.5B experiment was confounded — half its reward gain was
+schema going 0.005 → 1.000. Here that headroom is worth at most 0.003, so a
+reward rise cannot be explained away as format learning.
+
+### Three runs, one variable
+
+Held-out `root_cause`, greedy, tested with McNemar's exact test on the same 200
+paired cases:
+
+| | `numeric` wt | `cause` wt | cause | vs base |
+| --- | --- | --- | --- | --- |
+| base | | | 0.255 | |
+| MAIN | 0.15 | 0.45 | 0.295 | p = 0.057, **not significant** |
+| **ABLATE** | **0.35** | **0.25** | **0.430** | **p < 1e-4** |
+| PROBE | 0.35 | 0.10 | 0.450 | p < 1e-4 |
+
+**The control inverted its own purpose.** PROBE exists to demonstrate that a
+rising reward need not mean a better policy: I moved weight *away* from
+`root_cause`, 0.45 → 0.10, expecting the reward to climb while the diagnosis
+stayed put. It produced the best diagnosis of the three — +0.195 against MAIN's
++0.040, which is not even significant.
+
+**ABLATE says why.** PROBE differs from MAIN on four components at once, so both
+"raising `numeric`" and "lowering `root_cause`" were live explanations. ABLATE
+raises `numeric` to 0.35 and leaves `root_cause` substantial at 0.25 — and it
+tracks PROBE, not MAIN. Directly: MAIN-trained → ABLATE-trained is +0.135, with
+30 discordant pairs against 3, p < 1e-4.
+
+The task is a chain: `numeric → flags → root_cause`. **Weighting the head of the
+chain beat weighting the end of it by 3.4x**, because the end is only reachable
+through numbers the model mostly gets wrong. Putting the largest weight on the
+outcome I cared about was the wrong move; putting it on the bottleneck upstream
+of that outcome was the right one.
+
+This is the one finding here I would expect to transfer. It is also the one
+resting on a single seed.
+
+---
+
+## Two things I got wrong along the way
+
+**I used a monotonicity argument as a significance test.** MAIN's `cause` rose
+at nine consecutive evaluation points, and I called the gain real on that basis.
+Monotonicity across nine points of an noisy series is not a test; McNemar says
+p = 0.057. The commit that introduced the paired test also retracts the claim.
+
+**I assumed pairing always helps.** It does not. On `schema` the discordant
+pairs were 6:2 and the paired test came out *more* conservative than the
+unpaired reading. Pairing helps when two policies agree on most cases; where the
+disagreements are themselves balanced, it is the stricter test. `paired_test.py`
+documents that rather than quietly reporting whichever number is smaller.
+
+Also worth recording: my pre-registered go/no-go criterion was `pass@8 > 0`, and
+it rejected all three 1.7B candidates. It was the wrong criterion — exact match
+is a conjunction over seven fields, and even the 9B only reaches 0.245. What
+actually distinguished the 0.5B's failure was `cause` sitting *exactly* at
+chance, leaving nothing partial to sharpen.
 
 ---
 
 ## What I would do differently
 
-**Log the held-out curve from step one.** The first version of the training loop
-recorded reward only. Reward alone cannot distinguish learning from collapse —
-in a sibling experiment on this same task, a run held a *training* reward of
-1.000 for 115 steps while its completion length fell from 106 tokens to 35 and
-its held-out reward was 0.000. The length and entropy panels showed it 85 steps
+**Log the held-out curve from step one.** The first training loop recorded
+reward only. Reward alone cannot distinguish learning from collapse — in a
+sibling actor-critic experiment on this task, a run held a *training* reward of
+1.000 for 115 steps while its completion length fell 106 → 35 tokens and its
+held-out reward was 0.000. The length and entropy panels showed it 85 steps
 before the reward panel did.
 
-**Do not trust a component's weight as a measure of its influence.** One wrong
-number costs 0.69 of a possible 1.0 through the cascade `numeric → flags →
-root_cause → action`, so `numeric`'s nominal 0.15 understates it by 4x. This was
-measured and pinned by a test before the run, and it is why `cause_given_flags`
-exists as a separate diagnostic.
+**Price the cheats before training, not after.** Knowing that a constant guesser
+scores 0.245 is what turned "reward tripled" into "reward is 0.034 past a
+strategy that ignores the input". Without that line, +224% reads as a triumph.
 
-**Give the model somewhere to put its working.** The first prompt forbade any
-text besides the JSON object, and under it even the 9B did not compute — it
-emitted well-formed JSON carrying numbers it had estimated. Allowing terse
-arithmetic before the answer took the 9B's numeric accuracy from 0.08 to 0.58.
-The 0.5B ignored the invitation entirely and went straight to JSON at 108
-tokens, which is worth knowing: prompt affordances only help a model that can
-use them.
+**Do not read a component's weight as its influence.** One wrong number costs
+0.69 of a possible 1.0 through the `numeric → flags → root_cause → action`
+cascade, so `numeric`'s nominal 0.15 understates it roughly fourfold. That
+cascade turned out to be the whole story of Part 2, and it was measured and
+pinned by a test before any training ran.
 
-**Check the task before blaming the model.** Pointing the 9B at the task first
-found a genuine ambiguity — the `dp` field could reasonably be read as the train
-total or the anomalous stage's own, and the generator put the whole change on
-that stage. Fixing it moved that field from 0.025 to 1.000. Had I frozen a
-baseline first, I would have measured that defect into every number afterwards.
+**Check the task before blaming the model.** Pointing a 9B at the task first
+found a real ambiguity in the `dp` field; fixing it moved that field from 0.025
+to 1.000. Had I frozen a baseline first, that defect would have been measured
+into every number afterwards.
 
 ---
 
 ## Limits
 
-200 steps, one seed, one model, one task, LoRA rank 16, no learning-rate sweep.
-`root_cause` staying at exactly 0.145 is strong evidence that nothing was
-learned about diagnosis, but it is not evidence that nothing *could* be — a
-longer run, a larger model, or a curriculum that rewards the arithmetic directly
-might all move it. The data is synthetic and every parameter in it was chosen by
-hand; see `data/DATA_CARD.md`. This is not a diagnostic tool for a real membrane
-train and was never meant to be.
+**One seed per configuration.** This is the weakest point in the most
+interesting claim. "Weight the upstream bottleneck" rests on ABLATE-vs-MAIN at
+n=1 each. A second seed is the next thing to run.
 
-One reproducibility caveat worth stating: two greedy evaluations of the same
-frozen policy, differing only in batch size (64 against 32), returned `flags`
-0.005 against 0.007. Greedy decoding is deterministic per sequence but a batch
-is left-padded to its longest member, so batch composition perturbs the result
-slightly. Every figure above is quoted from the committed artifacts in `runs/`
-rather than from the training loop's own step-0 evaluation, which used the
-other batch size.
+**200 steps is not convergence.** All three 1.7B curves were still climbing at
+step 200, and the two `numeric`-heavy runs only began their rise at step
+150–175. The endpoints are a snapshot, not a ceiling.
 
-The claim I will stand behind is narrow: **on this task, at this scale, a 3.2x
-improvement in reward corresponded to zero improvement in the thing the reward
-was written to measure, and I could make the same policy look 19x better by
-changing the weights.**
+**Nothing here reaches exact match.** EM is 0.000 for every 0.5B and 1.7B policy
+measured, trained or not. `numeric` peaks at 0.137. The 9B reaches EM 0.245 and
+`numeric` 0.797, so the task is solvable — the arithmetic wall simply sits above
+1.7B.
+
+**Everything is synthetic**, every parameter hand-chosen; see `data/DATA_CARD.md`.
+Not a diagnostic tool for a real membrane train.
+
+One reproducibility caveat: two greedy evaluations of the same frozen policy
+differing only in batch size returned `flags` 0.005 against 0.007, because a
+batch is left-padded to its longest member and batch composition perturbs the
+result. Every figure above comes from committed artifacts in `runs/`.
+
+---
+
+The two claims I will stand behind:
+
+**On the 0.5B** — a 3.2x rise in reward corresponded to zero improvement in what
+the reward was written to measure, and the same policy could be reported as 19x
+better by changing the weights.
+
+**On the 1.7B** — the diagnosis did move, by 3.4x more under a reward weighted
+toward the upstream bottleneck than under one weighted toward the outcome
+itself. Where the weight goes mattered more than how much of it there was.
