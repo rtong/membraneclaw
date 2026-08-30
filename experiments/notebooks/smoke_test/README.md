@@ -182,13 +182,30 @@ real: 13 cases gained against 2 lost, p = 0.0074. What the aggregates do show pl
 that **`flags_acc` fell by about as much as `cause_acc` rose**, which is not what a clean
 improvement looks like.
 
-**The critic did not work, and the new panels say so plainly.** Median per-step
-`value_ev` was **+0.005** and the run-level explained variance was **−0.000**: the learned
-value function did exactly as well as predicting the mean of the returns, for 200 steps.
+**The critic barely worked, and the new panels are what say so.** Two numbers, measuring
+different things, and both are needed:
+
+| | MAIN | ABLATE |
+| --- | --- | --- |
+| median **within-batch** `value_ev` (what feeds the advantage) | +0.0052 | +0.0047 |
+| **across-step** explained variance of `value_mean` against `return_mean` | +0.0315 | +0.0166 |
+| the same, for a zero-parameter trailing mean of the last 20 rewards | +0.0115 | +0.0073 |
+| `std(V) / std(G)` | 0.083 | 0.124 |
+
+So the 2049-parameter learned value function is worth about **two percentage points of
+explained variance over `sum(last 20 rewards) / 20`**, and it explains essentially none of
+the *within-batch* variation, which is the part the advantage is built from. `V` lived in
+[0.265, 0.381] while its regression target ranged over [0.000, 0.860] — it moved 8% as much
+as the thing it was predicting.
+
 `value_std` averaged 0.0123 against a `value_mean` near 0.32 — a 3.8% relative spread, so
 every token in a batch received effectively the same baseline. At λ=1 that makes
 `A_t = R − const`, which is REINFORCE with a slow moving average. Whatever moved the policy
-above, the critic was not it.
+above, the critic contributed almost none of it.
+
+*Correction:* an earlier version of this file quoted the across-step figure as −0.000. That
+was read off a mid-run snapshot at step 93 and is wrong for the completed run; the numbers
+above are from all 200 steps of each.
 
 ### The ablation: `ABLATE` does not reproduce here
 
