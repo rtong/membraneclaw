@@ -45,7 +45,9 @@ still resolves the right value-head initialisation.
 | `ppo_ac.py` | the implementation: GAE, both clipped losses, the value head, the loop. The gradient is written out by hand in the module docstring, as `grpo_scratch.py` does. |
 | `01_actor_critic_and_gae.ipynb` | the derivation, and 14 checks that need no GPU. Runs on CPU in about two minutes. Committed with outputs. |
 | `02_ppo_actor_critic_1.7b.ipynb` | the run on the card, and the curves. Executed, committed with outputs; re-running it against a finished run directory plots instead of retraining. |
-| `runs/ppo-qwen3-17b-main-s0/` | the 200-step run: `metrics.jsonl`, `eval.jsonl`, `curves.png`, `critic.png`. |
+| `runs/ppo-qwen3-17b-{main,ablate}-s0/` | the two 200-step runs. Every run directory carries the same four artefacts: `metrics.jsonl`, `eval.jsonl`, `curves.png`, `critic.png` — notebook 02 iterates over `RUNS`, so adding a run to that dict is all it takes to get the same figures. |
+| `runs/paired/` | the three greedy evaluations the paired test reads — frozen, MAIN, ABLATE — each with the full `per_case` block. |
+| `runs/main_vs_ablate.png` | the cross-run comparison; it belongs to neither directory, so it sits one level up. |
 | `runs/smoke-ppo-ac-cpu/`, `runs/ppo-ac-ie2-s0/`, `runs/gonogo-stage-s0*/` | the 0.5B runs. Kept as evidence, not as a baseline for the new model. |
 
 ## Running
