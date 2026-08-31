@@ -14,47 +14,40 @@
   "overall": {
     "n_cases": 200,
     "k": 1,
-    "reward": 0.33025,
+    "reward": 0.32675,
     "exact_match": 0.0,
-    "validity_gate": 0.985,
-    "schema_ok": 0.985,
-    "cause_acc": 0.285,
-    "action_acc": 0.205,
-    "numeric_acc": 0.03333333333333333,
-    "flags_acc": 0.3183333333333333,
-    "cause_given_flags": 0.0,
+    "validity_gate": 0.99,
+    "schema_ok": 0.99,
+    "cause_acc": 0.245,
+    "action_acc": 0.215,
+    "numeric_acc": 0.05166666666666666,
+    "flags_acc": 0.39833333333333326,
+    "cause_given_flags": 0.8571428571428571,
     "components": {
-      "format": 0.09850000000000002,
-      "numeric": 0.004999999999999999,
-      "flags": 0.03819999999999999,
-      "stage": 0.02955,
-      "root_cause": 0.12825,
-      "action": 0.030749999999999996
+      "format": 0.099,
+      "numeric": 0.007749999999999999,
+      "flags": 0.047799999999999995,
+      "stage": 0.029699999999999997,
+      "root_cause": 0.11025,
+      "action": 0.03225
     },
-    "reward_mean_all": 0.33025,
-    "completion_tokens_mean": 98.93,
-    "completion_chars_mean": 254.28,
+    "reward_mean_all": 0.32675,
+    "completion_tokens_mean": 96.58,
+    "completion_chars_mean": 263.59,
     "parse_errors": {
-      "no_json": 3
+      "no_json": 2
     },
     "schema_errors": {},
     "predicted_cause_hist": {
-      "scaling": 77,
-      "biofouling": 120,
-      "null": 3
+      "compaction": 109,
+      "oxidation_damage": 87,
+      "biofouling": 1,
+      "null": 2,
+      "colloidal_fouling": 1
     },
     "per_case": [
       {
         "id": "dev-main-0147",
-        "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0145",
         "tier": "easy",
         "reward": 0.21,
         "cause": false,
@@ -63,9 +56,18 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0145",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
         "id": "dev-main-0129",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -83,8 +85,8 @@
       {
         "id": "dev-main-0000",
         "tier": "hard",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -92,8 +94,8 @@
       {
         "id": "dev-main-0197",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -101,7 +103,7 @@
       {
         "id": "dev-main-0041",
         "tier": "easy",
-        "reward": 0.18,
+        "reward": 0.22,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -110,8 +112,8 @@
       {
         "id": "dev-main-0050",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -119,8 +121,8 @@
       {
         "id": "dev-main-0130",
         "tier": "hard",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.77,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -128,8 +130,8 @@
       {
         "id": "dev-main-0039",
         "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.73,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -137,8 +139,8 @@
       {
         "id": "dev-main-0014",
         "tier": "easy",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -155,7 +157,7 @@
       {
         "id": "dev-main-0143",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -164,8 +166,8 @@
       {
         "id": "dev-main-0004",
         "tier": "hard",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.73,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -173,16 +175,16 @@
       {
         "id": "dev-main-0195",
         "tier": "easy",
-        "reward": 0.18,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 1
+        "numeric": 0
       },
       {
         "id": "dev-main-0003",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -191,17 +193,17 @@
       {
         "id": "dev-main-0027",
         "tier": "easy",
-        "reward": 0.23,
+        "reward": 0.21,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 2
+        "numeric": 0
       },
       {
         "id": "dev-main-0120",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -209,17 +211,17 @@
       {
         "id": "dev-main-0083",
         "tier": "hard",
-        "reward": 0.0,
+        "reward": 0.23,
         "cause": false,
         "exact": false,
-        "schema": false,
-        "numeric": 0
+        "schema": true,
+        "numeric": 2
       },
       {
         "id": "dev-main-0033",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -227,11 +229,11 @@
       {
         "id": "dev-main-0062",
         "tier": "hard",
-        "reward": 0.18,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 1
+        "numeric": 0
       },
       {
         "id": "dev-main-0142",
@@ -245,8 +247,8 @@
       {
         "id": "dev-main-0106",
         "tier": "easy",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -254,8 +256,8 @@
       {
         "id": "dev-main-0141",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -263,8 +265,8 @@
       {
         "id": "dev-main-0036",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -272,8 +274,8 @@
       {
         "id": "dev-main-0126",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.13,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -281,8 +283,8 @@
       {
         "id": "dev-main-0053",
         "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.73,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -299,8 +301,8 @@
       {
         "id": "dev-main-0035",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -308,8 +310,8 @@
       {
         "id": "dev-main-0196",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -317,7 +319,7 @@
       {
         "id": "dev-main-0101",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -326,8 +328,8 @@
       {
         "id": "dev-main-0028",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -353,7 +355,7 @@
       {
         "id": "dev-main-0059",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -362,8 +364,8 @@
       {
         "id": "dev-main-0193",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.77,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -380,17 +382,17 @@
       {
         "id": "dev-main-0153",
         "tier": "easy",
-        "reward": 0.13,
+        "reward": 0.22,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0168",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -407,8 +409,8 @@
       {
         "id": "dev-main-0026",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -416,8 +418,8 @@
       {
         "id": "dev-main-0070",
         "tier": "hard",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -425,8 +427,8 @@
       {
         "id": "dev-main-0134",
         "tier": "easy",
-        "reward": 0.73,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -434,8 +436,8 @@
       {
         "id": "dev-main-0078",
         "tier": "easy",
-        "reward": 0.66,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -443,7 +445,7 @@
       {
         "id": "dev-main-0191",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.21,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -452,8 +454,8 @@
       {
         "id": "dev-main-0183",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -470,8 +472,8 @@
       {
         "id": "dev-main-0099",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -479,41 +481,14 @@
       {
         "id": "dev-main-0133",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
       },
       {
         "id": "dev-main-0125",
-        "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0034",
-        "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0032",
-        "tier": "hard",
-        "reward": 0.23,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 2
-      },
-      {
-        "id": "dev-main-0024",
         "tier": "easy",
         "reward": 0.17,
         "cause": false,
@@ -522,10 +497,37 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0034",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0032",
+        "tier": "hard",
+        "reward": 0.78,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0024",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
         "id": "dev-main-0175",
         "tier": "easy",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -533,7 +535,7 @@
       {
         "id": "dev-main-0181",
         "tier": "easy",
-        "reward": 0.22,
+        "reward": 0.26,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -542,11 +544,11 @@
       {
         "id": "dev-main-0137",
         "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.78,
+        "cause": true,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0156",
@@ -560,32 +562,14 @@
       {
         "id": "dev-main-0073",
         "tier": "easy",
-        "reward": 0.0,
-        "cause": false,
-        "exact": false,
-        "schema": false,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0013",
-        "tier": "hard",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0088",
-        "tier": "easy",
-        "reward": 0.22,
+        "reward": 0.18,
         "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 1
       },
       {
-        "id": "dev-main-0173",
+        "id": "dev-main-0013",
         "tier": "hard",
         "reward": 0.17,
         "cause": false,
@@ -594,10 +578,28 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0088",
+        "tier": "easy",
+        "reward": 0.75,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0173",
+        "tier": "hard",
+        "reward": 0.86,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
         "id": "dev-main-0182",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -605,7 +607,7 @@
       {
         "id": "dev-main-0069",
         "tier": "easy",
-        "reward": 0.13,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -623,7 +625,7 @@
       {
         "id": "dev-main-0052",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -641,8 +643,8 @@
       {
         "id": "dev-main-0091",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -650,8 +652,8 @@
       {
         "id": "dev-main-0109",
         "tier": "hard",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.77,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -659,7 +661,7 @@
       {
         "id": "dev-main-0115",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -668,7 +670,7 @@
       {
         "id": "dev-main-0010",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -677,32 +679,14 @@
       {
         "id": "dev-main-0089",
         "tier": "easy",
-        "reward": 0.22,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 1
-      },
-      {
-        "id": "dev-main-0127",
-        "tier": "easy",
-        "reward": 0.77,
+        "reward": 0.81,
         "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
       },
       {
-        "id": "dev-main-0072",
-        "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0159",
+        "id": "dev-main-0127",
         "tier": "easy",
         "reward": 0.21,
         "cause": false,
@@ -711,8 +695,8 @@
         "numeric": 0
       },
       {
-        "id": "dev-main-0164",
-        "tier": "hard",
+        "id": "dev-main-0072",
+        "tier": "easy",
         "reward": 0.17,
         "cause": false,
         "exact": false,
@@ -720,7 +704,7 @@
         "numeric": 0
       },
       {
-        "id": "dev-main-0063",
+        "id": "dev-main-0159",
         "tier": "easy",
         "reward": 0.81,
         "cause": true,
@@ -729,10 +713,28 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0164",
+        "tier": "hard",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0063",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
         "id": "dev-main-0056",
         "tier": "hard",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -749,8 +751,8 @@
       {
         "id": "dev-main-0012",
         "tier": "hard",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -767,7 +769,7 @@
       {
         "id": "dev-main-0118",
         "tier": "hard",
-        "reward": 0.13,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -776,7 +778,7 @@
       {
         "id": "dev-main-0087",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -785,7 +787,7 @@
       {
         "id": "dev-main-0020",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.21,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -794,26 +796,26 @@
       {
         "id": "dev-main-0184",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.22,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0146",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.22,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0007",
         "tier": "hard",
-        "reward": 0.73,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -821,8 +823,8 @@
       {
         "id": "dev-main-0085",
         "tier": "hard",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -830,7 +832,7 @@
       {
         "id": "dev-main-0160",
         "tier": "hard",
-        "reward": 0.13,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -839,8 +841,8 @@
       {
         "id": "dev-main-0098",
         "tier": "hard",
-        "reward": 0.66,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -848,8 +850,8 @@
       {
         "id": "dev-main-0081",
         "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.58,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -857,17 +859,17 @@
       {
         "id": "dev-main-0016",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.22,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0095",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.77,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -875,8 +877,8 @@
       {
         "id": "dev-main-0096",
         "tier": "hard",
-        "reward": 0.21,
-        "cause": false,
+        "reward": 0.85,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -884,42 +886,6 @@
       {
         "id": "dev-main-0140",
         "tier": "hard",
-        "reward": 0.66,
-        "cause": true,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0005",
-        "tier": "easy",
-        "reward": 0.25,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0171",
-        "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0046",
-        "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0180",
-        "tier": "easy",
         "reward": 0.21,
         "cause": false,
         "exact": false,
@@ -927,10 +893,46 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0005",
+        "tier": "easy",
+        "reward": 0.85,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0171",
+        "tier": "easy",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0046",
+        "tier": "easy",
+        "reward": 0.73,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0180",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
         "id": "dev-main-0082",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -938,26 +940,26 @@
       {
         "id": "dev-main-0172",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.86,
+        "cause": true,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0104",
         "tier": "easy",
-        "reward": 0.13,
+        "reward": 0.22,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0021",
         "tier": "hard",
-        "reward": 0.66,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -974,8 +976,8 @@
       {
         "id": "dev-main-0112",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -983,7 +985,7 @@
       {
         "id": "dev-main-0108",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1001,11 +1003,11 @@
       {
         "id": "dev-main-0017",
         "tier": "easy",
-        "reward": 0.22,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 1
+        "numeric": 0
       },
       {
         "id": "dev-main-0061",
@@ -1019,8 +1021,8 @@
       {
         "id": "dev-main-0047",
         "tier": "hard",
-        "reward": 0.21,
-        "cause": false,
+        "reward": 0.85,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1028,33 +1030,6 @@
       {
         "id": "dev-main-0008",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0186",
-        "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0049",
-        "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0117",
-        "tier": "easy",
         "reward": 0.21,
         "cause": false,
         "exact": false,
@@ -1062,16 +1037,16 @@
         "numeric": 0
       },
       {
-        "id": "dev-main-0102",
+        "id": "dev-main-0186",
         "tier": "easy",
-        "reward": 0.18,
-        "cause": false,
+        "reward": 0.78,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 1
       },
       {
-        "id": "dev-main-0074",
+        "id": "dev-main-0049",
         "tier": "easy",
         "reward": 0.17,
         "cause": false,
@@ -1080,9 +1055,36 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0117",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0102",
+        "tier": "easy",
+        "reward": 0.63,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0074",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
         "id": "dev-main-0097",
         "tier": "hard",
-        "reward": 0.13,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1091,8 +1093,8 @@
       {
         "id": "dev-main-0022",
         "tier": "easy",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1109,8 +1111,8 @@
       {
         "id": "dev-main-0092",
         "tier": "hard",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1118,8 +1120,8 @@
       {
         "id": "dev-main-0057",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1136,8 +1138,8 @@
       {
         "id": "dev-main-0105",
         "tier": "easy",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1145,7 +1147,7 @@
       {
         "id": "dev-main-0006",
         "tier": "easy",
-        "reward": 0.13,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1154,8 +1156,8 @@
       {
         "id": "dev-main-0040",
         "tier": "hard",
-        "reward": 0.21,
-        "cause": false,
+        "reward": 0.85,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1163,8 +1165,8 @@
       {
         "id": "dev-main-0029",
         "tier": "hard",
-        "reward": 0.66,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1172,7 +1174,7 @@
       {
         "id": "dev-main-0188",
         "tier": "easy",
-        "reward": 0.22,
+        "reward": 0.26,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1181,8 +1183,8 @@
       {
         "id": "dev-main-0042",
         "tier": "hard",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1190,10 +1192,10 @@
       {
         "id": "dev-main-0136",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.0,
         "cause": false,
         "exact": false,
-        "schema": true,
+        "schema": false,
         "numeric": 0
       },
       {
@@ -1208,8 +1210,8 @@
       {
         "id": "dev-main-0001",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1217,7 +1219,7 @@
       {
         "id": "dev-main-0080",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1235,8 +1237,8 @@
       {
         "id": "dev-main-0190",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1244,7 +1246,7 @@
       {
         "id": "dev-main-0185",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1262,8 +1264,8 @@
       {
         "id": "dev-main-0067",
         "tier": "hard",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.62,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1271,7 +1273,7 @@
       {
         "id": "dev-main-0165",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1280,7 +1282,7 @@
       {
         "id": "dev-main-0038",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1289,8 +1291,8 @@
       {
         "id": "dev-main-0124",
         "tier": "hard",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1298,8 +1300,8 @@
       {
         "id": "dev-main-0119",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1316,8 +1318,8 @@
       {
         "id": "dev-main-0064",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1325,7 +1327,7 @@
       {
         "id": "dev-main-0178",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1334,6 +1336,15 @@
       {
         "id": "dev-main-0151",
         "tier": "easy",
+        "reward": 0.82,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0113",
+        "tier": "easy",
         "reward": 0.17,
         "cause": false,
         "exact": false,
@@ -1341,7 +1352,34 @@
         "numeric": 0
       },
       {
-        "id": "dev-main-0113",
+        "id": "dev-main-0025",
+        "tier": "easy",
+        "reward": 0.67,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0076",
+        "tier": "hard",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0123",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0019",
         "tier": "easy",
         "reward": 0.81,
         "cause": true,
@@ -1350,46 +1388,10 @@
         "numeric": 0
       },
       {
-        "id": "dev-main-0025",
-        "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0076",
-        "tier": "hard",
-        "reward": 0.13,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0123",
-        "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0019",
+        "id": "dev-main-0043",
         "tier": "easy",
         "reward": 0.21,
         "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0043",
-        "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1406,32 +1408,14 @@
       {
         "id": "dev-main-0157",
         "tier": "hard",
-        "reward": 0.22,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 1
+        "numeric": 0
       },
       {
         "id": "dev-main-0158",
-        "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0122",
-        "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0176",
         "tier": "easy",
         "reward": 0.77,
         "cause": true,
@@ -1440,10 +1424,28 @@
         "numeric": 0
       },
       {
-        "id": "dev-main-0011",
+        "id": "dev-main-0122",
         "tier": "easy",
         "reward": 0.13,
         "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0176",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0011",
+        "tier": "easy",
+        "reward": 0.73,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1460,33 +1462,24 @@
       {
         "id": "dev-main-0152",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.86,
+        "cause": true,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0128",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.0,
         "cause": false,
         "exact": false,
-        "schema": true,
+        "schema": false,
         "numeric": 0
       },
       {
         "id": "dev-main-0116",
         "tier": "hard",
-        "reward": 0.17,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0154",
-        "tier": "easy",
         "reward": 0.77,
         "cause": true,
         "exact": false,
@@ -1494,10 +1487,19 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0154",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
         "id": "dev-main-0071",
         "tier": "hard",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1505,7 +1507,7 @@
       {
         "id": "dev-main-0150",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1514,8 +1516,8 @@
       {
         "id": "dev-main-0169",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1532,8 +1534,8 @@
       {
         "id": "dev-main-0060",
         "tier": "hard",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.58,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1541,16 +1543,16 @@
       {
         "id": "dev-main-0167",
         "tier": "easy",
-        "reward": 0.0,
+        "reward": 0.3,
         "cause": false,
         "exact": false,
-        "schema": false,
-        "numeric": 0
+        "schema": true,
+        "numeric": 1
       },
       {
         "id": "dev-main-0031",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1559,15 +1561,6 @@
       {
         "id": "dev-main-0015",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
-        "id": "dev-main-0187",
-        "tier": "easy",
         "reward": 0.21,
         "cause": false,
         "exact": false,
@@ -1575,10 +1568,19 @@
         "numeric": 0
       },
       {
+        "id": "dev-main-0187",
+        "tier": "easy",
+        "reward": 0.85,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
         "id": "dev-main-0162",
         "tier": "hard",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1586,7 +1588,7 @@
       {
         "id": "dev-main-0174",
         "tier": "easy",
-        "reward": 0.22,
+        "reward": 0.26,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1604,8 +1606,8 @@
       {
         "id": "dev-main-0189",
         "tier": "hard",
-        "reward": 0.62,
-        "cause": true,
+        "reward": 0.17,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1613,7 +1615,7 @@
       {
         "id": "dev-main-0094",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1622,7 +1624,7 @@
       {
         "id": "dev-main-0199",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1631,7 +1633,7 @@
       {
         "id": "dev-main-0055",
         "tier": "easy",
-        "reward": 0.13,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1649,16 +1651,16 @@
       {
         "id": "dev-main-0138",
         "tier": "hard",
-        "reward": 0.22,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
-        "numeric": 1
+        "numeric": 0
       },
       {
         "id": "dev-main-0045",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.13,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1667,8 +1669,8 @@
       {
         "id": "dev-main-0155",
         "tier": "easy",
-        "reward": 0.81,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1676,8 +1678,8 @@
       {
         "id": "dev-main-0161",
         "tier": "hard",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1685,8 +1687,8 @@
       {
         "id": "dev-main-0077",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1694,8 +1696,8 @@
       {
         "id": "dev-main-0110",
         "tier": "easy",
-        "reward": 0.22,
-        "cause": false,
+        "reward": 0.86,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 1
@@ -1712,8 +1714,8 @@
       {
         "id": "dev-main-0166",
         "tier": "easy",
-        "reward": 0.21,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1730,7 +1732,7 @@
       {
         "id": "dev-main-0048",
         "tier": "easy",
-        "reward": 0.13,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1739,8 +1741,8 @@
       {
         "id": "dev-main-0103",
         "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1748,7 +1750,7 @@
       {
         "id": "dev-main-0198",
         "tier": "easy",
-        "reward": 0.17,
+        "reward": 0.21,
         "cause": false,
         "exact": false,
         "schema": true,
@@ -1757,26 +1759,26 @@
       {
         "id": "dev-main-0018",
         "tier": "easy",
-        "reward": 0.13,
-        "cause": false,
+        "reward": 0.78,
+        "cause": true,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0044",
         "tier": "hard",
-        "reward": 0.17,
+        "reward": 0.22,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 0
+        "numeric": 1
       },
       {
         "id": "dev-main-0148",
         "tier": "easy",
-        "reward": 0.77,
-        "cause": true,
+        "reward": 0.21,
+        "cause": false,
         "exact": false,
         "schema": true,
         "numeric": 0
@@ -1793,11 +1795,11 @@
       {
         "id": "dev-main-0090",
         "tier": "easy",
-        "reward": 0.18,
+        "reward": 0.17,
         "cause": false,
         "exact": false,
         "schema": true,
-        "numeric": 1
+        "numeric": 0
       },
       {
         "id": "dev-main-0194",
@@ -1811,14 +1813,23 @@
       {
         "id": "dev-main-0144",
         "tier": "hard",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.77,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0
       },
       {
         "id": "dev-main-0132",
+        "tier": "easy",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0066",
         "tier": "easy",
         "reward": 0.13,
         "cause": false,
@@ -1827,19 +1838,10 @@
         "numeric": 0
       },
       {
-        "id": "dev-main-0066",
-        "tier": "easy",
-        "reward": 0.17,
-        "cause": false,
-        "exact": false,
-        "schema": true,
-        "numeric": 0
-      },
-      {
         "id": "dev-main-0068",
         "tier": "hard",
-        "reward": 0.17,
-        "cause": false,
+        "reward": 0.81,
+        "cause": true,
         "exact": false,
         "schema": true,
         "numeric": 0

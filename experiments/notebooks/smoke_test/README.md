@@ -160,6 +160,117 @@ could page to host RAM as available to a new context. The guard uses `nvidia-smi
 
 ## The runs on this model
 
+Three 200-step runs, Qwen3-1.7B, seed 0, identical in everything but the reward
+weight vector. Held out on the full 200-case dev split every 25 steps, greedy,
+through `eval.py`'s own code path; all three reproduce the frozen baseline at
+step 0 to four decimals.
+
+### The headline: the weight on `root_cause` predicts the outcome, inversely
+
+| | `root_cause` weight | `cause_acc` 0 → 200 | `flags_acc` | `action_acc` | McNemar vs frozen |
+| --- | --- | --- | --- | --- | --- |
+| `MAIN` | **0.45** | 0.235 → **0.170** (−0.065) | −0.012 | −0.015 | p = 0.171 (32 gained, 45 lost) |
+| `ABLATE` | 0.25 | 0.235 → 0.245 (+0.010) | +0.075 | +0.040 | p = 0.918 (48 gained, 46 lost) |
+| `PROBE` | **0.10** | 0.235 → **0.335** (+0.100) | **+0.353** | +0.095 | **p = 0.0055** (34 gained, 14 lost) |
+
+Monotone, and the direction is the uncomfortable one: **the run that weighted the
+diagnosis most heavily is the only one that got worse at diagnosing**, and it is
+the only one that destabilised — `MAIN`'s held-out `cause_acc` fell to 0.135 at
+step 125, below the 1/7 = 0.143 chance rate, alongside a 31% monotone drop in the
+entropy proxy. `PROBE`, weighting it at 0.10, sailed through the same window and
+peaked at 0.380.
+
+The paired tests on the same 200 cases:
+
+| | before | after | gained | lost | discordant | p |
+| --- | --- | --- | --- | --- | --- | --- |
+| frozen → MAIN | 0.235 | 0.170 | 32 | 45 | 77 | 0.171 |
+| frozen → ABLATE | 0.235 | 0.245 | 48 | 46 | 94 | 0.918 |
+| frozen → PROBE | 0.235 | 0.335 | 34 | 14 | 48 | **0.0055** |
+| MAIN → ABLATE | 0.170 | 0.245 | 20 | 5 | 25 | **0.0041** |
+| MAIN → PROBE | 0.170 | 0.335 | 60 | 27 | 87 | **0.0005** |
+| ABLATE → PROBE | 0.245 | 0.335 | 61 | 43 | 104 | 0.095 |
+
+Only `PROBE` beats the frozen policy significantly. `MAIN` is not significantly
+*worse* either — 45 lost against 32 gained does not reach 0.05 — but it is
+significantly worse than both of the others.
+
+**`PROBE`'s reward number is not evidence of anything.** It reaches 0.518 against
+`MAIN`'s 0.271, but the two are different weighted sums: `PROBE` puts 0.35 on
+`format`, and this model's schema validity starts at 0.965, so a third of that
+reward is collected before the first gradient step. Only the accuracies carry
+across weight sets, and those are the table above.
+
+Nothing learned arithmetic. `numeric_acc` moved −0.015 / +0.017 / −0.007 and
+exact match was 0.000 at all 27 evaluation points across the three runs.
+
+### What the four algorithm fixes actually did
+
+`MAIN` is the clean before/after: same model, same weights, same seed, only the
+algorithm differs (`runs/v1-before-fixes/` holds the earlier pair).
+
+| | before | after |
+| --- | --- | --- |
+| `clip_frac` | **0.000000**, all 400 steps | 0.008 |
+| `ratio_mean` | exactly 1.000000000, min and max | varies |
+| per-token share of the advantage | **6.4%** | **46–66%** |
+| `value_std` | 0.012 | 0.022–0.042 |
+| held-out `cause_acc` at step 200 | 0.290 | 0.170 |
+
+The first four rows are the fixes working: the trust region exists, and credit
+assignment is genuinely per token for the first time. The last row is the result
+being *worse*, and the explanation is in the third-from-last: `clip_frac` is
+0.008, so the trust region is engaging on under 1% of tokens. Raising
+`inner_epochs` from 1 to 4 therefore did not buy four restrained updates per
+batch — it bought four unrestrained ones, and that is what drove the entropy
+collapse. A clip that binds on 0.8% of tokens is a clip in name.
+
+### The critic still does not work, and it is not the optimiser
+
+| | `value_ev` (out of sample) | `value_ev_fit` (in sample) | undefined steps |
+| --- | --- | --- | --- |
+| `MAIN` | +0.009 | +0.014 | 28 / 200 |
+| `ABLATE` | −0.003 | +0.015 | 12 / 200 |
+| `PROBE` | −0.026 | −0.001 | 3 / 200 |
+
+Eight dedicated gradient steps per batch on cached features, and the head still
+cannot fit the batch it was just trained on — `value_ev_fit` is the in-sample
+number and it is ~0.01. That rules out the learning rate and the update count as
+the cause. What is left is the representation: under `value_detach=True` the
+critic is a linear probe on the last layer's hidden states, and those apparently
+do not linearly encode the return for this task. Testing that means
+`--no-value-detach`, which is a separate run because it lets the value loss
+reshape what the policy reads.
+
+**`undefined steps` is a result, not a footnote.** Those are batches where every
+sequence drew nearly the same reward, so the returns have no variance and
+explained variance is undefined rather than bad. 14% of `MAIN`'s batches. That is
+the same degeneracy GRPO's group-mean baseline hits, arriving here as a collapsed
+signal-to-noise ratio instead of an exactly-zero gradient.
+
+## The card has to be free first
+
+`anton` has one RTX 5070 Ti at 16 GiB and the vLLM 9B service holds about 14.6 GiB of it.
+Stopping it needs `sudo`, and this machine has no `NOPASSWD` rule — so it is done by a
+person at a terminal, not by a notebook and not by an agent:
+
+```sh
+sudo systemctl stop vllm-qwen membraneclaw-agent    # any branch
+deploy/stack.sh down                                 # branches that have it
+```
+
+Notebook 02's first cell refuses to run until that has happened, rather than letting a run
+OOM twenty minutes in. Its threshold is 11 GiB now rather than 8: Qwen3-1.7B is 3.4 GiB of
+bf16 weights before any activation, and the value head forces `output_hidden_states=True`,
+which keeps all 29 layers' hidden states alive through the backward pass.
+
+**Do not trust `torch.cuda.mem_get_info` on this machine.** With vLLM loaded it reported
+13,454 MiB free while `nvidia-smi` reported 544 — under WSL2 the driver counts memory it
+could page to host RAM as available to a new context. The guard uses `nvidia-smi` plus
+`systemctl is-active`, and that pairing is the only one that has matched reality here.
+
+## The runs on this model
+
 `runs/ppo-qwen3-17b-main-s0` — 200 steps, MAIN weights, seed 0, 8 sequences per step, about
 35 minutes on the card. Held out on the full 200-case dev split, greedy, through `eval.py`:
 

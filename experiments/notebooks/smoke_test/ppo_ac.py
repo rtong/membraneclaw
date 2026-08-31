@@ -376,12 +376,23 @@ def critic_fit(
     sel = mask > 0
     v, g = values[sel], returns[sel]
     if v.numel() < 2:
-        return {"value_ev": 0.0, "value_std": 0.0}
+        return {"value_ev": None, "value_std": 0.0}
+    std = round(float(v.std(unbiased=False)), 6)
     g_var = float(g.var(unbiased=False))
-    return {
-        "value_ev": round(1.0 - float((g - v).var(unbiased=False)) / g_var, 6) if g_var > 0 else 0.0,
-        "value_std": round(float(v.std(unbiased=False)), 6),
-    }
+    # When every sequence in a batch draws nearly the same reward the returns have
+    # almost no variance, and 1 - var(G-V)/var(G) divides by roughly zero. A
+    # `g_var > 0` guard is not enough: 1e-14 passes it, and one step of the first
+    # fixed run recorded -1e13 that way. That is the metric being *undefined* on
+    # that batch, not the critic failing on it, and the two must not be confused --
+    # explained variance is bounded above by 1 but unbounded below, so a genuine
+    # -3 is a genuinely bad critic and has to survive the guard.
+    #
+    # 15% of batches were degenerate this way over 200 steps, which is a fact
+    # about the task worth reporting rather than filtering into silence. Hence
+    # None, which JSON writes as null, rather than a plausible-looking 0.0.
+    if g_var < 1e-6:
+        return {"value_ev": None, "value_std": std}
+    return {"value_ev": round(1.0 - float((g - v).var(unbiased=False)) / g_var, 6), "value_std": std}
 
 
 def whiten(advantages: torch.Tensor, mask: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
@@ -872,6 +883,11 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         record = evaluate(policy, tokenizer, cfg, eval_cases, step)
         with eval_path.open("a") as fh:
             fh.write(json.dumps(record) + "\n")
+        if record["reward"] > best["reward"]:
+            best.update(reward=record["reward"], step=step, cause_acc=record["cause_acc"])
+            policy.save_pretrained(out_dir / "adapter-best")
+            torch.save(value_head.state_dict(), out_dir / "value_head-best.pt")
+            (out_dir / "best.json").write_text(json.dumps(best, indent=2) + "\n")
         progress(
             f"    eval @{step:<4} reward {record['reward']:.4f} "
             f"cause {record['cause_acc']:.3f} flags {record['flags_acc']:.3f} "
@@ -894,7 +910,13 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     # gradient norm going from 2.7 to 109. Saving only the final policy saved the
     # wreck, and every measurement afterwards was of the wreck. Checkpoint the
     # best trailing mean as well, and say so if the two differ.
-    best: dict[str, Any] = {"reward": float("-inf"), "step": None}
+    # Selected on the *held-out* curve, not on training reward. Measured on the
+    # first fixed run: corr(trailing-10 training reward, held-out cause_acc) was
+    # only +0.472, training reward peaked at step 100 while held-out was already
+    # falling, and at the step where held-out cause_acc collapsed to 0.135 the
+    # training trailing mean was still 0.2930 -- higher than at step 25. Training
+    # reward barely reacts to the collapse it is supposed to protect against.
+    best: dict[str, Any] = {"reward": float("-inf"), "step": None, "criterion": "held-out reward"}
     for step in range(cfg.steps):
         started = time.perf_counter()
         batch = [rng.choice(cases) for _ in range(cfg.prompts_per_step)]
@@ -1055,14 +1077,9 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         # What the dedicated critic steps bought within this batch alone.
         record["value_ev_gain"] = round(record["value_ev_fit"] - record["value_ev"], 6)
         history.append(record)
+        # Kept as a diagnostic; no longer used to choose a checkpoint.
         window = [r["reward_mean"] for r in history[-BEST_WINDOW:]]
-        trailing = sum(window) / len(window)
-        record["reward_trailing"] = round(trailing, 6)
-        if len(history) >= BEST_WINDOW and trailing > best["reward"]:
-            best = {"reward": trailing, "step": step}
-            policy.save_pretrained(out_dir / "adapter-best")
-            torch.save(value_head.state_dict(), out_dir / "value_head-best.pt")
-            (out_dir / "best.json").write_text(json.dumps(best, indent=2) + "\n")
+        record["reward_trailing"] = round(sum(window) / len(window), 6)
         with metrics_path.open("a") as fh:
             fh.write(json.dumps(record) + "\n")
         progress(
@@ -1080,10 +1097,10 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     policy.save_pretrained(out_dir / "adapter")
     torch.save(value_head.state_dict(), out_dir / "value_head.pt")
     progress(f"\nwrote {out_dir}")
-    if best["step"] is not None and best["step"] < cfg.steps - 1:
+    if best["step"] is not None and best["step"] < cfg.steps:
         progress(
-            f"NOTE: best trailing-{BEST_WINDOW} reward {best['reward']:.4f} was at step "
-            f"{best['step']}, not at the end ({record['reward_mean']:.4f}). "
+            f"NOTE: best held-out reward {best['reward']:.4f} was at step "
+            f"{best['step']}, not at the end. "
             f"adapter-best/ holds that policy; adapter/ holds the final one."
         )
     return history
