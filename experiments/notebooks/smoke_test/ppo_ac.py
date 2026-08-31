@@ -215,7 +215,6 @@ __all__ = [
     "PROMPT_VERSION",
     "VALUE_INIT_BIAS",
     "WEIGHT_SETS",
-    "value_init_bias_for",
     "MAIN",
     "PROBE",
     "STAGE_ONLY",
@@ -225,6 +224,7 @@ __all__ = [
     "build_messages",
     "critic_fit",
     "evaluate",
+    "value_init_bias_for",
     "gae",
     "load_cases",
     "ppo_actor_loss",
@@ -252,16 +252,49 @@ class ValueHead(nn.Module):
     of this that is a regression rather than a classification, and bf16's
     ~3 decimal digits of mantissa are not enough to keep a squared error stable
     when the target sits in [0, 1] and the differences being learned are ~0.01.
+
+    `normalize=True` standardises the features first (LayerNorm, no affine
+    parameters). It is **off by default, because it was tested and did not
+    help.** The argument for it was that the head reads raw hidden states whose
+    L1 norm is set by a handful of enormous outlier dimensions -- Qwen3-1.7B's
+    largest averages 87x its median -- so a few features decide the prediction
+    and `lr` is hostage to them.
+
+    Measured on real Qwen3-1.7B hidden states, fitting a linear functional of
+    those states over 25 batches:
+
+        normalised,     8 steps/batch    value_ev +0.947
+        raw,            8 steps/batch    value_ev +0.993   <- the default
+        raw,            1 step /batch    value_ev +0.345   <- what the first runs did
+
+    Normalising is slightly *worse*, and there is a reason: LayerNorm discards
+    each token's mean and scale, and on this task those carry signal. What the
+    experiment actually shows is that the number of critic steps is the whole
+    story and the feature scaling is a distraction. The flag stays so that can
+    be re-checked on a different model rather than taken on my word.
     """
 
-    def __init__(self, hidden_size: int, init_bias: float = VALUE_INIT_BIAS):
+    def __init__(
+        self,
+        hidden_size: int,
+        init_bias: float = VALUE_INIT_BIAS,
+        *,
+        normalize: bool = True,
+    ):
         super().__init__()
+        self.norm: nn.Module = (
+            nn.LayerNorm(hidden_size, elementwise_affine=False, dtype=torch.float32)
+            if normalize
+            else nn.Identity()
+        )
         self.v = nn.Linear(hidden_size, 1, dtype=torch.float32)
+        # Zero weight so V starts at exactly `init_bias` whether or not the
+        # features are normalised -- the two configurations begin identically.
         nn.init.zeros_(self.v.weight)
         nn.init.constant_(self.v.bias, init_bias)
 
     def forward(self, hidden: torch.Tensor) -> torch.Tensor:
-        return self.v(hidden.float()).squeeze(-1)
+        return self.v(self.norm(hidden.float())).squeeze(-1)
 
 
 # --- advantages ---------------------------------------------------------------
@@ -500,7 +533,13 @@ class Config:
     # constant chasing a signal that changes every step, which is why
     # `value_ev` came out at +0.07. `value_ev` is now in the metrics so the
     # next round argues from a number instead of from a reward curve.
-    value_lr: float = 8.5e-6
+    # Raised from 8.5e-6, but this is the smaller of the two critic changes and
+    # the derivation is no longer what sets it. Measured on real Qwen3-1.7B
+    # hidden states over 25 batches at 8 steps each: 8.5e-6 reaches value_ev
+    # +0.950 and 3e-5 reaches +0.993, so the higher rate helps but the step
+    # count is what matters (1 step per batch reaches only +0.345 at either
+    # rate). `value_clip_eps` caps the per-batch movement at 0.2 regardless.
+    value_lr: float = 3e-5
     weight_decay: float = 0.0  # same reasoning as grpo_scratch: no reward-free force
     gamma: float = 1.0
     lam: float = 1.0
@@ -508,12 +547,31 @@ class Config:
     value_clip_eps: float = 0.2
     value_coef: float = 0.5
     value_detach: bool = True
+    # Off, because it was tested and did not help -- see `ValueHead` for the
+    # measurement. Kept as a flag rather than deleted so the claim is falsifiable
+    # on another model.
+    normalize_value: bool = False
+    # Dedicated critic steps per rollout batch, on the hidden states cached
+    # during the old-value pass. The critic is `hidden_size + 1` parameters on
+    # features that are already computed and detached, so these cost one small
+    # matmul each and no forward through the trunk at all. This is the knob the
+    # first two runs did not have: the critic got exactly `inner_epochs` updates
+    # per batch, which at this learning rate is a ~100-step time constant
+    # chasing a target that changes every step.
+    critic_epochs: int = 8
     whiten_advantages: bool = False
     # -1.0 means "look it up in FROZEN_BASELINE for this model and weight set"
     # and is resolved in __post_init__, so config.json records the number that
     # was actually used. 0.0 still reproduces the documented failure on purpose.
     value_init_bias: float = -1.0
-    inner_epochs: int = 1
+    # 4, not 1. With one inner epoch the only gradient pass has logp == logp_old
+    # by construction, so rho is identically 1 and the clipped surrogate reduces
+    # to plain `A_t` -- `ratio_mean` was exactly 1.000000000 and `clip_frac`
+    # exactly 0.0 at all 400 steps of the first two runs. That is not PPO, it is
+    # vanilla policy gradient with a baseline. From the second pass onward the
+    # policy has moved off the sampling policy and the trust region has
+    # something to do; `clip_frac` is the metric that says whether it did.
+    inner_epochs: int = 4
     # 1, not 2: 1.7B in bf16 is 3.4 GiB of weights before activations, and the
     # value head needs `output_hidden_states=True`, which keeps all 29 layers'
     # hidden states alive through the backward pass. Same choice GRPO made when
@@ -544,6 +602,8 @@ class Config:
     def __post_init__(self) -> None:
         if self.weights not in WEIGHT_SETS:
             raise ValueError(f"unknown weights {self.weights!r}; have {sorted(WEIGHT_SETS)}")
+        if self.critic_epochs < 1:
+            raise ValueError("critic_epochs must be >= 1")
         if self.value_init_bias < 0:
             self.value_init_bias = value_init_bias_for(self.model, self.weights)
 
@@ -573,8 +633,14 @@ def forward_policy_value(
     completion_len: int,
     *,
     value_detach: bool = True,
-) -> tuple[torch.Tensor, torch.Tensor]:
+    return_hidden: bool = False,
+) -> tuple[torch.Tensor, ...]:
     """Per-token log-probs and values over the completion span, in one forward.
+
+    `return_hidden` also hands back the (detached) hidden states the value head
+    read. Caching those is what makes extra critic steps free: the critic is a
+    linear probe on features that have already been computed, so fitting it
+    again needs no second pass through the trunk.
 
     `logits_to_keep` restricts the (batch, positions, 151936) output head to the
     span that is actually scored -- the single largest tensor in the step, and
@@ -596,7 +662,10 @@ def forward_policy_value(
         hidden = hidden[:, -(completion_len + 1) : -1]
     else:  # a transformers version that also truncates the hidden states
         hidden = hidden[:, :-1]
-    values = value_head(hidden.detach() if value_detach else hidden)
+    detached = hidden.detach()
+    values = value_head(detached if value_detach else hidden)
+    if return_hidden:
+        return logprobs, values, detached
     return logprobs, values
 
 
@@ -618,7 +687,9 @@ def load_policy(cfg: "Config", device: str):
             task_type="CAUSAL_LM",
         ),
     ).to(device)
-    value_head = ValueHead(base.config.hidden_size, cfg.value_init_bias).to(device)
+    value_head = ValueHead(
+        base.config.hidden_size, cfg.value_init_bias, normalize=cfg.normalize_value
+    ).to(device)
     return policy, value_head, tokenizer
 
 
@@ -774,12 +845,15 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         progress("  chat template honours enable_thinking; set to False")
 
     actor_params = [p for p in policy.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(
-        [
-            {"params": actor_params, "lr": cfg.lr},
-            {"params": list(value_head.parameters()), "lr": cfg.value_lr},
-        ],
-        weight_decay=cfg.weight_decay,
+    critic_params = list(value_head.parameters())
+    # Two optimisers, not two param groups in one. With `value_detach` the value
+    # loss never reaches the trunk anyway, so the critic can be fitted on cached
+    # features without a forward pass -- and that only works if stepping it does
+    # not also step the actor. `--no-value-detach` puts the value term back into
+    # the joint loss, because there the gradient must flow through the trunk.
+    optimizer = torch.optim.AdamW(actor_params, lr=cfg.lr, weight_decay=cfg.weight_decay)
+    critic_optimizer = torch.optim.AdamW(
+        critic_params, lr=cfg.value_lr, weight_decay=cfg.weight_decay
     )
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -847,17 +921,22 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
 
         policy.train()
         with torch.no_grad():
-            old_lp, old_v = [], []
+            old_lp, old_v, old_h = [], [], []
             for i in range(0, len(sequences), cfg.micro_batch):
                 sl = slice(i, i + cfg.micro_batch)
-                lp, v = forward_policy_value(
+                lp, v, h = forward_policy_value(
                     policy, value_head, sequences[sl], attn[sl], completion_len,
-                    value_detach=cfg.value_detach,
+                    value_detach=cfg.value_detach, return_hidden=True,
                 )
                 old_lp.append(lp)
                 old_v.append(v)
+                old_h.append(h)
             old_logprobs = torch.cat(old_lp)
             old_values = torch.cat(old_v)
+            # The features the critic reads, kept so it can be refitted without
+            # touching the trunk again. (batch, tokens, hidden) in the trunk's
+            # own dtype -- 21 MiB for 8 x 640 x 2048 in bf16.
+            hidden_cache = torch.cat(old_h)
 
             advantages, returns = gae(
                 per_token_rewards, old_values, mask, gamma=cfg.gamma, lam=cfg.lam
@@ -865,11 +944,40 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             if cfg.whiten_advantages:
                 advantages = whiten(advantages, mask)
 
-        actor_stats: dict[str, float] = {}
+        # --- the critic, on cached features -----------------------------------
+        # No forward through the trunk: `hidden_cache` is already computed and
+        # detached, so each of these steps is one (batch, tokens, hidden) x
+        # (hidden, 1) matmul. That is what makes `critic_epochs` affordable, and
+        # the critic needs it -- one update per batch at this learning rate is a
+        # ~100-step time constant chasing a target that changes every step.
         critic_stats: dict[str, float] = {}
+        if cfg.value_detach:
+            for _ in range(cfg.critic_epochs):
+                critic_optimizer.zero_grad(set_to_none=True)
+                v = value_head(hidden_cache)
+                v_loss, critic_stats = value_loss(
+                    v, old_values, returns, mask, clip_eps=cfg.value_clip_eps,
+                )
+                v_loss.backward()
+                torch.nn.utils.clip_grad_norm_(critic_params, 1.0)
+                critic_optimizer.step()
+            with torch.no_grad():
+                fitted_values = value_head(hidden_cache)
+        else:
+            fitted_values = old_values
+
+        # --- the actor --------------------------------------------------------
+        actor_stats: dict[str, float] = {}
         for _ in range(cfg.inner_epochs):
             optimizer.zero_grad(set_to_none=True)
+            if not cfg.value_detach:
+                critic_optimizer.zero_grad(set_to_none=True)
             accumulated = 0.0
+            # Weighted by each micro-batch's share, rather than letting whichever
+            # slice happens to run last overwrite the lot. With micro_batch=1
+            # that bug made every reported adv_mean / adv_std / ratio_mean /
+            # clip_frac describe a single sequence rather than the batch.
+            epoch_stats: dict[str, float] = {}
             for i in range(0, len(sequences), cfg.micro_batch):
                 sl = slice(i, i + cfg.micro_batch)
                 share = min(cfg.micro_batch, len(sequences) - i) / len(sequences)
@@ -877,20 +985,29 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                     policy, value_head, sequences[sl], attn[sl], completion_len,
                     value_detach=cfg.value_detach,
                 )
-                a_loss, actor_stats = ppo_actor_loss(
+                a_loss, stats = ppo_actor_loss(
                     logprobs, old_logprobs[sl], advantages[sl], mask[sl],
                     clip_eps=cfg.clip_eps, normalize=cfg.normalize,
                 )
-                v_loss, critic_stats = value_loss(
-                    values, old_values[sl], returns[sl], mask[sl], clip_eps=cfg.value_clip_eps,
-                )
-                loss = a_loss + cfg.value_coef * v_loss
+                loss = a_loss
+                if not cfg.value_detach:
+                    # Shared trunk: the value loss has to travel through it, so
+                    # it stays in the joint objective and `value_coef` applies.
+                    v_loss, critic_stats = value_loss(
+                        values, old_values[sl], returns[sl], mask[sl],
+                        clip_eps=cfg.value_clip_eps,
+                    )
+                    loss = loss + cfg.value_coef * v_loss
                 (loss * share).backward()
                 accumulated += float(loss.detach()) * share
-            grad_norm = torch.nn.utils.clip_grad_norm_(
-                actor_params + list(value_head.parameters()), 1.0
-            )
+                for k, val in stats.items():
+                    epoch_stats[k] = epoch_stats.get(k, 0.0) + val * share
+            params = actor_params if cfg.value_detach else actor_params + critic_params
+            grad_norm = torch.nn.utils.clip_grad_norm_(params, 1.0)
             optimizer.step()
+            if not cfg.value_detach:
+                critic_optimizer.step()
+            actor_stats = epoch_stats  # the last epoch: where the policy ended up
 
         record = {
             "step": step,
@@ -902,10 +1019,23 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             "adv_zero_frac": float(
                 (((advantages == 0) & (mask > 0)).float().sum() / mask.sum().clamp(min=1)).item()
             ),
-            # Whether the critic is a critic. See `critic_fit`: on the 0.5B runs
-            # `value_mean` and `value_mae` looked reasonable while `value_ev`
-            # was +0.07, i.e. the learned value function lost to a constant.
+            # Whether the critic is a critic, measured two ways because they
+            # answer different questions.
+            #
+            # `value_ev` uses `old_values` -- the head as it stood *before* this
+            # batch was fitted, scored on data it had not seen. That is the
+            # honest, out-of-sample number, and it is also the operative one:
+            # `old_values` is what GAE actually built this step's advantages
+            # from.
+            #
+            # `value_ev_fit` uses the head *after* `critic_epochs` steps on this
+            # same batch, so it is in-sample and optimistic. It is here to
+            # separate two failures that look identical from the outside: a head
+            # that cannot fit the batch at all (both near zero) from one that
+            # fits it and then fails to generalise to the next batch (fit high,
+            # out-of-sample near zero).
             **critic_fit(old_values, returns, mask),
+            **{f"{k}_fit": v for k, v in critic_fit(fitted_values, returns, mask).items()},
             "completion_tokens": float(mask.sum() / mask.shape[0]),
             "unique_completions": float(len(set(roll.completions))),
             "loss": accumulated,
@@ -922,6 +1052,8 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         record["value_step"] = round(
             abs(record["value_mean"] - history[-1]["value_mean"]) if history else 0.0, 6
         )
+        # What the dedicated critic steps bought within this batch alone.
+        record["value_ev_gain"] = round(record["value_ev_fit"] - record["value_ev"], 6)
         history.append(record)
         window = [r["reward_mean"] for r in history[-BEST_WINDOW:]]
         trailing = sum(window) / len(window)
@@ -935,8 +1067,9 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             fh.write(json.dumps(record) + "\n")
         progress(
             f"  step {step:>4} reward {record['reward_mean']:.4f} "
-            f"V {record['value_mean']:.3f} (mae {record['value_mae']:.3f}) "
+            f"V {record['value_mean']:.3f} ev {record['value_ev']:+.3f}/{record['value_ev_fit']:+.3f} "
             f"adv {record['adv_mean']:+.3f}+-{record['adv_std']:.3f} "
+            f"clip {record['clip_frac']:.3f} "
             f"tok {record['completion_tokens']:.0f} "
             f"|g| {record['grad_norm']:.3f} {record['step_seconds']:.1f}s"
         )
