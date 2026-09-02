@@ -45,6 +45,7 @@ still resolves the right value-head initialisation.
 | `ppo_ac.py` | the implementation: GAE, both clipped losses, the value head, the loop. The gradient is written out by hand in the module docstring, as `grpo_scratch.py` does. |
 | `01_actor_critic_and_gae.ipynb` | the derivation, and 14 checks that need no GPU. Runs on CPU in about two minutes. Committed with outputs. |
 | `02_ppo_actor_critic_1.7b.ipynb` | the run on the card, and the curves. Executed, committed with outputs; re-running it against a finished run directory plots instead of retraining. |
+| `03_critic_and_trust_region.ipynb` | the two items this README's *Status* left open — the critic's representation (`--no-value-detach`) and the trust region (`inner_epochs` vs. an entropy bonus). Three runs, each notebook 02's MAIN config with one knob changed. Same plot-or-retrain guard as 02. |
 | `runs/ppo-qwen3-17b-{main,ablate}-s0/` | the two 200-step runs. Every run directory carries the same four artefacts: `metrics.jsonl`, `eval.jsonl`, `curves.png`, `critic.png` — notebook 02 iterates over `RUNS`, so adding a run to that dict is all it takes to get the same figures. |
 | `runs/paired/` | the three greedy evaluations the paired test reads — frozen, MAIN, ABLATE — each with the full `per_case` block. |
 | `runs/main_vs_ablate.png` | the cross-run comparison; it belongs to neither directory, so it sits one level up. |
@@ -248,6 +249,28 @@ explained variance is undefined rather than bad. 14% of `MAIN`'s batches. That i
 the same degeneracy GRPO's group-mean baseline hits, arriving here as a collapsed
 signal-to-noise ratio instead of an exactly-zero gradient.
 
+### Both of the above, tested in `03_critic_and_trust_region.ipynb`
+
+Three runs, each notebook 02's `MAIN` configuration with exactly one knob moved,
+seed 0, 200 steps. All three beat the frozen policy on the paired McNemar test
+(p = 0.0013 / 0.0074 / 0.0165) **and** beat `MAIN`, which is confirmed the worst
+of the four — the only run whose held-out `cause_acc` fell and the only one to
+dip below the 1/7 chance rate.
+
+| run | change vs. MAIN | result |
+| --- | --- | --- |
+| `runs/ppo-qwen3-17b-nodetach-s0` | `value_detach=False` | **weak yes for Q1.** Out-of-sample `value_ev` +0.009 → +0.016, degenerate batches 28/200 → 6/200 — the predicted direction, but still a critic explaining ~2% of the return. Representation is part of the constraint, not all of it. Held-out `cause_acc` 0.235 → 0.305, but confounded by the shared trunk. |
+| `runs/ppo-qwen3-17b-ie2-s0` | `inner_epochs` 4 → 2 | entropy proxy 0.169 → 0.141 (vs `MAIN`'s 0.073), `cause_acc` 0.235 → 0.290 — but by engaging the clip *less* (`clip_frac` 0.008 → 0.003). The gain is from fewer unrestrained updates; `inner_epochs=4` was too many. |
+| `runs/ppo-qwen3-17b-ent-s0` | `entropy_coef` 0 → 0.005 | **the winner.** The only run where the trust region bound at all — `ratio_mean` max **1.405**. Best held-out result of the series: `cause_acc` 0.235 → 0.350, `flags_acc` 0.323 → 0.610, McNemar `MAIN → ENT` p < 0.0001. `entropy_coef` is now a real dial; 0.005 is a floor found after 0.05 swamped the reward gradient and drove the policy into 300-token garbage that overflowed the scorer. |
+
+`ppo_ac.py` picked up four corrections while these ran: the entropy feature
+(`Config.entropy_coef`, `token_entropy`, the `-entropy_coef · H` term —
+`entropy_coef=0.0` default, every run in `runs/` bit-identical), plus three latent
+bugs from commit `58833d3` that these runs were the first to hit: `best`
+referenced before assignment in the step-0 eval, `value_ev_gain` / the progress
+line not handling the `None` `critic_fit` returns on a degenerate batch, and
+`rollout` not surviving a completion the scorer cannot parse.
+
 ## The card has to be free first
 
 `anton` has one RTX 5070 Ti at 16 GiB and the vLLM 9B service holds about 14.6 GiB of it.
@@ -389,6 +412,10 @@ safety assertion (it did catch `lr=1e-3`) and should not be read as a prediction
 * `ppo_ac.py` — two 200-step runs end to end on the card, MAIN and ABLATE, exit 0 both.
 * `02` — executed against both, committed with outputs. Its figures are drawn inline; the
   PNGs beside the runs are written by the same cells.
+* `03` — executed, 5/5 CPU checks plus the three 200-step runs (`nodetach`, `ie2`, `ent`),
+  committed with outputs. All three beat frozen and beat `MAIN` on the paired test; the
+  entropy bonus (`ent`) is the only configuration in which the clip ever binds. Re-running
+  it against the finished run directories plots instead of retraining.
 
 What is shown: the loop is correct on real hardware at this scale; both policies improved
 held-out `root_cause` accuracy by a margin that survives a paired test (p = 0.007 and

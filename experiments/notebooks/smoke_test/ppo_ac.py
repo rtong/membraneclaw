@@ -231,6 +231,7 @@ __all__ = [
     "score",
     "selective_logprobs",
     "terminal_rewards",
+    "token_entropy",
     "value_loss",
     "whiten",
 ]
@@ -406,6 +407,28 @@ def whiten(advantages: torch.Tensor, mask: torch.Tensor, eps: float = 1e-8) -> t
 # --- the losses ---------------------------------------------------------------
 
 
+def token_entropy(logits: torch.Tensor) -> torch.Tensor:
+    """Shannon entropy of the policy's next-token distribution, per position.
+
+    `H = logsumexp(z) - sum(softmax(z) * z)`, in float32. This is the honest
+    distribution entropy, and it is a *different quantity* from the
+    `entropy_proxy` the diagnostics already carry: that one is `-logp` of the
+    single token that was sampled, a one-sample estimate of the cross entropy.
+    The proxy is fine as a monotone collapse detector and costs nothing; a bonus
+    term in the loss needs the real thing.
+
+    Materialises one logits-sized tensor for `softmax(z)`, kept for the backward
+    pass, so `forward_policy_value` computes it only when it is asked to -- never
+    in the old-value no-grad pass. It is built over the whole `logits_to_keep`
+    span, not the active mask, so at Qwen3-1.7B's 151,936-token vocabulary and a
+    640-token generation window that is ~390 MiB in float32 at micro_batch=1.
+    """
+    logits = logits.float()
+    logz = torch.logsumexp(logits, dim=-1)
+    probs = torch.softmax(logits, dim=-1)
+    return logz - (probs * logits).sum(dim=-1)
+
+
 def ppo_actor_loss(
     logprobs: torch.Tensor,
     old_logprobs: torch.Tensor,
@@ -414,6 +437,8 @@ def ppo_actor_loss(
     *,
     clip_eps: float = 0.2,
     normalize: str = "token",
+    entropy: torch.Tensor | None = None,
+    entropy_coef: float = 0.0,
 ) -> tuple[torch.Tensor, dict[str, float]]:
     """The clipped surrogate, with a per-token advantage.
 
@@ -421,6 +446,12 @@ def ppo_actor_loss(
     (batch, tokens) here and (batch,) there. The clipping, the normalisation and
     the diagnostics are deliberately identical so the two runs' numbers can be
     read against each other.
+
+    `entropy` is the per-token `token_entropy` of the *current* policy, passed in
+    when `entropy_coef > 0`. It enters as `-entropy_coef * mean(H)`, the standard
+    PPO entropy bonus -- a reward-free force that resists the near-greedy
+    collapse `inner_epochs > 1` drives here. `entropy_coef=0.0` reproduces every
+    run in `runs/` exactly: the term is not merely small, it is absent.
     """
     ratio = torch.exp(logprobs - old_logprobs)
     unclipped = ratio * advantages
@@ -436,11 +467,18 @@ def ppo_actor_loss(
     else:
         raise ValueError(f"unknown normalize={normalize!r}")
 
+    active = mask.sum().clamp(min=1.0)
+    surrogate = float(loss.detach())  # the clipped surrogate alone, as in every prior run
+    entropy_mean = None
+    if entropy is not None:
+        entropy_mean = (entropy * mask).sum() / active
+        if entropy_coef:
+            loss = loss - entropy_coef * entropy_mean
+
     with torch.no_grad():
-        active = mask.sum().clamp(min=1.0)
         binding = ((unclipped > clipped) & (mask > 0)).float().sum() / active
         stats = {
-            "actor_loss": float(loss.detach()),
+            "actor_loss": surrogate,
             "ratio_mean": float((ratio * mask).sum() / active),
             "clip_frac": float(binding),
             "adv_mean": float((advantages * mask).sum() / active),
@@ -449,6 +487,8 @@ def ppo_actor_loss(
             ),
             "entropy_proxy": float(-(logprobs * mask).sum() / active),
         }
+        if entropy_mean is not None:
+            stats["policy_entropy"] = float(entropy_mean)
     return loss, stats
 
 
@@ -557,6 +597,16 @@ class Config:
     clip_eps: float = 0.2
     value_clip_eps: float = 0.2
     value_coef: float = 0.5
+    # Entropy bonus on the policy's next-token distribution, added to the actor
+    # objective as `-entropy_coef * mean(H)`. 0.0 by default, which is not a
+    # small term but no term -- every run in `runs/` was trained without it, and
+    # `weight_decay` carries the same "no reward-free force" reasoning. It is on
+    # the table because with `inner_epochs=4` the entropy proxy fell 0.169 ->
+    # 0.073 over 200 steps on MAIN while `clip_frac` held near 0.008: four
+    # unrestrained updates per batch and nothing resisting a near-greedy
+    # collapse. `03_critic_and_trust_region.ipynb` runs a nonzero value here
+    # against lowering `inner_epochs` as the two candidate levers.
+    entropy_coef: float = 0.0
     value_detach: bool = True
     # Off, because it was tested and did not help -- see `ValueHead` for the
     # measurement. Kept as a flag rather than deleted so the claim is falsifiable
@@ -645,6 +695,7 @@ def forward_policy_value(
     *,
     value_detach: bool = True,
     return_hidden: bool = False,
+    return_entropy: bool = False,
 ) -> tuple[torch.Tensor, ...]:
     """Per-token log-probs and values over the completion span, in one forward.
 
@@ -653,12 +704,19 @@ def forward_policy_value(
     linear probe on features that have already been computed, so fitting it
     again needs no second pass through the trunk.
 
+    `return_entropy` hands back the per-token `token_entropy` instead, computed
+    from the same logits slice that produced `logprobs`. The two flags are not
+    combined -- `return_hidden` is the no-grad old-value pass, `return_entropy`
+    the actor pass -- and asking for both is a bug.
+
     `logits_to_keep` restricts the (batch, positions, 151936) output head to the
     span that is actually scored -- the single largest tensor in the step, and
     what exhausted the card on the GRPO run's first attempt. The hidden states
     come back full length regardless, so `V(s_t)` is sliced from them at the
     same positions whose logits produced token t.
     """
+    if return_hidden and return_entropy:
+        raise ValueError("return_hidden and return_entropy are not combined")
     out = model(
         input_ids=sequences,
         attention_mask=attention_mask,
@@ -667,6 +725,7 @@ def forward_policy_value(
         output_hidden_states=True,
     )
     logprobs = selective_logprobs(out.logits[:, :-1], sequences[:, -completion_len:])
+    entropy = token_entropy(out.logits[:, :-1]) if return_entropy else None
 
     hidden = out.hidden_states[-1]
     if hidden.shape[1] == sequences.shape[1]:
@@ -677,6 +736,8 @@ def forward_policy_value(
     values = value_head(detached if value_detach else hidden)
     if return_hidden:
         return logprobs, values, detached
+    if return_entropy:
+        return logprobs, values, entropy
     return logprobs, values
 
 
@@ -758,7 +819,18 @@ def rollout(
     completion_ids = out[:, prompt_len:]
     mask = build_mask(completion_ids, tokenizer.eos_token_id, tokenizer.pad_token_id)
     completions = tokenizer.batch_decode(completion_ids, skip_special_tokens=True)
-    rewards = [score(c, case["answer"], weights).total for c, case in zip(completions, expanded)]
+
+    def _reward(c: str, case: dict[str, Any]) -> float:
+        # A completion the scorer cannot process earned no reward. `reward.score`
+        # assumes well-formed numeric fields, and an exploring policy can emit a
+        # literal outside float range (`OverflowError` in `reward._numeric_hits`)
+        # or otherwise break parsing; that is a 0, not a dead run.
+        try:
+            return score(c, case["answer"], weights).total
+        except (OverflowError, ValueError, TypeError, KeyError):
+            return 0.0
+
+    rewards = [_reward(c, case) for c, case in zip(completions, expanded)]
 
     return Rollout(
         cases=expanded,
@@ -901,9 +973,6 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         f"={per_step} seq/step | lam={cfg.lam} | {device}"
     )
 
-    if cfg.eval_every:
-        run_eval(0)  # step 0 must reproduce the frozen baseline
-
     history: list[dict[str, Any]] = []
     # An RL run that has solved its task can still destroy itself: this one's
     # reward sat at 1.0000 from step 170 and collapsed to 0.0000 at 196 with the
@@ -916,7 +985,12 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     # falling, and at the step where held-out cause_acc collapsed to 0.135 the
     # training trailing mean was still 0.2930 -- higher than at step 25. Training
     # reward barely reacts to the collapse it is supposed to protect against.
+    # Defined before the step-0 eval because `run_eval` closes over it.
     best: dict[str, Any] = {"reward": float("-inf"), "step": None, "criterion": "held-out reward"}
+
+    if cfg.eval_every:
+        run_eval(0)  # step 0 must reproduce the frozen baseline
+
     for step in range(cfg.steps):
         started = time.perf_counter()
         batch = [rng.choice(cases) for _ in range(cfg.prompts_per_step)]
@@ -1003,13 +1077,21 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             for i in range(0, len(sequences), cfg.micro_batch):
                 sl = slice(i, i + cfg.micro_batch)
                 share = min(cfg.micro_batch, len(sequences) - i) / len(sequences)
-                logprobs, values = forward_policy_value(
+                want_entropy = cfg.entropy_coef > 0
+                fwd = forward_policy_value(
                     policy, value_head, sequences[sl], attn[sl], completion_len,
                     value_detach=cfg.value_detach,
+                    return_entropy=want_entropy,
                 )
+                if want_entropy:
+                    logprobs, values, entropy = fwd
+                else:
+                    logprobs, values = fwd
+                    entropy = None
                 a_loss, stats = ppo_actor_loss(
                     logprobs, old_logprobs[sl], advantages[sl], mask[sl],
                     clip_eps=cfg.clip_eps, normalize=cfg.normalize,
+                    entropy=entropy, entropy_coef=cfg.entropy_coef,
                 )
                 loss = a_loss
                 if not cfg.value_detach:
@@ -1074,17 +1156,23 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         record["value_step"] = round(
             abs(record["value_mean"] - history[-1]["value_mean"]) if history else 0.0, 6
         )
-        # What the dedicated critic steps bought within this batch alone.
-        record["value_ev_gain"] = round(record["value_ev_fit"] - record["value_ev"], 6)
+        # What the dedicated critic steps bought within this batch alone. None on a
+        # degenerate batch, where `critic_fit` leaves both explained variances undefined
+        # rather than reporting a plausible-looking 0.0.
+        ev, ev_fit = record["value_ev"], record["value_ev_fit"]
+        record["value_ev_gain"] = round(ev_fit - ev, 6) if ev is not None and ev_fit is not None else None
         history.append(record)
         # Kept as a diagnostic; no longer used to choose a checkpoint.
         window = [r["reward_mean"] for r in history[-BEST_WINDOW:]]
         record["reward_trailing"] = round(sum(window) / len(window), 6)
         with metrics_path.open("a") as fh:
             fh.write(json.dumps(record) + "\n")
+        ev_txt = "  undef  " if record["value_ev"] is None else (
+            f"{record['value_ev']:+.3f}/{record['value_ev_fit']:+.3f}"
+        )
         progress(
             f"  step {step:>4} reward {record['reward_mean']:.4f} "
-            f"V {record['value_mean']:.3f} ev {record['value_ev']:+.3f}/{record['value_ev_fit']:+.3f} "
+            f"V {record['value_mean']:.3f} ev {ev_txt} "
             f"adv {record['adv_mean']:+.3f}+-{record['adv_std']:.3f} "
             f"clip {record['clip_frac']:.3f} "
             f"tok {record['completion_tokens']:.0f} "
