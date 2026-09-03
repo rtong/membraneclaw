@@ -47,6 +47,7 @@ still resolves the right value-head initialisation.
 | `02_ppo_actor_critic_1.7b.ipynb` | the run on the card, and the curves. Executed, committed with outputs; re-running it against a finished run directory plots instead of retraining. |
 | `03_critic_and_trust_region.ipynb` | the two items this README's *Status* left open — the critic's representation (`--no-value-detach`) and the trust region (`inner_epochs` vs. an entropy bonus). Three runs, each notebook 02's MAIN config with one knob changed. Same plot-or-retrain guard as 02. |
 | `04_entropy_generalizes.ipynb` | whether `03`'s entropy bonus generalises: across the three weight sets (Q3 — it does, and it overturns `58833d3`'s "inverse weight" headline) and stacked with `--no-value-detach` (Q4 — a net task win, but the two levers cancel on the critic). Three runs. |
+| `05_entropy_coef_and_seed.ipynb` | `entropy_coef` swept 0.002–0.020 on `ABLATE` (Q5 — 0.005 was well placed, the window is narrow, 0.020 runs away) and `ABLATE + entropy` rerun at seed 1 (Q6 — the effect reproduces in direction, +0.065 vs +0.175, not in magnitude). Four runs. |
 | `runs/ppo-qwen3-17b-{main,ablate}-s0/` | the two 200-step runs. Every run directory carries the same four artefacts: `metrics.jsonl`, `eval.jsonl`, `curves.png`, `critic.png` — notebook 02 iterates over `RUNS`, so adding a run to that dict is all it takes to get the same figures. |
 | `runs/paired/` | the three greedy evaluations the paired test reads — frozen, MAIN, ABLATE — each with the full `per_case` block. |
 | `runs/main_vs_ablate.png` | the cross-run comparison; it belongs to neither directory, so it sits one level up. |
@@ -301,6 +302,23 @@ gain over `03`'s `ENT` is within noise. And on the critic they *cancel*: `NODETA
 `value_ev` gain (+0.016) is erased under the bonus (−0.003), because the extra
 exploration makes the return a moving target the shared-trunk critic cannot track.
 
+### The coefficient and a second seed — `05_entropy_coef_and_seed.ipynb`
+
+**Q5 — `entropy_coef=0.005` was well placed.** Sweeping `ABLATE` weights across 0.002 /
+0.005 / 0.010 / 0.020: 0.002 is too weak (0.280), 0.005 and 0.010 give the same outcome
+(0.410 / 0.405) but 0.010 already drifts (entropy proxy 2× frozen, completions lengthening),
+and **0.020 runs away** — completions 95 → 640 (the cap), schema validity → 0, reward → 0,
+the `0.05` blow-up at higher resolution. `0.005` sits at the clean end of a narrow
+0.005–0.010 plateau with a cliff above it.
+
+**Q6 — `ABLATE + entropy` reproduces in direction, not in magnitude.** At seed 1 the run
+still beats the frozen policy (`cause_acc` 0.235 → 0.300, `frozen → ABLATE+ent` p = 0.0023,
+15 gained / 2 lost) on the steadiest curve of the series — but 0.300 against seed 0's 0.410
+is a wide gap, the two policies disagree on 34/200 cases (p = 0.0002), and seed 0's
+`flags_acc` jump to 0.588 did not reproduce (seed 1 flat at 0.325). **The result is
++0.065 to +0.175 held-out `cause_acc`, significant at both seeds; the specific 0.410 was
+partly luck.**
+
 ## The card has to be free first
 
 `anton` has one RTX 5070 Ti at 16 GiB and the vLLM 9B service holds about 14.6 GiB of it.
@@ -450,14 +468,19 @@ safety assertion (it did catch `lr=1e-3`) and should not be read as a prediction
   committed with outputs. The entropy bonus generalises across weight sets and overturns
   `58833d3`'s "inverse weight" headline; stacked with `--no-value-detach` it wins on the
   task (`cause_acc` → 0.400) but cancels the critic gain.
+* `05` — executed, four 200-step runs (`ablate-ent-c002/c010/c020`, `ablate-ent-s1`),
+  committed with outputs. `entropy_coef=0.005` sits on a narrow 0.005–0.010 plateau; 0.020
+  runs away to a 640-token, zero-reward collapse. `ABLATE + entropy` reproduces at seed 1
+  in direction (p = 0.0023 vs frozen) but at half the magnitude (+0.065 vs +0.175).
 
-What the series shows, as of `04`: the loop is correct on real hardware at this scale, and
+What the series shows, as of `05`: the loop is correct on real hardware at this scale, and
 the notebook-02 `MAIN` regression was an optimiser failure, not a task ceiling — a dead
 clip and four unrestrained inner epochs drove a near-greedy collapse that broke the
-diagnosis-heavy weight sets. A small entropy bonus fixes it: every weight set then improves
-held-out `cause_acc` to 0.35–0.41, and `frozen → ABLATE+ent` reaches p < 1e-4. The learned
-critic still contributes almost none of it — `value_ev` never clears +0.02 in any of the
-eleven runs.
+diagnosis-heavy weight sets. A small entropy bonus (`entropy_coef=0.005`, on a narrow
+usable window) fixes it: every weight set then improves held-out `cause_acc`, by +0.065 to
++0.175 depending on the seed, significant against the frozen policy at both seeds tried. The
+learned critic still contributes almost none of it — `value_ev` never clears +0.02 in any
+of the fifteen runs.
 
 What is not shown: that this is arithmetic rather than a better prior over seven labels —
 `numeric_acc` is ~18 hits out of 600 and exact match is 0.000 everywhere. Nor that any of it
