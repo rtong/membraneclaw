@@ -46,6 +46,7 @@ still resolves the right value-head initialisation.
 | `01_actor_critic_and_gae.ipynb` | the derivation, and 14 checks that need no GPU. Runs on CPU in about two minutes. Committed with outputs. |
 | `02_ppo_actor_critic_1.7b.ipynb` | the run on the card, and the curves. Executed, committed with outputs; re-running it against a finished run directory plots instead of retraining. |
 | `03_critic_and_trust_region.ipynb` | the two items this README's *Status* left open — the critic's representation (`--no-value-detach`) and the trust region (`inner_epochs` vs. an entropy bonus). Three runs, each notebook 02's MAIN config with one knob changed. Same plot-or-retrain guard as 02. |
+| `04_entropy_generalizes.ipynb` | whether `03`'s entropy bonus generalises: across the three weight sets (Q3 — it does, and it overturns `58833d3`'s "inverse weight" headline) and stacked with `--no-value-detach` (Q4 — a net task win, but the two levers cancel on the critic). Three runs. |
 | `runs/ppo-qwen3-17b-{main,ablate}-s0/` | the two 200-step runs. Every run directory carries the same four artefacts: `metrics.jsonl`, `eval.jsonl`, `curves.png`, `critic.png` — notebook 02 iterates over `RUNS`, so adding a run to that dict is all it takes to get the same figures. |
 | `runs/paired/` | the three greedy evaluations the paired test reads — frozen, MAIN, ABLATE — each with the full `per_case` block. |
 | `runs/main_vs_ablate.png` | the cross-run comparison; it belongs to neither directory, so it sits one level up. |
@@ -168,6 +169,13 @@ step 0 to four decimals.
 
 ### The headline: the weight on `root_cause` predicts the outcome, inversely
 
+> **Superseded by `04_entropy_generalizes.ipynb`.** This monotone relationship holds
+> only for `inner_epochs=4` with a dead clip (`clip_frac ≈ 0.008`). Add
+> `entropy_coef=0.005` and it disappears: `MAIN` +0.115, `ABLATE` +0.175, `PROBE`
+> +0.130, with the *middle* weight doing best. It is a statement about the broken
+> trust region, not about the reward. The table below is left as the record of the
+> broken-clip runs.
+
 | | `root_cause` weight | `cause_acc` 0 → 200 | `flags_acc` | `action_acc` | McNemar vs frozen |
 | --- | --- | --- | --- | --- | --- |
 | `MAIN` | **0.45** | 0.235 → **0.170** (−0.065) | −0.012 | −0.015 | p = 0.171 (32 gained, 45 lost) |
@@ -270,6 +278,28 @@ bugs from commit `58833d3` that these runs were the first to hit: `best`
 referenced before assignment in the step-0 eval, `value_ev_gain` / the progress
 line not handling the `None` `critic_fit` returns on a degenerate batch, and
 `rollout` not surviving a completion the scorer cannot parse.
+
+### How far the entropy bonus generalises — `04_entropy_generalizes.ipynb`
+
+Three more runs, seed 0, 200 steps: `ABLATE` and `PROBE` weights each **+
+`entropy_coef=0.005`**, and `value_detach=False` **+** the bonus.
+
+**Q3 — the "inverse weight" result was an optimisation artifact.** Under plain PPO
+the `cause_acc` delta was monotone in the `root_cause` weight (`PROBE` +0.100,
+`ABLATE` +0.010, `MAIN` −0.065). With the entropy bonus every weight set improves —
+`MAIN` +0.115 → 0.350, `ABLATE` **+0.175 → 0.410**, `PROBE` +0.130 → 0.365 — and
+the monotone relationship is gone, with the *middle* weight best. The mechanism:
+entropy helps where the collapse did damage. `PROBE` barely weights the diagnosis,
+so the collapse never cost it much, and `PROBE → PROBE+ent` is **p = 0.60** — no
+significant change. `ABLATE → ABLATE+ent` is p = 0.0046; `frozen → ABLATE+ent` is
+p < 1e-4 (38 gained, 3 lost), the cleanest result in the series.
+
+**Q4 — the critic lever and the trust-region lever partly stack.** `value_detach=False`
++ `entropy_coef=0.005` reaches `cause_acc` 0.235 → **0.400** on `MAIN` weights, above
+either lever alone — but `MAIN+ent → NODETACH+ent` is only p = 0.275, so most of the
+gain over `03`'s `ENT` is within noise. And on the critic they *cancel*: `NODETACH`'s
+`value_ev` gain (+0.016) is erased under the bonus (−0.003), because the extra
+exploration makes the return a moving target the shared-trunk critic cannot track.
 
 ## The card has to be free first
 
@@ -416,12 +446,18 @@ safety assertion (it did catch `lr=1e-3`) and should not be read as a prediction
   committed with outputs. All three beat frozen and beat `MAIN` on the paired test; the
   entropy bonus (`ent`) is the only configuration in which the clip ever binds. Re-running
   it against the finished run directories plots instead of retraining.
+* `04` — executed, three 200-step runs (`ablate-ent`, `probe-ent`, `nodetach-ent`),
+  committed with outputs. The entropy bonus generalises across weight sets and overturns
+  `58833d3`'s "inverse weight" headline; stacked with `--no-value-detach` it wins on the
+  task (`cause_acc` → 0.400) but cancels the critic gain.
 
-What is shown: the loop is correct on real hardware at this scale; both policies improved
-held-out `root_cause` accuracy by a margin that survives a paired test (p = 0.007 and
-p = 0.021); raising the weight on `numeric` changed nothing about that, the two trained
-policies disagreeing on exactly one case in 200; and the critic contributed none of it,
-with explained variance at zero for all 400 steps.
+What the series shows, as of `04`: the loop is correct on real hardware at this scale, and
+the notebook-02 `MAIN` regression was an optimiser failure, not a task ceiling — a dead
+clip and four unrestrained inner epochs drove a near-greedy collapse that broke the
+diagnosis-heavy weight sets. A small entropy bonus fixes it: every weight set then improves
+held-out `cause_acc` to 0.35–0.41, and `frozen → ABLATE+ent` reaches p < 1e-4. The learned
+critic still contributes almost none of it — `value_ev` never clears +0.02 in any of the
+eleven runs.
 
 What is not shown: that this is arithmetic rather than a better prior over seven labels —
 `numeric_acc` is ~18 hits out of 600 and exact match is 0.000 everywhere. Nor that any of it
