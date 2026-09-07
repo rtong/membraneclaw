@@ -51,7 +51,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from task.decision_table import CAUSES
+from task.decision_table import ACTION_SET, CAUSES
 from task.schema import FLAG_KEYS, NUMERIC_KEYS, parse_answer, validate
 
 # How close a percent change has to be. The answer key is rounded to one
@@ -206,6 +206,12 @@ def score(
             # rather than scoring them as failures of a lookup never reached.
             "cause_given_flags": cause_ok if flags_ok else None,
             "predicted_cause": obj.get("root_cause") if obj.get("root_cause") in CAUSES else None,
+            # The action it named, for the same reason as the cause: with the
+            # flags handed over, `colloidal_fouling` gets its action right 1
+            # time in 20 while `scaling` and `biofouling` get theirs every time,
+            # and which label it reaches for instead is the difference between a
+            # measurement and a guess about label collision.
+            "predicted_action": obj.get("action") if obj.get("action") in ACTION_SET else None,
             "completion_chars": len(completion),
         },
     )

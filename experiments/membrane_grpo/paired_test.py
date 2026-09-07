@@ -55,7 +55,10 @@ def main() -> None:
     parser.add_argument("before", type=Path)
     parser.add_argument("after", type=Path)
     parser.add_argument(
-        "--metric", default="cause", choices=["cause", "exact", "schema"]
+        "--metric",
+        default="cause",
+        choices=["cause", "exact", "schema", "flags_ok", "stage", "action"],
+        help="flags_ok is all three flags correct, not the per-field rate",
     )
     args = parser.parse_args()
 
