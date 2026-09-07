@@ -38,7 +38,17 @@ from .decision_table import (
 
 PROMPT_VERSION = "v2"
 
-VERSIONS = ("v1", "v2")
+VERSIONS = ("v1", "v2", "v2-oracle-num", "v2-oracle-flags")
+
+# The two oracle variants are diagnostics, not training prompts. Twenty-one
+# 200-step runs on this task never moved `numeric` off ~18 hits in 600, while an
+# untrained 9B reaches 0.797 -- so the standing hypothesis is that arithmetic is
+# a capability wall and that `cause` is gated behind it through the stated
+# `numeric -> flags -> cause` chain. These versions test that by handing the
+# model each link in turn and measuring what the next one does, which is the
+# upper bound any real calculator or tool could ever buy. Nothing else about the
+# task changes: same records, same answer key, same reward, same eval path.
+ORACLE_VERSIONS = ("v2-oracle-num", "v2-oracle-flags")
 
 # v1 is kept, and kept working, because the 9B reference run in the README is
 # reported against it. A prompt version that can no longer be rendered is a
@@ -53,6 +63,16 @@ SYSTEM_PROMPTS = {
         "You compute tersely, then end your reply with a single JSON object."
     ),
 }
+
+# The oracle variants must differ from v2 in exactly one link of the chain and
+# in nothing else, so they reuse v2's system prompt verbatim -- "compute
+# tersely" and all, even though there is less left to compute. Rewording it
+# would add a second variable to a measurement whose entire value is having only
+# one. Whether the instruction confuses the model into recomputing anyway is not
+# assumed either way: `numeric_acc` under the oracle is the check, and if the
+# model cannot even copy three given numbers, that is the finding.
+SYSTEM_PROMPTS["v2-oracle-num"] = SYSTEM_PROMPTS["v2"]
+SYSTEM_PROMPTS["v2-oracle-flags"] = SYSTEM_PROMPTS["v2"]
 
 SYSTEM_PROMPT = SYSTEM_PROMPTS[PROMPT_VERSION]
 
@@ -99,9 +119,11 @@ def _reading_block(reading: dict[str, Any], version: str) -> str:
     # anomalous stage's own dp instead of the train total, which the record
     # invites by announcing which stage the anomaly sits in. The generator puts
     # the entire change on that stage, so the two readings diverge sharply.
-    # v2 prints the total, and there is nothing left to misread.
+    # v2 prints the total, and there is nothing left to misread. The condition
+    # is written against v1 rather than for v2 so that adding a v2 variant
+    # cannot silently drop the total and reintroduce that 38.7 pp misreading.
     dp = f"lead {_num(reading['dp_lead_bar'])} bar, tail {_num(reading['dp_tail_bar'])} bar"
-    if version == "v2":
+    if version != "v1":
         total = round(reading["dp_lead_bar"] + reading["dp_tail_bar"], 2)
         dp += f", total {_num(total)} bar"
 
@@ -164,11 +186,91 @@ CLOSINGS = {
     ),
 }
 
+# v2's closing opens with "Compute the three percent changes", which is the one
+# instruction the oracle variants have to drop -- there is nothing left to
+# compute. Everything else about it is held fixed: the same one-short-line
+# budget, the same ban on prose and LaTeX, the same closing sentence.
+CLOSINGS["v2-oracle-num"] = (
+    "The three percent changes are given above -- copy them across unchanged.\n"
+    "Use at most one short line of plain text per remaining step -- no prose,\n"
+    "no LaTeX, no headings.\n\n"
+    "Then end your reply with this JSON object and nothing after it:"
+)
+CLOSINGS["v2-oracle-flags"] = (
+    "The three percent changes and the three flags are given above -- copy them\n"
+    "across unchanged. Use at most one short line of plain text for the\n"
+    "remaining lookup -- no prose, no LaTeX, no headings.\n\n"
+    "Then end your reply with this JSON object and nothing after it:"
+)
+
+
+def _pct(value: float) -> str:
+    """One decimal place, and never `-0.0`, which no answer key contains."""
+    return f"{value if value else 0.0:.1f}"
+
+
+_STEP1_COMPUTE = """Step 1 -- compute three percent changes, each rounded to one decimal place.
+
+  TCF(T) = 1.03 ** (25 - T)
+  normalized_flow(t)  = permeate_flow(t) * TCF(feed_temperature(t))
+  salt_passage(t)     = permeate_conductivity(t) / feed_conductivity(t) * 100
+  dp(t)               = dp_lead(t) + dp_tail(t)
+
+  normalized_flow_change_pct = (normalized_flow(t1) - normalized_flow(t0)) \
+/ normalized_flow(t0) * 100
+  salt_passage_change_pct    = (salt_passage(t1) - salt_passage(t0)) \
+/ salt_passage(t0) * 100
+  dp_change_pct              = (dp(t1) - dp(t0)) / dp(t0) * 100"""
+
+
+_STEP2_DERIVE = f"""Step 2 -- turn each change into a flag.
+
+  flow          : down if <= {_num(FLOW_DOWN_PCT)}, up if >= +{_num(FLOW_UP_PCT)}, else flat
+  salt_passage  : down if <= {_num(SP_DOWN_PCT)}, sharp_up if >= +{_num(SP_SHARP_UP_PCT)}, \
+up if >= +{_num(SP_UP_PCT)}, else flat
+  dp            : down if <= {_num(DP_DOWN_PCT)}, up if >= +{_num(DP_UP_PCT)}, else flat"""
+
+
+def _step1_given(truth: dict[str, Any]) -> str:
+    return f"""Step 1 -- the three percent changes, already computed for you.
+
+  normalized_flow_change_pct = {_pct(truth["normalized_flow_change_pct"])}
+  salt_passage_change_pct    = {_pct(truth["salt_passage_change_pct"])}
+  dp_change_pct              = {_pct(truth["dp_change_pct"])}
+
+  Copy these three values into the JSON object unchanged."""
+
+
+def _step2_given(truth: dict[str, Any]) -> str:
+    return f"""Step 2 -- the three flags, already derived for you.
+
+  flow          : {truth["flags"]["flow"]}
+  salt_passage  : {truth["flags"]["salt_passage"]}
+  dp            : {truth["flags"]["dp"]}
+
+  Copy these three values into the JSON object unchanged."""
+
 
 def build_user_prompt(record: dict[str, Any], version: str = PROMPT_VERSION) -> str:
     """Render the user turn for one operating record."""
     if version not in VERSIONS:
         raise ValueError(f"unknown prompt version {version!r}; expected one of {VERSIONS}")
+
+    step1, step2 = _STEP1_COMPUTE, _STEP2_DERIVE
+    if version in ORACLE_VERSIONS:
+        # Imported here rather than at module scope: `generate` is the data
+        # builder and the training loop has no reason to pull it in. It is the
+        # right source all the same -- `truth_from_record` is the project's only
+        # grader, so the injected values are *derived from the record* by the
+        # same function that writes the answer key, not copied out of it. A
+        # mislabelled case would therefore be injected wrong and caught, rather
+        # than papered over.
+        from .generate import truth_from_record
+
+        truth = truth_from_record(record)
+        step1 = _step1_given(truth)
+        if version == "v2-oracle-flags":
+            step2 = _step2_given(truth)
 
     return f"""Reverse-osmosis train performance record.
 
@@ -181,25 +283,9 @@ Current (t1):
 Recovery is {_num(record["recovery_pct"])} % at both readings.
 Vessel probing places the anomaly in the {record["anomaly_stage"].upper()} stage.
 
-Step 1 -- compute three percent changes, each rounded to one decimal place.
+{step1}
 
-  TCF(T) = 1.03 ** (25 - T)
-  normalized_flow(t)  = permeate_flow(t) * TCF(feed_temperature(t))
-  salt_passage(t)     = permeate_conductivity(t) / feed_conductivity(t) * 100
-  dp(t)               = dp_lead(t) + dp_tail(t)
-
-  normalized_flow_change_pct = (normalized_flow(t1) - normalized_flow(t0)) \
-/ normalized_flow(t0) * 100
-  salt_passage_change_pct    = (salt_passage(t1) - salt_passage(t0)) \
-/ salt_passage(t0) * 100
-  dp_change_pct              = (dp(t1) - dp(t0)) / dp(t0) * 100
-
-Step 2 -- turn each change into a flag.
-
-  flow          : down if <= {_num(FLOW_DOWN_PCT)}, up if >= +{_num(FLOW_UP_PCT)}, else flat
-  salt_passage  : down if <= {_num(SP_DOWN_PCT)}, sharp_up if >= +{_num(SP_SHARP_UP_PCT)}, \
-up if >= +{_num(SP_UP_PCT)}, else flat
-  dp            : down if <= {_num(DP_DOWN_PCT)}, up if >= +{_num(DP_UP_PCT)}, else flat
+{step2}
 
 Step 3 -- read the root cause off this table.
 

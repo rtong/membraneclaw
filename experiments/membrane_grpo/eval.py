@@ -327,6 +327,15 @@ def summarise(results: list[CaseResult], weights) -> dict[str, Any]:
             r.diagnostics.get("cause_given_flags") for r in first
             if r.diagnostics.get("cause_given_flags") is not None
         ),
+        # The denominator, because without it the ratio cannot be read. A
+        # `cause_given_flags` of 0.000 means "never converted a correct flag
+        # triple into the right row" if this is 40, and means nothing at all if
+        # it is 1 -- and `mean` returns NaN on an empty list, which is a third
+        # reading again. The frozen Qwen3-1.7B reported 0.000 with this number
+        # unrecorded, and it could not be recovered from the saved file.
+        "cause_given_flags_n": sum(
+            1 for r in first if r.diagnostics.get("cause_given_flags") is not None
+        ),
         "components": {
             name: mean(r.components.get(name, 0.0) for r in first)
             for name in ("format", "numeric", "flags", "stage", "root_cause", "action")
@@ -379,6 +388,8 @@ def summarise(results: list[CaseResult], weights) -> dict[str, Any]:
             "exact": bool(row["scored"][0].diagnostics["exact_match"]),
             "schema": bool(row["scored"][0].diagnostics.get("schema_ok")),
             "numeric": row["scored"][0].diagnostics.get("numeric_correct", 0),
+            "flags": row["scored"][0].diagnostics.get("flags_correct", 0),
+            "flags_ok": row["scored"][0].diagnostics.get("flags_correct", 0) == 3,
         }
         for row in rows
     ]
@@ -408,7 +419,10 @@ def print_report(label: str, metrics: dict[str, Any]) -> None:
     print(f"  validity (gate)    {metrics['validity_gate']:.3f}")
     print(f"  schema ok          {metrics['schema_ok']:.3f}")
     print(f"  cause accuracy     {metrics['cause_acc']:.3f}")
-    print(f"  cause | flags ok   {metrics['cause_given_flags']:.3f}")
+    print(
+        f"  cause | flags ok   {metrics['cause_given_flags']:.3f}"
+        f"  (n = {metrics['cause_given_flags_n']})"
+    )
     print(f"  numeric (of 3)     {metrics['numeric_acc']:.3f}")
     print(f"  flags   (of 3)     {metrics['flags_acc']:.3f}")
     tokens = metrics.get("completion_tokens_mean")

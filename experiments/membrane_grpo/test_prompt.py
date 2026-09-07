@@ -15,7 +15,15 @@ import pytest
 
 from task.decision_table import ACTION_SET, CAUSES, COVERED, SEVERE_ACTION
 from task.generate import generate_case
-from task.prompt import RULES, SYSTEM_PROMPTS, build_messages, build_user_prompt
+from task.prompt import (
+    CLOSINGS,
+    PROMPT_VERSION,
+    RULES,
+    SCHEMA_EXAMPLE,
+    SYSTEM_PROMPTS,
+    build_messages,
+    build_user_prompt,
+)
 from task.schema import ANSWER_KEYS
 
 
@@ -144,3 +152,102 @@ def test_messages_are_a_system_user_pair():
     messages = build_messages(record)
     assert [m["role"] for m in messages] == ["system", "user"]
     assert all(m["content"].strip() for m in messages)
+
+
+# --- the oracle diagnostics ----------------------------------------------------
+#
+# These variants exist to find out where in the `numeric -> flags -> cause` chain
+# the 1.7B loses the task, by handing it one link at a time. That only means
+# anything if the values handed over are right and if nothing else about the
+# prompt moved, so both are tested rather than assumed.
+
+
+@pytest.mark.parametrize("cause", CAUSES)
+def test_the_oracle_injects_the_answer_key_and_not_something_near_it(cause):
+    """The injected numbers must *be* the graded values, to the last decimal.
+
+    `truth_from_record` is the only grader in the project, and the oracle
+    renders from it -- so this is really a check that rendering does not lose
+    precision on the way through `f"{v:.1f}"`. A tenth of a point of drift here
+    would be scored as a wrong answer and read as the model failing to copy.
+    """
+    rng = random.Random(hash(cause) % 2**32)
+    for _ in range(10):
+        record, answer, _ = generate_case(rng, cause, "hard")
+        text = build_user_prompt(record, "v2-oracle-num")
+        for key in (
+            "normalized_flow_change_pct",
+            "salt_passage_change_pct",
+            "dp_change_pct",
+        ):
+            rendered = re.search(rf"^  {key} += (\S+)$", text, re.M)
+            assert rendered, f"{key} not rendered"
+            # Compared as a float, not as a string: an answer key can hold -0.0
+            # and the prompt renders it 0.0, which is the same number and the
+            # same reward. Exact equality otherwise -- the rendering must not
+            # lose a decimal, or the model would be marked wrong for copying
+            # correctly.
+            assert float(rendered.group(1)) == answer[key], key
+
+
+@pytest.mark.parametrize("cause", CAUSES)
+def test_the_flags_oracle_injects_the_answer_key(cause):
+    rng = random.Random(hash(cause) % 2**32)
+    for _ in range(10):
+        record, answer, _ = generate_case(rng, cause, "hard")
+        text = build_user_prompt(record, "v2-oracle-flags")
+        for field, flag in answer["flags"].items():
+            assert re.search(rf"^  {field} +: {flag}$", text, re.M), (field, flag)
+
+
+def test_the_oracle_changes_only_the_step_it_names():
+    """One variable, or the measurement is worth nothing.
+
+    Everything before Step 1 and everything from Step 3 to the schema must be
+    byte-identical to v2 -- same readings, same dp total, same table, same
+    action rules, same JSON example. Only the steps being handed over, and the
+    closing sentence that tells the model it need not compute them, may differ.
+    """
+    record = generate_case(random.Random(21), "biofouling", "hard")[0]
+    base = build_user_prompt(record, "v2")
+
+    for version in ("v2-oracle-num", "v2-oracle-flags"):
+        other = build_user_prompt(record, version)
+        assert base[: base.index("Step 1")] == other[: other.index("Step 1")]
+
+        tail_from = "Step 3 -- read the root cause off this table."
+        base_tail = base[base.index(tail_from) : base.index(CLOSINGS["v2"])]
+        other_tail = other[other.index(tail_from) : other.index(CLOSINGS[version])]
+        assert base_tail == other_tail
+
+        # and the closing still ends on the same schema
+        assert other.endswith(SCHEMA_EXAMPLE)
+
+
+def test_the_numeric_oracle_still_makes_the_model_derive_the_flags():
+    """`v2-oracle-num` hands over one link, not two.
+
+    If it also leaked the flags there would be no difference left between it and
+    `v2-oracle-flags`, and the chain could not be decomposed.
+    """
+    record = generate_case(random.Random(22), "compaction", "easy")[0]
+    text = build_user_prompt(record, "v2-oracle-num")
+    assert "Step 2 -- turn each change into a flag." in text
+    assert "already derived for you" not in text
+
+
+def test_every_v2_variant_prints_the_dp_total():
+    """Guards the `version != "v1"` condition in `_reading_block`.
+
+    Written as `!= v1` precisely so a new variant cannot silently lose the total
+    and bring back the misreading v1 caused; this is the test that says so.
+    """
+    record = generate_case(random.Random(23), "scaling", "easy")[0]
+    total = round(record["t0"]["dp_lead_bar"] + record["t0"]["dp_tail_bar"], 2)
+    for version in ("v2", "v2-oracle-num", "v2-oracle-flags"):
+        assert f"total {total:g} bar" in build_user_prompt(record, version)
+
+
+def test_the_default_prompt_version_is_untouched():
+    """Every committed run is reported against v2; adding variants must not move it."""
+    assert PROMPT_VERSION == "v2"
