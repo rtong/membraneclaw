@@ -1,0 +1,11 @@
+{
+  "version": "0.8.8",
+  "failure_codes": [
+    "FIXED_INPUT_OMITTED_OR_REPLACED",
+    "LINEAR_GRID_SCAN",
+    "OFF_GRID_CANDIDATE",
+    "SEARCH_AFTER_ADJACENT_PROOF",
+    "TOOL_RESULT_CAP_EXCEEDED",
+    "OUTPUT_OMISSION"
+  ]
+}

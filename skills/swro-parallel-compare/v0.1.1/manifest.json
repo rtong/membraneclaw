@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "swro-parallel-compare@0.1.1",
+  "status": "frozen-for-next-valid-pilot",
+  "supersedes": "swro-parallel-compare@0.1.0",
+  "change_summary": "Adds immutable package metadata without changing the Solver instructions or workflow semantics.",
+  "scope": "Finite parallel SWRO package comparison with independent membrane and plant branches.",
+  "required_tools": [
+    "simulate_ro",
+    "simulate_swro_system"
+  ],
+  "files": [
+    "SKILL.md",
+    "workflow.json",
+    "manifest.json"
+  ],
+  "not_tested": [
+    "hard_executor",
+    "automatic_skill_evolution",
+    "held_out_generalization"
+  ]
+}

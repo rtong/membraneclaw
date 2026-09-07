@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "origin": "human_reviewed_development",
+  "question": "Development replay of D6-6c-01, not an unseen evaluation. Run membrane and plant branches independently for each of four supplied packages, then join by package ID. Require membrane water >= 0.370 kg/s, permeate NaCl <= 350 mg/L, inlet CP <= 1.30, plant product >= 0.041 m3/s and SEC <= 2.75 kWh/m3. Among jointly feasible packages choose minimum SEC. Report all requested outputs. The input extraction below is human-authored, not a 9B result; omitted inputs follow the historical fixture's defaults, not a verified live configuration.",
+  "branches": {
+    "membrane": {"tool": "simulate_ro", "required_outputs": ["water_kg_s", "nacl_mg_l", "inlet_cp", "water_recovery_pct", "water_lmh"]},
+    "plant": {"tool": "simulate_swro_system", "required_outputs": ["product_m3_s", "sec_kwh_m3", "lcow_usd2018_m3", "capex_usd2018"]}
+  },
+  "candidates": [
+    {"id": "A", "scenario_id": "design", "inputs": {
+      "membrane": {"feed_flow_mass_kg_s": 1, "feed_pressure_bar": 58, "membrane_area_m2": 70, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8},
+      "plant": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 58, "ro_area_m2": 7000, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.95}
+    }},
+    {"id": "B", "scenario_id": "design", "inputs": {
+      "membrane": {"feed_flow_mass_kg_s": 1, "feed_pressure_bar": 62, "membrane_area_m2": 60, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8},
+      "plant": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 62, "ro_area_m2": 6000, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.95}
+    }},
+    {"id": "C", "scenario_id": "design", "inputs": {
+      "membrane": {"feed_flow_mass_kg_s": 1, "feed_pressure_bar": 65, "membrane_area_m2": 55, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8},
+      "plant": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 65, "ro_area_m2": 5500, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.95}
+    }},
+    {"id": "D", "scenario_id": "design", "inputs": {
+      "membrane": {"feed_flow_mass_kg_s": 1, "feed_pressure_bar": 62, "membrane_area_m2": 60, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8},
+      "plant": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 62, "ro_area_m2": 6000, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.9}
+    }}
+  ],
+  "constraints": [
+    {"id": "water", "node": "membrane", "path": "water_kg_s", "op": ">=", "threshold": 0.370, "unit": "kg/s", "source": "Question: membrane water >=0.370 kg/s"},
+    {"id": "quality", "node": "membrane", "path": "nacl_mg_l", "op": "<=", "threshold": 350, "unit": "mg/L", "source": "Question: NaCl <=350 mg/L"},
+    {"id": "cp", "node": "membrane", "path": "inlet_cp", "op": "<=", "threshold": 1.30, "unit": "fraction", "source": "Question: inlet CP <=1.30"},
+    {"id": "capacity", "node": "plant", "path": "product_m3_s", "op": ">=", "threshold": 0.041, "unit": "m3/s", "source": "Question: product >=0.041 m3/s"},
+    {"id": "energy", "node": "plant", "path": "sec_kwh_m3", "op": "<=", "threshold": 2.75, "unit": "kWh/m3", "source": "Question: SEC <=2.75 kWh/m3"}
+  ],
+  "objective": {"node": "plant", "path": "sec_kwh_m3", "unit": "kWh/m3", "direction": "min", "source": "Question: minimum SEC among feasible packages"}
+}

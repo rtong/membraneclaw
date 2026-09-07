@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.5",
+  "modules": [
+    "copy fixed inputs into a concrete tool template",
+    "separate feed pH from result-pH limits",
+    "follow observed direction to adjacent grid evidence",
+    "emit a compact answer with a fixed valid-JSON trailer"
+  ]
+}

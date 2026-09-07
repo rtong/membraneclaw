@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.8",
+  "modules": [
+    "preserve every fixed input",
+    "run the six-result treatment state machine",
+    "stop on adjacent proof",
+    "answer concisely"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.7.2",
+  "status": "candidate",
+  "title": "SWRO bounded execution protocol",
+  "target_system": "tools-skills",
+  "compatible_tools": [
+    "describe_ro_parameters",
+    "describe_reaktoro_options",
+    "simulate_ro",
+    "simulate_swro_system",
+    "analyze_ro_scaling",
+    "equilibrate_feed"
+  ],
+  "task_families": [
+    "swro_design_and_feasibility",
+    "boundary_search",
+    "candidate_ranking",
+    "multi_simulator_join",
+    "scaling_analysis"
+  ],
+  "benchmark_answer_values_allowed": false,
+  "runtime_artifact": "SKILL.md",
+  "promotion_config": "../../../configs/skill_promotion.json"
+}

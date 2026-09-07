@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.5",
+  "status": "candidate",
+  "design": "compact input template, directional adjacent-grid search, six-result single-boundary stop, and fixed valid-JSON trailer skeleton",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}

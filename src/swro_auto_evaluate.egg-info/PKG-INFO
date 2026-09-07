@@ -1,6 +1,0 @@
-Metadata-Version: 2.4
-Name: swro-auto-evaluate
-Version: 0.1.0
-Summary: Reproducible step-level evaluation for SWRO WaterTAP agents
-Requires-Python: >=3.11
-Requires-Dist: openpyxl<4,>=3.1

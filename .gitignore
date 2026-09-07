@@ -1,12 +1,23 @@
 .env
 .venv/
+.stfolder/
+.stfolder.removed-*/
 __pycache__/
 *.py[cod]
+*.egg-info/
+~$*.xlsx
 .coverage
 .DS_Store
 
 # Generated artifacts
 benchmarks/normalized/
-runs/
+benchmarks/normalized_*/
+benchmarks/views/
+runs/*
+!runs/README.md
 reports/
+archive/
+tmp/
 
+# Local Codex MCP configuration exports must never enter the repository.
+watertap-mcp-backup.json

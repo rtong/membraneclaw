@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.4",
+  "status": "candidate",
+  "design": "compact input template plus a six-result hard stop for single-variable grid boundaries and immediate structured output",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}

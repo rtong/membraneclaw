@@ -14,6 +14,22 @@ class OpenWebUIError(RuntimeError):
     pass
 
 
+class OpenWebUIAgentError(OpenWebUIError):
+    """An upstream agent failed after emitting an observable partial trajectory."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        response_text: str,
+        raw_response: dict[str, Any],
+        latency_ms: int,
+    ):
+        super().__init__(message)
+        self.response_text = response_text
+        self.raw_response = raw_response
+        self.latency_ms = latency_ms
+
 @dataclass(frozen=True)
 class ChatResult:
     content: str
@@ -72,8 +88,13 @@ class OpenWebUIClient:
             "stream": False,
             "temperature": generation.get("temperature", 0.0),
             "top_p": generation.get("top_p", 1.0),
-            "max_tokens": generation.get("max_tokens", 6000),
         }
+        if generation.get("max_tokens") is not None:
+            payload["max_tokens"] = generation["max_tokens"]
+        if generation.get("enable_thinking") is not None:
+            payload["chat_template_kwargs"] = {
+                "enable_thinking": bool(generation["enable_thinking"])
+            }
         start = time.perf_counter()
         raw = self._request("POST", "/api/chat/completions", payload)
         latency_ms = round((time.perf_counter() - start) * 1000)
@@ -98,8 +119,13 @@ class OpenWebUIClient:
             "stream": True,
             "temperature": generation.get("temperature", 0.0),
             "top_p": generation.get("top_p", 1.0),
-            "max_tokens": generation.get("max_tokens", 6000),
         }
+        if generation.get("max_tokens") is not None:
+            payload["max_tokens"] = generation["max_tokens"]
+        if generation.get("enable_thinking") is not None:
+            payload["chat_template_kwargs"] = {
+                "enable_thinking": bool(generation["enable_thinking"])
+            }
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         request = urllib.request.Request(
             f"{self.base_url}/api/chat/completions",
@@ -116,6 +142,10 @@ class OpenWebUIClient:
         event_count = 0
         finish_reason = None
         usage = None
+        reasoning_event_count = 0
+        reasoning_chars = 0
+        delta_keys: set[str] = set()
+        trajectory_events: list[dict[str, Any]] = []
         try:
             with urllib.request.urlopen(request, timeout=self.timeout_seconds) as response:
                 for raw_line in response:
@@ -149,6 +179,30 @@ class OpenWebUIClient:
                     delta = choice.get("delta")
                     if not isinstance(delta, dict):
                         delta = choice.get("message") if isinstance(choice.get("message"), dict) else {}
+                    delta_keys.update(str(key) for key in delta)
+                    for container_name, container in (("event", event), ("delta", delta)):
+                        for field in (
+                            "tool_calls", "tool_call", "tool_results", "tool_result",
+                            "sources", "citations", "retrieval_results",
+                        ):
+                            value = container.get(field)
+                            if value not in (None, [], {}):
+                                trajectory_events.append(
+                                    {
+                                        "sequence": event_count,
+                                        "container": container_name,
+                                        "field": field,
+                                        "payload": value,
+                                    }
+                                )
+                    reasoning_values = [
+                        delta.get(key)
+                        for key in ("reasoning", "reasoning_content")
+                        if isinstance(delta.get(key), str) and delta.get(key)
+                    ]
+                    if reasoning_values:
+                        reasoning_event_count += 1
+                        reasoning_chars += max(len(value) for value in reasoning_values)
                     content = delta.get("content")
                     if isinstance(content, str):
                         parts.append(content)
@@ -170,18 +224,26 @@ class OpenWebUIClient:
         content = "".join(parts).strip()
         if not content:
             raise OpenWebUIError(
-                f"OpenWebUI stream ended without assistant content ({event_count} SSE events)"
+                "OpenWebUI stream ended without assistant content "
+                f"(events={event_count}, finish_reason={finish_reason!r}, "
+                f"reasoning_events={reasoning_event_count}, "
+                f"reasoning_chars={reasoning_chars}, delta_keys={sorted(delta_keys)})"
             )
+        response_metadata = {
+            "object": "chat.completion.stream",
+            "model": model,
+            "event_count": event_count,
+            "finish_reason": finish_reason,
+            "usage": usage,
+            "reasoning_event_count": reasoning_event_count,
+            "reasoning_chars": reasoning_chars,
+            "trajectory_events": trajectory_events,
+        }
         if "[agent error]" in content.lower():
-            raise OpenWebUIError(f"Upstream agent reported an error: {content[-2000:]}")
-        return ChatResult(
-            content=content,
-            raw={
-                "object": "chat.completion.stream",
-                "model": model,
-                "event_count": event_count,
-                "finish_reason": finish_reason,
-                "usage": usage,
-            },
-            latency_ms=latency_ms,
-        )
+            raise OpenWebUIAgentError(
+                f"Upstream agent reported an error: {content[-2000:]}",
+                response_text=content,
+                raw_response=response_metadata,
+                latency_ms=latency_ms,
+            )
+        return ChatResult(content=content, raw=response_metadata, latency_ms=latency_ms)

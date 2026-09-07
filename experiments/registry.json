@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "updated_on": "2026-09-07",
+  "current_development_experiment": "E30",
+  "experiments": [
+    {"id": "E00", "name": "d1-d6-paper-mainline", "status": "frozen", "run_ids": ["d1-d6-full-20260828-v1"]},
+    {"id": "E10", "name": "d1-d6-repeatability", "status": "paused", "run_ids": ["d1-d6-repeatability-26-r2", "d1-d6-repeatability-26-r3", "d1-d6-repeatability-26-r4"]},
+    {"id": "E20", "name": "evaluation-skill-judge-calibration", "status": "completed", "run_ids": ["judge-calibration-12-v1"]},
+    {"id": "E30", "name": "teacher-distilled-solver-skill-p3", "status": "blocked_external_tool_binding", "archived_run_ids": ["solver-skill-p3-c00-c10-v1", "solver-skill-p3-c00-c10-v2"], "archive_path": "archive/experiments/solver-skill-p3-invalid/runs", "next_run_id": "solver-skill-p3-c00-c10-v3"},
+    {"id": "E40", "name": "executable-skill-runtime", "status": "completed_offline_prototype", "run_ids": ["skill-runtime-demo-20260906-001", "skill-runtime-preflight-20260906-001"]},
+    {"id": "E50", "name": "held-out-d7-router-rag", "status": "planned", "run_ids": []},
+    {"id": "H10", "name": "historical-solver-skill", "status": "historical", "archived_run_ids": ["060", "089", "skill-history-analysis-20260902"], "archive_path": "archive/experiments/historical-solver-skill/runs"},
+    {"id": "H20", "name": "retired-prompt-state", "status": "historical", "archived_run_ids": ["verifier"], "archive_path": "archive/experiments/retired-prompt-state/runs"}
+  ]
+}

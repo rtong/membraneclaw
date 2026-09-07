@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "created_on": "2026-09-07",
+  "algorithm": "sha256_tree: sorted relative path + NUL + file bytes + NUL",
+  "artifacts": [
+    {"path": "archive/experiments/historical-solver-skill/runs/060", "sha256": "1b861e7282e2c17860c0b21ad01e5e2155d9e43d08319fb9edaa3d114d0d7a81"},
+    {"path": "archive/experiments/historical-solver-skill/runs/089", "sha256": "35e0f0d7e2422b94c94be39ad583919f9fcd8d63e64affb55ad6680e14caf9ee"},
+    {"path": "archive/experiments/historical-solver-skill/runs/skill-history-analysis-20260902", "sha256": "8791601ff2c0a3d3de2a67732f033581ccc75097d011194dbe29b9ad3747b0c5"},
+    {"path": "archive/experiments/retired-prompt-state/runs/verifier", "sha256": "4d344ba61179298acc63dcfb6753d906aac8afba7ec7e75493a4a3c649d5944a"},
+    {"path": "archive/experiments/smoke-runs/runs/smoke-tool-SigleRegression-20260826-v1", "sha256": "21188d47622384bcd9c9458f6f81e530f42fc75f397b85e7bc527a90d4ec40a2"},
+    {"path": "archive/experiments/smoke-runs/runs/smoke-tools-d1d5sample-20260828-v1", "sha256": "b18b0150d85511382169c351c3cfad0c5514542891aca72ec1a784a6233a45c6"},
+    {"path": "archive/experiments/solver-skill-p3-invalid/runs/solver-skill-p3-c00-c10-v1", "sha256": "86d6f17648ce06f0ad0b1e2385324b10fbbf7a8852b2ca284caa7c555f1582e8"},
+    {"path": "archive/experiments/solver-skill-p3-invalid/runs/solver-skill-p3-c00-c10-v2", "sha256": "d7a30bba3d3f47d351c131295738b8f4cd54e3f8d689f045fd9d86dc339ac526"},
+    {"path": "skills/_historical/swro-watertap", "sha256": "69ebcd87a1c8353e1c6699d1dd88721d4d9e6c86f943db13917e6e6628e774c8"}
+  ]
+}

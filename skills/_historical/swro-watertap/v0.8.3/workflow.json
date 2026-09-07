@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.3",
+  "modules": [
+    "copy fixed inputs into a concrete tool template",
+    "separate feed pH from result-pH limits",
+    "reject mismatched tool echoes",
+    "stop at adjacent grid evidence and finish"
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Pipeline-only mixed D7 mock: three unchanged R0 cases plus three derived R2 overlays grounded in the frozen RAG corpus; not valid as real D7 evidence",
+  "sources": [
+    {
+      "case_id": "D7-mock-01-feasibility",
+      "path": "benchmarks/Datasets Harness/D1/D1_a1_Feasibility_EN.xlsx",
+      "task_family": "d7_mock",
+      "benchmark_overlay": {
+        "overlay_id": "d7-mock-r2-pressure-policy-v1",
+        "question_append": "Additional operating decision: during the review, the measured RO feed/high-pressure-pump discharge pressure is 78 bar. The process simulator does not encode the plant alarm policy. Classify this condition as normal, warning, or immediate shutdown and state whether operation may continue unchanged. Do not invent an unstated threshold.",
+        "reference_answer_append": "For the added operating decision, retrieve the site pressure policy: the daily recommended range is 55-70 bar, pressure above 75 bar is a warning, and the HH/immediate shutdown condition is 80 bar. Therefore 78 bar is a warning but not yet the 80 bar shutdown point; operation should not continue unchanged, and pressure reduction plus investigation is required.",
+        "rubric_step_appends": {
+          "6": {
+            "reasoning_or_calculation": "For the added pressure-policy decision, separate simulator evidence from the retrieved site alarm thresholds.",
+            "key_outputs": "Correctly classify 78 bar as warning, not normal and not yet the 80 bar immediate-shutdown threshold; recommend corrective action.",
+            "full_credit": "Uses the site ranges 55-70 bar normal, >75 bar warning, and 80 bar HH/shutdown to classify 78 bar and avoids continuing unchanged.",
+            "common_failures": "Invents a threshold, labels 78 bar normal, or claims immediate shutdown without distinguishing the 80 bar HH point."
+          }
+        },
+        "benchmark_view": {
+          "rag_need": "R2",
+          "expected_route": "use_rag"
+        },
+        "rag_evidence": {
+          "source_document": "Safety file.xlsx",
+          "source_locator": "Sheet1, RO feed/high-pressure-pump discharge pressure row",
+          "missing_knowledge": "site normal, warning, and immediate-shutdown pressure bands",
+          "decision_impact": "classifies 78 bar and determines whether operation may continue"
+        }
+      }
+    },
+    {
+      "case_id": "D7-mock-02-constraint-conflict",
+      "path": "benchmarks/Datasets Harness/D2/D2_2b_ConstraintConflict_EN.xlsx",
+      "task_family": "d7_mock",
+      "benchmark_overlay": {
+        "overlay_id": "d7-mock-r2-cleaning-trigger-v1",
+        "question_append": "Additional operations observation: after normalization to the reference conditions, permeate flow has declined by 12%, normalized salt passage is unchanged, and normalized stage pressure drop has increased by 4%. Decide whether membrane cleaning should be initiated under the manufacturer operating criteria. Do not invent an unstated trigger.",
+        "reference_answer_append": "For the added cleaning decision, retrieve the manufacturer criteria: cleaning is indicated when normalized permeate flow drops 10%, normalized salt passage increases 5-10%, or normalized pressure drop increases 10-15%. The 12% normalized-flow decline alone exceeds its 10% trigger, so cleaning should be initiated even though salt passage and pressure drop have not triggered.",
+        "rubric_step_appends": {
+          "6": {
+            "reasoning_or_calculation": "For the added cleaning decision, compare each observed normalized change with the retrieved manufacturer trigger for that metric.",
+            "key_outputs": "Initiate cleaning because the 12% normalized permeate-flow decline exceeds the 10% trigger; do not require all three indicators to trigger.",
+            "full_credit": "Retrieves the 10% flow-loss, 5-10% salt-passage-rise, and 10-15% pressure-drop-rise criteria and correctly applies the one-or-more rule.",
+            "common_failures": "Invents thresholds, waits for all indicators, or treats the 4% pressure-drop increase as the deciding trigger."
+          }
+        },
+        "benchmark_view": {
+          "rag_need": "R2",
+          "expected_route": "use_rag"
+        },
+        "rag_evidence": {
+          "source_document": "RO-operational Manual.pdf",
+          "source_locator": "page 135, section 6.3 Cleaning Requirements",
+          "missing_knowledge": "manufacturer thresholds and one-or-more rule for initiating membrane cleaning",
+          "decision_impact": "determines whether a 12% normalized permeate-flow decline triggers cleaning"
+        }
+      }
+    },
+    {
+      "case_id": "D7-mock-03-salinity-intrusion",
+      "path": "benchmarks/Datasets Harness/D3/D3_3a_N01_salinity_intrusion_English.xlsx",
+      "task_family": "d7_mock",
+      "benchmark_overlay": {
+        "overlay_id": "d7-mock-r2-recovery-policy-v1",
+        "question_append": "Additional site-policy check: the proposed operating point has system recovery of 48%. The process calculations do not encode the site's normal, warning, and critical recovery bands. Classify 48% under the applicable operating guidance and state whether the plant should proceed unchanged. Do not invent an unstated band.",
+        "reference_answer_append": "For the added policy check, retrieve the site recovery bands: approximately 40-45% is the recommended range, 45-50% is a warning region with concentrated scaling and end-element risk, and operation above 50% is critical and generally requires special design or pretreatment. Therefore 48% is warning, not normal and not yet >50% critical; the plant should not proceed unchanged without risk review and mitigation.",
+        "rubric_step_appends": {
+          "6": {
+            "reasoning_or_calculation": "For the added recovery-policy check, distinguish the calculated recovery from the retrieved site operating bands.",
+            "key_outputs": "Classify 48% as warning, identify scaling/end-element risk, and avoid calling it either normal or >50% critical.",
+            "full_credit": "Uses the site bands 40-45% recommended, 45-50% warning, and >50% critical/special-design region to classify 48% and recommend review rather than unchanged operation.",
+            "common_failures": "Invents a band, calls 48% normal, or incorrectly treats it as already above the >50% critical boundary."
+          }
+        },
+        "benchmark_view": {
+          "rag_need": "R2",
+          "expected_route": "use_rag"
+        },
+        "rag_evidence": {
+          "source_document": "Safety file.xlsx",
+          "source_locator": "Sheet1, system Recovery row",
+          "missing_knowledge": "site recommended, warning, and critical recovery bands",
+          "decision_impact": "classifies 48% recovery and determines whether unchanged operation is acceptable"
+        }
+      }
+    },
+    {
+      "case_id": "D7-mock-04-capex-sensitivity",
+      "path": "benchmarks/Datasets Harness/D4/D4_4a_CAPEX_design_sensitivity_English.xlsx",
+      "task_family": "d7_mock",
+      "benchmark_overlay": {
+        "overlay_id": "d7-mock-r0-original-v1",
+        "benchmark_view": {
+          "rag_need": "R0",
+          "expected_route": "skip_rag"
+        }
+      }
+    },
+    {
+      "case_id": "D7-mock-05-recovery-limit",
+      "path": "benchmarks/Datasets Harness/D5/D5_5a_N01_recovery_limit_EN.xlsx",
+      "task_family": "d7_mock",
+      "benchmark_overlay": {
+        "overlay_id": "d7-mock-r0-original-v1",
+        "benchmark_view": {
+          "rag_need": "R0",
+          "expected_route": "skip_rag"
+        }
+      }
+    },
+    {
+      "case_id": "D7-mock-06-multisimulator",
+      "path": "benchmarks/Datasets Harness/D6/D6_6b_N07_MultiSimulator_SWRO_pressure_scaling_English.xlsx",
+      "task_family": "d7_mock",
+      "benchmark_overlay": {
+        "overlay_id": "d7-mock-r0-original-v1",
+        "benchmark_view": {
+          "rag_need": "R0",
+          "expected_route": "skip_rag"
+        }
+      }
+    }
+  ]
+}

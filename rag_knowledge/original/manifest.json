@@ -1,0 +1,21 @@
+{
+  "corpus_id": "openwebui-ro-operational-rag",
+  "status": "source-of-truth",
+  "deployment": "manually uploaded to OpenWebUI Knowledge",
+  "documents": [
+    {
+      "file": "RO-operational Manual.pdf",
+      "sha256": "BC496F9ACA634F7A2C5C8EE89733F955C5CC9FD63839FA5C2CBA1742CAF2628A",
+      "role": "RO membrane operation, pretreatment, scaling, cleaning and troubleshooting manual"
+    },
+    {
+      "file": "Safety file.xlsx",
+      "sha256": "A0B383FEB8524CFD4FB845E974EEB29408F68D291E63135F4FFB96CCF5386366",
+      "role": "site operating warnings, limits, shutdown conditions and CIP triggers"
+    }
+  ],
+  "d1_d6_audit": {
+    "decision": "no synthetic R2 transformation",
+    "reason": "D1-D6 questions generally disclose their benchmark-specific decision thresholds; the source corpus is reserved for naturally knowledge-dependent cases such as D7"
+  }
+}

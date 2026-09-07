@@ -1,0 +1,8 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.1",
+  "status": "candidate",
+  "design": "planning protocol with locked-call validation and task-shaped stopping gates, without a universal tool-call cap",
+  "source_files": ["00_core.md", "10_plan.md", "20_answer.md"],
+  "evaluation_set": "skill_planning_dev"
+}

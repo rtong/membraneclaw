@@ -1,0 +1,57 @@
+{
+  "version": "0.6.0",
+  "prevention_checks": {
+    "OUTPUT_OMISSION": [
+      "mandatory outputs in task framing",
+      "final answer contract",
+      "complete constraint check",
+      "multi-stage checklist completed before stopping"
+    ],
+    "CONSTRAINT_OMISSION": [
+      "question-first constraint extraction",
+      "case-specific tool verification",
+      "full pass-fail summary"
+    ],
+    "UNIT_CONVERSION": [
+      "retrieval only for interface clarification",
+      "explicit tool arguments",
+      "no silent unit drift",
+      "explicit kg/s to m3/h conversion when screening production",
+      "unit alignment before candidate elimination"
+    ],
+    "NUMERICAL_REASONING": [
+      "tools for case-specific quantities",
+      "bounded search",
+      "verified final candidate",
+      "consistency audit across equivalent calculations",
+      "raw-threshold comparison before rounding"
+    ],
+    "SEARCH_STRATEGY": [
+      "explicit candidates first",
+      "minimal passing-failing bracket",
+      "stop after recommendation is justified",
+      "respect required resolution",
+      "do not spend whole budget on the first scenario"
+    ],
+    "ENGINEERING_JUDGMENT": [
+      "retrieval for interpretation only when needed",
+      "tool-backed recommendation",
+      "stated monitoring note or limitation"
+    ],
+    "TOOL_ARGUMENT": [
+      "question-stated arguments all explicit",
+      "post-call echo check",
+      "fixed inputs locked"
+    ],
+    "PARAMETER_EXTRACTION": [
+      "task framing",
+      "source plan",
+      "question overrides retrieval"
+    ],
+    "OVERCLAIM": [
+      "evidence hierarchy",
+      "tool result over retrieved prose for current case",
+      "trailer matches actual actions"
+    ]
+  }
+}

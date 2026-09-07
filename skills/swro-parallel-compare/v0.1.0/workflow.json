@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "swro-parallel-compare@0.1.0",
+  "nodes": [
+    {
+      "id": "membrane",
+      "tool": "simulate_ro",
+      "needs": [],
+      "arguments": {
+        "feed_flow_mass_kg_s": {"input": "membrane.feed_flow_mass_kg_s"},
+        "feed_pressure_bar": {"input": "membrane.feed_pressure_bar"},
+        "membrane_area_m2": {"input": "membrane.membrane_area_m2"},
+        "feed_temperature_c": {"input": "membrane.feed_temperature_c"},
+        "A_comp": {"input": "membrane.A_comp"},
+        "B_comp": {"input": "membrane.B_comp"}
+      }
+    },
+    {
+      "id": "plant",
+      "tool": "simulate_swro_system",
+      "needs": [],
+      "arguments": {
+        "feed_flow_m3_s": {"input": "plant.feed_flow_m3_s"},
+        "p1_pressure_bar": {"input": "plant.p1_pressure_bar"},
+        "ro_area_m2": {"input": "plant.ro_area_m2"},
+        "feed_temperature_c": {"input": "plant.feed_temperature_c"},
+        "A_comp": {"input": "plant.A_comp"},
+        "B_comp": {"input": "plant.B_comp"},
+        "erd_type": {"input": "plant.erd_type"},
+        "pxr_efficiency": {"input": "plant.pxr_efficiency"}
+      }
+    }
+  ]
+}

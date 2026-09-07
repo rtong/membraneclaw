@@ -1,0 +1,20 @@
+{
+  "fixture_only": true,
+  "source": "Offline projection of existing teacher-tools::D6-6c-01, events T002-T009 and its final response in runs/d1-d6-full-20260828-v1/teacher_responses.jsonl. Values are historical, rounded projections; not new simulations and not a verified live API schema. Repeated B/D membrane inputs share one fixture record but are invoked separately. Native omitted/default inputs and ppm versus mg/L assumptions must be audited before live use.",
+  "records": [
+    {"tool": "simulate_ro", "arguments": {"feed_flow_mass_kg_s": 1, "feed_pressure_bar": 58, "membrane_area_m2": 70, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8},
+     "data": {"water_kg_s": 0.3720405, "nacl_mg_l": 347.6846, "inlet_cp": 1.271138, "water_recovery_pct": 38.1966, "water_lmh": 19.1335}},
+    {"tool": "simulate_ro", "arguments": {"feed_flow_mass_kg_s": 1, "feed_pressure_bar": 62, "membrane_area_m2": 60, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8},
+     "data": {"water_kg_s": 0.3813059, "nacl_mg_l": 300.6424, "inlet_cp": 1.299233, "water_recovery_pct": 39.1474, "water_lmh": 22.8784}},
+    {"tool": "simulate_ro", "arguments": {"feed_flow_mass_kg_s": 1, "feed_pressure_bar": 65, "membrane_area_m2": 55, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8},
+     "data": {"water_kg_s": 0.3906892, "nacl_mg_l": 275.9736, "inlet_cp": 1.321381, "water_recovery_pct": 40.1105, "water_lmh": 25.5724}},
+    {"tool": "simulate_swro_system", "arguments": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 58, "ro_area_m2": 7000, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.95},
+     "data": {"product_m3_s": 0.04138603, "sec_kwh_m3": 2.541992, "lcow_usd2018_m3": 1.141128, "capex_usd2018": 12826932.89}},
+    {"tool": "simulate_swro_system", "arguments": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 62, "ro_area_m2": 6000, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.95},
+     "data": {"product_m3_s": 0.04112661, "sec_kwh_m3": 2.691167, "lcow_usd2018_m3": 1.15226, "capex_usd2018": 12835559.04}},
+    {"tool": "simulate_swro_system", "arguments": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 65, "ro_area_m2": 5500, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.95},
+     "data": {"product_m3_s": 0.04132223, "sec_kwh_m3": 2.800823, "lcow_usd2018_m3": 1.154929, "capex_usd2018": 12880011.09}},
+    {"tool": "simulate_swro_system", "arguments": {"feed_flow_m3_s": 0.1, "p1_pressure_bar": 62, "ro_area_m2": 6000, "feed_temperature_c": 25, "A_comp": 4.2e-12, "B_comp": 3.5e-8, "erd_type": "pressure_exchanger", "pxr_efficiency": 0.9},
+     "data": {"product_m3_s": 0.04112661, "sec_kwh_m3": 2.842146, "lcow_usd2018_m3": 1.167425, "capex_usd2018": 12920859.21}}
+  ]
+}

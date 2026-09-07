@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.6",
+  "modules": [
+    "copy stated fixed inputs into every tool call",
+    "classify one decision variable independently of constraint count",
+    "gate every tool call and stop on adjacent grid proof",
+    "emit the complete score trailer before concise prose"
+  ]
+}

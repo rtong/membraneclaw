@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "selection_id": "teacher-distilled-solver-skill-pilot-p3@0.2.0",
+  "source_benchmark_set": "d1_d6",
+  "source_benchmarks_dir": "benchmarks/normalized",
+  "base_systems_config": "configs/systems.json",
+  "base_system_id": "tools",
+  "skill_version": "swro-parallel-compare@0.1.1",
+  "case_ids": [
+    "D6-6c-01"
+  ],
+  "conditions": [
+    "c00",
+    "c10"
+  ],
+  "repeats": 3,
+  "primary_outcome": "best_of_3_task_score",
+  "required_observable_tools": [
+    "simulate_ro",
+    "simulate_swro_system"
+  ],
+  "max_collection_attempts": 4,
+  "generation_overrides": {
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "max_tokens": 2048,
+    "enable_thinking": false
+  }
+}

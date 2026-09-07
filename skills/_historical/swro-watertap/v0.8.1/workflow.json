@@ -1,0 +1,10 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.8.1",
+  "modules": [
+    "compile and lock question-stated tool arguments",
+    "validate echoed inputs before accepting evidence",
+    "select task-shaped calls and stop at a proved boundary",
+    "report the decision with constraints and provenance"
+  ]
+}

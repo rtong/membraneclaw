@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "selection_id": "judge-calibration-12@0.1.0",
+  "description": "Four frozen D1-D6 cases with Baseline, Tools, and Tools-RAG answers from the immutable full run; selected before J0/J1 calibration for score range, native/recovered completion, single-tool and multi-tool coverage.",
+  "source_run": "d1-d6-full-20260828-v1",
+  "evaluation_skill": "skills/swro-evaluation-judge/v0.1.0/SKILL.md",
+  "judge_conditions": ["j0", "j1"],
+  "repeats": 2,
+  "seed": 20260907,
+  "case_ids": [
+    "D1-1a-feasibility",
+    "D1-1b-retrofit",
+    "D5-5a-n01-recovery-limit",
+    "D6-6c-01"
+  ],
+  "system_ids": ["baseline", "tools", "tools-rag"],
+  "selection_notes": [
+    "Historical Judge scores were used only to create broad low, medium, and high strata; they are not expert ground truth.",
+    "All three systems are retained within every selected case so within-case rankings can be compared.",
+    "The calibration does not regenerate any 9B answer and does not overwrite the source run."
+  ]
+}

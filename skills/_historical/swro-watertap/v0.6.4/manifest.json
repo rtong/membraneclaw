@@ -1,0 +1,22 @@
+{
+  "skill_id": "swro-watertap",
+  "version": "0.6.4",
+  "status": "candidate",
+  "title": "SWRO environment-use protocol",
+  "target_system": "environment-skill",
+  "compatible_tools": [
+    "describe_ro_parameters",
+    "simulate_ro",
+    "describe_reaktoro_options",
+    "analyze_ro_scaling"
+  ],
+  "task_families": [
+    "environment_orchestration",
+    "swro_design_and_feasibility",
+    "scaling_analysis",
+    "general_constraint_check"
+  ],
+  "benchmark_answer_values_allowed": false,
+  "runtime_artifact": "SKILL.md",
+  "promotion_config": "../../../configs/skill_promotion.json"
+}

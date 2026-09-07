@@ -1,0 +1,23 @@
+{
+  "workflow_id": "swro-bounded-execution",
+  "version": "0.7.1",
+  "default_call_budget": 10,
+  "states": [
+    {
+      "id": "compile",
+      "required": ["decision_variable", "fixed_inputs", "constraints", "resolution", "deliverables"]
+    },
+    {
+      "id": "screen",
+      "required": ["common_point_or_named_candidates", "controlling_case", "observed_direction"]
+    },
+    {
+      "id": "resolve",
+      "required": ["minimal_boundary_or_candidate_evidence", "echoed_inputs_verified"]
+    },
+    {
+      "id": "decide",
+      "required": ["all_constraints_checked", "complete_final_decision"]
+    }
+  ]
+}

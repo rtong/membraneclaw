@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swro-auto-evaluate"
-version = "0.1.0"
+version = "0.2.0"
 description = "Reproducible step-level evaluation for SWRO WaterTAP agents"
 requires-python = ">=3.11"
 dependencies = [
   "openpyxl>=3.1,<4",
+  "openai-codex==0.147.0",
 ]
 
 [tool.setuptools]
@@ -16,4 +17,3 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-

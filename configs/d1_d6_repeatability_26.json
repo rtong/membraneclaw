@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "selection_id": "d1-d6-repeatability-26@0.1.0",
+  "source_run": "d1-d6-full-20260828-v1",
+  "source_benchmarks_dir": "runs/d1-d6-full-20260828-v1/benchmarks",
+  "source_benchmark_set": "d1_d6",
+  "selection_method": "Within each of the 13 task families, sort case IDs by SHA-256 of 'd1-d6-repeatability-26@0.1.0|<case_id>' and retain the first two. The rule does not use model scores, failures, latency, or tool calls.",
+  "cases_per_family": 2,
+  "case_ids": [
+    "D1-1a-new-build",
+    "D1-1a-seasonal",
+    "D1-1b-new-build",
+    "D1-1b-supplier-qa",
+    "D1-1c-pump-qa",
+    "D1-1c-seasonal",
+    "D2-2a-feed-salinity-sopaudit",
+    "D2-2a-feed-flow-sudden-drop",
+    "D2-2b-safe-path",
+    "D2-2b-equipment-limit",
+    "D3-3a-swro-pump-head-energy",
+    "D3-3a-n05-train-overloading",
+    "D3-3b-n02-booster-pump-degradation",
+    "D3-3b-n01-px-efficiency-inference",
+    "D4-4a-n04-high-permeability-premium",
+    "D4-4a-n02-salinity-pressure-vs-area",
+    "D5-5a-n01-recovery-limit",
+    "D5-5a-n05-blend-limit",
+    "D5-5b-n05-antiscalant-operating-window",
+    "D5-5b-n01-carbonate-acid-boundary",
+    "D6-6a-n02",
+    "D6-6a-n06",
+    "D6-6b-n05",
+    "D6-6b-n02",
+    "D6-6c-05",
+    "D6-6c-04"
+  ],
+  "replication_plan": {
+    "existing_replicate": "d1-d6-full-20260828-v1",
+    "new_run_ids": [
+      "d1-d6-repeatability-26-r2",
+      "d1-d6-repeatability-26-r3",
+      "d1-d6-repeatability-26-r4",
+      "d1-d6-repeatability-26-r5"
+    ],
+    "systems": ["baseline", "tools", "tools-rag"],
+    "evaluation_profile": "d1_d6_repeatability",
+    "generation": {
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "max_tokens": 2048,
+      "enable_thinking": false
+    },
+    "expand_to_full_117_if": [
+      "Tools versus Baseline effect changes direction across replicates",
+      "Tools versus Tools+RAG ranking repeatedly reverses",
+      "native or final completion rates are materially unstable",
+      "the case-level effect is too variable to support the paper claim"
+    ]
+  }
+}
