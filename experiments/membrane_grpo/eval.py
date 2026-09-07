@@ -390,6 +390,17 @@ def summarise(results: list[CaseResult], weights) -> dict[str, Any]:
             "numeric": row["scored"][0].diagnostics.get("numeric_correct", 0),
             "flags": row["scored"][0].diagnostics.get("flags_correct", 0),
             "flags_ok": row["scored"][0].diagnostics.get("flags_correct", 0) == 3,
+            "stage": bool(row["scored"][0].diagnostics.get("stage_correct")),
+            "action": bool(row["scored"][0].diagnostics.get("action_correct")),
+            # What it picked, not just whether it was right -- `action` sits
+            # behind `root_cause` through a stated lookup, so an action failure
+            # is only interesting once you know whether the cause under it was
+            # right. Same for the confusion structure of the lookup itself.
+            "predicted_cause": row["scored"][0].diagnostics.get("predicted_cause"),
+            # The one place the action is *not* a function of the cause: a flow
+            # loss past the severe threshold overrides it. Recorded so the two
+            # regimes can be scored apart.
+            "severe": bool(row["case"].get("meta", {}).get("severe", False)),
         }
         for row in rows
     ]
