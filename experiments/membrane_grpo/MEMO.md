@@ -1,10 +1,10 @@
 # What My First LLM RL Run Actually Improved
 
 **Scope.** GRPO on a structured membrane-troubleshooting task with a
-deterministic reward, on one RTX 5070 Ti. Five 200-step runs: two on
-Qwen2.5-0.5B-Instruct, three on Qwen3-1.7B. Each took about an hour. Single
-seed throughout — see Limits, which is the part of this memo I would attack
-first.
+deterministic reward, on one RTX 5070 Ti. Seven 200-step runs: two on
+Qwen2.5-0.5B-Instruct, five on Qwen3-1.7B. Each took about an hour. Two of the
+1.7B runs are a seed replication, and they are the reason Part 2 retracts its
+own conclusion.
 
 ---
 
@@ -13,14 +13,16 @@ first.
 **On the 0.5B: formatting, and nothing else.** Held-out reward rose 3.2x while
 the model's ability to diagnose the fault did not move at all.
 
-**On the 1.7B: the diagnosis moved — but only under a reward I had built to be
-wrong.** The run I designed as the *control*, deliberately weighted away from
-the thing being measured, produced a policy five times better on that thing than
-the run I designed as correct.
+**On the 1.7B: the diagnosis moved — and my explanation of why did not
+survive a second seed.** Under one seed, a reward weighted toward the upstream
+bottleneck beat one weighted toward the outcome by 3.4x, at p < 1e-4. Under a
+second seed the same comparison gives +0.025 at p = 0.30, and the seed-to-seed
+spread *within* the winning configuration is larger than the gap between
+configurations.
 
-The second result is why this memo is longer than it was. The first conclusion
-was not wrong; it was a statement about a model that could not do the task at
-all, and I had mistaken it for a statement about RL.
+The first conclusion was not wrong; it was a statement about a model that could
+not do the task at all, and I had mistaken it for a statement about RL. The
+second was wrong, and Part 2 now says so.
 
 ---
 
@@ -63,7 +65,7 @@ once do it.**
 
 ---
 
-## Part 2 — Qwen3-1.7B: where the weight goes decides whether anything moves
+## Part 2 — Qwen3-1.7B: the diagnosis moves, but not for the reason I gave
 
 The obvious next question is what happens with a model that *can* partly do the
 task. Three candidates, measured on the same 200 dev cases rather than argued
@@ -110,14 +112,37 @@ raises `numeric` to 0.35 and leaves `root_cause` substantial at 0.25 — and it
 tracks PROBE, not MAIN. Directly: MAIN-trained → ABLATE-trained is +0.135, with
 30 discordant pairs against 3, p < 1e-4.
 
-The task is a chain: `numeric → flags → root_cause`. **Weighting the head of the
-chain beat weighting the end of it by 3.4x**, because the end is only reachable
-through numbers the model mostly gets wrong. Putting the largest weight on the
-outcome I cared about was the wrong move; putting it on the bottleneck upstream
-of that outcome was the right one.
+The reading at the time: the task is a chain, `numeric → flags → root_cause`,
+and weighting the head of the chain beats weighting the end, because the end is
+only reachable through numbers the model mostly gets wrong. I called it the one
+finding I expected to transfer, and noted it rested on a single seed.
 
-This is the one finding here I would expect to transfer. It is also the one
-resting on a single seed.
+### The second seed says no
+
+Re-running MAIN and ABLATE at seed 42, everything else identical:
+
+| held-out `cause` | seed 0 | seed 42 |
+| --- | --- | --- |
+| MAIN | 0.295 | 0.315 |
+| ABLATE | **0.430** | **0.340** |
+| ABLATE − MAIN | **+0.135**, p < 1e-4 | **+0.025**, p = 0.30 |
+
+The effect does not replicate. Worse, the seed moves ABLATE more than the
+weighting does: ABLATE at seed 0 against ABLATE at seed 42 is −0.090 with 21
+discordant pairs against 3, **p = 0.0003** — a larger and better-supported
+difference than the one I had attributed to the reward design.
+
+MAIN is stable across seeds (+0.020, 8 discordant pairs, p = 0.29). The
+instability is specific to the high-`numeric` configuration, which is
+consistent with it being the configuration whose gradient depends on a
+component the model is barely able to move.
+
+**Where the mistake was.** McNemar gave p < 1e-4 at seed 0 and I read that as
+"the effect is real". But the test asks whether *these two policies* differ on
+*these 200 cases* — it says nothing about whether the weighting reliably
+produces such policies. The first is a claim about two artifacts; the second is
+the claim I actually made. Only repetition supports the second, and a small
+p-value on a single run cannot substitute for it.
 
 ---
 
@@ -170,9 +195,12 @@ into every number afterwards.
 
 ## Limits
 
-**One seed per configuration.** This is the weakest point in the most
-interesting claim. "Weight the upstream bottleneck" rests on ABLATE-vs-MAIN at
-n=1 each. A second seed is the next thing to run.
+**Two seeds, and they disagree.** The one claim I thought would transfer did
+not survive its own replication. Two is still far too few — the honest position
+is that this design cannot separate a reward-weighting effect from seed noise
+at n=2, and would need perhaps five seeds per configuration to try. PROBE has
+still only been run once, so everything said about it above carries the same
+caveat that just cost ABLATE its conclusion.
 
 **200 steps is not convergence.** All three 1.7B curves were still climbing at
 step 200, and the two `numeric`-heavy runs only began their rise at step
@@ -199,6 +227,8 @@ The two claims I will stand behind:
 the reward was written to measure, and the same policy could be reported as 19x
 better by changing the weights.
 
-**On the 1.7B** — the diagnosis did move, by 3.4x more under a reward weighted
-toward the upstream bottleneck than under one weighted toward the outcome
-itself. Where the weight goes mattered more than how much of it there was.
+**On the 1.7B** — the diagnosis did move: every trained policy beats the
+frozen 0.255, and MAIN reaches 0.315 at seed 42 against a 0.143 chance floor.
+What I cannot claim is *why*. The upstream-weighting explanation held at one
+seed and vanished at the next, and within the configuration that produced it
+the seed matters more than the weighting does.
