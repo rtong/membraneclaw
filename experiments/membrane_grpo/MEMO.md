@@ -76,21 +76,11 @@ once do it.**
 ## Part 2 — Qwen3-1.7B: the diagnosis moves, but not for the reason I gave
 
 The obvious next question is what happens with a model that *can* partly do the
-task. Three candidates, measured on the same 200 dev cases rather than argued
-about:
-
-| | reward | cause | numeric | schema |
-| --- | --- | --- | --- | --- |
-| Qwen2.5-Math-1.5B | 0.000 | 0.000 | 0.000 | 0.000 |
-| Qwen2.5-1.5B-Instruct | 0.209 | 0.215 | 0.000 | 0.000 |
-| **Qwen3-1.7B** | **0.315** | **0.255** | **0.038** | **0.970** |
-
-Three unrelated failure modes: Math-1.5B writes 638 tokens of arithmetic and
-never emits a JSON object at all, trading instruction-following for exactly the
-capability I wanted; Qwen2.5-1.5B returns the numeric fields as strings, 600
-times over 200 cases. Qwen3-1.7B was chosen less for its score than because
-**its schema validity starts at 0.970**, leaving at most 0.003 of the headroom
-that confounded Part 1 — so a reward rise here cannot be format learning.
+task. Three candidates were measured on the same 200 dev cases rather than
+argued about (the table is in the README); two failed in unrelated ways, and
+Qwen3-1.7B was chosen less for its score than because **its schema validity
+starts at 0.970**, leaving at most 0.003 of the headroom that confounded Part 1.
+A reward rise here cannot be format learning.
 
 ### Three runs, one variable
 
@@ -137,10 +127,11 @@ weighting does: ABLATE at seed 0 against ABLATE at seed 42 is −0.090 with 21
 discordant pairs against 3, **p = 0.0003** — a larger and better-supported
 difference than the one I had attributed to the reward design.
 
-MAIN is stable across seeds (+0.020, 8 discordant pairs, p = 0.29). The
-instability is specific to the high-`numeric` configuration, which is
-consistent with it being the configuration whose gradient depends on a
-component the model is barely able to move.
+MAIN is stable across seeds (+0.020, 8 discordant pairs, p = 0.29); the
+instability is specific to the high-`numeric` configuration. I explained that at
+the time as its gradient depending on a component the model can barely move.
+Part 3 removes the ground under that too — `numeric` is not what gates anything
+downstream — so the instability is recorded and left unexplained.
 
 **Where the mistake was.** McNemar gave p < 1e-4 at seed 0 and I read that as
 "the effect is real". But the test asks whether *these two policies* differ on
@@ -176,13 +167,9 @@ of the label.
 | `action_acc` | 0.195 | 0.205 | 0.225 |
 | exact match | 0.000 | 0.090 | 0.210 |
 
-McNemar's exact test on the same 200 paired cases:
-
-| | difference | gained | lost | p |
-| --- | --- | --- | --- | --- |
-| baseline → `numeric` | +0.035 | 9 | 2 | 0.0654, **not significant** |
-| `numeric` → `flags` | +0.125 | 25 | 0 | **< 1e-4** |
-| baseline → `flags` | +0.160 | 34 | 2 | **< 1e-4** |
+McNemar's exact test on the same 200 paired cases: baseline → `numeric` is
++0.035, 9 gained against 2 lost, **p = 0.0654**; `numeric` → `flags` is +0.125,
+25 gained against 0, p < 1e-4; baseline → `flags` is +0.160, p < 1e-4.
 
 **Perfect arithmetic is worth +0.035 and does not clear significance.** That is
 the ceiling of any calculator, tool or solver wired into this task — measured
@@ -197,35 +184,28 @@ conjunction only 0.02 → 0.13.
 **And the bottleneck was never arithmetic.** With numbers and flags both handed
 over, the 17-row lookup is the entire remaining task, and:
 
-| | true | emitted | correct |
+| cause | true | emitted | correct |
 | --- | --- | --- | --- |
 | `scaling` | 29 | 79 | **29/29** |
 | `biofouling` | 29 | 90 | **29/29** |
 | `colloidal_fouling` | 29 | 31 | 25/29 |
-| `organic_fouling` | 29 | **0** | 0/29 |
-| `compaction` | 28 | **0** | 0/28 |
-| `oxidation_damage` | 28 | **0** | 0/28 |
-| `mechanical_leak` | 28 | **0** | 0/28 |
+| the other four | 113 | **0** | **0/113** |
 
 This is not a lookup performed badly. Four of the seven labels are not in the
 model's output vocabulary at all, and the three that are happen to be exactly
 the three rows requiring `dp = up`. Of the 0.745 between the frozen policy and a
 perfect one, **0.585 — 78% — survives handing over everything upstream.**
 
-`action` has the same shape and one failure of its own. It emits four of eight
-labels and not the four its own causes imply — it names `colloidal_fouling` 31
-times but that cause's action 5, reaching for `compaction`'s 26 times instead —
-so the pair is not coming off the table together. And the severity override, one
-stated conditional covering 37 of the 200 cases, is applied **zero** times in
-all three conditions, including the one that hands it the flow percentage;
-`isolate_and_evaluate_replacement` is emitted 0 times in 200. Where the cause is
-right and the override does not apply, the lookup is perfect: 39/39 and 41/41.
+`action` has the same shape and one failure of its own: the severity override —
+one stated conditional covering 37 of the 200 cases — is applied **zero** times
+in all three conditions, including the one that hands it the flow percentage.
+Where the cause is right and the override does not apply, the lookup is perfect,
+39/39 and 41/41. So `action` is not a lookup failure either.
 
-Two controls. `numeric_acc` is exactly 1.000 over 200 cases and three fields, so
-none of this is a failure to transcribe. And the gain is not the schema artifact
-it could have been: none of the nine cases that flipped to a correct cause were
-among the baseline's six `no_json`, and restricting to the 194 it parsed leaves
-the same picture, 0.263 → 0.299 → 0.428.
+Two controls, both in the README with the rest of the detail: `numeric_acc` is
+exactly 1.000, so none of this is a failure to transcribe; and the gain is not a
+schema artifact, since restricting to the cases the baseline already parsed
+leaves the same picture.
 
 What this costs Part 2 is its interpretation, not its numbers. `root_cause` was
 never a measurement of whether the model could read the table. On four rows of
@@ -234,7 +214,7 @@ out right, and the answer was always no.
 
 ---
 
-## Two things I got wrong along the way
+## Three things I got wrong along the way
 
 **I used a monotonicity argument as a significance test.** MAIN's `cause` rose
 at nine consecutive evaluation points, and I called the gain real on that basis.
@@ -247,11 +227,12 @@ unpaired reading. Pairing helps when two policies agree on most cases; where the
 disagreements are themselves balanced, it is the stricter test. `paired_test.py`
 documents that rather than quietly reporting whichever number is smaller.
 
-Also worth recording: my pre-registered go/no-go criterion was `pass@8 > 0`, and
-it rejected all three 1.7B candidates. It was the wrong criterion — exact match
-is a conjunction over seven fields, and even the 9B only reaches 0.245. What
-actually distinguished the 0.5B's failure was `cause` sitting *exactly* at
-chance, leaving nothing partial to sharpen.
+**I hung the question on the wrong instrument.** Three of five pre-registered
+predictions and the go/no-go criterion were all written about exact match, a
+conjunction over seven fields that is 0.000 for every policy in this project.
+Two of the three are therefore neither right nor wrong. What actually
+distinguished the 0.5B's failure was `cause` sitting *exactly* at chance. The
+predictions are scored one by one in the README.
 
 ---
 
