@@ -12,7 +12,7 @@
   "max_tokens": 640,
   "seed": 0,
   "adapter": null,
-  "elapsed_seconds": 82.7,
+  "elapsed_seconds": 75.5,
   "overall": {
     "n_cases": 200,
     "k": 1,
@@ -57,7 +57,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0145",
@@ -68,7 +72,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0129",
@@ -79,7 +87,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0100",
@@ -90,7 +102,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": true
       },
       {
         "id": "dev-main-0000",
@@ -101,7 +117,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0197",
@@ -112,7 +132,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0041",
@@ -123,7 +147,11 @@
         "schema": false,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": false,
+        "action": false,
+        "predicted_cause": null,
+        "severe": false
       },
       {
         "id": "dev-main-0050",
@@ -134,7 +162,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0130",
@@ -145,7 +177,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0039",
@@ -156,7 +192,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0014",
@@ -167,7 +207,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0023",
@@ -178,7 +222,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0143",
@@ -189,7 +237,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0004",
@@ -200,7 +252,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0195",
@@ -211,7 +267,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0003",
@@ -222,7 +282,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0027",
@@ -233,7 +297,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0120",
@@ -244,7 +312,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0083",
@@ -255,7 +327,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0033",
@@ -266,7 +342,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0062",
@@ -277,7 +357,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0142",
@@ -288,7 +372,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0106",
@@ -299,7 +387,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": true
       },
       {
         "id": "dev-main-0141",
@@ -310,7 +402,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0036",
@@ -321,7 +417,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0126",
@@ -332,7 +432,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0053",
@@ -343,7 +447,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0054",
@@ -354,7 +462,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0035",
@@ -365,7 +477,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0196",
@@ -376,7 +492,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0101",
@@ -387,7 +507,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0028",
@@ -398,7 +522,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0037",
@@ -409,7 +537,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0177",
@@ -420,7 +552,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0059",
@@ -431,7 +567,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0193",
@@ -442,7 +582,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0139",
@@ -453,7 +597,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0153",
@@ -464,7 +612,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0168",
@@ -475,7 +627,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0084",
@@ -486,7 +642,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0026",
@@ -497,7 +657,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0070",
@@ -508,7 +672,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0134",
@@ -519,7 +687,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0078",
@@ -530,7 +702,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0191",
@@ -541,7 +717,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0183",
@@ -552,7 +732,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0114",
@@ -563,7 +747,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0099",
@@ -574,7 +762,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0133",
@@ -585,7 +777,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0125",
@@ -596,7 +792,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0034",
@@ -607,7 +807,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0032",
@@ -618,7 +822,11 @@
         "schema": true,
         "numeric": 2,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0024",
@@ -629,7 +837,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0175",
@@ -640,7 +852,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": true
       },
       {
         "id": "dev-main-0181",
@@ -651,7 +867,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0137",
@@ -662,7 +882,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0156",
@@ -673,7 +897,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0073",
@@ -684,7 +912,11 @@
         "schema": false,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": false,
+        "action": false,
+        "predicted_cause": null,
+        "severe": true
       },
       {
         "id": "dev-main-0013",
@@ -695,7 +927,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0088",
@@ -706,7 +942,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0173",
@@ -717,7 +957,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0182",
@@ -728,7 +972,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0069",
@@ -739,7 +987,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0075",
@@ -750,7 +1002,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0052",
@@ -761,7 +1017,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0107",
@@ -772,7 +1032,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0091",
@@ -783,7 +1047,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0109",
@@ -794,7 +1062,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0115",
@@ -805,7 +1077,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0010",
@@ -816,7 +1092,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0089",
@@ -827,7 +1107,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0127",
@@ -838,7 +1122,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0072",
@@ -849,7 +1137,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": true
       },
       {
         "id": "dev-main-0159",
@@ -860,7 +1152,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0164",
@@ -871,7 +1167,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0063",
@@ -882,7 +1182,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0056",
@@ -893,7 +1197,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0192",
@@ -904,7 +1212,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0012",
@@ -915,7 +1227,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0163",
@@ -926,7 +1242,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0118",
@@ -937,7 +1257,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0087",
@@ -948,7 +1272,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0020",
@@ -959,7 +1287,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0184",
@@ -970,7 +1302,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0146",
@@ -981,7 +1317,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0007",
@@ -992,7 +1332,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0085",
@@ -1003,7 +1347,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0160",
@@ -1014,7 +1362,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0098",
@@ -1025,7 +1377,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0081",
@@ -1036,7 +1392,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0016",
@@ -1047,7 +1407,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0095",
@@ -1058,7 +1422,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0096",
@@ -1069,7 +1437,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0140",
@@ -1080,7 +1452,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0005",
@@ -1091,7 +1467,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 3,
-        "flags_ok": true
+        "flags_ok": true,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0171",
@@ -1102,7 +1482,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0046",
@@ -1113,7 +1497,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0180",
@@ -1124,7 +1512,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0082",
@@ -1135,7 +1527,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0172",
@@ -1146,7 +1542,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0104",
@@ -1157,7 +1557,11 @@
         "schema": false,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": false,
+        "action": false,
+        "predicted_cause": null,
+        "severe": false
       },
       {
         "id": "dev-main-0021",
@@ -1168,7 +1572,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0058",
@@ -1179,7 +1587,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0112",
@@ -1190,7 +1602,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0108",
@@ -1201,7 +1617,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0093",
@@ -1212,7 +1632,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0017",
@@ -1223,7 +1647,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0061",
@@ -1234,7 +1662,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0047",
@@ -1245,7 +1677,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 3,
-        "flags_ok": true
+        "flags_ok": true,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0008",
@@ -1256,7 +1692,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0186",
@@ -1267,7 +1707,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0049",
@@ -1278,7 +1722,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0117",
@@ -1289,7 +1737,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0102",
@@ -1300,7 +1752,11 @@
         "schema": false,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": false,
+        "action": false,
+        "predicted_cause": null,
+        "severe": true
       },
       {
         "id": "dev-main-0074",
@@ -1311,7 +1767,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0097",
@@ -1322,7 +1782,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0022",
@@ -1333,7 +1797,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0079",
@@ -1344,7 +1812,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0092",
@@ -1355,7 +1827,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0057",
@@ -1366,7 +1842,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0179",
@@ -1377,7 +1857,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0105",
@@ -1388,7 +1872,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0006",
@@ -1399,7 +1887,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0040",
@@ -1410,7 +1902,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0029",
@@ -1421,7 +1917,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0188",
@@ -1432,7 +1932,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0042",
@@ -1443,7 +1947,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0136",
@@ -1454,7 +1962,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0121",
@@ -1465,7 +1977,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0001",
@@ -1476,7 +1992,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0080",
@@ -1487,7 +2007,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0135",
@@ -1498,7 +2022,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0190",
@@ -1509,7 +2037,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0185",
@@ -1520,7 +2052,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0051",
@@ -1531,7 +2067,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0067",
@@ -1542,7 +2082,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0165",
@@ -1553,7 +2097,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0038",
@@ -1564,7 +2112,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0124",
@@ -1575,7 +2127,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 3,
-        "flags_ok": true
+        "flags_ok": true,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0119",
@@ -1586,7 +2142,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0149",
@@ -1597,7 +2157,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0064",
@@ -1608,7 +2172,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0178",
@@ -1619,7 +2187,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0151",
@@ -1630,7 +2202,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0113",
@@ -1641,7 +2217,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0025",
@@ -1652,7 +2232,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0076",
@@ -1663,7 +2247,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0123",
@@ -1674,7 +2262,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0019",
@@ -1685,7 +2277,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0043",
@@ -1696,7 +2292,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0131",
@@ -1707,7 +2307,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0157",
@@ -1718,7 +2322,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0158",
@@ -1729,7 +2337,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0122",
@@ -1740,7 +2352,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0176",
@@ -1751,7 +2367,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0011",
@@ -1762,7 +2382,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0002",
@@ -1773,7 +2397,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0152",
@@ -1784,7 +2412,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0128",
@@ -1795,7 +2427,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0116",
@@ -1806,7 +2442,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0154",
@@ -1817,7 +2457,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0071",
@@ -1828,7 +2472,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": true
       },
       {
         "id": "dev-main-0150",
@@ -1839,7 +2487,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0169",
@@ -1850,7 +2502,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0030",
@@ -1861,7 +2517,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0060",
@@ -1872,7 +2532,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": true
       },
       {
         "id": "dev-main-0167",
@@ -1883,7 +2547,11 @@
         "schema": false,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": false,
+        "action": false,
+        "predicted_cause": null,
+        "severe": false
       },
       {
         "id": "dev-main-0031",
@@ -1894,7 +2562,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0015",
@@ -1905,7 +2577,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0187",
@@ -1916,7 +2592,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 3,
-        "flags_ok": true
+        "flags_ok": true,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0162",
@@ -1927,7 +2607,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0174",
@@ -1938,7 +2622,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0065",
@@ -1949,7 +2637,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0189",
@@ -1960,7 +2652,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": true
       },
       {
         "id": "dev-main-0094",
@@ -1971,7 +2667,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0199",
@@ -1982,7 +2682,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0055",
@@ -1993,7 +2697,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0170",
@@ -2004,7 +2712,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": true
       },
       {
         "id": "dev-main-0138",
@@ -2015,7 +2727,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0045",
@@ -2026,7 +2742,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0155",
@@ -2037,7 +2757,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 2,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0161",
@@ -2048,7 +2772,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0077",
@@ -2059,7 +2787,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0110",
@@ -2070,7 +2802,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0009",
@@ -2081,7 +2817,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0166",
@@ -2092,7 +2832,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0086",
@@ -2103,7 +2847,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "oxidation_damage",
+        "severe": false
       },
       {
         "id": "dev-main-0048",
@@ -2114,7 +2862,11 @@
         "schema": false,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": false,
+        "action": false,
+        "predicted_cause": null,
+        "severe": false
       },
       {
         "id": "dev-main-0103",
@@ -2125,7 +2877,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0198",
@@ -2136,7 +2892,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": true
       },
       {
         "id": "dev-main-0018",
@@ -2147,7 +2907,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0044",
@@ -2158,7 +2922,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0148",
@@ -2169,7 +2937,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": true,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0111",
@@ -2180,7 +2952,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0090",
@@ -2191,7 +2967,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0194",
@@ -2202,7 +2982,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "biofouling",
+        "severe": false
       },
       {
         "id": "dev-main-0144",
@@ -2213,7 +2997,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0132",
@@ -2224,7 +3012,11 @@
         "schema": true,
         "numeric": 1,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0066",
@@ -2235,7 +3027,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 0,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       },
       {
         "id": "dev-main-0068",
@@ -2246,7 +3042,11 @@
         "schema": true,
         "numeric": 0,
         "flags": 1,
-        "flags_ok": false
+        "flags_ok": false,
+        "stage": true,
+        "action": false,
+        "predicted_cause": "scaling",
+        "severe": false
       }
     ]
   },
@@ -2295,7 +3095,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0145",
@@ -2306,7 +3110,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0100",
@@ -2317,7 +3125,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0197",
@@ -2328,7 +3140,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0041",
@@ -2339,7 +3155,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0050",
@@ -2350,7 +3170,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0039",
@@ -2361,7 +3185,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0014",
@@ -2372,7 +3200,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0023",
@@ -2383,7 +3215,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0143",
@@ -2394,7 +3230,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0195",
@@ -2405,7 +3245,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0003",
@@ -2416,7 +3260,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0027",
@@ -2427,7 +3275,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0120",
@@ -2438,7 +3290,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0033",
@@ -2449,7 +3305,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0106",
@@ -2460,7 +3320,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0141",
@@ -2471,7 +3335,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0053",
@@ -2482,7 +3350,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0035",
@@ -2493,7 +3365,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0196",
@@ -2504,7 +3380,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0037",
@@ -2515,7 +3395,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0059",
@@ -2526,7 +3410,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0193",
@@ -2537,7 +3425,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0153",
@@ -2548,7 +3440,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0168",
@@ -2559,7 +3455,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0084",
@@ -2570,7 +3470,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0026",
@@ -2581,7 +3485,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0134",
@@ -2592,7 +3500,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0078",
@@ -2603,7 +3515,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0183",
@@ -2614,7 +3530,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0099",
@@ -2625,7 +3545,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0133",
@@ -2636,7 +3560,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0125",
@@ -2647,7 +3575,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0034",
@@ -2658,7 +3590,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0024",
@@ -2669,7 +3605,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0175",
@@ -2680,7 +3620,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0181",
@@ -2691,7 +3635,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0137",
@@ -2702,7 +3650,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0156",
@@ -2713,7 +3665,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0073",
@@ -2724,7 +3680,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": true
         },
         {
           "id": "dev-main-0088",
@@ -2735,7 +3695,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0069",
@@ -2746,7 +3710,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0107",
@@ -2757,7 +3725,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0091",
@@ -2768,7 +3740,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0010",
@@ -2779,7 +3755,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0089",
@@ -2790,7 +3770,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0127",
@@ -2801,7 +3785,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0072",
@@ -2812,7 +3800,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0159",
@@ -2823,7 +3815,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0063",
@@ -2834,7 +3830,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0087",
@@ -2845,7 +3845,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0020",
@@ -2856,7 +3860,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0146",
@@ -2867,7 +3875,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0081",
@@ -2878,7 +3890,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0095",
@@ -2889,7 +3905,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0005",
@@ -2900,7 +3920,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0171",
@@ -2911,7 +3935,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0046",
@@ -2922,7 +3950,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0180",
@@ -2933,7 +3965,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0082",
@@ -2944,7 +3980,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0172",
@@ -2955,7 +3995,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0104",
@@ -2966,7 +4010,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0112",
@@ -2977,7 +4025,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0108",
@@ -2988,7 +4040,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0093",
@@ -2999,7 +4055,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0017",
@@ -3010,7 +4070,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0008",
@@ -3021,7 +4085,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0186",
@@ -3032,7 +4100,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0049",
@@ -3043,7 +4115,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0117",
@@ -3054,7 +4130,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0102",
@@ -3065,7 +4145,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": true
         },
         {
           "id": "dev-main-0074",
@@ -3076,7 +4160,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0022",
@@ -3087,7 +4175,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0079",
@@ -3098,7 +4190,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0179",
@@ -3109,7 +4205,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0105",
@@ -3120,7 +4220,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0006",
@@ -3131,7 +4235,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0188",
@@ -3142,7 +4250,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0121",
@@ -3153,7 +4265,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0080",
@@ -3164,7 +4280,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0135",
@@ -3175,7 +4295,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0190",
@@ -3186,7 +4310,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0051",
@@ -3197,7 +4325,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0165",
@@ -3208,7 +4340,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0038",
@@ -3219,7 +4355,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0119",
@@ -3230,7 +4370,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0064",
@@ -3241,7 +4385,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0151",
@@ -3252,7 +4400,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0113",
@@ -3263,7 +4415,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0025",
@@ -3274,7 +4430,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0123",
@@ -3285,7 +4445,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0019",
@@ -3296,7 +4460,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0043",
@@ -3307,7 +4475,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0131",
@@ -3318,7 +4490,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0158",
@@ -3329,7 +4505,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0122",
@@ -3340,7 +4520,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0176",
@@ -3351,7 +4535,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0011",
@@ -3362,7 +4550,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0002",
@@ -3373,7 +4565,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0152",
@@ -3384,7 +4580,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0128",
@@ -3395,7 +4595,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0154",
@@ -3406,7 +4610,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0150",
@@ -3417,7 +4625,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0169",
@@ -3428,7 +4640,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0030",
@@ -3439,7 +4655,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0167",
@@ -3450,7 +4670,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0031",
@@ -3461,7 +4685,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0187",
@@ -3472,7 +4700,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0174",
@@ -3483,7 +4715,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0065",
@@ -3494,7 +4730,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0094",
@@ -3505,7 +4745,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0199",
@@ -3516,7 +4760,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0055",
@@ -3527,7 +4775,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0170",
@@ -3538,7 +4790,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0045",
@@ -3549,7 +4805,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0155",
@@ -3560,7 +4820,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0077",
@@ -3571,7 +4835,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0110",
@@ -3582,7 +4850,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0166",
@@ -3593,7 +4865,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0086",
@@ -3604,7 +4880,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0048",
@@ -3615,7 +4895,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0103",
@@ -3626,7 +4910,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0198",
@@ -3637,7 +4925,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0018",
@@ -3648,7 +4940,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0148",
@@ -3659,7 +4955,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0090",
@@ -3670,7 +4970,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0194",
@@ -3681,7 +4985,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0132",
@@ -3692,7 +5000,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0066",
@@ -3703,7 +5015,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         }
       ]
     },
@@ -3748,7 +5064,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0000",
@@ -3759,7 +5079,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0130",
@@ -3770,7 +5094,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0004",
@@ -3781,7 +5109,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0083",
@@ -3792,7 +5124,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0062",
@@ -3803,7 +5139,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0142",
@@ -3814,7 +5154,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0036",
@@ -3825,7 +5169,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0126",
@@ -3836,7 +5184,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0054",
@@ -3847,7 +5199,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0101",
@@ -3858,7 +5214,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0028",
@@ -3869,7 +5229,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0177",
@@ -3880,7 +5244,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0139",
@@ -3891,7 +5259,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0070",
@@ -3902,7 +5274,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0191",
@@ -3913,7 +5289,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0114",
@@ -3924,7 +5304,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0032",
@@ -3935,7 +5319,11 @@
           "schema": true,
           "numeric": 2,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0013",
@@ -3946,7 +5334,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0173",
@@ -3957,7 +5349,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0182",
@@ -3968,7 +5364,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0075",
@@ -3979,7 +5379,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0052",
@@ -3990,7 +5394,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0109",
@@ -4001,7 +5409,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0115",
@@ -4012,7 +5424,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0164",
@@ -4023,7 +5439,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0056",
@@ -4034,7 +5454,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0192",
@@ -4045,7 +5469,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0012",
@@ -4056,7 +5484,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0163",
@@ -4067,7 +5499,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0118",
@@ -4078,7 +5514,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0184",
@@ -4089,7 +5529,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0007",
@@ -4100,7 +5544,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0085",
@@ -4111,7 +5559,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0160",
@@ -4122,7 +5574,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0098",
@@ -4133,7 +5589,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0016",
@@ -4144,7 +5604,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0096",
@@ -4155,7 +5619,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0140",
@@ -4166,7 +5634,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0021",
@@ -4177,7 +5649,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0058",
@@ -4188,7 +5664,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0061",
@@ -4199,7 +5679,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0047",
@@ -4210,7 +5694,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0097",
@@ -4221,7 +5709,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0092",
@@ -4232,7 +5724,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0057",
@@ -4243,7 +5739,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0040",
@@ -4254,7 +5754,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0029",
@@ -4265,7 +5769,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0042",
@@ -4276,7 +5784,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0136",
@@ -4287,7 +5799,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0001",
@@ -4298,7 +5814,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0185",
@@ -4309,7 +5829,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0067",
@@ -4320,7 +5844,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0124",
@@ -4331,7 +5859,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0149",
@@ -4342,7 +5874,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0178",
@@ -4353,7 +5889,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0076",
@@ -4364,7 +5904,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0157",
@@ -4375,7 +5919,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0116",
@@ -4386,7 +5934,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0071",
@@ -4397,7 +5949,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0060",
@@ -4408,7 +5964,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0015",
@@ -4419,7 +5979,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0162",
@@ -4430,7 +5994,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0189",
@@ -4441,7 +6009,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0138",
@@ -4452,7 +6024,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0161",
@@ -4463,7 +6039,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0009",
@@ -4474,7 +6054,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0044",
@@ -4485,7 +6069,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0111",
@@ -4496,7 +6084,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0144",
@@ -4507,7 +6099,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0068",
@@ -4518,7 +6114,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         }
       ]
     }
@@ -4568,7 +6168,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0145",
@@ -4579,7 +6183,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0129",
@@ -4590,7 +6198,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0100",
@@ -4601,7 +6213,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0000",
@@ -4612,7 +6228,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0197",
@@ -4623,7 +6243,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0041",
@@ -4634,7 +6258,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0050",
@@ -4645,7 +6273,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0130",
@@ -4656,7 +6288,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0039",
@@ -4667,7 +6303,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0014",
@@ -4678,7 +6318,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0023",
@@ -4689,7 +6333,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0143",
@@ -4700,7 +6348,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0004",
@@ -4711,7 +6363,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0195",
@@ -4722,7 +6378,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0003",
@@ -4733,7 +6393,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0027",
@@ -4744,7 +6408,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0120",
@@ -4755,7 +6423,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0083",
@@ -4766,7 +6438,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0033",
@@ -4777,7 +6453,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0062",
@@ -4788,7 +6468,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0142",
@@ -4799,7 +6483,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0106",
@@ -4810,7 +6498,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0141",
@@ -4821,7 +6513,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0036",
@@ -4832,7 +6528,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0126",
@@ -4843,7 +6543,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0053",
@@ -4854,7 +6558,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0054",
@@ -4865,7 +6573,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0035",
@@ -4876,7 +6588,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0196",
@@ -4887,7 +6603,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0101",
@@ -4898,7 +6618,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0028",
@@ -4909,7 +6633,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0037",
@@ -4920,7 +6648,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0177",
@@ -4931,7 +6663,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0059",
@@ -4942,7 +6678,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0193",
@@ -4953,7 +6693,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0139",
@@ -4964,7 +6708,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0153",
@@ -4975,7 +6723,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0168",
@@ -4986,7 +6738,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0084",
@@ -4997,7 +6753,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0026",
@@ -5008,7 +6768,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0070",
@@ -5019,7 +6783,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0134",
@@ -5030,7 +6798,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0078",
@@ -5041,7 +6813,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0191",
@@ -5052,7 +6828,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0183",
@@ -5063,7 +6843,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0114",
@@ -5074,7 +6858,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0099",
@@ -5085,7 +6873,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0133",
@@ -5096,7 +6888,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0125",
@@ -5107,7 +6903,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0034",
@@ -5118,7 +6918,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0032",
@@ -5129,7 +6933,11 @@
           "schema": true,
           "numeric": 2,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0024",
@@ -5140,7 +6948,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0175",
@@ -5151,7 +6963,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0181",
@@ -5162,7 +6978,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0137",
@@ -5173,7 +6993,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0156",
@@ -5184,7 +7008,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0073",
@@ -5195,7 +7023,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": true
         },
         {
           "id": "dev-main-0013",
@@ -5206,7 +7038,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0088",
@@ -5217,7 +7053,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0173",
@@ -5228,7 +7068,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0182",
@@ -5239,7 +7083,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0069",
@@ -5250,7 +7098,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0075",
@@ -5261,7 +7113,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0052",
@@ -5272,7 +7128,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0107",
@@ -5283,7 +7143,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0091",
@@ -5294,7 +7158,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0109",
@@ -5305,7 +7173,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0115",
@@ -5316,7 +7188,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0010",
@@ -5327,7 +7203,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0089",
@@ -5338,7 +7218,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0127",
@@ -5349,7 +7233,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0072",
@@ -5360,7 +7248,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0159",
@@ -5371,7 +7263,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0164",
@@ -5382,7 +7278,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0063",
@@ -5393,7 +7293,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0056",
@@ -5404,7 +7308,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0192",
@@ -5415,7 +7323,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0012",
@@ -5426,7 +7338,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0163",
@@ -5437,7 +7353,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0118",
@@ -5448,7 +7368,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0087",
@@ -5459,7 +7383,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0020",
@@ -5470,7 +7398,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0184",
@@ -5481,7 +7413,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0146",
@@ -5492,7 +7428,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0007",
@@ -5503,7 +7443,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0085",
@@ -5514,7 +7458,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0160",
@@ -5525,7 +7473,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0098",
@@ -5536,7 +7488,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0081",
@@ -5547,7 +7503,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0016",
@@ -5558,7 +7518,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0095",
@@ -5569,7 +7533,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0096",
@@ -5580,7 +7548,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0140",
@@ -5591,7 +7563,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0005",
@@ -5602,7 +7578,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0171",
@@ -5613,7 +7593,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0046",
@@ -5624,7 +7608,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0180",
@@ -5635,7 +7623,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0082",
@@ -5646,7 +7638,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0172",
@@ -5657,7 +7653,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0104",
@@ -5668,7 +7668,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0021",
@@ -5679,7 +7683,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0058",
@@ -5690,7 +7698,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0112",
@@ -5701,7 +7713,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0108",
@@ -5712,7 +7728,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0093",
@@ -5723,7 +7743,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0017",
@@ -5734,7 +7758,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0061",
@@ -5745,7 +7773,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0047",
@@ -5756,7 +7788,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0008",
@@ -5767,7 +7803,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0186",
@@ -5778,7 +7818,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0049",
@@ -5789,7 +7833,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0117",
@@ -5800,7 +7848,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0102",
@@ -5811,7 +7863,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": true
         },
         {
           "id": "dev-main-0074",
@@ -5822,7 +7878,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0097",
@@ -5833,7 +7893,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0022",
@@ -5844,7 +7908,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0079",
@@ -5855,7 +7923,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0092",
@@ -5866,7 +7938,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0057",
@@ -5877,7 +7953,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0179",
@@ -5888,7 +7968,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0105",
@@ -5899,7 +7983,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0006",
@@ -5910,7 +7998,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0040",
@@ -5921,7 +8013,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0029",
@@ -5932,7 +8028,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0188",
@@ -5943,7 +8043,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0042",
@@ -5954,7 +8058,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0136",
@@ -5965,7 +8073,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0121",
@@ -5976,7 +8088,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0001",
@@ -5987,7 +8103,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0080",
@@ -5998,7 +8118,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0135",
@@ -6009,7 +8133,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0190",
@@ -6020,7 +8148,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0185",
@@ -6031,7 +8163,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0051",
@@ -6042,7 +8178,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0067",
@@ -6053,7 +8193,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0165",
@@ -6064,7 +8208,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0038",
@@ -6075,7 +8223,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0124",
@@ -6086,7 +8238,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0119",
@@ -6097,7 +8253,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0149",
@@ -6108,7 +8268,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0064",
@@ -6119,7 +8283,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0178",
@@ -6130,7 +8298,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0151",
@@ -6141,7 +8313,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0113",
@@ -6152,7 +8328,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0025",
@@ -6163,7 +8343,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0076",
@@ -6174,7 +8358,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0123",
@@ -6185,7 +8373,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0019",
@@ -6196,7 +8388,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0043",
@@ -6207,7 +8403,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0131",
@@ -6218,7 +8418,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0157",
@@ -6229,7 +8433,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0158",
@@ -6240,7 +8448,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0122",
@@ -6251,7 +8463,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0176",
@@ -6262,7 +8478,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0011",
@@ -6273,7 +8493,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0002",
@@ -6284,7 +8508,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0152",
@@ -6295,7 +8523,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0128",
@@ -6306,7 +8538,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0116",
@@ -6317,7 +8553,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0154",
@@ -6328,7 +8568,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0071",
@@ -6339,7 +8583,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0150",
@@ -6350,7 +8598,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0169",
@@ -6361,7 +8613,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0030",
@@ -6372,7 +8628,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0060",
@@ -6383,7 +8643,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0167",
@@ -6394,7 +8658,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0031",
@@ -6405,7 +8673,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0015",
@@ -6416,7 +8688,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0187",
@@ -6427,7 +8703,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 3,
-          "flags_ok": true
+          "flags_ok": true,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0162",
@@ -6438,7 +8718,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0174",
@@ -6449,7 +8733,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0065",
@@ -6460,7 +8748,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0189",
@@ -6471,7 +8763,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": true
         },
         {
           "id": "dev-main-0094",
@@ -6482,7 +8778,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0199",
@@ -6493,7 +8793,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0055",
@@ -6504,7 +8808,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0170",
@@ -6515,7 +8823,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": true
         },
         {
           "id": "dev-main-0138",
@@ -6526,7 +8838,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0045",
@@ -6537,7 +8853,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0155",
@@ -6548,7 +8868,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 2,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0161",
@@ -6559,7 +8883,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0077",
@@ -6570,7 +8898,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0110",
@@ -6581,7 +8913,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0009",
@@ -6592,7 +8928,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0166",
@@ -6603,7 +8943,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0086",
@@ -6614,7 +8958,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "oxidation_damage",
+          "severe": false
         },
         {
           "id": "dev-main-0048",
@@ -6625,7 +8973,11 @@
           "schema": false,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": false,
+          "action": false,
+          "predicted_cause": null,
+          "severe": false
         },
         {
           "id": "dev-main-0103",
@@ -6636,7 +8988,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0198",
@@ -6647,7 +9003,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": true
         },
         {
           "id": "dev-main-0018",
@@ -6658,7 +9018,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0044",
@@ -6669,7 +9033,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0148",
@@ -6680,7 +9048,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": true,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0111",
@@ -6691,7 +9063,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0090",
@@ -6702,7 +9078,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0194",
@@ -6713,7 +9093,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "biofouling",
+          "severe": false
         },
         {
           "id": "dev-main-0144",
@@ -6724,7 +9108,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0132",
@@ -6735,7 +9123,11 @@
           "schema": true,
           "numeric": 1,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0066",
@@ -6746,7 +9138,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 0,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         },
         {
           "id": "dev-main-0068",
@@ -6757,7 +9153,11 @@
           "schema": true,
           "numeric": 0,
           "flags": 1,
-          "flags_ok": false
+          "flags_ok": false,
+          "stage": true,
+          "action": false,
+          "predicted_cause": "scaling",
+          "severe": false
         }
       ]
     }

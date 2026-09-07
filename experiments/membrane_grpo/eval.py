@@ -397,6 +397,7 @@ def summarise(results: list[CaseResult], weights) -> dict[str, Any]:
             # is only interesting once you know whether the cause under it was
             # right. Same for the confusion structure of the lookup itself.
             "predicted_cause": row["scored"][0].diagnostics.get("predicted_cause"),
+            "predicted_action": row["scored"][0].diagnostics.get("predicted_action"),
             # The one place the action is *not* a function of the cause: a flow
             # loss past the severe threshold overrides it. Recorded so the two
             # regimes can be scored apart.
