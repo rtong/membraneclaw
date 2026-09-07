@@ -12,7 +12,7 @@
   "max_tokens": 640,
   "seed": 0,
   "adapter": null,
-  "elapsed_seconds": 75.5,
+  "elapsed_seconds": 75.4,
   "overall": {
     "n_cases": 200,
     "k": 1,
@@ -61,6 +61,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -76,6 +77,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -91,6 +93,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -106,6 +109,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": true
       },
       {
@@ -121,6 +125,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -136,6 +141,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -151,6 +157,7 @@
         "stage": false,
         "action": false,
         "predicted_cause": null,
+        "predicted_action": null,
         "severe": false
       },
       {
@@ -166,6 +173,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -181,6 +189,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -196,6 +205,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -211,6 +221,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -226,6 +237,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -241,6 +253,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -256,6 +269,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -271,6 +285,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -286,6 +301,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -301,6 +317,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -316,6 +333,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -331,6 +349,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -346,6 +365,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -361,6 +381,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -376,6 +397,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -391,6 +413,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": true
       },
       {
@@ -406,6 +429,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -421,6 +445,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -436,6 +461,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -451,6 +477,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -466,6 +493,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -481,6 +509,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -496,6 +525,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -511,6 +541,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -526,6 +557,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -541,6 +573,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -556,6 +589,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -571,6 +605,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -586,6 +621,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -601,6 +637,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -616,6 +653,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -631,6 +669,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -646,6 +685,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -661,6 +701,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -676,6 +717,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -691,6 +733,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -706,6 +749,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -721,6 +765,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -736,6 +781,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -751,6 +797,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -766,6 +813,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -781,6 +829,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -796,6 +845,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -811,6 +861,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -826,6 +877,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -841,6 +893,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -856,6 +909,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": true
       },
       {
@@ -871,6 +925,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -886,6 +941,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -901,6 +957,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -916,6 +973,7 @@
         "stage": false,
         "action": false,
         "predicted_cause": null,
+        "predicted_action": null,
         "severe": true
       },
       {
@@ -931,6 +989,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -946,6 +1005,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -961,6 +1021,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -976,6 +1037,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -991,6 +1053,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1006,6 +1069,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1021,6 +1085,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1036,6 +1101,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1051,6 +1117,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1066,6 +1133,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -1081,6 +1149,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -1096,6 +1165,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1111,6 +1181,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1126,6 +1197,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1141,6 +1213,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": true
       },
       {
@@ -1156,6 +1229,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1171,6 +1245,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1186,6 +1261,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1201,6 +1277,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1216,6 +1293,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1231,6 +1309,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1246,6 +1325,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1261,6 +1341,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1276,6 +1357,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1291,6 +1373,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1306,6 +1389,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -1321,6 +1405,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1336,6 +1421,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1351,6 +1437,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -1366,6 +1453,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1381,6 +1469,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1396,6 +1485,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1411,6 +1501,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -1426,6 +1517,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1441,6 +1533,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1456,6 +1549,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1471,6 +1565,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1486,6 +1581,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1501,6 +1597,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1516,6 +1613,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1531,6 +1629,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1546,6 +1645,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -1561,6 +1661,7 @@
         "stage": false,
         "action": false,
         "predicted_cause": null,
+        "predicted_action": null,
         "severe": false
       },
       {
@@ -1576,6 +1677,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1591,6 +1693,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -1606,6 +1709,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1621,6 +1725,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1636,6 +1741,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1651,6 +1757,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1666,6 +1773,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1681,6 +1789,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1696,6 +1805,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1711,6 +1821,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1726,6 +1837,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1741,6 +1853,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1756,6 +1869,7 @@
         "stage": false,
         "action": false,
         "predicted_cause": null,
+        "predicted_action": null,
         "severe": true
       },
       {
@@ -1771,6 +1885,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1786,6 +1901,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1801,6 +1917,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -1816,6 +1933,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1831,6 +1949,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -1846,6 +1965,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1861,6 +1981,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1876,6 +1997,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1891,6 +2013,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1906,6 +2029,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1921,6 +2045,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -1936,6 +2061,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1951,6 +2077,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -1966,6 +2093,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -1981,6 +2109,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -1996,6 +2125,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2011,6 +2141,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2026,6 +2157,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2041,6 +2173,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2056,6 +2189,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2071,6 +2205,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2086,6 +2221,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -2101,6 +2237,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -2116,6 +2253,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2131,6 +2269,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2146,6 +2285,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2161,6 +2301,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2176,6 +2317,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2191,6 +2333,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2206,6 +2349,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2221,6 +2365,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2236,6 +2381,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -2251,6 +2397,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2266,6 +2413,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2281,6 +2429,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2296,6 +2445,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2311,6 +2461,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2326,6 +2477,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2341,6 +2493,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2356,6 +2509,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2371,6 +2525,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2386,6 +2541,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2401,6 +2557,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2416,6 +2573,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2431,6 +2589,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -2446,6 +2605,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2461,6 +2621,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2476,6 +2637,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": true
       },
       {
@@ -2491,6 +2653,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2506,6 +2669,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2521,6 +2685,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2536,6 +2701,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": true
       },
       {
@@ -2551,6 +2717,7 @@
         "stage": false,
         "action": false,
         "predicted_cause": null,
+        "predicted_action": null,
         "severe": false
       },
       {
@@ -2566,6 +2733,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -2581,6 +2749,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2596,6 +2765,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2611,6 +2781,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2626,6 +2797,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2641,6 +2813,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2656,6 +2829,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": true
       },
       {
@@ -2671,6 +2845,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2686,6 +2861,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2701,6 +2877,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2716,6 +2893,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": true
       },
       {
@@ -2731,6 +2909,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2746,6 +2925,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2761,6 +2941,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2776,6 +2957,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2791,6 +2973,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2806,6 +2989,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2821,6 +3005,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2836,6 +3021,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2851,6 +3037,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "oxidation_damage",
+        "predicted_action": "check_oxidant_and_replace_elements",
         "severe": false
       },
       {
@@ -2866,6 +3053,7 @@
         "stage": false,
         "action": false,
         "predicted_cause": null,
+        "predicted_action": null,
         "severe": false
       },
       {
@@ -2881,6 +3069,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2896,6 +3085,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": true
       },
       {
@@ -2911,6 +3101,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2926,6 +3117,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2941,6 +3133,7 @@
         "stage": true,
         "action": true,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -2956,6 +3149,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2971,6 +3165,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -2986,6 +3181,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "biofouling",
+        "predicted_action": "alkaline_clean_and_sanitize",
         "severe": false
       },
       {
@@ -3001,6 +3197,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -3016,6 +3213,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -3031,6 +3229,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       },
       {
@@ -3046,6 +3245,7 @@
         "stage": true,
         "action": false,
         "predicted_cause": "scaling",
+        "predicted_action": "acid_clean_low_ph",
         "severe": false
       }
     ]
@@ -3099,6 +3299,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3114,6 +3315,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3129,6 +3331,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -3144,6 +3347,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3159,6 +3363,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -3174,6 +3379,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3189,6 +3395,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3204,6 +3411,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -3219,6 +3427,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3234,6 +3443,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3249,6 +3459,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3264,6 +3475,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3279,6 +3491,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -3294,6 +3507,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3309,6 +3523,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3324,6 +3539,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -3339,6 +3555,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3354,6 +3571,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3369,6 +3587,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3384,6 +3603,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3399,6 +3619,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3414,6 +3635,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3429,6 +3651,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3444,6 +3667,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3459,6 +3683,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3474,6 +3699,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -3489,6 +3715,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3504,6 +3731,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3519,6 +3747,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -3534,6 +3763,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -3549,6 +3779,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3564,6 +3795,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3579,6 +3811,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3594,6 +3827,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3609,6 +3843,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3624,6 +3859,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -3639,6 +3875,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3654,6 +3891,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3669,6 +3907,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -3684,6 +3923,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": true
         },
         {
@@ -3699,6 +3939,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -3714,6 +3955,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3729,6 +3971,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3744,6 +3987,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3759,6 +4003,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3774,6 +4019,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3789,6 +4035,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3804,6 +4051,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -3819,6 +4067,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3834,6 +4083,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3849,6 +4099,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3864,6 +4115,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3879,6 +4131,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3894,6 +4147,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -3909,6 +4163,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3924,6 +4179,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3939,6 +4195,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3954,6 +4211,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -3969,6 +4227,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3984,6 +4243,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -3999,6 +4259,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -4014,6 +4275,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -4029,6 +4291,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4044,6 +4307,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4059,6 +4323,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4074,6 +4339,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4089,6 +4355,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4104,6 +4371,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4119,6 +4387,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4134,6 +4403,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4149,6 +4419,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": true
         },
         {
@@ -4164,6 +4435,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4179,6 +4451,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -4194,6 +4467,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4209,6 +4483,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -4224,6 +4499,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -4239,6 +4515,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4254,6 +4531,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4269,6 +4547,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4284,6 +4563,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4299,6 +4579,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4314,6 +4595,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4329,6 +4611,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4344,6 +4627,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -4359,6 +4643,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4374,6 +4659,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4389,6 +4675,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4404,6 +4691,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -4419,6 +4707,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4434,6 +4723,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -4449,6 +4739,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4464,6 +4755,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4479,6 +4771,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4494,6 +4787,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -4509,6 +4803,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4524,6 +4819,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4539,6 +4835,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4554,6 +4851,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4569,6 +4867,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4584,6 +4883,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4599,6 +4899,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -4614,6 +4915,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4629,6 +4931,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -4644,6 +4947,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4659,6 +4963,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4674,6 +4979,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -4689,6 +4995,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -4704,6 +5011,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4719,6 +5027,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4734,6 +5043,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -4749,6 +5059,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4764,6 +5075,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -4779,6 +5091,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4794,6 +5107,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -4809,6 +5123,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4824,6 +5139,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4839,6 +5155,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4854,6 +5171,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4869,6 +5187,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4884,6 +5203,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -4899,6 +5219,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -4914,6 +5235,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4929,6 +5251,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -4944,6 +5267,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4959,6 +5283,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -4974,6 +5299,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -4989,6 +5315,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5004,6 +5331,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5019,6 +5347,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         }
       ]
@@ -5068,6 +5397,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5083,6 +5413,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5098,6 +5429,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5113,6 +5445,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5128,6 +5461,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5143,6 +5477,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -5158,6 +5493,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5173,6 +5509,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5188,6 +5525,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5203,6 +5541,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5218,6 +5557,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5233,6 +5573,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5248,6 +5589,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -5263,6 +5605,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -5278,6 +5621,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5293,6 +5637,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -5308,6 +5653,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5323,6 +5669,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5338,6 +5685,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5353,6 +5701,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5368,6 +5717,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5383,6 +5733,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5398,6 +5749,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5413,6 +5765,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -5428,6 +5781,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -5443,6 +5797,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5458,6 +5813,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5473,6 +5829,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5488,6 +5845,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5503,6 +5861,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5518,6 +5877,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5533,6 +5893,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -5548,6 +5909,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5563,6 +5925,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -5578,6 +5941,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5593,6 +5957,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5608,6 +5973,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -5623,6 +5989,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5638,6 +6005,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5653,6 +6021,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5668,6 +6037,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -5683,6 +6053,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5698,6 +6069,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5713,6 +6085,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5728,6 +6101,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -5743,6 +6117,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5758,6 +6133,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5773,6 +6149,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -5788,6 +6165,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -5803,6 +6181,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5818,6 +6197,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5833,6 +6213,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5848,6 +6229,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -5863,6 +6245,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5878,6 +6261,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5893,6 +6277,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5908,6 +6293,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5923,6 +6309,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5938,6 +6325,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -5953,6 +6341,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -5968,6 +6357,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -5983,6 +6373,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -5998,6 +6389,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6013,6 +6405,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -6028,6 +6421,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6043,6 +6437,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6058,6 +6453,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6073,6 +6469,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6088,6 +6485,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6103,6 +6501,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6118,6 +6517,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         }
       ]
@@ -6172,6 +6572,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6187,6 +6588,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6202,6 +6604,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6217,6 +6620,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -6232,6 +6636,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -6247,6 +6652,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6262,6 +6668,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -6277,6 +6684,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6292,6 +6700,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6307,6 +6716,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6322,6 +6732,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -6337,6 +6748,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6352,6 +6764,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6367,6 +6780,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6382,6 +6796,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6397,6 +6812,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6412,6 +6828,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6427,6 +6844,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6442,6 +6860,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6457,6 +6876,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6472,6 +6892,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6487,6 +6908,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6502,6 +6924,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -6517,6 +6940,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6532,6 +6956,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6547,6 +6972,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6562,6 +6988,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6577,6 +7004,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6592,6 +7020,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6607,6 +7036,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6622,6 +7052,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -6637,6 +7068,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6652,6 +7084,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6667,6 +7100,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6682,6 +7116,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6697,6 +7132,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6712,6 +7148,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6727,6 +7164,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6742,6 +7180,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6757,6 +7196,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -6772,6 +7212,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6787,6 +7228,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -6802,6 +7244,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6817,6 +7260,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -6832,6 +7276,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6847,6 +7292,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -6862,6 +7308,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6877,6 +7324,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6892,6 +7340,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6907,6 +7356,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6922,6 +7372,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6937,6 +7388,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6952,6 +7404,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -6967,6 +7420,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -6982,6 +7436,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -6997,6 +7452,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7012,6 +7468,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -7027,6 +7484,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": true
         },
         {
@@ -7042,6 +7500,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7057,6 +7516,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -7072,6 +7532,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7087,6 +7548,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7102,6 +7564,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7117,6 +7580,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7132,6 +7596,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7147,6 +7612,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7162,6 +7628,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7177,6 +7644,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -7192,6 +7660,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -7207,6 +7676,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7222,6 +7692,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7237,6 +7708,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7252,6 +7724,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -7267,6 +7740,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7282,6 +7756,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -7297,6 +7772,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7312,6 +7788,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7327,6 +7804,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7342,6 +7820,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7357,6 +7836,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7372,6 +7852,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7387,6 +7868,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7402,6 +7884,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7417,6 +7900,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -7432,6 +7916,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7447,6 +7932,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7462,6 +7948,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -7477,6 +7964,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7492,6 +7980,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -7507,6 +7996,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -7522,6 +8012,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -7537,6 +8028,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7552,6 +8044,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7567,6 +8060,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -7582,6 +8076,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7597,6 +8092,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7612,6 +8108,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7627,6 +8124,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7642,6 +8140,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7657,6 +8156,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -7672,6 +8172,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -7687,6 +8188,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -7702,6 +8204,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -7717,6 +8220,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7732,6 +8236,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7747,6 +8252,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7762,6 +8268,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7777,6 +8284,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7792,6 +8300,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7807,6 +8316,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7822,6 +8332,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7837,6 +8348,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7852,6 +8364,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7867,6 +8380,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": true
         },
         {
@@ -7882,6 +8396,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -7897,6 +8412,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7912,6 +8428,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -7927,6 +8444,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7942,6 +8460,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -7957,6 +8476,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -7972,6 +8492,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -7987,6 +8508,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -8002,6 +8524,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8017,6 +8540,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8032,6 +8556,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -8047,6 +8572,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8062,6 +8588,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -8077,6 +8604,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8092,6 +8620,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8107,6 +8636,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8122,6 +8652,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8137,6 +8668,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8152,6 +8684,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8167,6 +8700,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8182,6 +8716,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8197,6 +8732,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -8212,6 +8748,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -8227,6 +8764,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8242,6 +8780,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8257,6 +8796,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8272,6 +8812,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8287,6 +8828,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8302,6 +8844,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8317,6 +8860,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8332,6 +8876,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8347,6 +8892,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -8362,6 +8908,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8377,6 +8924,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8392,6 +8940,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8407,6 +8956,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8422,6 +8972,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8437,6 +8988,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8452,6 +9004,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8467,6 +9020,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8482,6 +9036,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8497,6 +9052,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8512,6 +9068,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8527,6 +9084,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8542,6 +9100,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -8557,6 +9116,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8572,6 +9132,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8587,6 +9148,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -8602,6 +9164,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8617,6 +9180,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8632,6 +9196,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8647,6 +9212,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -8662,6 +9228,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -8677,6 +9244,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -8692,6 +9260,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8707,6 +9276,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8722,6 +9292,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8737,6 +9308,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8752,6 +9324,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8767,6 +9340,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": true
         },
         {
@@ -8782,6 +9356,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8797,6 +9372,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8812,6 +9388,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8827,6 +9404,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": true
         },
         {
@@ -8842,6 +9420,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8857,6 +9436,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8872,6 +9452,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8887,6 +9468,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8902,6 +9484,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -8917,6 +9500,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8932,6 +9516,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8947,6 +9532,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -8962,6 +9548,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "oxidation_damage",
+          "predicted_action": "check_oxidant_and_replace_elements",
           "severe": false
         },
         {
@@ -8977,6 +9564,7 @@
           "stage": false,
           "action": false,
           "predicted_cause": null,
+          "predicted_action": null,
           "severe": false
         },
         {
@@ -8992,6 +9580,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -9007,6 +9596,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": true
         },
         {
@@ -9022,6 +9612,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -9037,6 +9628,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -9052,6 +9644,7 @@
           "stage": true,
           "action": true,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -9067,6 +9660,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -9082,6 +9676,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -9097,6 +9692,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "biofouling",
+          "predicted_action": "alkaline_clean_and_sanitize",
           "severe": false
         },
         {
@@ -9112,6 +9708,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -9127,6 +9724,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -9142,6 +9740,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         },
         {
@@ -9157,6 +9756,7 @@
           "stage": true,
           "action": false,
           "predicted_cause": "scaling",
+          "predicted_action": "acid_clean_low_ph",
           "severe": false
         }
       ]
