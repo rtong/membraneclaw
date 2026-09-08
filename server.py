@@ -15,6 +15,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from starlette.concurrency import run_in_threadpool
 
 from fastapi.responses import HTMLResponse
 
@@ -157,6 +158,23 @@ def _run_agent(
             yield _render(chunk, skip=frozenset({call_idx, result_idx})), payload
             return
         yield _render(chunk), None
+
+
+def _first_tool_call_or_text(
+    messages: List[dict],
+    tools: Optional[List[dict]] = None,
+    user: Optional[identity.User] = None,
+):
+    """Drain `_run_agent` to the end of the turn, or to the first client tool call.
+
+    Split out so the non-streaming path can hand the whole blocking loop to a
+    worker thread in one call.
+    """
+    text, tool_call = "", None
+    for text, tool_call in _run_agent(messages, tools, user):
+        if tool_call is not None:
+            break
+    return text, tool_call
 
 
 def _chunk_payload(rid: str, model: str, delta: dict, finish: Optional[str] = None) -> str:
@@ -356,10 +374,19 @@ async def chat_completions(request: Request):
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
 
-    text, tool_call = "", None
-    for text, tool_call in _run_agent(messages, tools, user):
-        if tool_call is not None:
-            break
+    # In a worker thread, not inline. This endpoint is `async def` and
+    # `_run_agent` is a *synchronous* generator that blocks for the whole agent
+    # loop -- every LLM call and every tool call. Iterating it here ran it on the
+    # asyncio event loop, so one stuck call took the entire server down rather
+    # than just its own request: on 2026-09-08 an ro-chem tool call never
+    # returned and `/health` stopped answering for 2h40m alongside it.
+    #
+    # The streaming path never had this failure, which is the opposite of the
+    # intuition: Starlette already iterates a sync generator handed to
+    # StreamingResponse in a threadpool, so `_stream` was never on the loop.
+    text, tool_call = await run_in_threadpool(
+        _first_tool_call_or_text, messages, tools, user
+    )
 
     message = {"role": "assistant", "content": text}
     if tool_call is not None:
