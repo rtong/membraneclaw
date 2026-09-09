@@ -101,6 +101,7 @@ head and a calibrated one is 0.30 here against 0.086 before.
 from __future__ import annotations
 
 import sys
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -117,6 +118,7 @@ if str(GRPO_DIR) not in sys.path:
 # prompt, shared with the GRPO run so the comparison is not between two
 # subtly different tasks.
 from eval import supports_thinking_toggle  # noqa: E402
+from task.decision_table import CAUSES  # noqa: E402
 from grpo_scratch import build_mask, selective_logprobs  # noqa: E402
 from reward import ABLATE, MAIN, PROBE, Weights, score  # noqa: E402
 from task.prompt import PROMPT_VERSION, build_messages  # noqa: E402
@@ -237,6 +239,10 @@ __all__ = [
 ]
 
 
+#: Magnitude of the privileged one-hot -- derivation at its use site.
+PRIVILEGED_SCALE = 64.0
+
+
 def load_cases(split: str = "train") -> list[dict[str, Any]]:
     import json
 
@@ -269,10 +275,21 @@ class ValueHead(nn.Module):
         raw,            1 step /batch    value_ev +0.345   <- what the first runs did
 
     Normalising is slightly *worse*, and there is a reason: LayerNorm discards
-    each token's mean and scale, and on this task those carry signal. What the
-    experiment actually shows is that the number of critic steps is the whole
-    story and the feature scaling is a distraction. The flag stays so that can
-    be re-checked on a different model rather than taken on my word.
+    each token's mean and scale, and on this task those carry signal.
+
+    **Those three numbers have no held-out split, and the conclusion drawn from
+    them was wrong.** With `gamma = lam = 1` and a terminal reward the return is
+    constant along a sequence, so 25 batches of 8 is 200 *independent* targets
+    against this head's 2049 parameters -- enough to interpolate. Re-measured in
+    `07_the_critic_cannot_work.ipynb` on frozen rollouts, held out by sequence,
+    the same fit gives **+0.031**; splitting by token instead (which leaks the
+    target, since a sequence's tokens share it) gives +0.101, and no split at all
+    gives +0.311. The "representation is not the constraint" claim these numbers
+    were used to support does not survive a split, and `--no-value-detach` was
+    chasing it.
+
+    The flag stays so the input-scaling question can be re-checked on a different
+    model rather than taken on my word.
     """
 
     def __init__(
@@ -281,21 +298,36 @@ class ValueHead(nn.Module):
         init_bias: float = VALUE_INIT_BIAS,
         *,
         normalize: bool = True,
+        extra_features: int = 0,
     ):
         super().__init__()
+        # Normalisation covers the hidden part only; the privileged one-hot is
+        # already on a sane scale and LayerNorm across a concatenation of the two
+        # would let the 2048 hidden dims set the statistics for all of it.
+        self.hidden_size = hidden_size
         self.norm: nn.Module = (
             nn.LayerNorm(hidden_size, elementwise_affine=False, dtype=torch.float32)
             if normalize
             else nn.Identity()
         )
-        self.v = nn.Linear(hidden_size, 1, dtype=torch.float32)
+        self.v = nn.Linear(hidden_size + extra_features, 1, dtype=torch.float32)
         # Zero weight so V starts at exactly `init_bias` whether or not the
         # features are normalised -- the two configurations begin identically.
         nn.init.zeros_(self.v.weight)
         nn.init.constant_(self.v.bias, init_bias)
 
     def forward(self, hidden: torch.Tensor) -> torch.Tensor:
-        return self.v(self.norm(hidden.float())).squeeze(-1)
+        x = self.norm(hidden[..., : self.hidden_size].float())
+        want = self.v.in_features - self.hidden_size
+        if want:
+            extra = hidden[..., self.hidden_size :].float()
+            if extra.shape[-1] != want:
+                # `forward_policy_value` hands over the trunk's hidden states with
+                # no privileged block attached. Those callers only need a value to
+                # exist; the loop recomputes `old_values` on the full feature.
+                extra = x.new_zeros((*x.shape[:-1], want))
+            x = torch.cat([x, extra], dim=-1)
+        return self.v(x).squeeze(-1)
 
 
 # --- advantages ---------------------------------------------------------------
@@ -595,7 +627,7 @@ class Config:
     gamma: float = 1.0
     lam: float = 1.0
     clip_eps: float = 0.2
-    value_clip_eps: float = 0.2
+    value_clip_eps: float | None = 0.2
     value_coef: float = 0.5
     # Entropy bonus on the policy's next-token distribution, added to the actor
     # objective as `-entropy_coef * mean(H)`. 0.0 by default, which is not a
@@ -620,6 +652,68 @@ class Config:
     # per batch, which at this learning rate is a ~100-step time constant
     # chasing a target that changes every step.
     critic_epochs: int = 8
+    # How many recent rollout batches the critic fits over. 1 reproduces every run
+    # in `runs/`: the head sees one batch, and with `gamma = lam = 1.0` and the
+    # reward on the last active token only, `returns[b, t] = R_b` for every t --
+    # so one batch is `prompts_per_step` distinct target values (8) replicated
+    # across ~770 masked positions. `critic_fit` pools tokens, so the token axis
+    # inflates n without adding target variance, and a regressor shown 8 numbers
+    # per step whose mean moves every step converges to the running mean. That is
+    # what the metrics say happened: `value_mean` tracks `return_mean` to three
+    # decimals with a spread of 0.04, and `value_ev` came out *negative*.
+    #
+    # The representation is not the constraint. `ValueHead`'s docstring records
+    # this same head, on these same real hidden states, at these same 8 steps per
+    # batch, reaching `value_ev` +0.993 offline -- the difference is that the
+    # offline fit accumulates across batches. 25 restores that condition in the
+    # loop: 200 distinct targets rather than 8.
+    #
+    # Only the active positions are kept, so the window is flat (n_active, hidden)
+    # and batches of different completion lengths concatenate without padding.
+    # ~3 MiB per batch at the observed 96-token mean, 21 MiB at the 640 cap.
+    # Which hidden layer the value head reads. -1 (the last) is what every run in
+    # `runs/` used. Measured on frozen rollouts, 48 prompts x 8 samples, held out
+    # by prompt against the prompt's mean reward:
+    #
+    #     layer 28 (-1, the default)   test EV  +0.263
+    #     layer 27 (-2)                test EV  +0.456
+    #     layer 20                     test EV  +0.398
+    #     layer 14                     test EV  +0.106
+    #     layer  0                     test EV  +0.001
+    #
+    # The last layer is specialised for predicting the next token. The reward is
+    # a property of the finished answer, and the feature that carries it peaks
+    # one layer earlier.
+    # Asymmetric actor-critic: give the value head the case's true `root_cause`
+    # as a one-hot alongside the hidden state. The actor never sees it.
+    #
+    # This is unbiased, and the reason is the standard one -- a baseline that is
+    # any function of the *state* leaves the policy gradient's expectation alone,
+    # because E[grad log pi(a|s) b(s)] = 0. The label is determined by the prompt,
+    # so it is part of s and not of a. Sim-to-real robotics uses exactly this
+    # (the critic reads privileged simulator state the actor cannot observe).
+    #
+    # It is here because `07` measured what the reward actually depends on:
+    # regressing the prompt's mean reward on the task's *designed* difficulty
+    # variables (`tier`, `margin_pp`, `severe`) gives leave-one-out R^2 = -0.081,
+    # while regressing it on `root_cause` alone gives **+0.902**. A prompt is easy
+    # exactly when its answer is one of the labels the policy already emits. So
+    # the one thing that would let V(s) beat a constant is the label -- which the
+    # actor must not see, and the critic may.
+    privileged_cause: bool = False
+    value_layer: int = -1
+    critic_window: int = 1
+    # Rebuild the advantages from the critic's *post-fit* values. Off reproduces
+    # every existing run, where `fitted_values` was computed and then used only
+    # for metrics (`value_ev_fit`) -- the actor trained on advantages built from
+    # `old_values`, so the critic's dedicated steps did nothing for the batch that
+    # paid for them and only reached the actor through the next batch.
+    #
+    # Andrychowicz et al. 2020 (C5) is the one improvement the paper proposes
+    # itself: stale advantages hurt, and recomputing them at the start of each
+    # pass beat every other variant they tried. It is one line here because
+    # `lam = 1.0` makes `returns` the plain Monte-Carlo return, independent of V.
+    recompute_advantages: bool = False
     whiten_advantages: bool = False
     # -1.0 means "look it up in FROZEN_BASELINE for this model and weight set"
     # and is resolved in __post_init__, so config.json records the number that
@@ -665,6 +759,15 @@ class Config:
             raise ValueError(f"unknown weights {self.weights!r}; have {sorted(WEIGHT_SETS)}")
         if self.critic_epochs < 1:
             raise ValueError("critic_epochs must be >= 1")
+        if self.critic_window < 1:
+            raise ValueError("critic_window must be >= 1")
+        # A negative value means "no value clipping", the same sentinel convention
+        # `value_init_bias` uses, and for the same reason: the generated CLI types
+        # every flag from its default, so there is no way to pass None. It must not
+        # be spelled 0.0 -- that clamps the critic's movement to nothing, which is
+        # strictly worse than clipping at 0.2 rather than equivalent to disabling it.
+        if self.value_clip_eps is not None and self.value_clip_eps < 0:
+            self.value_clip_eps = None
         if self.value_init_bias < 0:
             self.value_init_bias = value_init_bias_for(self.model, self.weights)
 
@@ -696,6 +799,7 @@ def forward_policy_value(
     value_detach: bool = True,
     return_hidden: bool = False,
     return_entropy: bool = False,
+    value_layer: int = -1,
 ) -> tuple[torch.Tensor, ...]:
     """Per-token log-probs and values over the completion span, in one forward.
 
@@ -727,7 +831,14 @@ def forward_policy_value(
     logprobs = selective_logprobs(out.logits[:, :-1], sequences[:, -completion_len:])
     entropy = token_entropy(out.logits[:, :-1]) if return_entropy else None
 
-    hidden = out.hidden_states[-1]
+    # -1 is the last layer, which is what every run in `runs/` used and what the
+    # critic was measured on. It is not the best layer for this, and that was
+    # never checked: probing all 29 on frozen rollouts, held out *by prompt*
+    # against the prompt's mean reward, the last layer explains +0.263 of the
+    # variance and layer 27 explains **+0.456**. The last layer is specialised
+    # for next-token prediction; the reward is a property of the whole answer,
+    # and the representation that carries it best sits a little earlier.
+    hidden = out.hidden_states[value_layer]
     if hidden.shape[1] == sequences.shape[1]:
         hidden = hidden[:, -(completion_len + 1) : -1]
     else:  # a transformers version that also truncates the hidden states
@@ -760,7 +871,8 @@ def load_policy(cfg: "Config", device: str):
         ),
     ).to(device)
     value_head = ValueHead(
-        base.config.hidden_size, cfg.value_init_bias, normalize=cfg.normalize_value
+        base.config.hidden_size, cfg.value_init_bias, normalize=cfg.normalize_value,
+        extra_features=len(CAUSES) if cfg.privileged_cause else 0,
     ).to(device)
     return policy, value_head, tokenizer
 
@@ -974,6 +1086,11 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     )
 
     history: list[dict[str, Any]] = []
+    # (hidden, old_values, returns) for the last `critic_window` batches, active
+    # positions only, held on CPU so the window costs host RAM rather than the
+    # VRAM the rollout needs. Concatenated onto the device once per step, not
+    # once per critic epoch.
+    critic_history: deque = deque(maxlen=max(1, cfg.critic_window))
     # An RL run that has solved its task can still destroy itself: this one's
     # reward sat at 1.0000 from step 170 and collapsed to 0.0000 at 196 with the
     # gradient norm going from 2.7 to 109. Saving only the final policy saved the
@@ -1023,6 +1140,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                 lp, v, h = forward_policy_value(
                     policy, value_head, sequences[sl], attn[sl], completion_len,
                     value_detach=cfg.value_detach, return_hidden=True,
+                    value_layer=cfg.value_layer,
                 )
                 old_lp.append(lp)
                 old_v.append(v)
@@ -1033,6 +1151,29 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             # touching the trunk again. (batch, tokens, hidden) in the trunk's
             # own dtype -- 21 MiB for 8 x 640 x 2048 in bf16.
             hidden_cache = torch.cat(old_h)
+            if cfg.privileged_cause:
+                # One row per sequence, broadcast along the token axis: the label
+                # is a property of the prompt, so it does not vary within a
+                # sequence. `roll.cases` is expanded to match `samples_per_prompt`
+                # by `rollout`, so it lines up index-for-index with the batch.
+                # Scaled, and the scale is derived rather than picked. This file's
+                # own relation is |dV| ~ lr * ||h||_1: the hidden block moves V by
+                # 3e-5 * 1605 = 0.048 per critic step, while a one-hot has
+                # ||.||_1 = 1 and would move it by 3e-5 -- 1600x slower. Over a
+                # run's 640 critic steps the privileged weights would travel 0.019
+                # against cause offsets of +-0.25, i.e. stay frozen. 64 puts one
+                # step at 1.9e-3 and the run's total travel above 1.0.
+                onehot = torch.zeros(len(roll.cases), len(CAUSES),
+                                     device=hidden_cache.device, dtype=hidden_cache.dtype)
+                for i, case in enumerate(roll.cases):
+                    onehot[i, CAUSES.index(case["answer"]["root_cause"])] = PRIVILEGED_SCALE
+                hidden_cache = torch.cat(
+                    [hidden_cache, onehot.unsqueeze(1).expand(-1, hidden_cache.shape[1], -1)],
+                    dim=-1,
+                )
+                # old_values was computed by the head *before* the one-hot existed
+                # in this batch's tensor, so recompute it on the full feature.
+                old_values = value_head(hidden_cache)
 
             advantages, returns = gae(
                 per_token_rewards, old_values, mask, gamma=cfg.gamma, lam=cfg.lam
@@ -1048,19 +1189,54 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         # ~100-step time constant chasing a target that changes every step.
         critic_stats: dict[str, float] = {}
         if cfg.value_detach:
+            # The window keeps active positions only. Flattening to (n_active,
+            # hidden) is what lets batches of different completion lengths sit in
+            # one tensor without padding, and it drops nothing: every masked
+            # position contributes zero to the loss anyway.
+            with torch.no_grad():
+                sel = mask > 0
+                critic_history.append((
+                    hidden_cache[sel].to("cpu"),
+                    old_values[sel].to("cpu"),
+                    returns[sel].to("cpu"),
+                ))
+                if len(critic_history) > 1:
+                    fit_h = torch.cat([h for h, _, _ in critic_history]).to(device)
+                    fit_v = torch.cat([v for _, v, _ in critic_history]).to(device)
+                    fit_r = torch.cat([r for _, _, r in critic_history]).to(device)
+                    fit_m = torch.ones_like(fit_r)
+                else:
+                    # critic_window=1 stays on the original tensors rather than a
+                    # flattened copy of them, so the existing runs reproduce
+                    # bit-for-bit rather than merely equivalently.
+                    fit_h, fit_v, fit_r, fit_m = hidden_cache, old_values, returns, mask
+
             for _ in range(cfg.critic_epochs):
                 critic_optimizer.zero_grad(set_to_none=True)
-                v = value_head(hidden_cache)
+                v = value_head(fit_h)
                 v_loss, critic_stats = value_loss(
-                    v, old_values, returns, mask, clip_eps=cfg.value_clip_eps,
+                    v, fit_v, fit_r, fit_m, clip_eps=cfg.value_clip_eps,
                 )
                 v_loss.backward()
                 torch.nn.utils.clip_grad_norm_(critic_params, 1.0)
                 critic_optimizer.step()
             with torch.no_grad():
+                # On the *current* batch, always: this feeds `value_ev_fit` and the
+                # recomputed advantages, both of which are about this batch.
                 fitted_values = value_head(hidden_cache)
         else:
             fitted_values = old_values
+
+        # C5. Without this the critic's dedicated steps reach the actor only
+        # through the next batch's `old_values`. `returns` is the Monte-Carlo
+        # return at lam=1, so it does not move when V does, and the subtraction is
+        # the whole update. Re-masked because `fitted_values` is nonzero at padded
+        # positions where `gae` left the advantage at exactly zero.
+        if cfg.recompute_advantages:
+            with torch.no_grad():
+                advantages = (returns - fitted_values) * mask
+                if cfg.whiten_advantages:
+                    advantages = whiten(advantages, mask)
 
         # --- the actor --------------------------------------------------------
         actor_stats: dict[str, float] = {}
@@ -1082,6 +1258,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                     policy, value_head, sequences[sl], attn[sl], completion_len,
                     value_detach=cfg.value_detach,
                     return_entropy=want_entropy,
+                    value_layer=cfg.value_layer,
                 )
                 if want_entropy:
                     logprobs, values, entropy = fwd
