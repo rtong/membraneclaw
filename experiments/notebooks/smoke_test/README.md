@@ -13,6 +13,20 @@ The same task, the same frozen data, the same deterministic reward and the same 
 | degenerate case | all `G` rewards equal → gradient exactly zero, 16% of groups | none |
 | extra parameters | 0 | `hidden_size + 1` (2049 on Qwen3-1.7B) |
 
+**This table has an answer now, and it is in two parts.** `07` measured that with the
+original prompt the learned critic cannot beat a constant *in principle* — the reward is
+decided by the completion, the policy's representation of the prompt predicts it at +0.000
+held out, and GRPO's group mean computes that constant exactly. `08` changed the reward to
+pay each output field at the token that decides it, which is the one thing that gives
+`V(s_t)` a within-sequence quantity to track, and the critic then reaches **+0.616** explained
+variance unprivileged — **+0.093 above what position alone scores** — and cuts advantage
+spread **39%**. So the per-token credit assignment is no longer vacuous.
+
+And it still does not matter. The `lam = 1.0` ablation, where `V` cancels out of the policy
+gradient entirely, moves no accuracy outside the seed band. **Gradient variance is not the
+binding constraint on this task**, measured twice: once with a privileged critic under the
+original prompt (`07`), once with a working unprivileged one under `08`.
+
 Nothing about the task is redefined here. `reward.py`, `task/prompt.py`, `data/*.jsonl`,
 `build_mask` and — since the model change — `eval.py`'s `generate_hf` / `summarise` /
 `supports_thinking_toggle` are **imported** from `membrane_grpo`, not copied. Two methods
@@ -48,6 +62,9 @@ still resolves the right value-head initialisation.
 | `03_critic_and_trust_region.ipynb` | the two items this README's *Status* left open — the critic's representation (`--no-value-detach`) and the trust region (`inner_epochs` vs. an entropy bonus). Three runs, each notebook 02's MAIN config with one knob changed. Same plot-or-retrain guard as 02. |
 | `04_entropy_generalizes.ipynb` | whether `03`'s entropy bonus generalises: across the three weight sets (Q3 — it does, and it overturns `58833d3`'s "inverse weight" headline) and stacked with `--no-value-detach` (Q4 — a net task win, but the two levers cancel on the critic). Three runs. |
 | `05_entropy_coef_and_seed.ipynb` | `entropy_coef` swept 0.002–0.020 on `ABLATE` (Q5 — 0.005 was well placed, the window is narrow, 0.020 runs away) and `ABLATE + entropy` rerun at seed 1 (Q6 — the effect reproduces in direction, +0.065 vs +0.175, not in magnitude). Four runs. |
+| `06_working_critic_and_noise_floor.ipynb` | the critic fix (`critic_window`, `recompute_advantages`, no value clip — Q7), the seed noise floor and what it is made of (Q8 — the spread is a discrete label-collapse event, not gradient noise), and whether a hyperparameter search is admissible (Q9). Closes with the appendix that measures the arithmetic and finds the capability absent. |
+| `07_what_the_critic_can_learn.ipynb` | five interventions that all failed, then the measurement that explains why: held out *by prompt*, the policy's representation predicts the reward at **+0.000**, while `root_cause` one-hot explains +0.902 and the designed difficulty variables −0.081. A privileged critic reading the true cause clears +0.3 immediately and buys 37% less gradient variance and no accuracy. Closes on the reward's own construction: no component both varies and is predictable from the prompt. |
+| `08_the_harness_does_the_arithmetic.ipynb` | the readings are already structured, so `compute_changes` supplies the three percent changes and the model does steps 2–4 (v3). `numeric_acc` 0.035 → **1.000** and `exact_match` **0.000 → 0.090 on the frozen policy**, the first non-zero in the series. Then dense per-field credit, which gives the critic a within-sequence target, and the `lam = 1.0` ablation that says the task does not care. Three runs. |
 | `runs/ppo-qwen3-17b-{main,ablate}-s0/` | the two 200-step runs. Every run directory carries the same four artefacts: `metrics.jsonl`, `eval.jsonl`, `curves.png`, `critic.png` — notebook 02 iterates over `RUNS`, so adding a run to that dict is all it takes to get the same figures. |
 | `runs/paired/` | the three greedy evaluations the paired test reads — frozen, MAIN, ABLATE — each with the full `per_case` block. |
 | `runs/main_vs_ablate.png` | the cross-run comparison; it belongs to neither directory, so it sits one level up. |

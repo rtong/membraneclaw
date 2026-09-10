@@ -100,6 +100,7 @@ head and a calibrated one is 0.30 here against 0.086 before.
 """
 from __future__ import annotations
 
+import contextlib
 import sys
 from collections import deque
 from dataclasses import dataclass, field
@@ -137,6 +138,16 @@ DATA = GRPO_DIR / "data"
 #: baselines. `STAGE_ONLY` is derived rather than measured: the MAIN evaluation
 #: reports `components.stage = 0.0291` against a weight of 0.03, so the frozen
 #: policy already copies the stage on 97% of cases.
+#: The same measurement under v3, where the harness supplies the arithmetic.
+#: From `runs/paired/base_v3_{main,ablate}.json`, the frozen policy on the full
+#: dev split, greedy, identical settings to `runs/paired/base.json`. It is far
+#: higher than the v2 figure for a mechanical reason -- `numeric` is 1.000 by
+#: construction -- so a value head initialised to the v2 number would start a v3
+#: run badly biased and spend the early steps unlearning it.
+FROZEN_BASELINE_V3: dict[str, dict[str, float]] = {
+    "Qwen/Qwen3-1.7B": {"MAIN": 0.5151, "ABLATE": 0.6561},
+}
+
 FROZEN_BASELINE: dict[str, dict[str, float]] = {
     "Qwen/Qwen3-1.7B": {
         "MAIN": 0.3015,
@@ -224,6 +235,9 @@ __all__ = [
     "ValueHead",
     "build_mask",
     "build_messages",
+    "build_messages_v3",
+    "v3_prompts",
+    "compute_changes",
     "critic_fit",
     "evaluate",
     "value_init_bias_for",
@@ -233,6 +247,8 @@ __all__ = [
     "score",
     "selective_logprobs",
     "terminal_rewards",
+    "dense_rewards",
+    "field_credits",
     "token_entropy",
     "value_loss",
     "whiten",
@@ -241,6 +257,116 @@ __all__ = [
 
 #: Magnitude of the privileged one-hot -- derivation at its use site.
 PRIVILEGED_SCALE = 64.0
+
+
+# --- v3: the arithmetic, computed by the harness ------------------------------
+#
+# `06`'s appendix and `07`'s closing section measured the same thing from two
+# directions: Qwen3-1.7B does not do this task's arithmetic. Two of the three
+# percent changes involve no domain formula at all -- a division and a sum, then
+# a percent change -- and it misses those at the same rate as the one that uses
+# `TCF`. Over the 1000 case-evaluations in `runs/paired/` the count of numbers
+# landing inside the 0.5 pp tolerance is 844 zeros, 140 ones, 15 twos and one
+# three. Showing the working in a 2-shot prompt moved it by 0.000.
+#
+# The readings are already structured in `record["t0"]` / `record["t1"]`, so the
+# harness can do the arithmetic exactly and hand the model the result. That is
+# what a calculator tool would achieve, minus the tool-call protocol and minus
+# the extraction step, because there is nothing to extract -- the numbers are
+# already parsed. `compute_changes` reproduces every one of the 600 answers in
+# `data/{train,dev}.jsonl` exactly, which is the check that licenses this.
+#
+# v3 is v2 with Step 1 replaced, by surgery on v2's own rendered text rather
+# than by re-rendering it. Everything outside the Step 1 block and the closing
+# instruction is byte-identical to v2, so a v2/v3 comparison has one variable.
+
+
+def compute_changes(record: dict[str, Any]) -> dict[str, float]:
+    """The three percent changes, from the structured readings. Exact."""
+
+    def tcf(temp_c: float) -> float:
+        return 1.03 ** (25 - temp_c)
+
+    def normalized_flow(t: dict[str, float]) -> float:
+        return t["permeate_flow_m3_h"] * tcf(t["feed_temp_C"])
+
+    def salt_passage(t: dict[str, float]) -> float:
+        return t["permeate_conductivity_uS_cm"] / t["feed_conductivity_uS_cm"] * 100
+
+    def dp(t: dict[str, float]) -> float:
+        return t["dp_lead_bar"] + t["dp_tail_bar"]
+
+    t0, t1 = record["t0"], record["t1"]
+
+    def pct(before: float, after: float) -> float:
+        return round((after - before) / before * 100, 1)
+
+    return {
+        "normalized_flow_change_pct": pct(normalized_flow(t0), normalized_flow(t1)),
+        "salt_passage_change_pct": pct(salt_passage(t0), salt_passage(t1)),
+        "dp_change_pct": pct(dp(t0), dp(t1)),
+    }
+
+
+V3_STEP1 = """Step 1 -- the three percent changes, already computed for you.
+
+  normalized_flow_change_pct = {normalized_flow_change_pct}
+  salt_passage_change_pct    = {salt_passage_change_pct}
+  dp_change_pct              = {dp_change_pct}
+
+  Copy these three values into the JSON unchanged. Do not recompute them.
+
+"""
+
+V3_CLOSING = """The three percent changes are given above -- copy them into the JSON
+unchanged. Use at most one short line of plain reasoning for the flags -- no
+prose, no LaTeX, no headings.
+
+Then end your reply with this JSON object and nothing after it:"""
+
+
+def build_user_prompt_v3(record: dict[str, Any]) -> str:
+    """v2's user turn with the arithmetic supplied instead of demanded."""
+    from task.prompt import CLOSINGS, build_user_prompt
+
+    text = build_user_prompt(record, "v2")
+    start, end = text.index("Step 1 -- "), text.index("Step 2 -- ")
+    text = text[:start] + V3_STEP1.format(**compute_changes(record)) + text[end:]
+    old = CLOSINGS["v2"]
+    if old not in text:  # pragma: no cover - guards a membrane_grpo edit
+        raise RuntimeError("v2 closing not found; task/prompt.py changed under v3")
+    return text.replace(old, V3_CLOSING)
+
+
+@contextlib.contextmanager
+def v3_prompts():
+    """Swap the prompt builder `eval.generate_hf` closes over, for one call.
+
+    `generate_hf` differs from what v3 needs in exactly one line -- the
+    `build_messages` it calls -- and rebinding that name in its own module
+    namespace leaves every other line of the generation and scoring path
+    literally theirs. That is the property the whole series rests on: the frozen
+    baseline, the GRPO curve and every PPO curve are produced by the same
+    function, so a v2/v3 difference is a difference in the prompt and nothing
+    else. Nothing is written into that tree; the binding is restored on exit.
+    """
+    import eval as membrane_eval
+
+    original = membrane_eval.build_messages
+    membrane_eval.build_messages = lambda record, version=None: build_messages_v3(record)
+    try:
+        yield
+    finally:
+        membrane_eval.build_messages = original
+
+
+def build_messages_v3(record: dict[str, Any]) -> list[dict[str, str]]:
+    from task.prompt import SYSTEM_PROMPTS
+
+    return [
+        {"role": "system", "content": SYSTEM_PROMPTS["v2"]},
+        {"role": "user", "content": build_user_prompt_v3(record)},
+    ]
 
 
 def load_cases(split: str = "train") -> list[dict[str, Any]]:
@@ -349,6 +475,133 @@ def terminal_rewards(rewards: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     return out * (lengths > 0).float().unsqueeze(-1)
 
 
+#: The output fields in the order the schema lists them, paired with the regex
+#: that finds the *end* of that field's value in a completion. `flags` is nested,
+#: so its three keys are matched inside the flags object rather than in the whole
+#: text -- "flow" also occurs inside "normalized_flow_change_pct".
+_FIELD_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("normalized_flow_change_pct", r'"normalized_flow_change_pct"\s*:\s*(-?\d+(?:\.\d+)?)'),
+    ("salt_passage_change_pct", r'"salt_passage_change_pct"\s*:\s*(-?\d+(?:\.\d+)?)'),
+    ("dp_change_pct", r'"dp_change_pct"\s*:\s*(-?\d+(?:\.\d+)?)'),
+    ("flags.flow", r'"flow"\s*:\s*"[a-z_]*"'),
+    ("flags.salt_passage", r'"salt_passage"\s*:\s*"[a-z_]*"'),
+    ("flags.dp", r'"dp"\s*:\s*"[a-z_]*"'),
+    ("stage", r'"stage"\s*:\s*"[a-z_]*"'),
+    ("root_cause", r'"root_cause"\s*:\s*"[a-z_]*"'),
+    ("action", r'"action"\s*:\s*"[a-z_]*"'),
+)
+
+
+def field_credits(
+    completion: str, answer: dict[str, Any], weights: Weights
+) -> tuple[dict[str, float], float]:
+    """Split one completion's reward into per-field credits and a terminal rest.
+
+    The pieces sum to `score(completion, answer, weights).total` exactly, so the
+    objective the actor optimises is unchanged -- only *when* the credit arrives
+    moves. `numeric` and `flags` are scored by `reward.py` as the mean of three
+    hits, so each of the three carries a third of that component's weight.
+
+    `format` is schema validity, which is not known until the object closes, and
+    anything whose field cannot be located goes to the same place: the last
+    active token, exactly where `terminal_rewards` would have put all of it.
+    """
+    import re
+
+    from reward import _flag_hits, _numeric_hits
+    from task.schema import FLAG_KEYS, NUMERIC_KEYS, parse_answer, validate
+
+    parsed = parse_answer(completion)
+    obj = parsed.obj if isinstance(parsed.obj, dict) else None
+    if obj is None:
+        return {}, 0.0
+
+    numeric, flags = _numeric_hits(obj, answer), _flag_hits(obj, answer)
+    earned = {
+        **{k: weights.numeric / 3 * hit for k, hit in zip(NUMERIC_KEYS, numeric)},
+        **{f"flags.{k}": weights.flags / 3 * hit for k, hit in zip(FLAG_KEYS, flags)},
+        "stage": weights.stage * (obj.get("stage") == answer["stage"]),
+        "root_cause": weights.root_cause * (obj.get("root_cause") == answer["root_cause"]),
+        "action": weights.action * (obj.get("action") == answer["action"]),
+    }
+    terminal = weights.format * float(validate(obj).ok)
+
+    flags_span = re.search(r'"flags"\s*:\s*\{[^}]*\}', completion)
+    placed: dict[str, float] = {}
+    for field, pattern in _FIELD_PATTERNS:
+        credit = float(earned.get(field, 0.0))
+        if not credit:
+            continue
+        if field.startswith("flags."):
+            if flags_span is None:
+                terminal += credit
+                continue
+            hit = None
+            for hit in re.finditer(pattern, flags_span.group()):
+                pass
+            if hit is None:
+                terminal += credit
+                continue
+            placed[field] = flags_span.start() + hit.end()
+        else:
+            hit = None
+            for hit in re.finditer(pattern, completion):
+                pass
+            if hit is None:
+                terminal += credit
+                continue
+            placed[field] = hit.end()
+        placed[field] = (placed[field], credit)
+
+    return {f: v for f, v in placed.items()}, terminal
+
+
+def dense_rewards(
+    completions: list[str],
+    completion_ids: torch.Tensor,
+    mask: torch.Tensor,
+    cases: list[dict[str, Any]],
+    weights: Weights,
+    tokenizer,
+) -> torch.Tensor:
+    """Per-token rewards that land where each field is written, not at the end.
+
+    Why this exists. With `gamma = lam = 1` and one terminal reward the return is
+    constant along a sequence, so `V(s_t)` has nothing to track and the per-token
+    credit assignment actor-critic PPO offers has nothing to assign -- which is
+    the finding `07` closes on. Paying each field at the token that decides it
+    makes the return fall as the answer is written, which is the one thing that
+    gives a causal value function a job. It only bites with `lam < 1`; at
+    `lam = 1` GAE ignores `V` and this changes nothing but the metrics.
+
+    Row sums equal `Rollout.rewards` up to float error, so the sequence-level
+    objective is untouched.
+    """
+    out = torch.zeros_like(mask, dtype=torch.float32)
+    lengths = mask.sum(dim=-1).long()
+    for b, (text, case) in enumerate(zip(completions, cases)):
+        length = int(lengths[b])
+        if length == 0:
+            continue
+        ids = completion_ids[b, :length].tolist()
+        # Cumulative decoded length after each token, so a character offset can
+        # be turned into the index of the token that completed it. Prefix decodes
+        # rather than per-token decodes: byte-level BPE splits multi-byte
+        # characters across tokens, and their lengths do not add up.
+        bounds = [len(tokenizer.decode(ids[: i + 1], skip_special_tokens=True)) for i in range(length)]
+
+        try:
+            placed, terminal = field_credits(text, case["answer"], weights)
+        except (OverflowError, ValueError, TypeError, KeyError):
+            placed, terminal = {}, 0.0
+
+        for offset, credit in placed.values():
+            index = next((i for i, end in enumerate(bounds) if end >= offset), length - 1)
+            out[b, index] += credit
+        out[b, length - 1] += terminal
+    return out
+
+
 def gae(
     rewards: torch.Tensor,
     values: torch.Tensor,
@@ -424,8 +677,27 @@ def critic_fit(
     # about the task worth reporting rather than filtering into silence. Hence
     # None, which JSON writes as null, rather than a plausible-looking 0.0.
     if g_var < 1e-6:
-        return {"value_ev": None, "value_std": std}
-    return {"value_ev": round(1.0 - float((g - v).var(unbiased=False)) / g_var, 6), "value_std": std}
+        return {"value_ev": None, "value_std": std, "value_ev_position": None}
+    # With `dense_rewards` the return falls as the answer is written, so a head
+    # that learned nothing but "how far along am I" would already score well.
+    # This is that head, fitted for free: the mean return at each *relative*
+    # position, in twenty bins, scored on the same batch. `value_ev` above it is
+    # the part of the critic that is reading the sequence rather than counting
+    # tokens; `value_ev` at or below it means the critic is a clock.
+    position = torch.zeros_like(returns)
+    index = torch.arange(mask.shape[1], device=mask.device).unsqueeze(0).expand_as(mask)
+    lengths = mask.sum(dim=-1, keepdim=True).clamp(min=1.0)
+    binned = (index / lengths * 20).floor().clamp(max=19).long()
+    for b in range(20):
+        hit = (binned == b) & sel
+        if hit.any():
+            position[hit] = returns[hit].mean()
+    ev_pos = round(1.0 - float((g - position[sel]).var(unbiased=False)) / g_var, 6)
+    return {
+        "value_ev": round(1.0 - float((g - v).var(unbiased=False)) / g_var, 6),
+        "value_std": std,
+        "value_ev_position": ev_pos,
+    }
 
 
 def whiten(advantages: torch.Tensor, mask: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
@@ -702,6 +974,25 @@ class Config:
     # actor must not see, and the critic may.
     privileged_cause: bool = False
     value_layer: int = -1
+    #: Hand the model the three percent changes instead of demanding them.
+    #: `07`'s closing section is the argument: the arithmetic is a capability
+    #: this model does not have, at the level of elementary decimal arithmetic
+    #: rather than the domain formula, so a reward that pays for it pays for
+    #: nothing. The readings are already structured, so the harness computes the
+    #: changes exactly and the model does steps 2-4. See `build_messages_v3`.
+    prompt_v3: bool = False
+
+    #: Pay each output field at the token that decides it, instead of paying the
+    #: whole sequence reward at the last one. `07` closes on why this matters:
+    #: with `gamma = lam = 1` and a terminal reward the return is constant along
+    #: a sequence, so `V(s_t)` has nothing to track and the per-token credit
+    #: assignment this method offers over GRPO has nothing to assign. Row sums
+    #: are unchanged, so the sequence-level objective is the same one; only the
+    #: timing of the credit moves. **It only bites with `lam < 1`** -- at
+    #: `lam = 1` GAE never consults `V` and this changes the metrics and nothing
+    #: else. See `dense_rewards`.
+    dense_rewards: bool = False
+
     critic_window: int = 1
     # Rebuild the advantages from the critic's *post-fit* values. Off reproduces
     # every existing run, where `fitted_values` was computed and then used only
@@ -769,7 +1060,8 @@ class Config:
         if self.value_clip_eps is not None and self.value_clip_eps < 0:
             self.value_clip_eps = None
         if self.value_init_bias < 0:
-            self.value_init_bias = value_init_bias_for(self.model, self.weights)
+            table = FROZEN_BASELINE_V3 if self.prompt_v3 else FROZEN_BASELINE
+            self.value_init_bias = table.get(self.model, {}).get(self.weights, 0.0)
 
 
 # --- the model side -----------------------------------------------------------
@@ -899,12 +1191,14 @@ def rollout(
     weights: Weights,
     device: str,
     template_kwargs: dict[str, Any] | None = None,
+    prompt_v3: bool = False,
 ) -> Rollout:
     """Sample one batch: `samples_per_prompt` completions for each case."""
     expanded = [c for c in cases for _ in range(samples_per_prompt)]
+    messages = build_messages_v3 if prompt_v3 else build_messages
     texts = [
         tokenizer.apply_chat_template(
-            build_messages(c["record"]),
+            messages(c["record"]),
             tokenize=False,
             add_generation_prompt=True,
             **(template_kwargs or {}),
@@ -975,20 +1269,21 @@ def evaluate(policy, tokenizer, cfg: "Config", cases: list[dict], step: int) -> 
     # generate_hf still moves the encoded batch onto a device, so it needs the
     # one the live policy is already on rather than a re-derived guess.
     device = str(next(policy.parameters()).device)
-    results = generate_hf(
-        cases,
-        model=cfg.model,
-        device=device,
-        dtype=cfg.dtype,
-        n=1,
-        temperature=0.0,
-        max_tokens=cfg.eval_max_tokens,
-        seed=cfg.seed,
-        batch_size=cfg.eval_batch,
-        adapter=None,
-        prompt_version=cfg.prompt_version,
-        loaded=(policy, tokenizer),
-    )
+    with v3_prompts() if cfg.prompt_v3 else contextlib.nullcontext():
+        results = generate_hf(
+            cases,
+            model=cfg.model,
+            device=device,
+            dtype=cfg.dtype,
+            n=1,
+            temperature=0.0,
+            max_tokens=cfg.eval_max_tokens,
+            seed=cfg.seed,
+            batch_size=cfg.eval_batch,
+            adapter=None,
+            prompt_version=cfg.prompt_version,
+            loaded=(policy, tokenizer),
+        )
     metrics = summarise(results, WEIGHT_SETS[cfg.weights])
     return {
         "step": step,
@@ -1123,6 +1418,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             weights=weights,
             device=device,
             template_kwargs=template_kwargs,
+            prompt_v3=cfg.prompt_v3,
         )
         gen_seconds = time.perf_counter() - started
 
@@ -1130,7 +1426,17 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         attn = roll.attention_mask
         completion_len = mask.shape[1]
         rewards = torch.tensor(roll.rewards, device=device, dtype=torch.float32)
-        per_token_rewards = terminal_rewards(rewards, mask)
+        if cfg.dense_rewards:
+            per_token_rewards = dense_rewards(
+                roll.completions,
+                sequences[:, -completion_len:],
+                mask,
+                roll.cases,
+                weights,
+                tokenizer,
+            )
+        else:
+            per_token_rewards = terminal_rewards(rewards, mask)
 
         policy.train()
         with torch.no_grad():
@@ -1408,6 +1714,8 @@ def main() -> None:
     fields = {k: v for k, v in vars(args).items() if k in asdict(Config()) and k != "metrics"}
     fields["value_detach"] = bool(fields["value_detach"])
     fields["whiten_advantages"] = bool(fields["whiten_advantages"])
+    fields["prompt_v3"] = bool(fields["prompt_v3"])
+    fields["dense_rewards"] = bool(fields["dense_rewards"])
     cfg = Config(**fields)
     tag = cfg.model.rsplit("/", 1)[-1].replace(".", "").lower()
     out = args.out or SMOKE_DIR / "runs" / f"ppo-{tag}-{cfg.weights.lower()}-s{cfg.seed}"
