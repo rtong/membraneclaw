@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "experiment_id": "teacher-distilled-solver-skill-validation@0.1.0",
+  "study_phase": "matching_family_validation",
+  "parent_run_id": "solver-skill-p3-c00-c10-v3",
+  "selection_id": "teacher-distilled-solver-skill-d6c-validation-3case@0.1.0",
+  "source_benchmark_set": "d1_d6",
+  "source_benchmarks_dir": "benchmarks/normalized",
+  "base_systems_config": "configs/systems.json",
+  "base_system_id": "tools",
+  "skill_version": "swro-parallel-compare@0.1.1",
+  "expected_skill_sha256": "24db1649848dd1ae66948cd54f877f04032c61bbb9bd9941e436b1b8610cefed",
+  "case_ids": [
+    "D6-6c-02",
+    "D6-6c-03",
+    "D6-6c-06"
+  ],
+  "selection_rationale": "Pre-registered matching-family validation spanning membrane transport, cold ageing, and ERD variation while preserving the four-row parallel two-simulator task shape.",
+  "conditions": [
+    "c00",
+    "c10"
+  ],
+  "repeats": 3,
+  "primary_outcome": "mean_case_best_of_3_task_score_difference",
+  "required_observable_tools": [
+    "simulate_ro",
+    "simulate_swro_system"
+  ],
+  "max_collection_attempts": 4,
+  "generation_overrides": {
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "max_tokens": 2048,
+    "enable_thinking": false
+  }
+}

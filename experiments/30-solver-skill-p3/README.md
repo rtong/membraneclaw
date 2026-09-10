@@ -12,8 +12,8 @@
 
 ## 当前状态
 
-`blocked_external_tool_binding`。v2实际只调用 `calculator`/`http_get`，没有WaterTAP目标仿真
-结果，因此不能进入Judge，也不能解释为Skill无效。
+`completed_development_signal`。v3正式结果为C00 best-of-3 52、C10 best-of-3 100，主效应
++48；但C10三次得分为20、50、100，说明效果不稳定。该结果已冻结，下一步进入E31同族验证。
 
 ## 不属于本实验的内容
 

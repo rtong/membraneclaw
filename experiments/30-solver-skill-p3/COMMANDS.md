@@ -1,7 +1,7 @@
 # E30 single-line commands
 
-所有命令均为单行，在F盘执行副本中、激活 Miniforge `scrapingpipe` 后运行。现在处于外部工具
-阻塞状态，以下命令只在远程 WaterTAP 绑定修复后使用。
+所有命令均为单行，在F盘执行副本中、激活 Miniforge `scrapingpipe` 后运行。以下命令是已完成
+v3的历史执行记录；不要使用相同run ID重建或覆盖结果。当前命令见E31。
 
 ## 1. 工具表面验证
 

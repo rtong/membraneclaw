@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "variant_id": "d1-d6-input-complete-v1",
+  "base_benchmark_set": "d1_d6",
+  "derived_benchmark_set": "d1_d6_input_complete_v1",
+  "corpus_size": 117,
+  "changed_case_count": 8,
+  "allowed_changed_fields": [
+    "question_prompt",
+    "source.derived_overlay",
+    "source.imported_at"
+  ],
+  "unchanged_fields": [
+    "reference_answer",
+    "rubric",
+    "tool_efficiency_rubric"
+  ],
+  "finding": "Eight questions invoke both simulators but omit the non-default plant feed flow used by their Gold calculations. The representative-unit flow is also made explicit for reproducibility.",
+  "change": "Append the same scale clarification: simulate_ro feed 1.00 kg/s and simulate_swro_system feed 0.100 m³/s.",
+  "cases": [
+    {
+      "case_id": "D6-6b-n06",
+      "source": "benchmarks/Datasets Harness/D6/D6_6b_N06_EN.xlsx",
+      "evidence": "Gold plant product/recovery pairs imply feed = product / (recovery/100) = 0.100 m³/s."
+    },
+    {
+      "case_id": "D6-6b-n07",
+      "source": "benchmarks/Datasets Harness/D6/D6_6b_N07_EN.xlsx",
+      "evidence": "Gold plant product/recovery pairs imply feed = product / (recovery/100) = 0.100 m³/s."
+    },
+    {
+      "case_id": "D6-6c-02",
+      "source": "benchmarks/Datasets Harness/D6/D6_6c_02_EN.xlsx",
+      "evidence": "Question omits both feed scales while its D6-6c family template and Gold outputs use the 1.00 kg/s module and 0.100 m³/s plant scales stated in D6-6c-01."
+    },
+    {
+      "case_id": "D6-6c-03",
+      "source": "benchmarks/Datasets Harness/D6/D6_6c_03_EN.xlsx",
+      "evidence": "Question omits both feed scales while its D6-6c family template and Gold outputs use the 1.00 kg/s module and 0.100 m³/s plant scales stated in D6-6c-01."
+    },
+    {
+      "case_id": "D6-6c-04",
+      "source": "benchmarks/Datasets Harness/D6/D6_6c_04_EN.xlsx",
+      "evidence": "Question omits both feed scales while its D6-6c family template and Gold outputs use the 1.00 kg/s module and 0.100 m³/s plant scales stated in D6-6c-01."
+    },
+    {
+      "case_id": "D6-6c-05",
+      "source": "benchmarks/Datasets Harness/D6/D6_6c_05_EN.xlsx",
+      "evidence": "Question omits both feed scales while its D6-6c family template and Gold outputs use the 1.00 kg/s module and 0.100 m³/s plant scales stated in D6-6c-01."
+    },
+    {
+      "case_id": "D6-6c-06",
+      "source": "benchmarks/Datasets Harness/D6/D6_6c_06_EN.xlsx",
+      "evidence": "Question omits both feed scales while its D6-6c family template and Gold outputs use the 1.00 kg/s module and 0.100 m³/s plant scales stated in D6-6c-01."
+    },
+    {
+      "case_id": "D6-6c-07",
+      "source": "benchmarks/Datasets Harness/D6/D6_6c_07_EN.xlsx",
+      "evidence": "Question omits both feed scales while its D6-6c family template and Gold outputs use the 1.00 kg/s module and 0.100 m³/s plant scales stated in D6-6c-01."
+    }
+  ]
+}
+

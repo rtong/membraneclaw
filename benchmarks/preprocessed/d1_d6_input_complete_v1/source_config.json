@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "variant_id": "d1-d6-input-complete-v1",
+  "purpose": "Derived D1-D6 view that makes the hidden non-default simulator feed scale explicit without editing source workbooks, Gold answers, or rubrics.",
+  "discovery": {
+    "root": "benchmarks/Datasets Harness",
+    "domains": [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5",
+      "D6"
+    ],
+    "extensions": [
+      ".xlsx"
+    ],
+    "ignore_prefixes": [
+      "~$"
+    ]
+  },
+  "overrides": {
+    "benchmarks/Datasets Harness/D6/D6_6b_N06_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6b-n06",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    },
+    "benchmarks/Datasets Harness/D6/D6_6b_N07_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6b-n07",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    },
+    "benchmarks/Datasets Harness/D6/D6_6c_02_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6c-02",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    },
+    "benchmarks/Datasets Harness/D6/D6_6c_03_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6c-03",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    },
+    "benchmarks/Datasets Harness/D6/D6_6c_04_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6c-04",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    },
+    "benchmarks/Datasets Harness/D6/D6_6c_05_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6c-05",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    },
+    "benchmarks/Datasets Harness/D6/D6_6c_06_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6c-06",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    },
+    "benchmarks/Datasets Harness/D6/D6_6c_07_EN.xlsx": {
+      "benchmark_overlay": {
+        "overlay_id": "d1-d6-input-complete-v1:D6-6c-07",
+        "question_append": "Simulator scale clarification: use a feed flow of 1.00 kg/s for each representative simulate_ro membrane-unit call and 0.100 m³/s for each simulate_swro_system plant call."
+      }
+    }
+  }
+}
+

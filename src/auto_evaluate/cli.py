@@ -830,6 +830,10 @@ def command_solver_skill_pilot(args) -> int:
         analysis = build_solver_skill_analysis(run_dir)
         result_path = write_solver_skill_analysis(run_dir, analysis)
         report_path = build_report(run_dir)
+        primary = analysis["primary_outcome"]
+        primary_effect = primary.get(
+            "mean_case_best_difference", primary.get("c10_minus_c00")
+        )
         print(
             json.dumps(
                 {
@@ -838,7 +842,9 @@ def command_solver_skill_pilot(args) -> int:
                     "run_id": args.run_id,
                     "results": str(result_path),
                     "report": str(report_path),
-                    "c10_minus_c00": analysis["paired_effect"]["mean_effect"],
+                    "primary_metric": primary["metric"],
+                    "primary_effect": primary_effect,
+                    "paired_mean_effect": analysis["paired_effect"]["mean_effect"],
                 },
                 ensure_ascii=False,
                 indent=2,

@@ -16,6 +16,7 @@ experiments/
   10-repeatability/                D1-D6重复性审计
   20-judge-calibration/             Evaluation Skill Judge校准
   30-solver-skill-p3/              当前Solver Skill开发实验
+  31-solver-skill-validation/      冻结Solver Skill三题同族验证
   40-executable-skill-runtime/      可执行Skill离线原型
   50-d7-router-rag/                未来真实D7主线
   90-historical/                   历史、退休和无效实验索引

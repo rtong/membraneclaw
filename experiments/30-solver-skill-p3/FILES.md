@@ -9,7 +9,7 @@
 ## Skill
 
 - `skills/swro-parallel-compare/v0.1.0`：v2使用的历史冻结版本，不修改。
-- `skills/swro-parallel-compare/v0.1.1`：未来v3使用的完整冻结包。
+- `skills/swro-parallel-compare/v0.1.1`：v3和后续E31验证使用的冻结包。
 
 ## 功能代码
 
@@ -28,4 +28,4 @@
 
 - `archive/experiments/solver-skill-p3-invalid/runs/solver-skill-p3-c00-c10-v1`：无模型调用的错误元数据预检。
 - `archive/experiments/solver-skill-p3-invalid/runs/solver-skill-p3-c00-c10-v2`：错误远程工具表面，无有效WaterTAP episode。
-- `runs/solver-skill-p3-c00-c10-v3`：远程工具恢复后创建，当前不存在。
+- `runs/solver-skill-p3-c00-c10-v3`：已完成并冻结的开发试点。

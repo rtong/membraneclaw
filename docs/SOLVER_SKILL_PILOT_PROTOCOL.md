@@ -2,8 +2,10 @@
 
 Protocol version: `teacher-distilled-solver-skill-pilot@0.2.0`
 
-Status: frozen for the next valid C00/C10 solver collection. Version 0.1.0 produced no valid
-WaterTAP episodes because the remote preset exposed only generic tools.
+Status: completed and frozen as run `solver-skill-p3-c00-c10-v3`. The development result was
+C00 best-of-3 52 versus C10 best-of-3 100; the paired mean effect was +9.33 with high variability.
+The next experiment is the separately pre-registered matching-family validation in
+`SOLVER_SKILL_VALIDATION_PROTOCOL.md`.
 
 ## Question
 

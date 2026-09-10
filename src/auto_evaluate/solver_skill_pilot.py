@@ -25,6 +25,10 @@ from .runner import execute_run, summarize_run_completeness
 
 PILOT_ID = "teacher-distilled-solver-skill-pilot@0.2.0"
 PILOT_CONDITIONS = ("c00", "c10")
+PRIMARY_OUTCOMES = {
+    "best_of_3_task_score",
+    "mean_case_best_of_3_task_score_difference",
+}
 
 
 def _required_string(config: dict[str, Any], field: str) -> str:
@@ -65,18 +69,22 @@ def load_solver_skill_pilot_config(root: Path, config_path: Path) -> dict[str, A
     _required_string(config, "base_systems_config")
     _required_string(config, "base_system_id")
     skill_version = _required_string(config, "skill_version")
-    _required_string_list(config, "case_ids")
+    case_ids = _required_string_list(config, "case_ids")
     _required_string_list(config, "required_observable_tools")
-    if config.get("primary_outcome") != "best_of_3_task_score":
+    primary_outcome = config.get("primary_outcome")
+    if primary_outcome not in PRIMARY_OUTCOMES:
         raise ValueError(
-            "solver Skill pilot primary_outcome must be best_of_3_task_score"
+            "solver Skill pilot primary_outcome must be one of "
+            f"{sorted(PRIMARY_OUTCOMES)}"
         )
+    if primary_outcome == "mean_case_best_of_3_task_score_difference" and len(case_ids) < 2:
+        raise ValueError("mean-case best-of-3 requires at least two selected cases")
     conditions = _required_string_list(config, "conditions")
     if tuple(conditions) != PILOT_CONDITIONS:
         raise ValueError("solver Skill pilot conditions must be ordered as c00, c10")
     repeats = config.get("repeats")
-    if not isinstance(repeats, int) or isinstance(repeats, bool) or repeats < 2:
-        raise ValueError("solver Skill pilot repeats must be an integer >= 2")
+    if not isinstance(repeats, int) or isinstance(repeats, bool) or repeats != 3:
+        raise ValueError("solver Skill best-of-3 experiments require exactly 3 repeats")
     max_attempts = config.get("max_collection_attempts", 4)
     if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
         raise ValueError("max_collection_attempts must be an integer >= 1")
@@ -86,7 +94,17 @@ def load_solver_skill_pilot_config(root: Path, config_path: Path) -> dict[str, A
     systems_path = (root / config["base_systems_config"]).resolve()
     if not systems_path.is_file():
         raise FileNotFoundError(f"Base systems config not found: {systems_path}")
-    _skill_dir(root, skill_version)
+    skill_dir = _skill_dir(root, skill_version)
+    expected_skill_sha256 = config.get("expected_skill_sha256")
+    if expected_skill_sha256 is not None:
+        if not isinstance(expected_skill_sha256, str) or not expected_skill_sha256.strip():
+            raise ValueError("expected_skill_sha256 must be a non-empty string")
+        actual_skill_sha256 = sha256_tree(skill_dir)
+        if actual_skill_sha256 != expected_skill_sha256.strip():
+            raise ValueError(
+                "Frozen Solver Skill hash mismatch: "
+                f"expected {expected_skill_sha256.strip()}, found {actual_skill_sha256}"
+            )
     return config
 
 
@@ -258,7 +276,10 @@ def prepare_solver_skill_pilot(
     shutil.copy2(config_path, run_dir / "selection.json")
     pilot_manifest = {
         "schema_version": "1.0",
-        "experiment_id": PILOT_ID,
+        "experiment_id": config.get("experiment_id", PILOT_ID),
+        "study_phase": config.get("study_phase", "development"),
+        "parent_run_id": config.get("parent_run_id"),
+        "selection_rationale": config.get("selection_rationale"),
         "run_id": run_id,
         "created_at": utc_now(),
         "selection_id": config["selection_id"],
@@ -442,6 +463,12 @@ def build_solver_skill_analysis(run_dir: Path) -> dict[str, Any]:
                 "repeat_index": int(system["repeat_index"]),
                 "system_id": system_id,
                 "score": float(rating["total_score"]),
+                "tool_efficiency_score": (
+                    float(rating["tool_efficiency_score"])
+                    if isinstance(rating.get("tool_efficiency_score"), (int, float))
+                    and not isinstance(rating.get("tool_efficiency_score"), bool)
+                    else None
+                ),
                 "status": response.get("status", "missing"),
                 "native_status": response.get("native_status", response.get("status", "missing")),
                 "completion_mode": response.get("completion_mode", "missing"),
@@ -473,9 +500,13 @@ def build_solver_skill_analysis(run_dir: Path) -> dict[str, Any]:
         summaries[condition] = {
             "episodes": len(selected),
             "best_score": best["score"],
+            "best_case_id": best["case_id"],
             "best_system_id": best["system_id"],
             "best_repeat_index": best["repeat_index"],
             "mean_score": mean(row["score"] for row in selected),
+            "mean_tool_efficiency_score": _mean_optional(
+                [row["tool_efficiency_score"] for row in selected]
+            ),
             "final_completion_rate": mean(row["status"] == "success" for row in selected),
             "native_completion_rate": mean(row["native_status"] == "success" for row in selected),
             "valid_path_rate": mean(row["valid_path"] for row in selected),
@@ -507,11 +538,31 @@ def build_solver_skill_analysis(run_dir: Path) -> dict[str, Any]:
                 }
             )
     gains = [row["c10_minus_c00"] for row in paired_rows]
-    c00_best = summaries["c00"]
-    c10_best = summaries["c10"]
     case_effects = []
+    case_best_of_3 = []
     for case_id in pilot["case_ids"]:
         case_gains = [row["c10_minus_c00"] for row in paired_rows if row["case_id"] == case_id]
+        c00_rows = [
+            row for row in rows if row["case_id"] == case_id and row["condition"] == "c00"
+        ]
+        c10_rows = [
+            row for row in rows if row["case_id"] == case_id and row["condition"] == "c10"
+        ]
+        c00_case_best = max(c00_rows, key=lambda row: (row["score"], -row["repeat_index"]))
+        c10_case_best = max(c10_rows, key=lambda row: (row["score"], -row["repeat_index"]))
+        best_difference = c10_case_best["score"] - c00_case_best["score"]
+        case_best_of_3.append(
+            {
+                "case_id": case_id,
+                "c00_best_score": c00_case_best["score"],
+                "c00_best_system_id": c00_case_best["system_id"],
+                "c00_best_repeat_index": c00_case_best["repeat_index"],
+                "c10_best_score": c10_case_best["score"],
+                "c10_best_system_id": c10_case_best["system_id"],
+                "c10_best_repeat_index": c10_case_best["repeat_index"],
+                "c10_minus_c00": best_difference,
+            }
+        )
         case_effects.append(
             {
                 "case_id": case_id,
@@ -520,27 +571,49 @@ def build_solver_skill_analysis(run_dir: Path) -> dict[str, Any]:
                 "effect_sd": stdev(case_gains) if len(case_gains) > 1 else 0.0,
                 "minimum_effect": min(case_gains),
                 "maximum_effect": max(case_gains),
+                "best_of_3_effect": best_difference,
+            }
+        )
+
+    primary_metric = pilot.get("primary_outcome", "best_of_3_task_score")
+    case_best_gains = [row["c10_minus_c00"] for row in case_best_of_3]
+    primary_outcome = {
+        "metric": primary_metric,
+        "sampling_budget_per_condition_per_case": int(pilot["repeats"]),
+        "case_count": len(case_best_of_3),
+        "case_results": case_best_of_3,
+        "c00_mean_case_best_score": mean(row["c00_best_score"] for row in case_best_of_3),
+        "c10_mean_case_best_score": mean(row["c10_best_score"] for row in case_best_of_3),
+        "mean_case_best_difference": mean(case_best_gains),
+        "case_wins": sum(value > 0 for value in case_best_gains),
+        "case_ties": sum(value == 0 for value in case_best_gains),
+        "case_losses": sum(value < 0 for value in case_best_gains),
+    }
+    if len(case_best_of_3) == 1:
+        only_case = case_best_of_3[0]
+        primary_outcome.update(
+            {
+                "sampling_budget_per_condition": int(pilot["repeats"]),
+                "c00_best_score": only_case["c00_best_score"],
+                "c00_best_system_id": only_case["c00_best_system_id"],
+                "c10_best_score": only_case["c10_best_score"],
+                "c10_best_system_id": only_case["c10_best_system_id"],
+                "c10_minus_c00": only_case["c10_minus_c00"],
             }
         )
 
     return {
         "schema_version": "1.0",
         "experiment_id": pilot["experiment_id"],
+        "study_phase": pilot.get("study_phase", "development"),
+        "parent_run_id": pilot.get("parent_run_id"),
         "run_id": run_dir.name,
         "case_ids": pilot["case_ids"],
         "repeats": pilot["repeats"],
         "solver_skill_version": pilot["solver_skill_version"],
         "solver_skill_sha256": pilot["solver_skill_sha256"],
         "condition_summaries": summaries,
-        "primary_outcome": {
-            "metric": "best_of_3_task_score",
-            "sampling_budget_per_condition": int(pilot["repeats"]),
-            "c00_best_score": c00_best["best_score"],
-            "c00_best_system_id": c00_best["best_system_id"],
-            "c10_best_score": c10_best["best_score"],
-            "c10_best_system_id": c10_best["best_system_id"],
-            "c10_minus_c00": c10_best["best_score"] - c00_best["best_score"],
-        },
+        "primary_outcome": primary_outcome,
         "paired_effect": {
             "comparison": "c10_minus_c00",
             "mean_effect": mean(gains),
@@ -552,7 +625,11 @@ def build_solver_skill_analysis(run_dir: Path) -> dict[str, Any]:
         },
         "episode_results": rows,
         "interpretation_boundary": (
-            "This development-only pilot tests prompt-delivered seed Skill content. "
+            "This pre-registered matching-family validation tests transfer of one frozen, "
+            "prompt-delivered seed Skill to cases not used to write it. It does not test the "
+            "hard executor, automatic Skill evolution, or held-out D7 generalization."
+            if pilot.get("study_phase") == "matching_family_validation"
+            else "This development-only pilot tests prompt-delivered seed Skill content. "
             "It does not test the hard executor, automatic Skill evolution, or held-out generalization."
         ),
     }
@@ -583,43 +660,89 @@ def write_solver_skill_analysis(run_dir: Path, analysis: dict[str, Any]) -> Path
         run_dir / "solver_skill_paired_effects.csv",
         analysis["paired_effect"]["paired_episodes"],
     )
+    _write_csv(
+        run_dir / "solver_skill_case_best_of_3.csv",
+        analysis["primary_outcome"]["case_results"],
+    )
     summaries = analysis["condition_summaries"]
     primary = analysis["primary_outcome"]
     effect = analysis["paired_effect"]
+    is_validation = (
+        primary.get("metric") == "mean_case_best_of_3_task_score_difference"
+    )
     lines = [
-        "# 教师蒸馏短Solver Skill开发试点",
+        (
+            "# 教师蒸馏短Solver Skill同族验证"
+            if is_validation
+            else "# 教师蒸馏短Solver Skill开发试点"
+        ),
         "",
         f"- Skill：`{analysis['solver_skill_version']}`",
         f"- Cases：{', '.join(f'`{case_id}`' for case_id in analysis['case_ids'])}",
         f"- 每条件每题重复：{analysis['repeats']}",
         "- RAG：关闭",
         "- Judge：两个条件共用同一冻结Judge",
-        "- 主指标：每个条件固定3次有效执行中的最高任务分（best-of-3）",
+        (
+            "- 主指标：逐题计算两条件best-of-3差值，再对预注册题目取平均"
+            if is_validation
+            else "- 主指标：每个条件固定3次有效执行中的最高任务分（best-of-3）"
+        ),
         "",
         "## 条件汇总",
         "",
-        "| 条件 | Episode | 最高任务分 | 最佳Episode | 平均任务分（诊断） | 最终完成率 | 原生完成率 | 有效路径率 | Tool参数错误率 | 平均工具调用 | 平均时延秒 | 平均tokens |",
-        "|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| 条件 | Episode | 最高任务分 | 最佳Episode | 平均任务分（诊断） | 平均工具效率分 | 最终完成率 | 原生完成率 | 有效路径率 | Tool参数错误率 | 平均工具调用 | 平均时延秒 | 平均tokens |",
+        "|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for condition in PILOT_CONDITIONS:
         row = summaries[condition]
         latency = "-" if row["mean_latency_ms"] is None else f"{row['mean_latency_ms'] / 1000:.1f}"
         tokens = "-" if row["mean_total_tokens"] is None else f"{row['mean_total_tokens']:.0f}"
+        efficiency = (
+            "-"
+            if row["mean_tool_efficiency_score"] is None
+            else f"{row['mean_tool_efficiency_score']:.2f}"
+        )
         lines.append(
             f"| {condition.upper()} | {row['episodes']} | {row['best_score']:.2f} | "
-            f"{row['best_system_id']} | {row['mean_score']:.2f} | "
+            f"{row['best_case_id']}/{row['best_system_id']} | {row['mean_score']:.2f} | "
+            f"{efficiency} | "
             f"{row['final_completion_rate']:.1%} | {row['native_completion_rate']:.1%} | "
             f"{row['valid_path_rate']:.1%} | {row['tool_argument_failure_rate']:.1%} | "
             f"{row['mean_tool_calls']:.1f} | {latency} | {tokens} |"
         )
+    lines.extend(["", "## 主结果：逐题best-of-3", ""])
+    if is_validation:
+        lines.extend(
+            [
+                f"- C00逐题最高分均值：{primary['c00_mean_case_best_score']:.2f}。",
+                f"- C10逐题最高分均值：{primary['c10_mean_case_best_score']:.2f}。",
+                f"- 平均逐题增益：{primary['mean_case_best_difference']:+.2f}。",
+                f"- Case胜/平/负：{primary['case_wins']}/{primary['case_ties']}/{primary['case_losses']}。",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                f"- C00最高分：{primary['c00_best_score']:.2f}（{primary['c00_best_system_id']}）。",
+                f"- C10最高分：{primary['c10_best_score']:.2f}（{primary['c10_best_system_id']}）。",
+                f"- C10相对C00：{primary['c10_minus_c00']:+.2f}。",
+            ]
+        )
     lines.extend(
         [
             "",
-            "## 主结果：best-of-3",
-            "",
-            f"- C00最高分：{primary['c00_best_score']:.2f}（{primary['c00_best_system_id']}）。",
-            f"- C10最高分：{primary['c10_best_score']:.2f}（{primary['c10_best_system_id']}）。",
-            f"- C10相对C00：{primary['c10_minus_c00']:+.2f}。",
+            "| Case | C00最高分 | C00 Episode | C10最高分 | C10 Episode | C10-C00 |",
+            "|---|---:|---|---:|---|---:|",
+        ]
+    )
+    for row in primary["case_results"]:
+        lines.append(
+            f"| {row['case_id']} | {row['c00_best_score']:.2f} | {row['c00_best_system_id']} | "
+            f"{row['c10_best_score']:.2f} | {row['c10_best_system_id']} | "
+            f"{row['c10_minus_c00']:+.2f} |"
+        )
+    lines.extend(
+        [
             "",
             "## 配对均值诊断",
             "",
@@ -640,8 +763,12 @@ def write_solver_skill_analysis(run_dir: Path, analysis: dict[str, Any]) -> Path
             "",
             "## 结论边界",
             "",
-            "这是所选开发题上的种子Skill内容试点，只能判断是否值得继续实现C01/C11。",
-            "它不证明硬执行器有效，不证明Skill已经自动进化，也不证明对未见任务泛化。",
+            (
+                "这是对冻结Skill的同一任务族验证；验证题未用于编写Skill，但仍属于D6_6c。"
+                if is_validation
+                else "这是所选开发题上的种子Skill内容试点，只能判断是否值得继续实现C01/C11。"
+            ),
+            "它不证明硬执行器有效，不证明Skill已经自动进化，也不证明D7泛化。",
         ]
     )
     output = run_dir / "RESULTS_CN.md"

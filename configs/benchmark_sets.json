@@ -13,6 +13,12 @@
       "normalized_dir": "benchmarks/normalized",
       "evaluation_profile": "d1_d6"
     },
+    "d1_d6_input_complete_v1": {
+      "description": "Derived 117-case D1-D6 view with eight audited simulator-scale clarifications",
+      "source_config": "benchmarks/preprocessed/d1_d6_input_complete_v1/source_config.json",
+      "normalized_dir": "benchmarks/normalized_d1_d6_input_complete_v1",
+      "evaluation_profile": "d1_d6"
+    },
     "d7": {
       "description": "D7 intake entry using the existing four-sheet workbook importer",
       "source_config": "configs/benchmarks_d7.json",

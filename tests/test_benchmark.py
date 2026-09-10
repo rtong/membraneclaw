@@ -21,6 +21,57 @@ from auto_evaluate.benchmark import (  # noqa: E402
 
 
 class BenchmarkImportTests(unittest.TestCase):
+    def test_input_complete_view_changes_only_eight_questions(self):
+        expected_changed = {
+            "D6-6b-n06",
+            "D6-6b-n07",
+            "D6-6c-02",
+            "D6-6c-03",
+            "D6-6c-04",
+            "D6-6c-05",
+            "D6-6c-06",
+            "D6-6c-07",
+        }
+        variant_config = (
+            ROOT
+            / "benchmarks"
+            / "preprocessed"
+            / "d1_d6_input_complete_v1"
+            / "source_config.json"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_root = Path(tmp)
+            base = import_all(ROOT / "configs/benchmarks.json", tmp_root / "base", ROOT)
+            derived = import_all(variant_config, tmp_root / "derived", ROOT)
+
+        base_by_id = {item["case_id"]: item for item in base}
+        derived_by_id = {item["case_id"]: item for item in derived}
+        self.assertEqual(117, len(base_by_id))
+        self.assertEqual(set(base_by_id), set(derived_by_id))
+        changed = {
+            case_id
+            for case_id in base_by_id
+            if base_by_id[case_id]["question_prompt"]
+            != derived_by_id[case_id]["question_prompt"]
+        }
+        self.assertEqual(expected_changed, changed)
+
+        for case_id in base_by_id:
+            original = base_by_id[case_id]
+            amended = derived_by_id[case_id]
+            self.assertEqual(original["reference_answer"], amended["reference_answer"])
+            self.assertEqual(original["rubric"], amended["rubric"])
+            self.assertEqual(
+                original["tool_efficiency_rubric"],
+                amended["tool_efficiency_rubric"],
+            )
+            if case_id in expected_changed:
+                self.assertIn("1.00 kg/s", amended["question_prompt"])
+                self.assertIn("0.100 m³/s", amended["question_prompt"])
+                self.assertIn("derived_overlay", amended["source"])
+            else:
+                self.assertNotIn("derived_overlay", amended["source"])
+
     def test_sheet_serialization_compacts_repeated_merged_area_values(self):
         from openpyxl import Workbook
 

@@ -9,7 +9,8 @@
 
 ## 当前与旁线实验
 
-- `SOLVER_SKILL_PILOT_PROTOCOL.md`：当前P3 Teacher-distilled Solver Skill。
+- `SOLVER_SKILL_PILOT_PROTOCOL.md`：已完成的P3开发试点。
+- `SOLVER_SKILL_VALIDATION_PROTOCOL.md`：当前冻结Skill三题同族验证。
 - `JUDGE_SKILL_CALIBRATION_PROTOCOL.md`：Evaluation Skill Judge校准。
 - `SOLVER_SKILL_SIDE_PROTOCOL.md`：历史Solver Skill确认设计，不是当前主run。
 - `SKILLS_EVIDENCE_AUDIT.md`：v0.6/v0.8历史结果边界。
