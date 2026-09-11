@@ -236,6 +236,7 @@ __all__ = [
     "build_mask",
     "build_messages",
     "build_messages_v3",
+    "build_messages_v4",
     "v3_prompts",
     "compute_changes",
     "critic_fit",
@@ -339,7 +340,7 @@ def build_user_prompt_v3(record: dict[str, Any]) -> str:
 
 
 @contextlib.contextmanager
-def v3_prompts():
+def v3_prompts(v4: bool = False):
     """Swap the prompt builder `eval.generate_hf` closes over, for one call.
 
     `generate_hf` differs from what v3 needs in exactly one line -- the
@@ -353,11 +354,64 @@ def v3_prompts():
     import eval as membrane_eval
 
     original = membrane_eval.build_messages
-    membrane_eval.build_messages = lambda record, version=None: build_messages_v3(record)
+    builder = build_messages_v4 if v4 else build_messages_v3
+    membrane_eval.build_messages = lambda record, version=None: builder(record)
     try:
         yield
     finally:
         membrane_eval.build_messages = original
+
+
+# --- v4: say the flat band out loud ---------------------------------------------
+#
+# `09`'s diagnosis, on the frozen policy and on the trained v3 one alike: **the
+# model emits `flat` exactly zero times in 600 flag slots**, and `flat` is the
+# right answer in 184 of them. Every other value is nearly perfect once the
+# arithmetic is supplied -- 399/416 = 0.959 on the non-flat slots -- and
+# 0.959 * 416/600 = 0.665 is `flags_acc` to three decimals. The entire remaining
+# deficit is one value the policy will not say.
+#
+# That matters beyond the accuracy, because it is the one shape RL provably
+# cannot fix: a policy gradient reweights behaviour that appears in a sample, and
+# `flat` never appears. Four prompt variants were measured on the frozen policy,
+# greedy, full dev:
+#
+#   control v3                          flat emitted   0 / 184   all-three 0.130
+#   enumerate the values in the schema  flat emitted   1 / 184   all-three 0.210
+#   *state the flat band first*         flat emitted  26 / 184   all-three 0.245
+#   both of the above                   flat emitted   3 / 184   all-three 0.155
+#
+# v4 is the third. It restates Step 2 with the flat band as its own leading
+# condition rather than a trailing `else`, and says how often `flat` is right.
+# 26 is still far below 184 -- telling the model directly barely moves it, which
+# is a fact about the model -- but 26 is not 0, and that is the difference
+# between a gradient existing and not existing.
+V4_STEP2 = """Step 2 -- turn each change into a flag. Check the flat band first:
+
+  flow          : flat if strictly between -10 and +10; else down if <= -10, up if >= +10
+  salt_passage  : flat if strictly between -15 and +15; else down if <= -15, \
+sharp_up if >= +50, up if >= +15
+  dp            : flat if strictly between -15 and +15; else down if <= -15, up if >= +15
+
+  Roughly a third of all flags are flat. Do not avoid it.
+
+"""
+
+
+def build_user_prompt_v4(record: dict[str, Any]) -> str:
+    """v3's user turn with Step 2's flat band promoted out of the `else`."""
+    text = build_user_prompt_v3(record)
+    start, end = text.index("Step 2 -- "), text.index("Step 3 -- ")
+    return text[:start] + V4_STEP2 + text[end:]
+
+
+def build_messages_v4(record: dict[str, Any]) -> list[dict[str, str]]:
+    from task.prompt import SYSTEM_PROMPTS
+
+    return [
+        {"role": "system", "content": SYSTEM_PROMPTS["v2"]},
+        {"role": "user", "content": build_user_prompt_v4(record)},
+    ]
 
 
 def build_messages_v3(record: dict[str, Any]) -> list[dict[str, str]]:
@@ -492,8 +546,17 @@ _FIELD_PATTERNS: tuple[tuple[str, str], ...] = (
 )
 
 
+#: Multiplier on the credit for a flag whose *true* value is `flat`. See
+#: `field_credits`. 1.0 reproduces the flat-blind behaviour of every run before
+#: `09`.
+FLAT_CREDIT_SCALE = 1.0
+
+
 def field_credits(
-    completion: str, answer: dict[str, Any], weights: Weights
+    completion: str,
+    answer: dict[str, Any],
+    weights: Weights,
+    flat_scale: float = FLAT_CREDIT_SCALE,
 ) -> tuple[dict[str, float], float]:
     """Split one completion's reward into per-field credits and a terminal rest.
 
@@ -517,9 +580,25 @@ def field_credits(
         return {}, 0.0
 
     numeric, flags = _numeric_hits(obj, answer), _flag_hits(obj, answer)
+    # `09`: the policy emits `flat` on 0.5% of flag slots at temperature 1.0 and
+    # `flat` is the right answer on 30.7% of them -- a 60x deficit, and the whole
+    # of the remaining `flags_acc` gap (0.959 x 416/600 = 0.665 = the measured
+    # value). Saying anything but `flat` is locally optimal, because the non-flat
+    # values are 96% reliable, so the mode-seeking update suppresses the rare
+    # correct answer further; `runs/v4-stopped-at-68-regressing` is that happening.
+    #
+    # This pays more for a `flat` slot the policy got right. It is *not* inverse
+    # class frequency -- `flat` is already the most common true value, so standard
+    # class balancing does nothing here. The imbalance is in the policy's prior,
+    # not in the labels. Non-flat credit is left alone rather than scaled down:
+    # the 96% is the part that works and there is no reason to make it cheaper.
+    def _flag_credit(key: str, hit: bool) -> float:
+        scale = flat_scale if answer["flags"][key] == "flat" else 1.0
+        return weights.flags / 3 * scale * hit
+
     earned = {
         **{k: weights.numeric / 3 * hit for k, hit in zip(NUMERIC_KEYS, numeric)},
-        **{f"flags.{k}": weights.flags / 3 * hit for k, hit in zip(FLAG_KEYS, flags)},
+        **{f"flags.{k}": _flag_credit(k, hit) for k, hit in zip(FLAG_KEYS, flags)},
         "stage": weights.stage * (obj.get("stage") == answer["stage"]),
         "root_cause": weights.root_cause * (obj.get("root_cause") == answer["root_cause"]),
         "action": weights.action * (obj.get("action") == answer["action"]),
@@ -556,6 +635,77 @@ def field_credits(
     return {f: v for f, v in placed.items()}, terminal
 
 
+#: The three flag values, with the value itself captured so its *span* can be
+#: located rather than just its end. `field_credits` deliberately keeps its own
+#: end-of-match offsets: those are what every committed run was trained on.
+_FLAG_VALUE_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("flow", r'"flow"\s*:\s*"([a-z_]*)"'),
+    ("salt_passage", r'"salt_passage"\s*:\s*"([a-z_]*)"'),
+    ("dp", r'"dp"\s*:\s*"([a-z_]*)"'),
+)
+
+
+def flag_value_spans(completion: str) -> list[tuple[int, int]]:
+    """Character spans of the three flag values inside the flags object."""
+    import re
+
+    block = re.search(r'"flags"\s*:\s*\{[^}]*\}', completion)
+    if block is None:
+        return []
+    spans = []
+    for _, pattern in _FLAG_VALUE_PATTERNS:
+        hit = None
+        for hit in re.finditer(pattern, block.group()):
+            pass
+        if hit is not None:
+            spans.append((block.start() + hit.start(1), block.start() + hit.end(1)))
+    return spans
+
+
+def flag_token_mask(
+    completions: list[str], completion_ids: torch.Tensor, mask: torch.Tensor, tokenizer
+) -> torch.Tensor:
+    """1.0 on the tokens that spell the three flag values, 0 elsewhere.
+
+    `09` measured the failure this exists for. Held out on dev, the trained
+    policy calls a non-flat flag correctly on 97% of slots that sit within 2-5 pp
+    of a threshold -- it can do the comparison, and boundary proximity is not the
+    problem -- while `flat` is **0 for 41, 0 for 87 and 0 for 56** across every
+    distance bucket. The token is not produced at all, on easy cases and hard
+    ones alike. That is a prior, not a capability.
+
+    A reward that never sees the action cannot reweight it, which is why paying
+    8x for a correct `flat` (`runs/v3-flat8-stopped-at-78`) moved `flat` recall
+    0.000 -> 0.304 and cost non-flat 0.97 -> 0.84 in the same buckets: an 8x
+    gradient monopolises the trust region. Credit was the wrong instrument, and
+    the giveaway is that credit was already neutral -- every flag pays the same
+    `weights.flags / 3` whether or not it is flat.
+
+    The right instrument for an action that is never sampled is exploration, and
+    the dense-credit machinery already localises *where* the choice is made. This
+    mask is that: an entropy bonus can then be applied to the three decision
+    tokens and nowhere else, which is what `entropy_coef` cannot do -- `05`
+    measured the global coefficient blowing completion length up at 0.020.
+    """
+    out = torch.zeros_like(mask, dtype=torch.float32)
+    lengths = mask.sum(dim=-1).long()
+    for b, text in enumerate(completions):
+        length = int(lengths[b])
+        if length == 0:
+            continue
+        spans = flag_value_spans(text)
+        if not spans:
+            continue
+        ids = completion_ids[b, :length].tolist()
+        bounds = [len(tokenizer.decode(ids[: i + 1], skip_special_tokens=True)) for i in range(length)]
+        for start, end in spans:
+            for i, stop in enumerate(bounds):
+                begin = bounds[i - 1] if i else 0
+                if begin < end and stop > start:
+                    out[b, i] = 1.0
+    return out
+
+
 def dense_rewards(
     completions: list[str],
     completion_ids: torch.Tensor,
@@ -563,6 +713,7 @@ def dense_rewards(
     cases: list[dict[str, Any]],
     weights: Weights,
     tokenizer,
+    flat_scale: float = FLAT_CREDIT_SCALE,
 ) -> torch.Tensor:
     """Per-token rewards that land where each field is written, not at the end.
 
@@ -591,7 +742,7 @@ def dense_rewards(
         bounds = [len(tokenizer.decode(ids[: i + 1], skip_special_tokens=True)) for i in range(length)]
 
         try:
-            placed, terminal = field_credits(text, case["answer"], weights)
+            placed, terminal = field_credits(text, case["answer"], weights, flat_scale)
         except (OverflowError, ValueError, TypeError, KeyError):
             placed, terminal = {}, 0.0
 
@@ -743,6 +894,8 @@ def ppo_actor_loss(
     normalize: str = "token",
     entropy: torch.Tensor | None = None,
     entropy_coef: float = 0.0,
+    focus_mask: torch.Tensor | None = None,
+    focus_entropy_coef: float = 0.0,
 ) -> tuple[torch.Tensor, dict[str, float]]:
     """The clipped surrogate, with a per-token advantage.
 
@@ -778,6 +931,15 @@ def ppo_actor_loss(
         entropy_mean = (entropy * mask).sum() / active
         if entropy_coef:
             loss = loss - entropy_coef * entropy_mean
+        if focus_entropy_coef and focus_mask is not None:
+            # The same bonus, restricted to the tokens `focus_mask` marks -- the
+            # three flag values. Normalised over those tokens only, so the
+            # coefficient means the same thing whatever fraction of the sequence
+            # they are (about 3 of 95).
+            focused = focus_mask * mask
+            focus_active = focused.sum().clamp(min=1.0)
+            focus_entropy = (entropy * focused).sum() / focus_active
+            loss = loss - focus_entropy_coef * focus_entropy
 
     with torch.no_grad():
         binding = ((unclipped > clipped) & (mask > 0)).float().sum() / active
@@ -793,6 +955,12 @@ def ppo_actor_loss(
         }
         if entropy_mean is not None:
             stats["policy_entropy"] = float(entropy_mean)
+        if focus_mask is not None and entropy is not None:
+            focused = focus_mask * mask
+            stats["flag_entropy"] = float(
+                (entropy * focused).sum() / focused.sum().clamp(min=1.0)
+            )
+            stats["flag_tokens"] = float(focused.sum() / mask.shape[0])
     return loss, stats
 
 
@@ -982,6 +1150,19 @@ class Config:
     #: changes exactly and the model does steps 2-4. See `build_messages_v3`.
     prompt_v3: bool = False
 
+    #: v4 implies v3, and additionally restates Step 2 with the flat band as its
+    #: own leading condition. See `V4_STEP2` for the measurement that motivates it.
+    prompt_v4: bool = False
+
+    #: Multiplier on the dense credit for a correctly-called `flat` flag. Only
+    #: meaningful with `dense_rewards`. 1.0 is every run before `09`.
+    flat_credit_scale: float = 1.0
+
+    #: An entropy bonus applied to the three flag-value tokens and nowhere else.
+    #: See `flag_token_mask` for the measurement that motivates it. 0.0 is every
+    #: run before `09`; it is independent of `entropy_coef`, which stays global.
+    flag_entropy_coef: float = 0.0
+
     #: Pay each output field at the token that decides it, instead of paying the
     #: whole sequence reward at the last one. `07` closes on why this matters:
     #: with `gamma = lam = 1` and a terminal reward the return is constant along
@@ -1060,7 +1241,7 @@ class Config:
         if self.value_clip_eps is not None and self.value_clip_eps < 0:
             self.value_clip_eps = None
         if self.value_init_bias < 0:
-            table = FROZEN_BASELINE_V3 if self.prompt_v3 else FROZEN_BASELINE
+            table = FROZEN_BASELINE_V3 if (self.prompt_v3 or self.prompt_v4) else FROZEN_BASELINE
             self.value_init_bias = table.get(self.model, {}).get(self.weights, 0.0)
 
 
@@ -1192,10 +1373,11 @@ def rollout(
     device: str,
     template_kwargs: dict[str, Any] | None = None,
     prompt_v3: bool = False,
+    prompt_v4: bool = False,
 ) -> Rollout:
     """Sample one batch: `samples_per_prompt` completions for each case."""
     expanded = [c for c in cases for _ in range(samples_per_prompt)]
-    messages = build_messages_v3 if prompt_v3 else build_messages
+    messages = build_messages_v4 if prompt_v4 else (build_messages_v3 if prompt_v3 else build_messages)
     texts = [
         tokenizer.apply_chat_template(
             messages(c["record"]),
@@ -1269,7 +1451,7 @@ def evaluate(policy, tokenizer, cfg: "Config", cases: list[dict], step: int) -> 
     # generate_hf still moves the encoded batch onto a device, so it needs the
     # one the live policy is already on rather than a re-derived guess.
     device = str(next(policy.parameters()).device)
-    with v3_prompts() if cfg.prompt_v3 else contextlib.nullcontext():
+    with v3_prompts(cfg.prompt_v4) if (cfg.prompt_v3 or cfg.prompt_v4) else contextlib.nullcontext():
         results = generate_hf(
             cases,
             model=cfg.model,
@@ -1418,7 +1600,8 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             weights=weights,
             device=device,
             template_kwargs=template_kwargs,
-            prompt_v3=cfg.prompt_v3,
+            prompt_v3=cfg.prompt_v3 or cfg.prompt_v4,
+            prompt_v4=cfg.prompt_v4,
         )
         gen_seconds = time.perf_counter() - started
 
@@ -1434,9 +1617,16 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                 roll.cases,
                 weights,
                 tokenizer,
+                cfg.flat_credit_scale,
             )
         else:
             per_token_rewards = terminal_rewards(rewards, mask)
+
+        flag_mask = None
+        if cfg.flag_entropy_coef:
+            flag_mask = flag_token_mask(
+                roll.completions, sequences[:, -completion_len:], mask, tokenizer
+            )
 
         policy.train()
         with torch.no_grad():
@@ -1575,6 +1765,8 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                     logprobs, old_logprobs[sl], advantages[sl], mask[sl],
                     clip_eps=cfg.clip_eps, normalize=cfg.normalize,
                     entropy=entropy, entropy_coef=cfg.entropy_coef,
+                    focus_mask=None if flag_mask is None else flag_mask[sl],
+                    focus_entropy_coef=cfg.flag_entropy_coef,
                 )
                 loss = a_loss
                 if not cfg.value_detach:
@@ -1716,6 +1908,7 @@ def main() -> None:
     fields["whiten_advantages"] = bool(fields["whiten_advantages"])
     fields["prompt_v3"] = bool(fields["prompt_v3"])
     fields["dense_rewards"] = bool(fields["dense_rewards"])
+    fields["prompt_v4"] = bool(fields["prompt_v4"])
     cfg = Config(**fields)
     tag = cfg.model.rsplit("/", 1)[-1].replace(".", "").lower()
     out = args.out or SMOKE_DIR / "runs" / f"ppo-{tag}-{cfg.weights.lower()}-s{cfg.seed}"
