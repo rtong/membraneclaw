@@ -90,14 +90,19 @@ The reward is non-negative. A value head initialised to zero therefore produces
 `A_t = R >= 0` for every token of every completion, and the first updates
 reinforce *everything*, garbage included. GRPO cannot do this: group centring
 makes advantages zero-mean by construction. The default here initialises the
-head's bias to `VALUE_INIT_BIAS`, the frozen 0.5B baseline's mean reward from
-`runs/baseline-0.5b-v2/eval_dev_greedy.json`, so the critic starts approximately
-calibrated instead of catastrophically low. `--value-init-bias 0` reproduces the
-failure on purpose.
+head's bias to the frozen policy's own held-out reward -- looked up in
+`FROZEN_BASELINE` per `(model, weight set)`, because the reward is a weighted sum
+and the same frozen Qwen3-1.7B scores 0.3015 under MAIN, 0.4500 under PROBE and
+0.2615 under ABLATE. So the critic starts approximately calibrated instead of
+catastrophically low. `--value-init-bias 0` reproduces the failure on purpose,
+and the failure is now larger than it was on the 0.5B: the gap between a cold
+head and a calibrated one is 0.30 here against 0.086 before.
 """
 from __future__ import annotations
 
+import contextlib
 import sys
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -113,15 +118,70 @@ if str(GRPO_DIR) not in sys.path:
 # Imported, never reimplemented: one tokenizer convention, one reward, one
 # prompt, shared with the GRPO run so the comparison is not between two
 # subtly different tasks.
+from eval import supports_thinking_toggle  # noqa: E402
+from task.decision_table import CAUSES  # noqa: E402
 from grpo_scratch import build_mask, selective_logprobs  # noqa: E402
-from reward import MAIN, PROBE, Weights, score  # noqa: E402
+from reward import ABLATE, MAIN, PROBE, Weights, score  # noqa: E402
 from task.prompt import PROMPT_VERSION, build_messages  # noqa: E402
 
 DATA = GRPO_DIR / "data"
 
-#: Mean reward of the frozen 0.5B baseline on dev, greedy, prompt v2.
-#: runs/baseline-0.5b-v2/eval_dev_greedy.json -> overall.reward
-VALUE_INIT_BIAS = 0.086
+#: Held-out reward of the *frozen* policy on dev, greedy, prompt v2 -- one
+#: number per weight set, because the reward is a weighted sum and the same
+#: policy scores differently under each. This is what the value head's bias is
+#: initialised to, so it must match the weights the run is actually using;
+#: initialising to another weight set's baseline is the pathology in the module
+#: docstring, only quieter.
+#:
+#: Qwen3-1.7B, from `membrane_grpo/runs/q3-{main,probe,ablate}-s0/eval.jsonl`
+#: step 0, which is the same `eval.py` code path that produced the frozen
+#: baselines. `STAGE_ONLY` is derived rather than measured: the MAIN evaluation
+#: reports `components.stage = 0.0291` against a weight of 0.03, so the frozen
+#: policy already copies the stage on 97% of cases.
+#: The same measurement under v3, where the harness supplies the arithmetic.
+#: From `runs/paired/base_v3_{main,ablate}.json`, the frozen policy on the full
+#: dev split, greedy, identical settings to `runs/paired/base.json`. It is far
+#: higher than the v2 figure for a mechanical reason -- `numeric` is 1.000 by
+#: construction -- so a value head initialised to the v2 number would start a v3
+#: run badly biased and spend the early steps unlearning it.
+FROZEN_BASELINE_V3: dict[str, dict[str, float]] = {
+    "Qwen/Qwen3-1.7B": {"MAIN": 0.5151, "ABLATE": 0.6561},
+}
+
+FROZEN_BASELINE: dict[str, dict[str, float]] = {
+    "Qwen/Qwen3-1.7B": {
+        "MAIN": 0.3015,
+        "PROBE": 0.4500,
+        "ABLATE": 0.2615,
+        "STAGE_ONLY": 0.970,
+    },
+    # Kept so the 0.5B runs already in `runs/` stay reproducible from this file.
+    # MAIN from runs/baseline-0.5b-v2/eval_dev_greedy.json -> overall.reward;
+    # PROBE from MEMO.md's probe run at step 0. ABLATE is absent rather than
+    # guessed -- it was never run on this model, and an unmeasured pair should
+    # fall through to the loud 0.0 rather than borrow a neighbour's number.
+    "Qwen/Qwen2.5-0.5B-Instruct": {
+        "MAIN": 0.086,
+        "PROBE": 0.024,
+        "STAGE_ONLY": 0.0,
+    },
+}
+
+
+def value_init_bias_for(model: str, weights: str) -> float:
+    """The warm start for the value head, or 0.0 if this pair was never measured.
+
+    0.0 is the *documented* failure -- the reward is non-negative, so a critic at
+    zero makes every advantage non-negative and the first updates reinforce
+    everything, garbage included. Falling back to it is loud rather than
+    plausible, which is what a fallback for a missing measurement should be.
+    """
+    return FROZEN_BASELINE.get(model, {}).get(weights, 0.0)
+
+
+#: The default run's warm start: Qwen3-1.7B under MAIN. Named separately because
+#: `01_actor_critic_and_gae.ipynb` contrasts it against a cold head at 0.0.
+VALUE_INIT_BIAS = FROZEN_BASELINE["Qwen/Qwen3-1.7B"]["MAIN"]
 
 #: The go/no-go weighting. Every point is on `stage`, which the prompt states
 #: outright -- `task/generate.py` puts `anomaly_stage` in the record and the
@@ -132,16 +192,42 @@ VALUE_INIT_BIAS = 0.086
 #: this model on a pure copy task when copying is the *only* thing that pays?
 #: Under MAIN weights `stage` is worth 0.03 and 200 steps left it at 0.000. If
 #: it does not move even here, the ceiling is not a tuning problem.
+#:
+#: That question was asked of the 0.5B and answered (`runs/gonogo-stage-s0`).
+#: **It is not a live probe on Qwen3-1.7B**, which already copies the stage on
+#: 97% of dev cases before any training -- there is 0.03 of headroom, so a
+#: STAGE_ONLY run here measures a ceiling effect and nothing else. Kept for
+#: reproducing the 0.5B result, not for rerunning on the new model.
 STAGE_ONLY = Weights(format=0.0, numeric=0.0, flags=0.0, stage=1.0, root_cause=0.0, action=0.0)
+
+#: The weight sets a run may be trained under, resolved by name in one place so
+#: `train`, `evaluate` and the CLI cannot drift apart. `ABLATE` comes from the
+#: GRPO side: it holds `numeric` at PROBE's 0.35 while leaving `root_cause`
+#: substantial at 0.25, and on Qwen3-1.7B it settled which of the two weights
+#: was doing the work (`membrane_grpo/runs/q3-ablate-s0`).
+WEIGHT_SETS: dict[str, Weights] = {
+    "MAIN": MAIN,
+    "PROBE": PROBE,
+    "ABLATE": ABLATE,
+    "STAGE_ONLY": STAGE_ONLY,
+}
 
 #: Steps averaged when deciding which policy was "best". A single step is 8
 #: samples and far too noisy to checkpoint on; a trailing mean is not.
+#:
+#: This is a *training* reward, and a training reward is not evidence: the
+#: 0.5B stage run held 1.0000 here for 30 steps while it was worth 0.000 on
+#: dev. With `eval_every` on, prefer `eval.jsonl` for that judgement; this
+#: checkpoints often enough not to lose the policy in between.
 BEST_WINDOW = 10
 
 __all__ = [
+    "ABLATE",
     "DATA",
+    "FROZEN_BASELINE",
     "PROMPT_VERSION",
     "VALUE_INIT_BIAS",
+    "WEIGHT_SETS",
     "MAIN",
     "PROBE",
     "STAGE_ONLY",
@@ -149,15 +235,192 @@ __all__ = [
     "ValueHead",
     "build_mask",
     "build_messages",
+    "build_messages_v3",
+    "build_messages_v4",
+    "v3_prompts",
+    "compute_changes",
+    "critic_fit",
+    "evaluate",
+    "value_init_bias_for",
     "gae",
     "load_cases",
     "ppo_actor_loss",
     "score",
     "selective_logprobs",
     "terminal_rewards",
+    "dense_rewards",
+    "field_credits",
+    "token_entropy",
     "value_loss",
     "whiten",
 ]
+
+
+#: Magnitude of the privileged one-hot -- derivation at its use site.
+PRIVILEGED_SCALE = 64.0
+
+
+# --- v3: the arithmetic, computed by the harness ------------------------------
+#
+# `06`'s appendix and `07`'s closing section measured the same thing from two
+# directions: Qwen3-1.7B does not do this task's arithmetic. Two of the three
+# percent changes involve no domain formula at all -- a division and a sum, then
+# a percent change -- and it misses those at the same rate as the one that uses
+# `TCF`. Over the 1000 case-evaluations in `runs/paired/` the count of numbers
+# landing inside the 0.5 pp tolerance is 844 zeros, 140 ones, 15 twos and one
+# three. Showing the working in a 2-shot prompt moved it by 0.000.
+#
+# The readings are already structured in `record["t0"]` / `record["t1"]`, so the
+# harness can do the arithmetic exactly and hand the model the result. That is
+# what a calculator tool would achieve, minus the tool-call protocol and minus
+# the extraction step, because there is nothing to extract -- the numbers are
+# already parsed. `compute_changes` reproduces every one of the 600 answers in
+# `data/{train,dev}.jsonl` exactly, which is the check that licenses this.
+#
+# v3 is v2 with Step 1 replaced, by surgery on v2's own rendered text rather
+# than by re-rendering it. Everything outside the Step 1 block and the closing
+# instruction is byte-identical to v2, so a v2/v3 comparison has one variable.
+
+
+def compute_changes(record: dict[str, Any]) -> dict[str, float]:
+    """The three percent changes, from the structured readings. Exact."""
+
+    def tcf(temp_c: float) -> float:
+        return 1.03 ** (25 - temp_c)
+
+    def normalized_flow(t: dict[str, float]) -> float:
+        return t["permeate_flow_m3_h"] * tcf(t["feed_temp_C"])
+
+    def salt_passage(t: dict[str, float]) -> float:
+        return t["permeate_conductivity_uS_cm"] / t["feed_conductivity_uS_cm"] * 100
+
+    def dp(t: dict[str, float]) -> float:
+        return t["dp_lead_bar"] + t["dp_tail_bar"]
+
+    t0, t1 = record["t0"], record["t1"]
+
+    def pct(before: float, after: float) -> float:
+        return round((after - before) / before * 100, 1)
+
+    return {
+        "normalized_flow_change_pct": pct(normalized_flow(t0), normalized_flow(t1)),
+        "salt_passage_change_pct": pct(salt_passage(t0), salt_passage(t1)),
+        "dp_change_pct": pct(dp(t0), dp(t1)),
+    }
+
+
+V3_STEP1 = """Step 1 -- the three percent changes, already computed for you.
+
+  normalized_flow_change_pct = {normalized_flow_change_pct}
+  salt_passage_change_pct    = {salt_passage_change_pct}
+  dp_change_pct              = {dp_change_pct}
+
+  Copy these three values into the JSON unchanged. Do not recompute them.
+
+"""
+
+V3_CLOSING = """The three percent changes are given above -- copy them into the JSON
+unchanged. Use at most one short line of plain reasoning for the flags -- no
+prose, no LaTeX, no headings.
+
+Then end your reply with this JSON object and nothing after it:"""
+
+
+def build_user_prompt_v3(record: dict[str, Any]) -> str:
+    """v2's user turn with the arithmetic supplied instead of demanded."""
+    from task.prompt import CLOSINGS, build_user_prompt
+
+    text = build_user_prompt(record, "v2")
+    start, end = text.index("Step 1 -- "), text.index("Step 2 -- ")
+    text = text[:start] + V3_STEP1.format(**compute_changes(record)) + text[end:]
+    old = CLOSINGS["v2"]
+    if old not in text:  # pragma: no cover - guards a membrane_grpo edit
+        raise RuntimeError("v2 closing not found; task/prompt.py changed under v3")
+    return text.replace(old, V3_CLOSING)
+
+
+@contextlib.contextmanager
+def v3_prompts(v4: bool = False):
+    """Swap the prompt builder `eval.generate_hf` closes over, for one call.
+
+    `generate_hf` differs from what v3 needs in exactly one line -- the
+    `build_messages` it calls -- and rebinding that name in its own module
+    namespace leaves every other line of the generation and scoring path
+    literally theirs. That is the property the whole series rests on: the frozen
+    baseline, the GRPO curve and every PPO curve are produced by the same
+    function, so a v2/v3 difference is a difference in the prompt and nothing
+    else. Nothing is written into that tree; the binding is restored on exit.
+    """
+    import eval as membrane_eval
+
+    original = membrane_eval.build_messages
+    builder = build_messages_v4 if v4 else build_messages_v3
+    membrane_eval.build_messages = lambda record, version=None: builder(record)
+    try:
+        yield
+    finally:
+        membrane_eval.build_messages = original
+
+
+# --- v4: say the flat band out loud ---------------------------------------------
+#
+# `09`'s diagnosis, on the frozen policy and on the trained v3 one alike: **the
+# model emits `flat` exactly zero times in 600 flag slots**, and `flat` is the
+# right answer in 184 of them. Every other value is nearly perfect once the
+# arithmetic is supplied -- 399/416 = 0.959 on the non-flat slots -- and
+# 0.959 * 416/600 = 0.665 is `flags_acc` to three decimals. The entire remaining
+# deficit is one value the policy will not say.
+#
+# That matters beyond the accuracy, because it is the one shape RL provably
+# cannot fix: a policy gradient reweights behaviour that appears in a sample, and
+# `flat` never appears. Four prompt variants were measured on the frozen policy,
+# greedy, full dev:
+#
+#   control v3                          flat emitted   0 / 184   all-three 0.130
+#   enumerate the values in the schema  flat emitted   1 / 184   all-three 0.210
+#   *state the flat band first*         flat emitted  26 / 184   all-three 0.245
+#   both of the above                   flat emitted   3 / 184   all-three 0.155
+#
+# v4 is the third. It restates Step 2 with the flat band as its own leading
+# condition rather than a trailing `else`, and says how often `flat` is right.
+# 26 is still far below 184 -- telling the model directly barely moves it, which
+# is a fact about the model -- but 26 is not 0, and that is the difference
+# between a gradient existing and not existing.
+V4_STEP2 = """Step 2 -- turn each change into a flag. Check the flat band first:
+
+  flow          : flat if strictly between -10 and +10; else down if <= -10, up if >= +10
+  salt_passage  : flat if strictly between -15 and +15; else down if <= -15, \
+sharp_up if >= +50, up if >= +15
+  dp            : flat if strictly between -15 and +15; else down if <= -15, up if >= +15
+
+  Roughly a third of all flags are flat. Do not avoid it.
+
+"""
+
+
+def build_user_prompt_v4(record: dict[str, Any]) -> str:
+    """v3's user turn with Step 2's flat band promoted out of the `else`."""
+    text = build_user_prompt_v3(record)
+    start, end = text.index("Step 2 -- "), text.index("Step 3 -- ")
+    return text[:start] + V4_STEP2 + text[end:]
+
+
+def build_messages_v4(record: dict[str, Any]) -> list[dict[str, str]]:
+    from task.prompt import SYSTEM_PROMPTS
+
+    return [
+        {"role": "system", "content": SYSTEM_PROMPTS["v2"]},
+        {"role": "user", "content": build_user_prompt_v4(record)},
+    ]
+
+
+def build_messages_v3(record: dict[str, Any]) -> list[dict[str, str]]:
+    from task.prompt import SYSTEM_PROMPTS
+
+    return [
+        {"role": "system", "content": SYSTEM_PROMPTS["v2"]},
+        {"role": "user", "content": build_user_prompt_v3(record)},
+    ]
 
 
 def load_cases(split: str = "train") -> list[dict[str, Any]]:
@@ -176,16 +439,75 @@ class ValueHead(nn.Module):
     of this that is a regression rather than a classification, and bf16's
     ~3 decimal digits of mantissa are not enough to keep a squared error stable
     when the target sits in [0, 1] and the differences being learned are ~0.01.
+
+    `normalize=True` standardises the features first (LayerNorm, no affine
+    parameters). It is **off by default, because it was tested and did not
+    help.** The argument for it was that the head reads raw hidden states whose
+    L1 norm is set by a handful of enormous outlier dimensions -- Qwen3-1.7B's
+    largest averages 87x its median -- so a few features decide the prediction
+    and `lr` is hostage to them.
+
+    Measured on real Qwen3-1.7B hidden states, fitting a linear functional of
+    those states over 25 batches:
+
+        normalised,     8 steps/batch    value_ev +0.947
+        raw,            8 steps/batch    value_ev +0.993   <- the default
+        raw,            1 step /batch    value_ev +0.345   <- what the first runs did
+
+    Normalising is slightly *worse*, and there is a reason: LayerNorm discards
+    each token's mean and scale, and on this task those carry signal.
+
+    **Those three numbers have no held-out split, and the conclusion drawn from
+    them was wrong.** With `gamma = lam = 1` and a terminal reward the return is
+    constant along a sequence, so 25 batches of 8 is 200 *independent* targets
+    against this head's 2049 parameters -- enough to interpolate. Re-measured in
+    `07_the_critic_cannot_work.ipynb` on frozen rollouts, held out by sequence,
+    the same fit gives **+0.031**; splitting by token instead (which leaks the
+    target, since a sequence's tokens share it) gives +0.101, and no split at all
+    gives +0.311. The "representation is not the constraint" claim these numbers
+    were used to support does not survive a split, and `--no-value-detach` was
+    chasing it.
+
+    The flag stays so the input-scaling question can be re-checked on a different
+    model rather than taken on my word.
     """
 
-    def __init__(self, hidden_size: int, init_bias: float = VALUE_INIT_BIAS):
+    def __init__(
+        self,
+        hidden_size: int,
+        init_bias: float = VALUE_INIT_BIAS,
+        *,
+        normalize: bool = True,
+        extra_features: int = 0,
+    ):
         super().__init__()
-        self.v = nn.Linear(hidden_size, 1, dtype=torch.float32)
+        # Normalisation covers the hidden part only; the privileged one-hot is
+        # already on a sane scale and LayerNorm across a concatenation of the two
+        # would let the 2048 hidden dims set the statistics for all of it.
+        self.hidden_size = hidden_size
+        self.norm: nn.Module = (
+            nn.LayerNorm(hidden_size, elementwise_affine=False, dtype=torch.float32)
+            if normalize
+            else nn.Identity()
+        )
+        self.v = nn.Linear(hidden_size + extra_features, 1, dtype=torch.float32)
+        # Zero weight so V starts at exactly `init_bias` whether or not the
+        # features are normalised -- the two configurations begin identically.
         nn.init.zeros_(self.v.weight)
         nn.init.constant_(self.v.bias, init_bias)
 
     def forward(self, hidden: torch.Tensor) -> torch.Tensor:
-        return self.v(hidden.float()).squeeze(-1)
+        x = self.norm(hidden[..., : self.hidden_size].float())
+        want = self.v.in_features - self.hidden_size
+        if want:
+            extra = hidden[..., self.hidden_size :].float()
+            if extra.shape[-1] != want:
+                # `forward_policy_value` hands over the trunk's hidden states with
+                # no privileged block attached. Those callers only need a value to
+                # exist; the loop recomputes `old_values` on the full feature.
+                extra = x.new_zeros((*x.shape[:-1], want))
+            x = torch.cat([x, extra], dim=-1)
+        return self.v(x).squeeze(-1)
 
 
 # --- advantages ---------------------------------------------------------------
@@ -205,6 +527,230 @@ def terminal_rewards(rewards: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     idx = (lengths - 1).clamp(min=0)
     out.scatter_(1, idx.unsqueeze(-1), rewards.unsqueeze(-1).to(out.dtype))
     return out * (lengths > 0).float().unsqueeze(-1)
+
+
+#: The output fields in the order the schema lists them, paired with the regex
+#: that finds the *end* of that field's value in a completion. `flags` is nested,
+#: so its three keys are matched inside the flags object rather than in the whole
+#: text -- "flow" also occurs inside "normalized_flow_change_pct".
+_FIELD_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("normalized_flow_change_pct", r'"normalized_flow_change_pct"\s*:\s*(-?\d+(?:\.\d+)?)'),
+    ("salt_passage_change_pct", r'"salt_passage_change_pct"\s*:\s*(-?\d+(?:\.\d+)?)'),
+    ("dp_change_pct", r'"dp_change_pct"\s*:\s*(-?\d+(?:\.\d+)?)'),
+    ("flags.flow", r'"flow"\s*:\s*"[a-z_]*"'),
+    ("flags.salt_passage", r'"salt_passage"\s*:\s*"[a-z_]*"'),
+    ("flags.dp", r'"dp"\s*:\s*"[a-z_]*"'),
+    ("stage", r'"stage"\s*:\s*"[a-z_]*"'),
+    ("root_cause", r'"root_cause"\s*:\s*"[a-z_]*"'),
+    ("action", r'"action"\s*:\s*"[a-z_]*"'),
+)
+
+
+#: Multiplier on the credit for a flag whose *true* value is `flat`. See
+#: `field_credits`. 1.0 reproduces the flat-blind behaviour of every run before
+#: `09`.
+FLAT_CREDIT_SCALE = 1.0
+
+
+def field_credits(
+    completion: str,
+    answer: dict[str, Any],
+    weights: Weights,
+    flat_scale: float = FLAT_CREDIT_SCALE,
+) -> tuple[dict[str, float], float]:
+    """Split one completion's reward into per-field credits and a terminal rest.
+
+    The pieces sum to `score(completion, answer, weights).total` exactly, so the
+    objective the actor optimises is unchanged -- only *when* the credit arrives
+    moves. `numeric` and `flags` are scored by `reward.py` as the mean of three
+    hits, so each of the three carries a third of that component's weight.
+
+    `format` is schema validity, which is not known until the object closes, and
+    anything whose field cannot be located goes to the same place: the last
+    active token, exactly where `terminal_rewards` would have put all of it.
+    """
+    import re
+
+    from reward import _flag_hits, _numeric_hits
+    from task.schema import FLAG_KEYS, NUMERIC_KEYS, parse_answer, validate
+
+    parsed = parse_answer(completion)
+    obj = parsed.obj if isinstance(parsed.obj, dict) else None
+    if obj is None:
+        return {}, 0.0
+
+    numeric, flags = _numeric_hits(obj, answer), _flag_hits(obj, answer)
+    # `09`: the policy emits `flat` on 0.5% of flag slots at temperature 1.0 and
+    # `flat` is the right answer on 30.7% of them -- a 60x deficit, and the whole
+    # of the remaining `flags_acc` gap (0.959 x 416/600 = 0.665 = the measured
+    # value). Saying anything but `flat` is locally optimal, because the non-flat
+    # values are 96% reliable, so the mode-seeking update suppresses the rare
+    # correct answer further; `runs/v4-stopped-at-68-regressing` is that happening.
+    #
+    # This pays more for a `flat` slot the policy got right. It is *not* inverse
+    # class frequency -- `flat` is already the most common true value, so standard
+    # class balancing does nothing here. The imbalance is in the policy's prior,
+    # not in the labels. Non-flat credit is left alone rather than scaled down:
+    # the 96% is the part that works and there is no reason to make it cheaper.
+    def _flag_credit(key: str, hit: bool) -> float:
+        scale = flat_scale if answer["flags"][key] == "flat" else 1.0
+        return weights.flags / 3 * scale * hit
+
+    earned = {
+        **{k: weights.numeric / 3 * hit for k, hit in zip(NUMERIC_KEYS, numeric)},
+        **{f"flags.{k}": _flag_credit(k, hit) for k, hit in zip(FLAG_KEYS, flags)},
+        "stage": weights.stage * (obj.get("stage") == answer["stage"]),
+        "root_cause": weights.root_cause * (obj.get("root_cause") == answer["root_cause"]),
+        "action": weights.action * (obj.get("action") == answer["action"]),
+    }
+    terminal = weights.format * float(validate(obj).ok)
+
+    flags_span = re.search(r'"flags"\s*:\s*\{[^}]*\}', completion)
+    placed: dict[str, float] = {}
+    for field, pattern in _FIELD_PATTERNS:
+        credit = float(earned.get(field, 0.0))
+        if not credit:
+            continue
+        if field.startswith("flags."):
+            if flags_span is None:
+                terminal += credit
+                continue
+            hit = None
+            for hit in re.finditer(pattern, flags_span.group()):
+                pass
+            if hit is None:
+                terminal += credit
+                continue
+            placed[field] = flags_span.start() + hit.end()
+        else:
+            hit = None
+            for hit in re.finditer(pattern, completion):
+                pass
+            if hit is None:
+                terminal += credit
+                continue
+            placed[field] = hit.end()
+        placed[field] = (placed[field], credit)
+
+    return {f: v for f, v in placed.items()}, terminal
+
+
+#: The three flag values, with the value itself captured so its *span* can be
+#: located rather than just its end. `field_credits` deliberately keeps its own
+#: end-of-match offsets: those are what every committed run was trained on.
+_FLAG_VALUE_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("flow", r'"flow"\s*:\s*"([a-z_]*)"'),
+    ("salt_passage", r'"salt_passage"\s*:\s*"([a-z_]*)"'),
+    ("dp", r'"dp"\s*:\s*"([a-z_]*)"'),
+)
+
+
+def flag_value_spans(completion: str) -> list[tuple[int, int]]:
+    """Character spans of the three flag values inside the flags object."""
+    import re
+
+    block = re.search(r'"flags"\s*:\s*\{[^}]*\}', completion)
+    if block is None:
+        return []
+    spans = []
+    for _, pattern in _FLAG_VALUE_PATTERNS:
+        hit = None
+        for hit in re.finditer(pattern, block.group()):
+            pass
+        if hit is not None:
+            spans.append((block.start() + hit.start(1), block.start() + hit.end(1)))
+    return spans
+
+
+def flag_token_mask(
+    completions: list[str], completion_ids: torch.Tensor, mask: torch.Tensor, tokenizer
+) -> torch.Tensor:
+    """1.0 on the tokens that spell the three flag values, 0 elsewhere.
+
+    `09` measured the failure this exists for. Held out on dev, the trained
+    policy calls a non-flat flag correctly on 97% of slots that sit within 2-5 pp
+    of a threshold -- it can do the comparison, and boundary proximity is not the
+    problem -- while `flat` is **0 for 41, 0 for 87 and 0 for 56** across every
+    distance bucket. The token is not produced at all, on easy cases and hard
+    ones alike. That is a prior, not a capability.
+
+    A reward that never sees the action cannot reweight it, which is why paying
+    8x for a correct `flat` (`runs/v3-flat8-stopped-at-78`) moved `flat` recall
+    0.000 -> 0.304 and cost non-flat 0.97 -> 0.84 in the same buckets: an 8x
+    gradient monopolises the trust region. Credit was the wrong instrument, and
+    the giveaway is that credit was already neutral -- every flag pays the same
+    `weights.flags / 3` whether or not it is flat.
+
+    The right instrument for an action that is never sampled is exploration, and
+    the dense-credit machinery already localises *where* the choice is made. This
+    mask is that: an entropy bonus can then be applied to the three decision
+    tokens and nowhere else, which is what `entropy_coef` cannot do -- `05`
+    measured the global coefficient blowing completion length up at 0.020.
+    """
+    out = torch.zeros_like(mask, dtype=torch.float32)
+    lengths = mask.sum(dim=-1).long()
+    for b, text in enumerate(completions):
+        length = int(lengths[b])
+        if length == 0:
+            continue
+        spans = flag_value_spans(text)
+        if not spans:
+            continue
+        ids = completion_ids[b, :length].tolist()
+        bounds = [len(tokenizer.decode(ids[: i + 1], skip_special_tokens=True)) for i in range(length)]
+        for start, end in spans:
+            for i, stop in enumerate(bounds):
+                begin = bounds[i - 1] if i else 0
+                if begin < end and stop > start:
+                    out[b, i] = 1.0
+    return out
+
+
+def dense_rewards(
+    completions: list[str],
+    completion_ids: torch.Tensor,
+    mask: torch.Tensor,
+    cases: list[dict[str, Any]],
+    weights: Weights,
+    tokenizer,
+    flat_scale: float = FLAT_CREDIT_SCALE,
+) -> torch.Tensor:
+    """Per-token rewards that land where each field is written, not at the end.
+
+    Why this exists. With `gamma = lam = 1` and one terminal reward the return is
+    constant along a sequence, so `V(s_t)` has nothing to track and the per-token
+    credit assignment actor-critic PPO offers has nothing to assign -- which is
+    the finding `07` closes on. Paying each field at the token that decides it
+    makes the return fall as the answer is written, which is the one thing that
+    gives a causal value function a job. It only bites with `lam < 1`; at
+    `lam = 1` GAE ignores `V` and this changes nothing but the metrics.
+
+    Row sums equal `Rollout.rewards` up to float error, so the sequence-level
+    objective is untouched.
+    """
+    out = torch.zeros_like(mask, dtype=torch.float32)
+    lengths = mask.sum(dim=-1).long()
+    for b, (text, case) in enumerate(zip(completions, cases)):
+        length = int(lengths[b])
+        if length == 0:
+            continue
+        ids = completion_ids[b, :length].tolist()
+        # Cumulative decoded length after each token, so a character offset can
+        # be turned into the index of the token that completed it. Prefix decodes
+        # rather than per-token decodes: byte-level BPE splits multi-byte
+        # characters across tokens, and their lengths do not add up.
+        bounds = [len(tokenizer.decode(ids[: i + 1], skip_special_tokens=True)) for i in range(length)]
+
+        try:
+            placed, terminal = field_credits(text, case["answer"], weights, flat_scale)
+        except (OverflowError, ValueError, TypeError, KeyError):
+            placed, terminal = {}, 0.0
+
+        for offset, credit in placed.values():
+            index = next((i for i, end in enumerate(bounds) if end >= offset), length - 1)
+            out[b, index] += credit
+        out[b, length - 1] += terminal
+    return out
 
 
 def gae(
@@ -246,6 +792,65 @@ def gae(
     return advantages * mask, (advantages + values) * mask
 
 
+def critic_fit(
+    values: torch.Tensor, returns: torch.Tensor, mask: torch.Tensor
+) -> dict[str, float]:
+    """How much of the return the critic actually explains, over one batch.
+
+    `value_mean` and `value_mae` cannot tell a working critic from one that has
+    collapsed to a constant, and the 0.5B runs in `runs/` are the demonstration:
+    on `ppo-ac-ie2-s0` the learned value function posted a respectable MAE of
+    0.089 and an **explained variance of +0.07** -- worse than predicting the
+    mean of the returns, which is what a critic exists to beat. `value_std` says
+    the same thing from the other side: on 125 steps of `gonogo-stage-s0` where
+    every sequence in the batch drew the identical reward, V had mean 0.95 and a
+    within-batch spread of 0.065, so V(s) was barely a function of s at all.
+
+    Computed over the whole batch from the values the advantages were actually
+    built from, not per micro-batch -- the per-micro-batch stats in `value_loss`
+    are overwritten by whichever slice happens to run last.
+    """
+    sel = mask > 0
+    v, g = values[sel], returns[sel]
+    if v.numel() < 2:
+        return {"value_ev": None, "value_std": 0.0}
+    std = round(float(v.std(unbiased=False)), 6)
+    g_var = float(g.var(unbiased=False))
+    # When every sequence in a batch draws nearly the same reward the returns have
+    # almost no variance, and 1 - var(G-V)/var(G) divides by roughly zero. A
+    # `g_var > 0` guard is not enough: 1e-14 passes it, and one step of the first
+    # fixed run recorded -1e13 that way. That is the metric being *undefined* on
+    # that batch, not the critic failing on it, and the two must not be confused --
+    # explained variance is bounded above by 1 but unbounded below, so a genuine
+    # -3 is a genuinely bad critic and has to survive the guard.
+    #
+    # 15% of batches were degenerate this way over 200 steps, which is a fact
+    # about the task worth reporting rather than filtering into silence. Hence
+    # None, which JSON writes as null, rather than a plausible-looking 0.0.
+    if g_var < 1e-6:
+        return {"value_ev": None, "value_std": std, "value_ev_position": None}
+    # With `dense_rewards` the return falls as the answer is written, so a head
+    # that learned nothing but "how far along am I" would already score well.
+    # This is that head, fitted for free: the mean return at each *relative*
+    # position, in twenty bins, scored on the same batch. `value_ev` above it is
+    # the part of the critic that is reading the sequence rather than counting
+    # tokens; `value_ev` at or below it means the critic is a clock.
+    position = torch.zeros_like(returns)
+    index = torch.arange(mask.shape[1], device=mask.device).unsqueeze(0).expand_as(mask)
+    lengths = mask.sum(dim=-1, keepdim=True).clamp(min=1.0)
+    binned = (index / lengths * 20).floor().clamp(max=19).long()
+    for b in range(20):
+        hit = (binned == b) & sel
+        if hit.any():
+            position[hit] = returns[hit].mean()
+    ev_pos = round(1.0 - float((g - position[sel]).var(unbiased=False)) / g_var, 6)
+    return {
+        "value_ev": round(1.0 - float((g - v).var(unbiased=False)) / g_var, 6),
+        "value_std": std,
+        "value_ev_position": ev_pos,
+    }
+
+
 def whiten(advantages: torch.Tensor, mask: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     """Zero-mean, unit-variance over active tokens only. Off by default."""
     active = mask.sum().clamp(min=1.0)
@@ -257,6 +862,28 @@ def whiten(advantages: torch.Tensor, mask: torch.Tensor, eps: float = 1e-8) -> t
 # --- the losses ---------------------------------------------------------------
 
 
+def token_entropy(logits: torch.Tensor) -> torch.Tensor:
+    """Shannon entropy of the policy's next-token distribution, per position.
+
+    `H = logsumexp(z) - sum(softmax(z) * z)`, in float32. This is the honest
+    distribution entropy, and it is a *different quantity* from the
+    `entropy_proxy` the diagnostics already carry: that one is `-logp` of the
+    single token that was sampled, a one-sample estimate of the cross entropy.
+    The proxy is fine as a monotone collapse detector and costs nothing; a bonus
+    term in the loss needs the real thing.
+
+    Materialises one logits-sized tensor for `softmax(z)`, kept for the backward
+    pass, so `forward_policy_value` computes it only when it is asked to -- never
+    in the old-value no-grad pass. It is built over the whole `logits_to_keep`
+    span, not the active mask, so at Qwen3-1.7B's 151,936-token vocabulary and a
+    640-token generation window that is ~390 MiB in float32 at micro_batch=1.
+    """
+    logits = logits.float()
+    logz = torch.logsumexp(logits, dim=-1)
+    probs = torch.softmax(logits, dim=-1)
+    return logz - (probs * logits).sum(dim=-1)
+
+
 def ppo_actor_loss(
     logprobs: torch.Tensor,
     old_logprobs: torch.Tensor,
@@ -265,6 +892,10 @@ def ppo_actor_loss(
     *,
     clip_eps: float = 0.2,
     normalize: str = "token",
+    entropy: torch.Tensor | None = None,
+    entropy_coef: float = 0.0,
+    focus_mask: torch.Tensor | None = None,
+    focus_entropy_coef: float = 0.0,
 ) -> tuple[torch.Tensor, dict[str, float]]:
     """The clipped surrogate, with a per-token advantage.
 
@@ -272,6 +903,12 @@ def ppo_actor_loss(
     (batch, tokens) here and (batch,) there. The clipping, the normalisation and
     the diagnostics are deliberately identical so the two runs' numbers can be
     read against each other.
+
+    `entropy` is the per-token `token_entropy` of the *current* policy, passed in
+    when `entropy_coef > 0`. It enters as `-entropy_coef * mean(H)`, the standard
+    PPO entropy bonus -- a reward-free force that resists the near-greedy
+    collapse `inner_epochs > 1` drives here. `entropy_coef=0.0` reproduces every
+    run in `runs/` exactly: the term is not merely small, it is absent.
     """
     ratio = torch.exp(logprobs - old_logprobs)
     unclipped = ratio * advantages
@@ -287,11 +924,27 @@ def ppo_actor_loss(
     else:
         raise ValueError(f"unknown normalize={normalize!r}")
 
+    active = mask.sum().clamp(min=1.0)
+    surrogate = float(loss.detach())  # the clipped surrogate alone, as in every prior run
+    entropy_mean = None
+    if entropy is not None:
+        entropy_mean = (entropy * mask).sum() / active
+        if entropy_coef:
+            loss = loss - entropy_coef * entropy_mean
+        if focus_entropy_coef and focus_mask is not None:
+            # The same bonus, restricted to the tokens `focus_mask` marks -- the
+            # three flag values. Normalised over those tokens only, so the
+            # coefficient means the same thing whatever fraction of the sequence
+            # they are (about 3 of 95).
+            focused = focus_mask * mask
+            focus_active = focused.sum().clamp(min=1.0)
+            focus_entropy = (entropy * focused).sum() / focus_active
+            loss = loss - focus_entropy_coef * focus_entropy
+
     with torch.no_grad():
-        active = mask.sum().clamp(min=1.0)
         binding = ((unclipped > clipped) & (mask > 0)).float().sum() / active
         stats = {
-            "actor_loss": float(loss.detach()),
+            "actor_loss": surrogate,
             "ratio_mean": float((ratio * mask).sum() / active),
             "clip_frac": float(binding),
             "adv_mean": float((advantages * mask).sum() / active),
@@ -300,6 +953,14 @@ def ppo_actor_loss(
             ),
             "entropy_proxy": float(-(logprobs * mask).sum() / active),
         }
+        if entropy_mean is not None:
+            stats["policy_entropy"] = float(entropy_mean)
+        if focus_mask is not None and entropy is not None:
+            focused = focus_mask * mask
+            stats["flag_entropy"] = float(
+                (entropy * focused).sum() / focused.sum().clamp(min=1.0)
+            )
+            stats["flag_tokens"] = float(focused.sum() / mask.shape[0])
     return loss, stats
 
 
@@ -352,8 +1013,15 @@ def value_loss(
 class Config:
     """Defaults chosen to sit alongside `grpo_scratch.Config`, not to beat it."""
 
-    model: str = "Qwen/Qwen2.5-0.5B-Instruct"
-    steps: int = 100
+    # Qwen3-1.7B, chosen on the GRPO side by measurement rather than argument
+    # (`membrane_grpo/runs/sel-*`). The reason that matters here: its schema
+    # validity is already 0.970, so a reward rise cannot be explained away as
+    # format learning -- which is exactly what 52% of the 0.5B's gain turned out
+    # to be. It also starts at cause_acc 0.255 against a 1/7 = 0.143 chance
+    # floor, so there is something partial for RL to sharpen; the 0.5B sat
+    # *exactly* at chance and had nothing.
+    model: str = "Qwen/Qwen3-1.7B"
+    steps: int = 200
     prompts_per_step: int = 8
     # 1 is the point: unlike GRPO, the algorithm needs no second sample of the
     # same prompt. Raise it only to fill the batch, never for the baseline.
@@ -361,25 +1029,181 @@ class Config:
     max_new_tokens: int = 640
     temperature: float = 1.0
     lr: float = 1e-5
-    # Derived, not guessed. Adam moves every one of the head's `hidden_size`
-    # weights by about `lr` per step, and those steps are summed through the
-    # features, so the value itself moves by roughly `lr * ||h||_1`. Measured on
-    # this model, `||h||_1` is about 3.9e3 -- so lr=1e-3 moves V by ~4.0 per
-    # step against a reward that lives in [0, 1]. The first CPU smoke run did
-    # exactly that: V went 0.086 -> -1.868 in one step. 5e-6 targets a step of
-    # ~0.02, and `value_step` in the metrics is there to confirm it.
-    value_lr: float = 5e-6
+    # Derived, not guessed, and re-derived for this model rather than carried
+    # over. Adam moves every one of the head's `hidden_size` weights by about
+    # `lr` per step, and those steps are summed through the features, so the
+    # value itself moves by roughly `lr * ||h||_1`. On the 0.5B that meant
+    # lr=1e-3 moved V by ~4.2 against a reward living in [0, 1], and the first
+    # CPU smoke run did exactly that: V went 0.086 -> -1.868 in one step.
+    #
+    # The constant does not survive the model change, and not in the direction
+    # the parameter count suggests. Measured in `01_actor_critic_and_gae.ipynb`:
+    #
+    #     Qwen2.5-0.5B   hidden  896   E|h| 4.824   ||h||_1 4323
+    #     Qwen3-1.7B     hidden 2048   E|h| 1.127   ||h||_1 2308
+    #
+    # 2.3x the dimensions but 4.3x smaller per-dimension activations -- Qwen3
+    # simply does not carry the huge outlier features the 0.5B does -- so
+    # `||h||_1` *falls* by 47%. Keeping 5e-6 would have quietly cut the critic's
+    # step from 0.022 to 0.012 on a model where the critic was already the
+    # bottleneck. 8.5e-6 puts it at 0.020, which is the target the old default
+    # was chosen for; `value_step` in the metrics confirms it per run.
+    #
+    # That target is itself the open question, and it is deliberately *not*
+    # touched here so that the model is the only thing that changed. The 0.5B
+    # runs moved V by a median of 0.004-0.009 per step against a regression
+    # target whose own batch-to-batch swing reaches 1.0 -- a ~100-step time
+    # constant chasing a signal that changes every step, which is why
+    # `value_ev` came out at +0.07. `value_ev` is now in the metrics so the
+    # next round argues from a number instead of from a reward curve.
+    # Raised from 8.5e-6, but this is the smaller of the two critic changes and
+    # the derivation is no longer what sets it. Measured on real Qwen3-1.7B
+    # hidden states over 25 batches at 8 steps each: 8.5e-6 reaches value_ev
+    # +0.950 and 3e-5 reaches +0.993, so the higher rate helps but the step
+    # count is what matters (1 step per batch reaches only +0.345 at either
+    # rate). `value_clip_eps` caps the per-batch movement at 0.2 regardless.
+    value_lr: float = 3e-5
     weight_decay: float = 0.0  # same reasoning as grpo_scratch: no reward-free force
     gamma: float = 1.0
     lam: float = 1.0
     clip_eps: float = 0.2
-    value_clip_eps: float = 0.2
+    value_clip_eps: float | None = 0.2
     value_coef: float = 0.5
+    # Entropy bonus on the policy's next-token distribution, added to the actor
+    # objective as `-entropy_coef * mean(H)`. 0.0 by default, which is not a
+    # small term but no term -- every run in `runs/` was trained without it, and
+    # `weight_decay` carries the same "no reward-free force" reasoning. It is on
+    # the table because with `inner_epochs=4` the entropy proxy fell 0.169 ->
+    # 0.073 over 200 steps on MAIN while `clip_frac` held near 0.008: four
+    # unrestrained updates per batch and nothing resisting a near-greedy
+    # collapse. `03_critic_and_trust_region.ipynb` runs a nonzero value here
+    # against lowering `inner_epochs` as the two candidate levers.
+    entropy_coef: float = 0.0
     value_detach: bool = True
+    # Off, because it was tested and did not help -- see `ValueHead` for the
+    # measurement. Kept as a flag rather than deleted so the claim is falsifiable
+    # on another model.
+    normalize_value: bool = False
+    # Dedicated critic steps per rollout batch, on the hidden states cached
+    # during the old-value pass. The critic is `hidden_size + 1` parameters on
+    # features that are already computed and detached, so these cost one small
+    # matmul each and no forward through the trunk at all. This is the knob the
+    # first two runs did not have: the critic got exactly `inner_epochs` updates
+    # per batch, which at this learning rate is a ~100-step time constant
+    # chasing a target that changes every step.
+    critic_epochs: int = 8
+    # How many recent rollout batches the critic fits over. 1 reproduces every run
+    # in `runs/`: the head sees one batch, and with `gamma = lam = 1.0` and the
+    # reward on the last active token only, `returns[b, t] = R_b` for every t --
+    # so one batch is `prompts_per_step` distinct target values (8) replicated
+    # across ~770 masked positions. `critic_fit` pools tokens, so the token axis
+    # inflates n without adding target variance, and a regressor shown 8 numbers
+    # per step whose mean moves every step converges to the running mean. That is
+    # what the metrics say happened: `value_mean` tracks `return_mean` to three
+    # decimals with a spread of 0.04, and `value_ev` came out *negative*.
+    #
+    # The representation is not the constraint. `ValueHead`'s docstring records
+    # this same head, on these same real hidden states, at these same 8 steps per
+    # batch, reaching `value_ev` +0.993 offline -- the difference is that the
+    # offline fit accumulates across batches. 25 restores that condition in the
+    # loop: 200 distinct targets rather than 8.
+    #
+    # Only the active positions are kept, so the window is flat (n_active, hidden)
+    # and batches of different completion lengths concatenate without padding.
+    # ~3 MiB per batch at the observed 96-token mean, 21 MiB at the 640 cap.
+    # Which hidden layer the value head reads. -1 (the last) is what every run in
+    # `runs/` used. Measured on frozen rollouts, 48 prompts x 8 samples, held out
+    # by prompt against the prompt's mean reward:
+    #
+    #     layer 28 (-1, the default)   test EV  +0.263
+    #     layer 27 (-2)                test EV  +0.456
+    #     layer 20                     test EV  +0.398
+    #     layer 14                     test EV  +0.106
+    #     layer  0                     test EV  +0.001
+    #
+    # The last layer is specialised for predicting the next token. The reward is
+    # a property of the finished answer, and the feature that carries it peaks
+    # one layer earlier.
+    # Asymmetric actor-critic: give the value head the case's true `root_cause`
+    # as a one-hot alongside the hidden state. The actor never sees it.
+    #
+    # This is unbiased, and the reason is the standard one -- a baseline that is
+    # any function of the *state* leaves the policy gradient's expectation alone,
+    # because E[grad log pi(a|s) b(s)] = 0. The label is determined by the prompt,
+    # so it is part of s and not of a. Sim-to-real robotics uses exactly this
+    # (the critic reads privileged simulator state the actor cannot observe).
+    #
+    # It is here because `07` measured what the reward actually depends on:
+    # regressing the prompt's mean reward on the task's *designed* difficulty
+    # variables (`tier`, `margin_pp`, `severe`) gives leave-one-out R^2 = -0.081,
+    # while regressing it on `root_cause` alone gives **+0.902**. A prompt is easy
+    # exactly when its answer is one of the labels the policy already emits. So
+    # the one thing that would let V(s) beat a constant is the label -- which the
+    # actor must not see, and the critic may.
+    privileged_cause: bool = False
+    value_layer: int = -1
+    #: Hand the model the three percent changes instead of demanding them.
+    #: `07`'s closing section is the argument: the arithmetic is a capability
+    #: this model does not have, at the level of elementary decimal arithmetic
+    #: rather than the domain formula, so a reward that pays for it pays for
+    #: nothing. The readings are already structured, so the harness computes the
+    #: changes exactly and the model does steps 2-4. See `build_messages_v3`.
+    prompt_v3: bool = False
+
+    #: v4 implies v3, and additionally restates Step 2 with the flat band as its
+    #: own leading condition. See `V4_STEP2` for the measurement that motivates it.
+    prompt_v4: bool = False
+
+    #: Multiplier on the dense credit for a correctly-called `flat` flag. Only
+    #: meaningful with `dense_rewards`. 1.0 is every run before `09`.
+    flat_credit_scale: float = 1.0
+
+    #: An entropy bonus applied to the three flag-value tokens and nowhere else.
+    #: See `flag_token_mask` for the measurement that motivates it. 0.0 is every
+    #: run before `09`; it is independent of `entropy_coef`, which stays global.
+    flag_entropy_coef: float = 0.0
+
+    #: Pay each output field at the token that decides it, instead of paying the
+    #: whole sequence reward at the last one. `07` closes on why this matters:
+    #: with `gamma = lam = 1` and a terminal reward the return is constant along
+    #: a sequence, so `V(s_t)` has nothing to track and the per-token credit
+    #: assignment this method offers over GRPO has nothing to assign. Row sums
+    #: are unchanged, so the sequence-level objective is the same one; only the
+    #: timing of the credit moves. **It only bites with `lam < 1`** -- at
+    #: `lam = 1` GAE never consults `V` and this changes the metrics and nothing
+    #: else. See `dense_rewards`.
+    dense_rewards: bool = False
+
+    critic_window: int = 1
+    # Rebuild the advantages from the critic's *post-fit* values. Off reproduces
+    # every existing run, where `fitted_values` was computed and then used only
+    # for metrics (`value_ev_fit`) -- the actor trained on advantages built from
+    # `old_values`, so the critic's dedicated steps did nothing for the batch that
+    # paid for them and only reached the actor through the next batch.
+    #
+    # Andrychowicz et al. 2020 (C5) is the one improvement the paper proposes
+    # itself: stale advantages hurt, and recomputing them at the start of each
+    # pass beat every other variant they tried. It is one line here because
+    # `lam = 1.0` makes `returns` the plain Monte-Carlo return, independent of V.
+    recompute_advantages: bool = False
     whiten_advantages: bool = False
-    value_init_bias: float = VALUE_INIT_BIAS
-    inner_epochs: int = 1
-    micro_batch: int = 2
+    # -1.0 means "look it up in FROZEN_BASELINE for this model and weight set"
+    # and is resolved in __post_init__, so config.json records the number that
+    # was actually used. 0.0 still reproduces the documented failure on purpose.
+    value_init_bias: float = -1.0
+    # 4, not 1. With one inner epoch the only gradient pass has logp == logp_old
+    # by construction, so rho is identically 1 and the clipped surrogate reduces
+    # to plain `A_t` -- `ratio_mean` was exactly 1.000000000 and `clip_frac`
+    # exactly 0.0 at all 400 steps of the first two runs. That is not PPO, it is
+    # vanilla policy gradient with a baseline. From the second pass onward the
+    # policy has moved off the sampling policy and the trust region has
+    # something to do; `clip_frac` is the metric that says whether it did.
+    inner_epochs: int = 4
+    # 1, not 2: 1.7B in bf16 is 3.4 GiB of weights before activations, and the
+    # value head needs `output_hidden_states=True`, which keeps all 29 layers'
+    # hidden states alive through the backward pass. Same choice GRPO made when
+    # it moved to this model.
+    micro_batch: int = 1
     normalize: str = "token"
     lora_r: int = 16
     weights: str = "MAIN"
@@ -387,7 +1211,38 @@ class Config:
     dtype: str = "bfloat16"
     split: str = "train"
     prompt_version: str = PROMPT_VERSION
+    # Held-out evaluation during training, taken from `grpo_scratch.Config`.
+    # The reason to have it is on this side of the fence, not GRPO's: this
+    # method has already produced a run (`runs/gonogo-stage-s0`) whose *training*
+    # reward sat at 1.0000 for 30 steps while the policy it was checkpointing
+    # was worth 0.000 on dev. A reward curve alone cannot tell learning from
+    # collapse, and `adapter-best` picked the wreck.
+    eval_every: int = 25
+    # The full dev split, so step 0 is directly comparable to the frozen
+    # baseline rather than to a subset of it with a different denominator.
+    eval_cases: int = 200
+    eval_batch: int = 32
+    eval_split: str = "dev"
+    eval_max_tokens: int = 640
     metrics: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.weights not in WEIGHT_SETS:
+            raise ValueError(f"unknown weights {self.weights!r}; have {sorted(WEIGHT_SETS)}")
+        if self.critic_epochs < 1:
+            raise ValueError("critic_epochs must be >= 1")
+        if self.critic_window < 1:
+            raise ValueError("critic_window must be >= 1")
+        # A negative value means "no value clipping", the same sentinel convention
+        # `value_init_bias` uses, and for the same reason: the generated CLI types
+        # every flag from its default, so there is no way to pass None. It must not
+        # be spelled 0.0 -- that clamps the critic's movement to nothing, which is
+        # strictly worse than clipping at 0.2 rather than equivalent to disabling it.
+        if self.value_clip_eps is not None and self.value_clip_eps < 0:
+            self.value_clip_eps = None
+        if self.value_init_bias < 0:
+            table = FROZEN_BASELINE_V3 if (self.prompt_v3 or self.prompt_v4) else FROZEN_BASELINE
+            self.value_init_bias = table.get(self.model, {}).get(self.weights, 0.0)
 
 
 # --- the model side -----------------------------------------------------------
@@ -415,8 +1270,21 @@ def forward_policy_value(
     completion_len: int,
     *,
     value_detach: bool = True,
-) -> tuple[torch.Tensor, torch.Tensor]:
+    return_hidden: bool = False,
+    return_entropy: bool = False,
+    value_layer: int = -1,
+) -> tuple[torch.Tensor, ...]:
     """Per-token log-probs and values over the completion span, in one forward.
+
+    `return_hidden` also hands back the (detached) hidden states the value head
+    read. Caching those is what makes extra critic steps free: the critic is a
+    linear probe on features that have already been computed, so fitting it
+    again needs no second pass through the trunk.
+
+    `return_entropy` hands back the per-token `token_entropy` instead, computed
+    from the same logits slice that produced `logprobs`. The two flags are not
+    combined -- `return_hidden` is the no-grad old-value pass, `return_entropy`
+    the actor pass -- and asking for both is a bug.
 
     `logits_to_keep` restricts the (batch, positions, 151936) output head to the
     span that is actually scored -- the single largest tensor in the step, and
@@ -424,6 +1292,8 @@ def forward_policy_value(
     come back full length regardless, so `V(s_t)` is sliced from them at the
     same positions whose logits produced token t.
     """
+    if return_hidden and return_entropy:
+        raise ValueError("return_hidden and return_entropy are not combined")
     out = model(
         input_ids=sequences,
         attention_mask=attention_mask,
@@ -432,13 +1302,26 @@ def forward_policy_value(
         output_hidden_states=True,
     )
     logprobs = selective_logprobs(out.logits[:, :-1], sequences[:, -completion_len:])
+    entropy = token_entropy(out.logits[:, :-1]) if return_entropy else None
 
-    hidden = out.hidden_states[-1]
+    # -1 is the last layer, which is what every run in `runs/` used and what the
+    # critic was measured on. It is not the best layer for this, and that was
+    # never checked: probing all 29 on frozen rollouts, held out *by prompt*
+    # against the prompt's mean reward, the last layer explains +0.263 of the
+    # variance and layer 27 explains **+0.456**. The last layer is specialised
+    # for next-token prediction; the reward is a property of the whole answer,
+    # and the representation that carries it best sits a little earlier.
+    hidden = out.hidden_states[value_layer]
     if hidden.shape[1] == sequences.shape[1]:
         hidden = hidden[:, -(completion_len + 1) : -1]
     else:  # a transformers version that also truncates the hidden states
         hidden = hidden[:, :-1]
-    values = value_head(hidden.detach() if value_detach else hidden)
+    detached = hidden.detach()
+    values = value_head(detached if value_detach else hidden)
+    if return_hidden:
+        return logprobs, values, detached
+    if return_entropy:
+        return logprobs, values, entropy
     return logprobs, values
 
 
@@ -460,7 +1343,10 @@ def load_policy(cfg: "Config", device: str):
             task_type="CAUSAL_LM",
         ),
     ).to(device)
-    value_head = ValueHead(base.config.hidden_size, cfg.value_init_bias).to(device)
+    value_head = ValueHead(
+        base.config.hidden_size, cfg.value_init_bias, normalize=cfg.normalize_value,
+        extra_features=len(CAUSES) if cfg.privileged_cause else 0,
+    ).to(device)
     return policy, value_head, tokenizer
 
 
@@ -485,12 +1371,19 @@ def rollout(
     temperature: float,
     weights: Weights,
     device: str,
+    template_kwargs: dict[str, Any] | None = None,
+    prompt_v3: bool = False,
+    prompt_v4: bool = False,
 ) -> Rollout:
     """Sample one batch: `samples_per_prompt` completions for each case."""
     expanded = [c for c in cases for _ in range(samples_per_prompt)]
+    messages = build_messages_v4 if prompt_v4 else (build_messages_v3 if prompt_v3 else build_messages)
     texts = [
         tokenizer.apply_chat_template(
-            build_messages(c["record"]), tokenize=False, add_generation_prompt=True
+            messages(c["record"]),
+            tokenize=False,
+            add_generation_prompt=True,
+            **(template_kwargs or {}),
         )
         for c in expanded
     ]
@@ -514,7 +1407,18 @@ def rollout(
     completion_ids = out[:, prompt_len:]
     mask = build_mask(completion_ids, tokenizer.eos_token_id, tokenizer.pad_token_id)
     completions = tokenizer.batch_decode(completion_ids, skip_special_tokens=True)
-    rewards = [score(c, case["answer"], weights).total for c, case in zip(completions, expanded)]
+
+    def _reward(c: str, case: dict[str, Any]) -> float:
+        # A completion the scorer cannot process earned no reward. `reward.score`
+        # assumes well-formed numeric fields, and an exploring policy can emit a
+        # literal outside float range (`OverflowError` in `reward._numeric_hits`)
+        # or otherwise break parsing; that is a 0, not a dead run.
+        try:
+            return score(c, case["answer"], weights).total
+        except (OverflowError, ValueError, TypeError, KeyError):
+            return 0.0
+
+    rewards = [_reward(c, case) for c, case in zip(completions, expanded)]
 
     return Rollout(
         cases=expanded,
@@ -528,6 +1432,55 @@ def rollout(
     )
 
 
+# --- held-out evaluation ------------------------------------------------------
+
+
+def evaluate(policy, tokenizer, cfg: "Config", cases: list[dict], step: int) -> dict[str, Any]:
+    """Greedy pass over a fixed held-out slice, through `eval.py`'s own code path.
+
+    Lifted from `grpo_scratch.evaluate` unchanged in substance, and that is the
+    point: the PPO curve, the GRPO curve and the frozen baseline are then all
+    produced by literally the same function, so the three are comparable without
+    an argument about whose harness was fairer.
+
+    The value head is not involved. This measures the policy, and the critic is
+    scaffolding for training it.
+    """
+    from eval import generate_hf, summarise
+
+    # generate_hf still moves the encoded batch onto a device, so it needs the
+    # one the live policy is already on rather than a re-derived guess.
+    device = str(next(policy.parameters()).device)
+    with v3_prompts(cfg.prompt_v4) if (cfg.prompt_v3 or cfg.prompt_v4) else contextlib.nullcontext():
+        results = generate_hf(
+            cases,
+            model=cfg.model,
+            device=device,
+            dtype=cfg.dtype,
+            n=1,
+            temperature=0.0,
+            max_tokens=cfg.eval_max_tokens,
+            seed=cfg.seed,
+            batch_size=cfg.eval_batch,
+            adapter=None,
+            prompt_version=cfg.prompt_version,
+            loaded=(policy, tokenizer),
+        )
+    metrics = summarise(results, WEIGHT_SETS[cfg.weights])
+    return {
+        "step": step,
+        "reward": metrics["reward"],
+        "exact_match": metrics["exact_match"],
+        "validity_gate": metrics["validity_gate"],
+        "schema_ok": metrics["schema_ok"],
+        "cause_acc": metrics["cause_acc"],
+        "flags_acc": metrics["flags_acc"],
+        "numeric_acc": metrics["numeric_acc"],
+        "action_acc": metrics["action_acc"],
+        "completion_tokens": metrics["completion_tokens_mean"],
+    }
+
+
 # --- training -----------------------------------------------------------------
 
 
@@ -536,7 +1489,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
 
     Deliberately the same shape as `grpo_scratch.train`: same rollout-then-update
     order, same micro-batching, same `metrics.jsonl` next to a `config.json`, so
-    `02_ppo_actor_critic_0.5b.ipynb` can plot the two runs on one axis without
+    `02_ppo_actor_critic_1.7b.ipynb` can plot the two runs on one axis without
     special-casing either.
     """
     import json
@@ -548,22 +1501,60 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     rng = random.Random(cfg.seed)
 
     cases = load_cases(cfg.split)
-    weights = {"MAIN": MAIN, "PROBE": PROBE, "STAGE_ONLY": STAGE_ONLY}[cfg.weights]
+    weights = WEIGHT_SETS[cfg.weights]
 
     policy, value_head, tokenizer = load_policy(cfg, device)
+
+    # A Qwen3 chat template defaults thinking *on*, and on this task that is
+    # fatal rather than merely verbose: the policy spends its whole budget
+    # inside <think> and returns nothing to score, so every rollout fails the
+    # gate at 0.0 and the run trains on noise. Qwen2.5 templates have no such
+    # variable, so this is detected rather than switched on by model name --
+    # the same fix `eval.py` and `grpo_scratch.py` already carry.
+    template_kwargs: dict[str, Any] = {}
+    if supports_thinking_toggle(tokenizer):
+        template_kwargs["enable_thinking"] = False
+        progress("  chat template honours enable_thinking; set to False")
+
     actor_params = [p for p in policy.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(
-        [
-            {"params": actor_params, "lr": cfg.lr},
-            {"params": list(value_head.parameters()), "lr": cfg.value_lr},
-        ],
-        weight_decay=cfg.weight_decay,
+    critic_params = list(value_head.parameters())
+    # Two optimisers, not two param groups in one. With `value_detach` the value
+    # loss never reaches the trunk anyway, so the critic can be fitted on cached
+    # features without a forward pass -- and that only works if stepping it does
+    # not also step the actor. `--no-value-detach` puts the value term back into
+    # the joint loss, because there the gradient must flow through the trunk.
+    optimizer = torch.optim.AdamW(actor_params, lr=cfg.lr, weight_decay=cfg.weight_decay)
+    critic_optimizer = torch.optim.AdamW(
+        critic_params, lr=cfg.value_lr, weight_decay=cfg.weight_decay
     )
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "config.json").write_text(json.dumps(asdict(cfg), indent=2) + "\n")
     metrics_path = out_dir / "metrics.jsonl"
     metrics_path.write_text("")
+    eval_path = out_dir / "eval.jsonl"
+    eval_path.write_text("")
+
+    eval_cases = [
+        json.loads(line)
+        for line in (DATA / f"{cfg.eval_split}.jsonl").read_text().splitlines()
+    ][: cfg.eval_cases]
+
+    def run_eval(step: int) -> dict[str, Any]:
+        record = evaluate(policy, tokenizer, cfg, eval_cases, step)
+        with eval_path.open("a") as fh:
+            fh.write(json.dumps(record) + "\n")
+        if record["reward"] > best["reward"]:
+            best.update(reward=record["reward"], step=step, cause_acc=record["cause_acc"])
+            policy.save_pretrained(out_dir / "adapter-best")
+            torch.save(value_head.state_dict(), out_dir / "value_head-best.pt")
+            (out_dir / "best.json").write_text(json.dumps(best, indent=2) + "\n")
+        progress(
+            f"    eval @{step:<4} reward {record['reward']:.4f} "
+            f"cause {record['cause_acc']:.3f} flags {record['flags_acc']:.3f} "
+            f"EM {record['exact_match']:.3f} valid {record['validity_gate']:.3f}"
+        )
+        return record
 
     per_step = cfg.prompts_per_step * cfg.samples_per_prompt
     progress(
@@ -572,12 +1563,28 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     )
 
     history: list[dict[str, Any]] = []
+    # (hidden, old_values, returns) for the last `critic_window` batches, active
+    # positions only, held on CPU so the window costs host RAM rather than the
+    # VRAM the rollout needs. Concatenated onto the device once per step, not
+    # once per critic epoch.
+    critic_history: deque = deque(maxlen=max(1, cfg.critic_window))
     # An RL run that has solved its task can still destroy itself: this one's
     # reward sat at 1.0000 from step 170 and collapsed to 0.0000 at 196 with the
     # gradient norm going from 2.7 to 109. Saving only the final policy saved the
     # wreck, and every measurement afterwards was of the wreck. Checkpoint the
     # best trailing mean as well, and say so if the two differ.
-    best: dict[str, Any] = {"reward": float("-inf"), "step": None}
+    # Selected on the *held-out* curve, not on training reward. Measured on the
+    # first fixed run: corr(trailing-10 training reward, held-out cause_acc) was
+    # only +0.472, training reward peaked at step 100 while held-out was already
+    # falling, and at the step where held-out cause_acc collapsed to 0.135 the
+    # training trailing mean was still 0.2930 -- higher than at step 25. Training
+    # reward barely reacts to the collapse it is supposed to protect against.
+    # Defined before the step-0 eval because `run_eval` closes over it.
+    best: dict[str, Any] = {"reward": float("-inf"), "step": None, "criterion": "held-out reward"}
+
+    if cfg.eval_every:
+        run_eval(0)  # step 0 must reproduce the frozen baseline
+
     for step in range(cfg.steps):
         started = time.perf_counter()
         batch = [rng.choice(cases) for _ in range(cfg.prompts_per_step)]
@@ -592,6 +1599,9 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             temperature=cfg.temperature,
             weights=weights,
             device=device,
+            template_kwargs=template_kwargs,
+            prompt_v3=cfg.prompt_v3 or cfg.prompt_v4,
+            prompt_v4=cfg.prompt_v4,
         )
         gen_seconds = time.perf_counter() - started
 
@@ -599,21 +1609,67 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         attn = roll.attention_mask
         completion_len = mask.shape[1]
         rewards = torch.tensor(roll.rewards, device=device, dtype=torch.float32)
-        per_token_rewards = terminal_rewards(rewards, mask)
+        if cfg.dense_rewards:
+            per_token_rewards = dense_rewards(
+                roll.completions,
+                sequences[:, -completion_len:],
+                mask,
+                roll.cases,
+                weights,
+                tokenizer,
+                cfg.flat_credit_scale,
+            )
+        else:
+            per_token_rewards = terminal_rewards(rewards, mask)
+
+        flag_mask = None
+        if cfg.flag_entropy_coef:
+            flag_mask = flag_token_mask(
+                roll.completions, sequences[:, -completion_len:], mask, tokenizer
+            )
 
         policy.train()
         with torch.no_grad():
-            old_lp, old_v = [], []
+            old_lp, old_v, old_h = [], [], []
             for i in range(0, len(sequences), cfg.micro_batch):
                 sl = slice(i, i + cfg.micro_batch)
-                lp, v = forward_policy_value(
+                lp, v, h = forward_policy_value(
                     policy, value_head, sequences[sl], attn[sl], completion_len,
-                    value_detach=cfg.value_detach,
+                    value_detach=cfg.value_detach, return_hidden=True,
+                    value_layer=cfg.value_layer,
                 )
                 old_lp.append(lp)
                 old_v.append(v)
+                old_h.append(h)
             old_logprobs = torch.cat(old_lp)
             old_values = torch.cat(old_v)
+            # The features the critic reads, kept so it can be refitted without
+            # touching the trunk again. (batch, tokens, hidden) in the trunk's
+            # own dtype -- 21 MiB for 8 x 640 x 2048 in bf16.
+            hidden_cache = torch.cat(old_h)
+            if cfg.privileged_cause:
+                # One row per sequence, broadcast along the token axis: the label
+                # is a property of the prompt, so it does not vary within a
+                # sequence. `roll.cases` is expanded to match `samples_per_prompt`
+                # by `rollout`, so it lines up index-for-index with the batch.
+                # Scaled, and the scale is derived rather than picked. This file's
+                # own relation is |dV| ~ lr * ||h||_1: the hidden block moves V by
+                # 3e-5 * 1605 = 0.048 per critic step, while a one-hot has
+                # ||.||_1 = 1 and would move it by 3e-5 -- 1600x slower. Over a
+                # run's 640 critic steps the privileged weights would travel 0.019
+                # against cause offsets of +-0.25, i.e. stay frozen. 64 puts one
+                # step at 1.9e-3 and the run's total travel above 1.0.
+                onehot = torch.zeros(len(roll.cases), len(CAUSES),
+                                     device=hidden_cache.device, dtype=hidden_cache.dtype)
+                for i, case in enumerate(roll.cases):
+                    onehot[i, CAUSES.index(case["answer"]["root_cause"])] = PRIVILEGED_SCALE
+                hidden_cache = torch.cat(
+                    [hidden_cache, onehot.unsqueeze(1).expand(-1, hidden_cache.shape[1], -1)],
+                    dim=-1,
+                )
+                # old_values was computed by the head *before* the one-hot existed
+                # in this batch's tensor, so recompute it on the full feature.
+                old_values = value_head(hidden_cache)
 
             advantages, returns = gae(
                 per_token_rewards, old_values, mask, gamma=cfg.gamma, lam=cfg.lam
@@ -621,32 +1677,116 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             if cfg.whiten_advantages:
                 advantages = whiten(advantages, mask)
 
-        actor_stats: dict[str, float] = {}
+        # --- the critic, on cached features -----------------------------------
+        # No forward through the trunk: `hidden_cache` is already computed and
+        # detached, so each of these steps is one (batch, tokens, hidden) x
+        # (hidden, 1) matmul. That is what makes `critic_epochs` affordable, and
+        # the critic needs it -- one update per batch at this learning rate is a
+        # ~100-step time constant chasing a target that changes every step.
         critic_stats: dict[str, float] = {}
+        if cfg.value_detach:
+            # The window keeps active positions only. Flattening to (n_active,
+            # hidden) is what lets batches of different completion lengths sit in
+            # one tensor without padding, and it drops nothing: every masked
+            # position contributes zero to the loss anyway.
+            with torch.no_grad():
+                sel = mask > 0
+                critic_history.append((
+                    hidden_cache[sel].to("cpu"),
+                    old_values[sel].to("cpu"),
+                    returns[sel].to("cpu"),
+                ))
+                if len(critic_history) > 1:
+                    fit_h = torch.cat([h for h, _, _ in critic_history]).to(device)
+                    fit_v = torch.cat([v for _, v, _ in critic_history]).to(device)
+                    fit_r = torch.cat([r for _, _, r in critic_history]).to(device)
+                    fit_m = torch.ones_like(fit_r)
+                else:
+                    # critic_window=1 stays on the original tensors rather than a
+                    # flattened copy of them, so the existing runs reproduce
+                    # bit-for-bit rather than merely equivalently.
+                    fit_h, fit_v, fit_r, fit_m = hidden_cache, old_values, returns, mask
+
+            for _ in range(cfg.critic_epochs):
+                critic_optimizer.zero_grad(set_to_none=True)
+                v = value_head(fit_h)
+                v_loss, critic_stats = value_loss(
+                    v, fit_v, fit_r, fit_m, clip_eps=cfg.value_clip_eps,
+                )
+                v_loss.backward()
+                torch.nn.utils.clip_grad_norm_(critic_params, 1.0)
+                critic_optimizer.step()
+            with torch.no_grad():
+                # On the *current* batch, always: this feeds `value_ev_fit` and the
+                # recomputed advantages, both of which are about this batch.
+                fitted_values = value_head(hidden_cache)
+        else:
+            fitted_values = old_values
+
+        # C5. Without this the critic's dedicated steps reach the actor only
+        # through the next batch's `old_values`. `returns` is the Monte-Carlo
+        # return at lam=1, so it does not move when V does, and the subtraction is
+        # the whole update. Re-masked because `fitted_values` is nonzero at padded
+        # positions where `gae` left the advantage at exactly zero.
+        if cfg.recompute_advantages:
+            with torch.no_grad():
+                advantages = (returns - fitted_values) * mask
+                if cfg.whiten_advantages:
+                    advantages = whiten(advantages, mask)
+
+        # --- the actor --------------------------------------------------------
+        actor_stats: dict[str, float] = {}
         for _ in range(cfg.inner_epochs):
             optimizer.zero_grad(set_to_none=True)
+            if not cfg.value_detach:
+                critic_optimizer.zero_grad(set_to_none=True)
             accumulated = 0.0
+            # Weighted by each micro-batch's share, rather than letting whichever
+            # slice happens to run last overwrite the lot. With micro_batch=1
+            # that bug made every reported adv_mean / adv_std / ratio_mean /
+            # clip_frac describe a single sequence rather than the batch.
+            epoch_stats: dict[str, float] = {}
             for i in range(0, len(sequences), cfg.micro_batch):
                 sl = slice(i, i + cfg.micro_batch)
                 share = min(cfg.micro_batch, len(sequences) - i) / len(sequences)
-                logprobs, values = forward_policy_value(
+                want_entropy = cfg.entropy_coef > 0
+                fwd = forward_policy_value(
                     policy, value_head, sequences[sl], attn[sl], completion_len,
                     value_detach=cfg.value_detach,
+                    return_entropy=want_entropy,
+                    value_layer=cfg.value_layer,
                 )
-                a_loss, actor_stats = ppo_actor_loss(
+                if want_entropy:
+                    logprobs, values, entropy = fwd
+                else:
+                    logprobs, values = fwd
+                    entropy = None
+                a_loss, stats = ppo_actor_loss(
                     logprobs, old_logprobs[sl], advantages[sl], mask[sl],
                     clip_eps=cfg.clip_eps, normalize=cfg.normalize,
+                    entropy=entropy, entropy_coef=cfg.entropy_coef,
+                    focus_mask=None if flag_mask is None else flag_mask[sl],
+                    focus_entropy_coef=cfg.flag_entropy_coef,
                 )
-                v_loss, critic_stats = value_loss(
-                    values, old_values[sl], returns[sl], mask[sl], clip_eps=cfg.value_clip_eps,
-                )
-                loss = a_loss + cfg.value_coef * v_loss
+                loss = a_loss
+                if not cfg.value_detach:
+                    # Shared trunk: the value loss has to travel through it, so
+                    # it stays in the joint objective and `value_coef` applies.
+                    v_loss, critic_stats = value_loss(
+                        values, old_values[sl], returns[sl], mask[sl],
+                        clip_eps=cfg.value_clip_eps,
+                    )
+                    loss = loss + cfg.value_coef * v_loss
                 (loss * share).backward()
                 accumulated += float(loss.detach()) * share
-            grad_norm = torch.nn.utils.clip_grad_norm_(
-                actor_params + list(value_head.parameters()), 1.0
-            )
+                for k, val in stats.items():
+                    epoch_stats[k] = epoch_stats.get(k, 0.0) + val * share
+            params = actor_params if cfg.value_detach else actor_params + critic_params
+            grad_norm = torch.nn.utils.clip_grad_norm_(params, 1.0)
             optimizer.step()
+            if not cfg.value_detach:
+                critic_optimizer.step()
+            actor_stats = epoch_stats  # the last epoch: where the policy ended up
 
         record = {
             "step": step,
@@ -658,6 +1798,23 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             "adv_zero_frac": float(
                 (((advantages == 0) & (mask > 0)).float().sum() / mask.sum().clamp(min=1)).item()
             ),
+            # Whether the critic is a critic, measured two ways because they
+            # answer different questions.
+            #
+            # `value_ev` uses `old_values` -- the head as it stood *before* this
+            # batch was fitted, scored on data it had not seen. That is the
+            # honest, out-of-sample number, and it is also the operative one:
+            # `old_values` is what GAE actually built this step's advantages
+            # from.
+            #
+            # `value_ev_fit` uses the head *after* `critic_epochs` steps on this
+            # same batch, so it is in-sample and optimistic. It is here to
+            # separate two failures that look identical from the outside: a head
+            # that cannot fit the batch at all (both near zero) from one that
+            # fits it and then fails to generalise to the next batch (fit high,
+            # out-of-sample near zero).
+            **critic_fit(old_values, returns, mask),
+            **{f"{k}_fit": v for k, v in critic_fit(fitted_values, returns, mask).items()},
             "completion_tokens": float(mask.sum() / mask.shape[0]),
             "unique_completions": float(len(set(roll.completions))),
             "loss": accumulated,
@@ -674,32 +1831,39 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         record["value_step"] = round(
             abs(record["value_mean"] - history[-1]["value_mean"]) if history else 0.0, 6
         )
+        # What the dedicated critic steps bought within this batch alone. None on a
+        # degenerate batch, where `critic_fit` leaves both explained variances undefined
+        # rather than reporting a plausible-looking 0.0.
+        ev, ev_fit = record["value_ev"], record["value_ev_fit"]
+        record["value_ev_gain"] = round(ev_fit - ev, 6) if ev is not None and ev_fit is not None else None
         history.append(record)
+        # Kept as a diagnostic; no longer used to choose a checkpoint.
         window = [r["reward_mean"] for r in history[-BEST_WINDOW:]]
-        trailing = sum(window) / len(window)
-        record["reward_trailing"] = round(trailing, 6)
-        if len(history) >= BEST_WINDOW and trailing > best["reward"]:
-            best = {"reward": trailing, "step": step}
-            policy.save_pretrained(out_dir / "adapter-best")
-            torch.save(value_head.state_dict(), out_dir / "value_head-best.pt")
-            (out_dir / "best.json").write_text(json.dumps(best, indent=2) + "\n")
+        record["reward_trailing"] = round(sum(window) / len(window), 6)
         with metrics_path.open("a") as fh:
             fh.write(json.dumps(record) + "\n")
+        ev_txt = "  undef  " if record["value_ev"] is None else (
+            f"{record['value_ev']:+.3f}/{record['value_ev_fit']:+.3f}"
+        )
         progress(
             f"  step {step:>4} reward {record['reward_mean']:.4f} "
-            f"V {record['value_mean']:.3f} (mae {record['value_mae']:.3f}) "
+            f"V {record['value_mean']:.3f} ev {ev_txt} "
             f"adv {record['adv_mean']:+.3f}+-{record['adv_std']:.3f} "
+            f"clip {record['clip_frac']:.3f} "
             f"tok {record['completion_tokens']:.0f} "
             f"|g| {record['grad_norm']:.3f} {record['step_seconds']:.1f}s"
         )
 
+        if cfg.eval_every and (step + 1) % cfg.eval_every == 0:
+            run_eval(step + 1)
+
     policy.save_pretrained(out_dir / "adapter")
     torch.save(value_head.state_dict(), out_dir / "value_head.pt")
     progress(f"\nwrote {out_dir}")
-    if best["step"] is not None and best["step"] < cfg.steps - 1:
+    if best["step"] is not None and best["step"] < cfg.steps:
         progress(
-            f"NOTE: best trailing-{BEST_WINDOW} reward {best['reward']:.4f} was at step "
-            f"{best['step']}, not at the end ({record['reward_mean']:.4f}). "
+            f"NOTE: best held-out reward {best['reward']:.4f} was at step "
+            f"{best['step']}, not at the end. "
             f"adapter-best/ holds that policy; adapter/ holds the final one."
         )
     return history
@@ -727,15 +1891,27 @@ def main() -> None:
             parser.add_argument(f"--{name.replace('_', '-')}", type=int, default=int(value))
         else:
             parser.add_argument(f"--{name.replace('_', '-')}", type=type(value), default=value)
+    # The sentinel, not the resolved value. `asdict(Config())` has already run
+    # __post_init__, so without this every run would inherit MAIN's baseline as
+    # a hard-coded default -- including `--weights PROBE`, whose frozen policy
+    # scores 0.45 rather than 0.30. A wrong bias on a critic this slow to move
+    # is not a detail: it is most of the baseline for the whole run.
+    parser.set_defaults(value_init_bias=-1.0)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--device", default="auto")
     args = parser.parse_args()
+    if args.weights not in WEIGHT_SETS:
+        parser.error(f"--weights must be one of {sorted(WEIGHT_SETS)}")
 
     fields = {k: v for k, v in vars(args).items() if k in asdict(Config()) and k != "metrics"}
     fields["value_detach"] = bool(fields["value_detach"])
     fields["whiten_advantages"] = bool(fields["whiten_advantages"])
+    fields["prompt_v3"] = bool(fields["prompt_v3"])
+    fields["dense_rewards"] = bool(fields["dense_rewards"])
+    fields["prompt_v4"] = bool(fields["prompt_v4"])
     cfg = Config(**fields)
-    out = args.out or SMOKE_DIR / "runs" / f"ppo-ac-{cfg.weights.lower()}-lam{cfg.lam}-s{cfg.seed}"
+    tag = cfg.model.rsplit("/", 1)[-1].replace(".", "").lower()
+    out = args.out or SMOKE_DIR / "runs" / f"ppo-{tag}-{cfg.weights.lower()}-s{cfg.seed}"
     train(cfg, out, resolve_device(args.device))
 
 

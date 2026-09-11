@@ -1,0 +1,1846 @@
+{
+  "model": "Qwen/Qwen3-1.7B",
+  "backend": "hf",
+  "split": "dev",
+  "split_sha256": "94b32d0557f6962d5be8f5b33cebb5303c4137475f3292a34e9fd8b8018da6c2",
+  "prompt_version": "v2",
+  "weights": "MAIN",
+  "mode": "greedy",
+  "k": 1,
+  "temperature": 0.0,
+  "max_tokens": 640,
+  "seed": 0,
+  "adapter": "/home/bayan/MembraneClaw/experiments/notebooks/smoke_test/runs/ppo-qwen3-17b-ie2-s0/adapter",
+  "overall": {
+    "n_cases": 200,
+    "k": 1,
+    "reward": 0.34535000000000005,
+    "exact_match": 0.0,
+    "validity_gate": 1.0,
+    "schema_ok": 1.0,
+    "cause_acc": 0.29,
+    "action_acc": 0.205,
+    "numeric_acc": 0.05,
+    "flags_acc": 0.3883333333333333,
+    "cause_given_flags": 0.0,
+    "components": {
+      "format": 0.1,
+      "numeric": 0.007499999999999999,
+      "flags": 0.046599999999999996,
+      "stage": 0.03,
+      "root_cause": 0.1305,
+      "action": 0.030749999999999996
+    },
+    "reward_mean_all": 0.34535000000000005,
+    "completion_tokens_mean": 95.515,
+    "completion_chars_mean": 250.405,
+    "parse_errors": {},
+    "schema_errors": {},
+    "predicted_cause_hist": {
+      "scaling": 79,
+      "biofouling": 121
+    },
+    "per_case": [
+      {
+        "id": "dev-main-0147",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0145",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0129",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0100",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0000",
+        "tier": "hard",
+        "reward": 0.62,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0197",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0041",
+        "tier": "easy",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0050",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0130",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0039",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0014",
+        "tier": "easy",
+        "reward": 0.62,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0023",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0143",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0004",
+        "tier": "hard",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0195",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0003",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0027",
+        "tier": "easy",
+        "reward": 0.27,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 2
+      },
+      {
+        "id": "dev-main-0120",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0083",
+        "tier": "hard",
+        "reward": 0.23,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 2
+      },
+      {
+        "id": "dev-main-0033",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0062",
+        "tier": "hard",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0142",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0106",
+        "tier": "easy",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0141",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0036",
+        "tier": "hard",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0126",
+        "tier": "hard",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0053",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0054",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0035",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0196",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0101",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0028",
+        "tier": "hard",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0037",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0177",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0059",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0193",
+        "tier": "easy",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0139",
+        "tier": "hard",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0153",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0168",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0084",
+        "tier": "easy",
+        "reward": 0.62,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0026",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0070",
+        "tier": "hard",
+        "reward": 0.62,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0134",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0078",
+        "tier": "easy",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0191",
+        "tier": "hard",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0183",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0114",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0099",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0133",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0125",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0034",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0032",
+        "tier": "hard",
+        "reward": 0.23,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 2
+      },
+      {
+        "id": "dev-main-0024",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0175",
+        "tier": "easy",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0181",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0137",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0156",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0073",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0013",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0088",
+        "tier": "easy",
+        "reward": 0.26,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0173",
+        "tier": "hard",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0182",
+        "tier": "hard",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0069",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0075",
+        "tier": "hard",
+        "reward": 0.26,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0052",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0107",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0091",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0109",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0115",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0010",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0089",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0127",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0072",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0159",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0164",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0063",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0056",
+        "tier": "hard",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0192",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0012",
+        "tier": "hard",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0163",
+        "tier": "hard",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0118",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0087",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0020",
+        "tier": "easy",
+        "reward": 0.27,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 2
+      },
+      {
+        "id": "dev-main-0184",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0146",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0007",
+        "tier": "hard",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0085",
+        "tier": "hard",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0160",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0098",
+        "tier": "hard",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0081",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0016",
+        "tier": "hard",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0095",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0096",
+        "tier": "hard",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0140",
+        "tier": "hard",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0005",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0171",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0046",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0180",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0082",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0172",
+        "tier": "easy",
+        "reward": 0.26,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0104",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0021",
+        "tier": "hard",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0058",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0112",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0108",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0093",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0017",
+        "tier": "easy",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0061",
+        "tier": "hard",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0047",
+        "tier": "hard",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0008",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0186",
+        "tier": "easy",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0049",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0117",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0102",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0074",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0097",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0022",
+        "tier": "easy",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0079",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0092",
+        "tier": "hard",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0057",
+        "tier": "hard",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0179",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0105",
+        "tier": "easy",
+        "reward": 0.62,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0006",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0040",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0029",
+        "tier": "hard",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0188",
+        "tier": "easy",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0042",
+        "tier": "hard",
+        "reward": 0.62,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0136",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0121",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0001",
+        "tier": "hard",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0080",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0135",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0190",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0185",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0051",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0067",
+        "tier": "hard",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0165",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0038",
+        "tier": "easy",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0124",
+        "tier": "hard",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0119",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0149",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0064",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0178",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0151",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0113",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0025",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0076",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0123",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0019",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0043",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0131",
+        "tier": "easy",
+        "reward": 0.26,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0157",
+        "tier": "hard",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0158",
+        "tier": "easy",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0122",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0176",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0011",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0002",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0152",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0128",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0116",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0154",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0071",
+        "tier": "hard",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0150",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0169",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0030",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0060",
+        "tier": "hard",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0167",
+        "tier": "easy",
+        "reward": 0.26,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0031",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0015",
+        "tier": "hard",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0187",
+        "tier": "easy",
+        "reward": 0.25,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0162",
+        "tier": "hard",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0174",
+        "tier": "easy",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0065",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0189",
+        "tier": "hard",
+        "reward": 0.66,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0094",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0199",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0055",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0170",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0138",
+        "tier": "hard",
+        "reward": 0.26,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0045",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0155",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0161",
+        "tier": "hard",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0077",
+        "tier": "easy",
+        "reward": 0.77,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0110",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0009",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0166",
+        "tier": "easy",
+        "reward": 0.21,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0086",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0048",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0103",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0198",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0018",
+        "tier": "easy",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0044",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0148",
+        "tier": "easy",
+        "reward": 0.81,
+        "cause": true,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0111",
+        "tier": "hard",
+        "reward": 0.13,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0090",
+        "tier": "easy",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0194",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0144",
+        "tier": "hard",
+        "reward": 0.22,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0132",
+        "tier": "easy",
+        "reward": 0.18,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 1
+      },
+      {
+        "id": "dev-main-0066",
+        "tier": "easy",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      },
+      {
+        "id": "dev-main-0068",
+        "tier": "hard",
+        "reward": 0.17,
+        "cause": false,
+        "exact": false,
+        "schema": true,
+        "numeric": 0
+      }
+    ]
+  }
+}

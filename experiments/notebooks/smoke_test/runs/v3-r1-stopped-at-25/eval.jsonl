@@ -1,0 +1,2 @@
+{"step": 0, "reward": 0.65605, "exact_match": 0.09, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.295, "flags_acc": 0.59, "numeric_acc": 1.0, "action_acc": 0.21, "completion_tokens": 95.24}
+{"step": 25, "reward": 0.66425, "exact_match": 0.155, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.295, "flags_acc": 0.6583333333333333, "numeric_acc": 1.0, "action_acc": 0.21, "completion_tokens": 95.545}
