@@ -1158,6 +1158,12 @@ class Config:
     #: meaningful with `dense_rewards`. 1.0 is every run before `09`.
     flat_credit_scale: float = 1.0
 
+    #: A finished run directory to continue from -- its `adapter/` and
+    #: `value_head.pt` are loaded instead of starting from the frozen model. The
+    #: step counter restarts at 0, so `eval.jsonl` in the new directory is the
+    #: continuation's own curve and has to be read with the offset in mind.
+    resume_from: str = ""
+
     #: An entropy bonus applied to the three flag-value tokens and nowhere else.
     #: See `flag_token_mask` for the measurement that motivates it. 0.0 is every
     #: run before `09`; it is independent of `entropy_coef`, which stays global.
@@ -1347,6 +1353,28 @@ def load_policy(cfg: "Config", device: str):
         base.config.hidden_size, cfg.value_init_bias, normalize=cfg.normalize_value,
         extra_features=len(CAUSES) if cfg.privileged_cause else 0,
     ).to(device)
+
+    if cfg.resume_from:
+        # Continue an existing run rather than start one. `09` is the reason this
+        # exists: a 400-step run's `flags_acc` was still climbing at its last
+        # three evaluation points (0.883 -> 0.900 -> 0.927), and re-running with
+        # more steps is *not* a continuation -- the same command diverges from
+        # itself at step 3, because bf16 matmuls are not bitwise deterministic
+        # and one flipped logit at `temperature = 1.0` is enough. Extending a run
+        # therefore has to start from its weights, not from its seed.
+        #
+        # Both halves are restored. The value head matters as much as the policy:
+        # `critic_window` means it is fitted over the last K batches, and a head
+        # re-initialised to `value_init_bias` would spend the first K steps of the
+        # continuation relearning what it already knew.
+        source = Path(cfg.resume_from)
+        policy.load_adapter(str(source / "adapter"), adapter_name="default")
+        head_state = source / "value_head.pt"
+        if head_state.exists():
+            value_head.load_state_dict(torch.load(head_state, map_location=device))
+        else:  # pragma: no cover - a run killed before it saved
+            raise FileNotFoundError(f"no value_head.pt under {source}")
+
     return policy, value_head, tokenizer
 
 
