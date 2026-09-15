@@ -8,3 +8,18 @@ runs/**/adapter*/README.md
 runs/**/*.bin
 runs/**/*.pt
 runs/**/checkpoint-*/
+
+# Two exceptions, named individually so no future run is caught by them.
+#
+# `11`'s result cannot be regenerated: bf16 matmuls on this card are not bitwise
+# deterministic, so re-running the same seeding command and the same 200 PPO
+# steps produces a different policy -- this series measured that divergence at
+# step 3. The numbers stay reproducible from eval.jsonl/metrics.jsonl; the
+# policies do not. So the zero point PPO started from, and the policy it
+# reached, are kept as files rather than as instructions for making them.
+!runs/frz-slots-w4/adapter/adapter_model.safetensors
+!runs/frz-slots-w4/value_head.pt
+!runs/ppo-on-seed-w4/adapter/adapter_model.safetensors
+!runs/ppo-on-seed-w4/adapter-best/adapter_model.safetensors
+!runs/ppo-on-seed-w4/value_head.pt
+!runs/ppo-on-seed-w4/value_head-best.pt
