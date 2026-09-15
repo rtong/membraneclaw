@@ -1,0 +1,3802 @@
+[
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_check_sdi",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "colloidal_fouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "flat",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "flat"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "colloidal_fouling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "flat",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "down",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "down",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "flat"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "down",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "down",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "down",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "compaction",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "flat"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "down",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": true,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "organic_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "acid_clean_low_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "scaling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "isolate_and_evaluate_replacement",
+  "pred_action": "isolate_and_evaluate_replacement",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": true,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_check_sdi",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "colloidal_fouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "flat"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_and_sanitize",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "biofouling",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": true,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "up",
+   "flow": "down",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "alkaline_clean_and_sanitize",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "biofouling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "no_clean_evaluate_replacement",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "compaction",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "up"
+  }
+ },
+ {
+  "true_action": "probe_vessels_and_replace_orings",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "mechanical_leak",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "flat",
+   "salt_passage": "sharp_up"
+  }
+ },
+ {
+  "true_action": "alkaline_clean_high_ph",
+  "pred_action": "acid_clean_low_ph",
+  "true_cause": "organic_fouling",
+  "pred_cause": "scaling",
+  "severe": false,
+  "cause_ok": false,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "down",
+   "salt_passage": "down",
+   "dp": "up"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "down",
+   "salt_passage": "down"
+  }
+ },
+ {
+  "true_action": "check_oxidant_and_replace_elements",
+  "pred_action": "check_oxidant_and_replace_elements",
+  "true_cause": "oxidation_damage",
+  "pred_cause": "oxidation_damage",
+  "severe": false,
+  "cause_ok": true,
+  "flags_ok": false,
+  "pred_flags": {
+   "flow": "up",
+   "salt_passage": "sharp_up",
+   "dp": "down"
+  },
+  "true_flags": {
+   "dp": "flat",
+   "flow": "up",
+   "salt_passage": "sharp_up"
+  }
+ }
+]

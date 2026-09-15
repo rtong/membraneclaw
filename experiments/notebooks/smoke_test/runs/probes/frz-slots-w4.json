@@ -1,0 +1,32 @@
+{
+ "label": "frz-slots-w4",
+ "adapter": "runs/frz-slots-w4/adapter",
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 108,
+ "severe_correct": 108,
+ "severe_slots": 108,
+ "og_emitted": 7,
+ "og_correct": 4,
+ "og_slots": 80,
+ "action_hist": {
+  "acid_clean_low_ph": 147,
+  "check_oxidant_and_replace_elements": 109,
+  "alkalin_clean_and_sanitize": 1,
+  "no_clean_evaluate_replacement": 3,
+  "alkaline_clean_and_sanitize": 224,
+  "isolate_and_evaluate_replacement": 108,
+  "alkaline_clean_and_check_sdi": 8
+ },
+ "cause_hist": {
+  "scaling": 175,
+  "oxidation_damage": 109,
+  "biofouling": 298,
+  "compaction": 3,
+  "colloidal_fouling": 8,
+  "organic_fouling": 7
+ }
+}

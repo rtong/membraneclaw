@@ -1,0 +1,36 @@
+{
+ "label": "sft_full",
+ "adapter": "runs/sft-seed-v2/adapter",
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 107,
+ "severe_correct": 104,
+ "severe_slots": 108,
+ "og_emitted": 79,
+ "og_correct": 77,
+ "og_slots": 80,
+ "action_hist": {
+  "no_clean_evaluate_replacement": 53,
+  "check_oxidant_and_replace_elements": 86,
+  "isolate_and_evaluate_replacement": 107,
+  "alkaline_clean_and_sanitize": 76,
+  "acid_clean_low_ph": 63,
+  "alkaline_clean_and_check_sdi": 72,
+  "probe_vessels_and_replace_orings": 86,
+  "null": 1,
+  "alkaline_clean_high_ph": 56
+ },
+ "cause_hist": {
+  "compaction": 69,
+  "oxidation_damage": 86,
+  "organic_fouling": 79,
+  "biofouling": 105,
+  "scaling": 76,
+  "colloidal_fouling": 98,
+  "mechanical_leak": 86,
+  "null": 1
+ }
+}

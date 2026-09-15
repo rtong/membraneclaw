@@ -1,0 +1,1850 @@
+{
+ "model": "Qwen/Qwen3-1.7B",
+ "backend": "hf",
+ "split": "test",
+ "prompt_version": "v3",
+ "weights": "MAIN",
+ "mode": "greedy",
+ "k": 1,
+ "temperature": 0.0,
+ "max_tokens": 640,
+ "seed": 0,
+ "adapter": "runs/sft-seed-v2/adapter",
+ "overall": {
+  "n_cases": 200,
+  "k": 1,
+  "reward": 0.98735,
+  "exact_match": 0.96,
+  "validity_gate": 1.0,
+  "schema_ok": 1.0,
+  "cause_acc": 0.98,
+  "action_acc": 0.985,
+  "numeric_acc": 1.0,
+  "flags_acc": 0.9883333333333333,
+  "cause_given_flags": 1.0,
+  "components": {
+   "format": 0.1,
+   "numeric": 0.15,
+   "flags": 0.1186,
+   "stage": 0.03,
+   "root_cause": 0.441,
+   "action": 0.14775
+  },
+  "reward_mean_all": 0.98735,
+  "completion_tokens_mean": 114.475,
+  "completion_chars_mean": 318.83,
+  "parse_errors": {},
+  "schema_errors": {},
+  "predicted_cause_hist": {
+   "scaling": 29,
+   "mechanical_leak": 28,
+   "biofouling": 27,
+   "organic_fouling": 29,
+   "colloidal_fouling": 30,
+   "oxidation_damage": 28,
+   "compaction": 29
+  },
+  "per_case": [
+   {
+    "id": "test-main-0049",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0077",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0027",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0141",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0115",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0184",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0035",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0089",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0123",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0113",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0062",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0072",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0018",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0191",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0154",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0020",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0048",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0189",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0117",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0176",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0185",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0096",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0057",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0036",
+    "tier": "easy",
+    "reward": 0.36,
+    "cause": false,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0099",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0051",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0046",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0009",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0142",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0173",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0153",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0034",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0130",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0060",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0104",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0166",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0008",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0058",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0090",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0161",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0133",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0016",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0194",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0165",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0129",
+    "tier": "easy",
+    "reward": 0.51,
+    "cause": false,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0122",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0114",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0000",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0084",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0076",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0110",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0070",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0032",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0079",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0080",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0001",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0152",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0197",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0043",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0183",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0172",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0013",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0121",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0106",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0177",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0188",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0131",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0015",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0126",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0158",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0124",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0038",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0119",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0112",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0017",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0069",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0155",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0175",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0196",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0107",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0182",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0097",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0144",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0071",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0082",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0056",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0025",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0195",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0140",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0041",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0145",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0033",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0019",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0094",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0014",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0042",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0103",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0128",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0146",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0187",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0111",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0138",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0134",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0075",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0151",
+    "tier": "hard",
+    "reward": 0.96,
+    "cause": true,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0064",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0045",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0116",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0067",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0143",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0073",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0029",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0093",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0088",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0169",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0170",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0132",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0120",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0180",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0179",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0081",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0054",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0190",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0039",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0136",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0193",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0167",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0150",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0005",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0085",
+    "tier": "easy",
+    "reward": 0.51,
+    "cause": false,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0139",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0159",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0087",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0012",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0164",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0125",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0178",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0002",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0026",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0063",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0059",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0108",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0037",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0109",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0021",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0068",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0156",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0198",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0199",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0030",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0127",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0192",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0163",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0157",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0171",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0181",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0102",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0007",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0044",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0174",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0149",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0148",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0095",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0040",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0101",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0010",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0065",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0083",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0028",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0162",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0118",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0061",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0066",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0092",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0098",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0147",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0186",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0055",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0105",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0024",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0011",
+    "tier": "hard",
+    "reward": 0.85,
+    "cause": true,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0137",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0031",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0160",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0091",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0074",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0053",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0100",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0004",
+    "tier": "easy",
+    "reward": 0.96,
+    "cause": true,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0052",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0168",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0135",
+    "tier": "hard",
+    "reward": 0.36,
+    "cause": false,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0078",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0006",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0023",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0003",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0050",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0086",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0047",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "test-main-0022",
+    "tier": "hard",
+    "reward": 0.96,
+    "cause": true,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   }
+  ]
+ }
+}

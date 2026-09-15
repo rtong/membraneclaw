@@ -1,0 +1,34 @@
+{
+ "label": "seed11-offdist-full",
+ "adapter": "runs/seed11-offdist-full/adapter",
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 107,
+ "severe_correct": 107,
+ "severe_slots": 108,
+ "og_emitted": 75,
+ "og_correct": 75,
+ "og_slots": 80,
+ "action_hist": {
+  "no_clean_evaluate_replacement": 72,
+  "check_oxidant_and_replace_elements": 79,
+  "isolate_and_evaluate_replacement": 107,
+  "alkaline_clean_and_sanitize": 74,
+  "acid_clean_low_ph": 61,
+  "probe_vessels_and_replace_orings": 84,
+  "alkaline_clean_and_check_sdi": 68,
+  "alkaline_clean_high_ph": 55
+ },
+ "cause_hist": {
+  "compaction": 94,
+  "oxidation_damage": 80,
+  "organic_fouling": 75,
+  "biofouling": 99,
+  "scaling": 73,
+  "mechanical_leak": 84,
+  "colloidal_fouling": 95
+ }
+}

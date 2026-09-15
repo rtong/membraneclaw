@@ -1,0 +1,31 @@
+{
+ "label": "ppo575",
+ "adapter": "runs/ppo-qwen3-17b-v3-flat3-resume200/adapter-best",
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 0,
+ "severe_correct": 0,
+ "severe_slots": 108,
+ "og_emitted": 0,
+ "og_correct": 0,
+ "og_slots": 80,
+ "action_hist": {
+  "no_clean_evaluate_replacement": 206,
+  "check_oxidant_and_replace_elements": 83,
+  "alkaline_clean_and_sanitize": 96,
+  "probe_vessels_and_replace_orings": 91,
+  "alkaline_clean_and_check_sdi": 100,
+  "acid_clean_low_ph": 24
+ },
+ "cause_hist": {
+  "compaction": 206,
+  "oxidation_damage": 83,
+  "biofouling": 96,
+  "mechanical_leak": 91,
+  "colloidal_fouling": 100,
+  "scaling": 24
+ }
+}
