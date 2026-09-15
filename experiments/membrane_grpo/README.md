@@ -523,13 +523,14 @@ components did it, and it tracked `PROBE`.
 
 ### The seed replication (P9)
 
-`MAIN` and `ABLATE` re-run at seed 42, everything else identical:
+All three weight sets re-run at seed 42, everything else identical:
 
-| held-out `cause` | seed 0 | seed 42 |
-| --- | --- | --- |
-| `MAIN` | 0.295 | 0.315 |
-| `ABLATE` | **0.430** | **0.340** |
-| `ABLATE` − `MAIN` | **+0.135**, p < 1e-4 | +0.025, p = 0.30 |
+| held-out `cause` | seed 0 | seed 42 | seed 0 → 42 |
+| --- | --- | --- | --- |
+| `MAIN` | 0.295 | 0.315 | +0.020, p = 0.29 |
+| `ABLATE` | **0.430** | **0.340** | −0.090, **p = 0.0003** |
+| `PROBE` | **0.450** | **0.365** | −0.085, **p = 0.016** |
+| `ABLATE` − `MAIN` | **+0.135**, p < 1e-4 | +0.025, p = 0.30 | |
 
 It does not replicate, and the seed moves `ABLATE` further than the weighting
 does: `ABLATE` seed 0 against seed 42 is −0.090, 21 discordant pairs to 3,
@@ -541,11 +542,22 @@ nothing about whether the weighting reliably produces such policies. Only
 repetition supports the second claim, and a small p-value on a single run is not
 a substitute for it.
 
-`PROBE` was re-run at seed 42 as well and reached 0.425, but **that run's
-artifacts were lost** — it executed in `/tmp` on the training box, which was
-cleared by a reboot before the results were copied back. The number is therefore
-not reported as a result anywhere in this repository, and the run needs redoing.
-Every other figure here comes from a committed artifact in `runs/`.
+`PROBE` does not replicate either. Its seed-42 run lands at 0.365 — 31 cases
+lost against 14 gained relative to seed 0, p = 0.016 — so both high-`numeric`
+configurations move with the seed about as much as they differed from `MAIN`,
+and only `MAIN` is stable. At seed 42 `PROBE` still beats `MAIN` (+0.050, 11
+discordant pairs to 1, p = 0.0063) but is indistinguishable from `ABLATE`
+(+0.025, 16 to 11, p = 0.44). "The mis-weighted control produces the best
+policy" therefore holds at one seed of two.
+
+A first attempt at this run reported 0.425, but it executed in `/tmp` on the
+training box, which was cleared by a reboot before its artifacts were copied
+back, and it ran from an older checkout. Training on the GPU is not bit-for-bit
+reproducible even at a fixed seed, so the two numbers cannot be reconciled after
+the fact. 0.425 is not reported as a result; the committed rerun in
+`runs/q3-probe-s42/` is. The rerun wrote into `$HOME`, survived a later reboot,
+and was copied back before any analysis. Every figure here comes from a committed
+artifact in `runs/`.
 
 ## The oracle decomposition (P10)
 
@@ -708,8 +720,9 @@ against a 1/7 = 0.143 chance floor.
 policy was reportable as a 19x gain under `PROBE`'s weights against 3.2x under
 `MAIN`'s, which is the separation the control was built to produce. On
 Qwen3-1.7B it reversed: `PROBE` de-emphasises `root_cause` 0.45 → 0.10 and
-produced the *best* held-out diagnosis of the three, 0.450 against `MAIN`'s
-0.295. The control was written to show that reward can rise without capability;
+produced the *best* held-out diagnosis of the three at seed 0, 0.450 against
+`MAIN`'s 0.295 — though at seed 42 it fell to 0.365 and tied `ABLATE` (P9). The
+control was written to show that reward can rise without capability;
 it showed that a reward weighted away from the target can produce more of it.
 P10 explains why the whole family of weighting arguments was mis-aimed.
 
