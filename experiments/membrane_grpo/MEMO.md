@@ -98,7 +98,8 @@ paired cases:
 rising reward need not mean a better policy: I moved weight *away* from
 `root_cause`, 0.45 → 0.10, expecting the reward to climb while the diagnosis
 stayed put. It produced the best diagnosis of the three — +0.195 against MAIN's
-+0.040, which is not even significant.
++0.040, which is not even significant. (At seed 42 that lead shrinks to a tie
+with ABLATE; see Limits.)
 
 **ABLATE was built to say why.** PROBE differs from MAIN on four components at
 once, so "raising `numeric`" and "lowering `root_cause`" were both live. ABLATE
@@ -271,8 +272,9 @@ into every number afterwards.
 
 **Two seeds, and they disagree.** This design cannot separate a reward-weighting
 effect from seed noise at n=2, and would need perhaps five seeds per
-configuration to try. PROBE has been run once, so everything said about it
-carries the caveat that just cost ABLATE its conclusion. Part 3 is the
+configuration to try. PROBE has now had its second seed too, and it moves like
+ABLATE: 0.450 → 0.365, p = 0.016, still ahead of MAIN at seed 42 but tied with
+ABLATE. Only MAIN is stable across seeds. Part 3 is the
 exception, and that is why it is the strongest section here: a frozen policy
 under greedy decoding is deterministic — repeating the three evaluations
 reproduces them to three decimals — so there is no seed for it to fail.
