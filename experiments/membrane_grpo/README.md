@@ -197,9 +197,7 @@ before the baseline rather than after it.
 
 Qwen2.5-0.5B-Instruct, prompt v2, dev split (`sha256 94b32d05…`), seed 0.
 Artifacts in `runs/baseline-0.5b-v2/`. No run in this directory evaluates on
-the test split. The sibling experiment in `experiments/notebooks/smoke_test` has
-since done so (#16), so `test.jsonl` is no longer an untouched held-out set for
-the project as a whole.
+the test split.
 
 | greedy, pass@1 | dev | holdout_shift |
 | --- | --- | --- |
@@ -609,8 +607,10 @@ McNemar's exact test, same 200 paired cases:
 
 Perfect arithmetic is worth +0.035 **to the frozen policy** and does not clear
 significance. That bounds what supplying the numbers buys without further
-training; it is not the ceiling of a calculator wired into the task, which the
-last subsection below shows directly. `numeric → flags` is real and
+training. It is not the ceiling of a calculator wired into the task: nothing
+here trains with the numbers supplied, and no run here reaches non-zero exact
+match without them, so how far
+such a policy could be trained is untested. `numeric → flags` is real and
 `flags → cause` is real, but the composite is not: `cause` needs all three flags
 at once, and perfect arithmetic lifts the per-field rate 0.330 → 0.580 while
 lifting the three-way conjunction only 0.02 → 0.13.
@@ -634,14 +634,9 @@ right:
 Greedy decoding never reaches four of the seven labels, and the three it does
 reach are exactly the three rows requiring `dp = up`. Of the 0.745 between the
 frozen policy and a perfect one, **0.585 — 78% — survives handing over everything
-upstream.**
-
-This is a property of the argmax under this prompt, not of the model's
-vocabulary. The sibling experiment's temperature-1.0 probe of the same frozen
-model (600 samples of the train split, `smoke_test/runs/probes/frozen.json`)
-emits `compaction` 22 times, `mechanical_leak` 8 and `oxidation_damage` 2, while
-`colloidal_fouling` — 31 times under greedy here — and `organic_fouling` are both
-at 0/600. Which labels are unreachable depends on how the policy is decoded.
+upstream.** This is a property of the argmax under this prompt; which labels a
+*sampled* policy reaches was not measured, and "not in the vocabulary" would be a
+stronger claim than these three evaluations support.
 
 `action` has the same shape plus one failure of its own:
 
@@ -682,34 +677,6 @@ result in this project with no seed for it to fail at.
 been reporting 0.000 on the frozen baseline, which turns out to be 0 of **4** —
 the model assembles a correct flag triple 4 times in 200. `cause_given_flags_n`
 is now recorded alongside it.
-
-### What training on top of it did (#16)
-
-Everything above is a measurement of the frozen policy. The sibling actor-critic
-experiment, `experiments/notebooks/smoke_test`, ran the same oracle
-independently (its "v3") and matched these numbers — `flags_acc` 0.590 against
-0.580, `exact_match` 0.090 against 0.090, `cause_given_flags` 1.000 in both — and
-then trained on top. From its committed artifacts:
-
-| run | what it adds | dev EM | test EM | `holdout_shift` EM |
-| --- | --- | --- | --- | --- |
-| frozen, arithmetic supplied | — | 0.090 | | |
-| `ppo-qwen3-17b-v3-flat3-resume100` | PPO, 3x credit on `flat`, 500 steps | 0.620 | | |
-| `ppo-on-seed-w4`, step 0 | supervised seed, no task answers | 0.255 | | |
-| `ppo-on-seed-w4`, step 200 | + 200 PPO steps | **0.930** | **0.930** | **0.920** (n = 50) |
-
-The seed is trained on off-distribution records with the loss masked to the
-`root_cause` and `action` slots, so it teaches the label vocabulary without any
-task answer; test and `holdout_shift` figures are `runs/paired/ppo_on_seed_*.json`.
-Every non-zero exact-match result in either experiment comes from a run with the
-arithmetic supplied.
-
-Two limits carry over. These are single runs, and that experiment records that
-its training does not reproduce at a fixed seed. And its paired files do not
-record `split_sha256`, so unlike this directory's they cannot prove by hash which
-frozen split they scored. Neither undoes the point that matters here: the 78%
-gap above is where this model starts, not a ceiling on what training reaches from
-it.
 
 ## Pre-registered predictions
 

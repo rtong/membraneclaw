@@ -25,9 +25,8 @@ configurations.
 Handing the frozen model perfect arithmetic moves held-out diagnosis by +0.035
 and does not reach significance. Hand it perfect flags too, leaving nothing but
 a 17-row lookup, and under greedy decoding it names three of the seven causes
-and never the other four. That is where the policy starts, not how far it can
-go: a sibling experiment trained on top of the same supplied numbers and
-reached exact match 0.930 on held-out data.
+and never the other four. That is where this policy starts; what training from
+there would reach is not measured here.
 
 The first conclusion was not wrong; it was a statement about a model that could
 not do the task at all, and I had mistaken it for a statement about RL. The
@@ -176,10 +175,11 @@ McNemar's exact test on the same 200 paired cases: baseline → `numeric` is
 
 **Perfect arithmetic is worth +0.035 to the frozen policy and does not clear
 significance.** That bounds what supplying the numbers buys *without further
-training*, and nothing more. An earlier draft of this paragraph called it the
-ceiling of any calculator or tool wired into this task; the sibling experiment
-below supplied the same numbers and trained on top, and every exact-match result
-above zero in either experiment comes from a run that had them.
+training*, and nothing more. An earlier draft called it the ceiling of any
+calculator or tool wired into this task. It is not: nothing here trains on top
+of the supplied numbers, and no run here has exact match above zero without them, so
+this measures a starting point and says nothing about how far a policy given the
+numbers could be trained.
 
 **The chain is real link by link and does not transmit.** `numeric → flags`
 holds: all-three-flags goes 4 → 26, p = 0.0001. `flags → cause` holds: +0.125.
@@ -199,11 +199,9 @@ over, the 17-row lookup is the entire remaining task, and:
 
 This is not a lookup performed badly. Greedy decoding never reaches four of the
 seven labels, and the three it does reach are exactly the three rows requiring
-`dp = up`. That is a statement about the argmax, not about what the model can
-say: sampled at temperature 1.0 in the sibling experiment's probe, three of those
-four do appear, rarely, while `colloidal_fouling` — named 31 times here — does
-not. Of the 0.745 between the frozen policy and a perfect one, **0.585 — 78% —
-survives handing over everything upstream.**
+`dp = up`. That is a property of the argmax under this prompt, not a claim that
+the model cannot produce those strings — sampling was not measured. Of the 0.745 between the frozen policy and a
+perfect one, **0.585 — 78% — survives handing over everything upstream.**
 
 `action` has the same shape and one failure of its own: the severity override —
 one stated conditional covering 37 of the 200 cases — is applied **zero** times
@@ -215,18 +213,6 @@ Two controls, both in the README with the rest of the detail: `numeric_acc` is
 exactly 1.000, so none of this is a failure to transcribe; and the gain is not a
 schema artifact, since restricting to the cases the baseline already parsed
 leaves the same picture.
-
-**What training on top of it did.** The sibling actor-critic experiment
-(`experiments/notebooks/smoke_test`, merged in #16) ran the same oracle
-independently and matched these frozen numbers — flags 0.590 against 0.580,
-exact match 0.090 against 0.090 — and then trained. PPO with the arithmetic
-supplied reached dev exact match 0.620. From a supervised seed that taught no
-task answer — off-distribution records, loss masked to the `root_cause` and
-`action` slots, exact match 0.255 before any PPO — 200 PPO steps reached 0.930
-on dev, 0.930 on the test split and 0.920 on `holdout_shift`. Those are single
-runs, and that experiment records that its training does not reproduce at a
-fixed seed. What they settle is narrower, and enough: the gap measured above is
-a starting point for this model, not a ceiling on it.
 
 What this costs Part 2 is its interpretation, not its numbers. `root_cause` was
 never a measurement of whether the model could read the table. On four rows of
@@ -336,9 +322,8 @@ experiment around is not what gates the diagnosis. Perfect numbers buy +0.035,
 not significant; perfect numbers and perfect flags still leave 78% of the gap,
 because greedy decoding never reaches four of the seven causes and one stated
 conditional is never applied in 37 chances. That measures where the policy
-starts. Trained on top of the same supplied numbers, the sibling experiment
-reached exact match 0.930 on held-out data, so it is not a ceiling — and the
-first draft of this section, which called it one, made the same mistake Part 2
-did: a true measurement promoted into a claim it could not carry. **Measure where
-a policy starts before deciding what training can do from there, and say which
-of the two a number is.**
+starts, not a ceiling on where training could take it — and the first draft of
+this section, which called it a ceiling, made the same mistake Part 2 did: a true
+measurement promoted into a claim it could not carry. **Measure where a policy
+starts before deciding what training can do from there, and say which of the two
+a number is.**
