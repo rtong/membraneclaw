@@ -693,12 +693,14 @@ the two with a control.
 | `q3-oracle-main-s0` | `v2-oracle-num` | a fresh adapter | `MAIN`, 0 |
 | `seed-shuffled` | `v2-oracle-num` | the frozen model; 387 off-scale records, `(root_cause, action)` pairs permuted across records | — |
 | `q3-oracle-main-shufseed-s0` | `v2-oracle-num` | `seed-shuffled/adapter` | `MAIN`, 0 |
+| `seed-true` | `v2-oracle-num` | the frozen model; the same 387 records, labels unshuffled | — |
+| `q3-oracle-main-trueseed-s0` | `v2-oracle-num` | `seed-true/adapter` | `MAIN`, 0 |
 
 Both GRPO runs are otherwise `q3-main-s0`'s configuration, 200 steps. The
 shuffled seed installs exactly the correct seed's vocabulary — every label and
 every pair as often, the dead-label weight on the same 172 cases — while 348 of
-387 records get another record's labels. A seed with correct labels is not run
-(by decision, to save the GPU hours); that bounds what this can conclude.
+387 records get another record's labels. The last two rows were added by the
+amendment below.
 
 **Primary measure:** held-out `cause_acc` at step 200, shuffled-seed run against
 fresh run, McNemar on the same 200 dev cases from `eval.py` on the final
@@ -714,6 +716,28 @@ causes the final policy emits.
 The ±0.15 / −0.10 bands are set above the seed-to-seed movement already
 measured on this model under GRPO (0.085–0.090 in `cause_acc`, P9). This is one
 seed per run, so A or B would be "consistent with", not established.
+
+**Amendment, 2026-09-15, before any GRPO result.** The correctly labelled seed
+is now run as well, queued after the two runs above. Written while the fresh
+run was in progress, with no step-200 number from either GRPO run seen; the only
+result seen was the shuffled seed evaluated on its own, before RL (`cause_acc`
+0.145, `cause_given_flags` 0.081 over 62, two causes emitted under greedy
+decoding). The A/B/C table above stays as recorded. With the correct seed in
+hand, the primary comparison becomes shuffled seed against correct seed, both
+after GRPO, at step 200:
+
+| outcome | criterion | reading |
+| --- | --- | --- |
+| **A′** | correct ≥ fresh **+0.15** (p < 0.05), and \|shuffled − correct\| < 0.10 with p ≥ 0.05 | the seed helps GRPO, and only its vocabulary is needed |
+| **B′** | correct ≥ shuffled **+0.15**, p < 0.05 | what the seed contributes is the lookup |
+| **C′** | correct < fresh + 0.15, or p ≥ 0.05 against fresh | the seed does not help GRPO here, so vocabulary against lookup is not tested |
+| **D′** | anything else | inconclusive |
+
+A′ also needs its precondition checked rather than assumed: a temperature-1.0
+probe (`eval.py --mode sample -k 8` on dev, all 1,600 samples counted) of the
+frozen policy and both seeds. If the shuffled seed leaves `organic_fouling` or
+`isolate_and_evaluate_replacement` at zero samples, it failed to install the
+vocabulary it controls for, and A′ is not available whatever the accuracies say.
 
 One known risk, stated in advance: a sequence-level reward gives no per-token
 credit, and if GRPO does not learn to say `flat`, flag accuracy caps near 0.67

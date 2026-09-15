@@ -373,6 +373,13 @@ def summarise(results: list[CaseResult], weights) -> dict[str, Any]:
     metrics["predicted_cause_hist"] = dict(
         Counter(r.diagnostics.get("predicted_cause") for r in first)
     )
+    # Over every sample rather than the first of each case. In sample mode the
+    # question is usually whether a label has any probability mass at all, and a
+    # label at 1% mass is expected about twice in 200 first samples but sixteen
+    # times in 1,600. In greedy mode k = 1, so these equal the first-sample counts.
+    every = [s for row in rows for s in row["scored"]]
+    metrics["sampled_cause_hist"] = dict(Counter(s.diagnostics.get("predicted_cause") for s in every))
+    metrics["sampled_action_hist"] = dict(Counter(s.diagnostics.get("predicted_action") for s in every))
 
     # Per-case outcomes, so two evaluations of the same split can be compared
     # with a paired test. Aggregates alone force the far weaker
