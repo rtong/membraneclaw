@@ -1,0 +1,503 @@
+{
+ "model": "Qwen/Qwen3-1.7B",
+ "backend": "hf",
+ "split": "holdout_shift",
+ "prompt_version": "v3",
+ "weights": "MAIN",
+ "mode": "greedy",
+ "k": 1,
+ "temperature": 0.0,
+ "max_tokens": 640,
+ "seed": 0,
+ "adapter": "runs/ppo-on-seed-w4-s1/adapter",
+ "overall": {
+  "n_cases": 50,
+  "k": 1,
+  "reward": 0.9520000000000001,
+  "exact_match": 0.88,
+  "validity_gate": 1.0,
+  "schema_ok": 0.98,
+  "cause_acc": 0.92,
+  "action_acc": 0.96,
+  "numeric_acc": 1.0,
+  "flags_acc": 0.9666666666666667,
+  "cause_given_flags": 0.9777777777777777,
+  "components": {
+   "format": 0.098,
+   "numeric": 0.15,
+   "flags": 0.11599999999999999,
+   "stage": 0.03,
+   "root_cause": 0.414,
+   "action": 0.144
+  },
+  "reward_mean_all": 0.9520000000000001,
+  "completion_tokens_mean": 97.26,
+  "completion_chars_mean": 263.58,
+  "parse_errors": {},
+  "schema_errors": {
+   "bad_value": 1
+  },
+  "predicted_cause_hist": {
+   "biofouling": 9,
+   "mechanical_leak": 6,
+   "oxidation_damage": 6,
+   "scaling": 10,
+   "colloidal_fouling": 7,
+   "null": 1,
+   "organic_fouling": 8,
+   "compaction": 3
+  },
+  "per_case": [
+   {
+    "id": "holdout_shift-shift_temp-0008",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0022",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0006",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0005",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0020",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0019",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0000",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0007",
+    "tier": "hard",
+    "reward": 0.96,
+    "cause": true,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0009",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0011",
+    "tier": "hard",
+    "reward": 0.41,
+    "cause": false,
+    "exact": false,
+    "schema": false,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0021",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0010",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0013",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0018",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0012",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0024",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0017",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0014",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0003",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0015",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0023",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0004",
+    "tier": "hard",
+    "reward": 0.55,
+    "cause": false,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0002",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0001",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_temp-0016",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0019",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0018",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0005",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0015",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0017",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0024",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0009",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0011",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0007",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0020",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0014",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0003",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0008",
+    "tier": "easy",
+    "reward": 0.96,
+    "cause": true,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0006",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0012",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0022",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0002",
+    "tier": "easy",
+    "reward": 0.36,
+    "cause": false,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0023",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0013",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0021",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0010",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0001",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0016",
+    "tier": "hard",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0004",
+    "tier": "hard",
+    "reward": 0.36,
+    "cause": false,
+    "exact": false,
+    "schema": true,
+    "numeric": 3
+   },
+   {
+    "id": "holdout_shift-shift_boundary-0000",
+    "tier": "easy",
+    "reward": 1.0,
+    "cause": true,
+    "exact": true,
+    "schema": true,
+    "numeric": 3
+   }
+  ]
+ }
+}
