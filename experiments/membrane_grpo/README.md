@@ -63,6 +63,15 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P4 | `grpo_scratch.py` — hand-written GRPO | done — **exit gate met** |
 | P5 | short run + probe-reward control | done |
 | P7 | curves and memo | done — [`MEMO.md`](MEMO.md) |
+| P8 | model selection, then three weight sets on Qwen3-1.7B | done — the diagnosis moves |
+| P9 | seed replication of MAIN and ABLATE | done — **P8's explanation does not replicate** |
+| P10 | the oracle decomposition, no training | done — **the bottleneck is not arithmetic** |
+
+P8 onwards is why the memo has three parts rather than one. P8 found a reward
+weighting that appeared to move held-out `root_cause` 0.295 → 0.430 at p < 1e-4;
+P9 re-ran it at seed 42 and got 0.340, with the seed accounting for more of the
+difference than the weighting; P10 stopped training altogether and asked what
+the ceiling was, which turned out to be far below where the runs were aiming.
 
 Training moved to `anton`, a CUDA box on the tailnet, after P2. The task layer
 and the frozen data carry over untouched — that is what the standard-library-only
@@ -469,6 +478,187 @@ that gets the diagnosis wrong on 12% of cases beats one that gets every field
 right but adds a stray key. That inversion is the misspecification the control
 is built to demonstrate, and it is visible before a single gradient step.
 
+## Model selection and the three weight sets (P8, P9)
+
+The 0.5B result was confounded: half its reward gain was schema validity going
+0.005 → 1.000, which is formatting rather than diagnosis, and its `cause_acc`
+sat *exactly* at the 1/7 chance floor, leaving RL nothing partial to sharpen.
+Three candidates, measured on the same 200 dev cases (`runs/sel-*`) rather than
+argued about:
+
+| frozen, dev, greedy | reward | `cause` | `numeric` | `schema` | tokens |
+| --- | --- | --- | --- | --- | --- |
+| Qwen2.5-Math-1.5B-Instruct | 0.000 | 0.000 | 0.000 | 0.000 | 638 |
+| Qwen2.5-1.5B-Instruct | 0.209 | 0.215 | 0.000 | 0.000 | 108 |
+| **Qwen3-1.7B** | **0.315** | **0.255** | **0.038** | **0.970** | 98 |
+
+Three unrelated failure modes. Math-1.5B writes 638 tokens of arithmetic and
+never emits a JSON object — `no_json` 200/200 — trading instruction-following
+for exactly the capability wanted. Qwen2.5-1.5B has one mechanical defect: the
+numeric fields come out as strings, so `not_a_number` fires 600 times over 200
+cases. Qwen3-1.7B was chosen less for its score than because its schema validity
+**starts** at 0.970, which leaves at most 0.003 of the headroom that confounded
+the 0.5B — so a reward rise on this model cannot be format learning.
+
+The pre-registered go/no-go for this choice was `pass@8 > 0`, and it rejected all
+three. It was overridden, and the scoring below explains why it was the wrong
+criterion.
+
+### Three weight sets, one variable (P8)
+
+200 steps each, seed 0, identical but for the reward weight vector. Held-out
+`root_cause`, greedy, McNemar against the frozen policy on the same 200 cases:
+
+| | `numeric` wt | `cause` wt | `cause_acc` | vs frozen |
+| --- | --- | --- | --- | --- |
+| frozen | | | 0.255 | |
+| `MAIN` | 0.15 | 0.45 | 0.295 | p = 0.057, **not significant** |
+| `ABLATE` | **0.35** | 0.25 | **0.430** | p < 1e-4 |
+| `PROBE` | **0.35** | **0.10** | **0.450** | p < 1e-4 |
+
+`PROBE` is the control, built to show that reward can rise while capability does
+not — weight moved *away* from `root_cause`, 0.45 → 0.10. It produced the best
+diagnosis of the three. `ABLATE` was added to isolate which of the four moved
+components did it, and it tracked `PROBE`.
+
+### The seed replication (P9)
+
+`MAIN` and `ABLATE` re-run at seed 42, everything else identical:
+
+| held-out `cause` | seed 0 | seed 42 |
+| --- | --- | --- |
+| `MAIN` | 0.295 | 0.315 |
+| `ABLATE` | **0.430** | **0.340** |
+| `ABLATE` − `MAIN` | **+0.135**, p < 1e-4 | +0.025, p = 0.30 |
+
+It does not replicate, and the seed moves `ABLATE` further than the weighting
+does: `ABLATE` seed 0 against seed 42 is −0.090, 21 discordant pairs to 3,
+**p = 0.0003**. `MAIN` is stable (+0.020, 8 discordant, p = 0.29).
+
+The error was reading McNemar's p < 1e-4 at one seed as "the effect is real".
+The test asks whether *these two policies* differ on *these 200 cases*; it says
+nothing about whether the weighting reliably produces such policies. Only
+repetition supports the second claim, and a small p-value on a single run is not
+a substitute for it.
+
+`PROBE` was re-run at seed 42 as well and reached 0.425, but **that run's
+artifacts were lost** — it executed in `/tmp` on the training box, which was
+cleared by a reboot before the results were copied back. The number is therefore
+not reported as a result anywhere in this repository, and the run needs redoing.
+Every other figure here comes from a committed artifact in `runs/`.
+
+## The oracle decomposition (P10)
+
+Three evaluations of the **frozen** Qwen3-1.7B, no training, 83 seconds each,
+differing only in how much of the stated procedure the prompt hands over:
+
+| version | Step 1 | Step 2 |
+| --- | --- | --- |
+| `v2` | model computes the three percent changes | model derives the flags |
+| `v2-oracle-num` | **given** | model derives the flags |
+| `v2-oracle-flags` | **given** | **given** |
+
+The injected values come from `task.generate.truth_from_record`, the project's
+only grader, so they are *derived from the record* by the same function that
+writes the answer key rather than copied out of it — a mislabelled case would be
+injected wrong and caught. `test_the_oracle_changes_only_the_step_it_names`
+pins that everything before Step 1 and everything from Step 3 to the schema is
+byte-identical to `v2`; `PROMPT_VERSION` stays `"v2"`, so every committed run
+remains comparable.
+
+```sh
+python3 eval.py --backend hf --model Qwen/Qwen3-1.7B --split dev --mode greedy \
+  --max-tokens 640 --batch-size 16 --prompt-version v2-oracle-num --run-name oracle-num
+```
+
+### What it measured
+
+| frozen, dev, greedy | `oracle-base` | `oracle-num` | `oracle-flags` |
+| --- | --- | --- | --- |
+| `numeric_acc` | 0.038 | 1.000 | 1.000 |
+| `flags_acc`, per field | 0.330 | 0.580 | 1.000 |
+| all three flags at once | 4/200 | 26/200 | 200/200 |
+| **`cause_acc`** | **0.255** | **0.290** | **0.415** |
+| `action_acc` | 0.195 | 0.205 | 0.225 |
+| `exact_match` | 0.000 | 0.090 | 0.210 |
+| `schema_ok` | 0.970 | 1.000 | 1.000 |
+
+McNemar's exact test, same 200 paired cases:
+
+| | difference | gained | lost | discordant | p |
+| --- | --- | --- | --- | --- | --- |
+| base → num | +0.035 | 9 | 2 | 11 | 0.0654, **not significant** |
+| num → flags | +0.125 | 25 | 0 | 25 | **< 1e-4** |
+| base → flags | +0.160 | 34 | 2 | 36 | **< 1e-4** |
+| base → num, `flags_ok` | +0.110 | 26 | 4 | 30 | **0.0001** |
+
+Perfect arithmetic — the ceiling of any calculator, tool or solver — is worth
++0.035 and does not clear significance. `numeric → flags` is real and
+`flags → cause` is real, but the composite is not: `cause` needs all three flags
+at once, and perfect arithmetic lifts the per-field rate 0.330 → 0.580 while
+lifting the three-way conjunction only 0.02 → 0.13.
+
+### Where it actually fails: four labels that are never emitted
+
+With numbers and flags both given, the 17-row lookup is the whole remaining
+task. `predicted_cause` says what it answered rather than only whether it was
+right:
+
+| true cause | n | emitted | correct | what it said instead |
+| --- | --- | --- | --- | --- |
+| `scaling` | 29 | 79 | **29/29** | — |
+| `biofouling` | 29 | 90 | **29/29** | — |
+| `colloidal_fouling` | 29 | 31 | 25/29 | `biofouling` ×4 |
+| `organic_fouling` | 29 | **0** | 0/29 | `scaling` ×16, `biofouling` ×13 |
+| `compaction` | 28 | **0** | 0/28 | `scaling` ×15, `biofouling` ×7, `colloidal` ×6 |
+| `oxidation_damage` | 28 | **0** | 0/28 | `biofouling` ×22, `scaling` ×6 |
+| `mechanical_leak` | 28 | **0** | 0/28 | `biofouling` ×15, `scaling` ×13 |
+
+Four of seven labels are not in the model's output vocabulary at all, and the
+three that are happen to be exactly the three rows requiring `dp = up`. Of the
+0.745 between the frozen policy and a perfect one, **0.585 — 78% — survives
+handing over everything upstream.** No tool addresses that.
+
+`action` has the same shape plus one failure of its own:
+
+* **The severity override is never applied.** *If the flow loss is past −30 the
+  action is `isolate_and_evaluate_replacement` whatever the cause* covers 37 of
+  the 200 cases. The model applies it **0 times in all three conditions**,
+  including the one that hands it the flow percentage.
+  `isolate_and_evaluate_replacement` is emitted 0 times in 200 — and it is
+  reachable from no cause, so it appears only behind that one conditional.
+* **The cause and action heads collapse onto different subsets.** Four action
+  labels of eight, and not the four its own causes imply: it names
+  `colloidal_fouling` 31 times but that cause's action 5, reaching for
+  `compaction`'s action 26 times instead. The pair is not coming off the table
+  together.
+* **The lookup itself is fine.** Where the cause is right and the override does
+  not apply, `action` follows it 39/39 and 41/41 in the first two conditions.
+
+A guess that did not survive: the obvious reading of `colloidal_fouling`'s 1/20
+was a label collision with the string-similar `alkaline_clean_and_sanitize`.
+`predicted_action` was recorded rather than asserted, and it says the model
+reaches for `no_clean_evaluate_replacement` — a different row entirely.
+
+### Two controls, and the determinism check
+
+`numeric_acc` is exactly 1.000 over 200 cases and three fields, so none of this
+is a failure to transcribe what was given. And the gain is not a schema
+artifact: none of the nine cases that flipped to a correct cause were among the
+baseline's six `no_json`, and restricting to the 194 the baseline parsed leaves
+the same picture, 0.263 → 0.299 → 0.428.
+
+All three evaluations were run twice, a commit apart, to add `action`,
+`predicted_cause`, `predicted_action` and `severe` to `per_case`. Every headline
+number reproduced to three decimals. A frozen policy under greedy decoding at a
+fixed batch size is deterministic on this box — which is why P10 is the only
+result in this project with no seed for it to fail at.
+
+`cause_given_flags` needed a denominator before any of this was readable. It had
+been reporting 0.000 on the frozen baseline, which turns out to be 0 of **4** —
+the model assembles a correct flag triple 4 times in 200. `cause_given_flags_n`
+is now recorded alongside it.
+
 ## Pre-registered predictions
 
 Written before the first training run, and to be scored honestly afterwards even
@@ -494,6 +684,58 @@ variance-reduction result that failed to reproduce as a speedup.
 
 The `holdout_shift` slices exist to test 3 and 4 under distribution shift and are
 never trained on.
+
+### Scored
+
+Owed since the first run, and worth more than it is comfortable to write down.
+Two held, one inverted on the larger model, and two turned out to be untestable
+for the same reason.
+
+| | outcome |
+| --- | --- |
+| 1. format saturation dominates | **held**, and harder than predicted |
+| 2. the probe control separates reward from capability | **held on the 0.5B, inverted on the 1.7B** |
+| 3. the `hard` tier does not move | **untestable as written** |
+| 4. pass@1 rises while pass@8 is flat or falls | **untestable as written** |
+| 5. a visible fraction of groups has zero reward variance | **held** |
+
+**1 held, and more sharply than it was written.** On the 0.5B, schema validity
+went 0.005 → 1.000, reward 0.086 → 0.279, and `root_cause` did not move "much
+less" — it read 0.145 at all nine evaluation points, identical to three decimals,
+against a 1/7 = 0.143 chance floor.
+
+**2 held where it was aimed and inverted one model up.** On the 0.5B the same
+policy was reportable as a 19x gain under `PROBE`'s weights against 3.2x under
+`MAIN`'s, which is the separation the control was built to produce. On
+Qwen3-1.7B it reversed: `PROBE` de-emphasises `root_cause` 0.45 → 0.10 and
+produced the *best* held-out diagnosis of the three, 0.450 against `MAIN`'s
+0.295. The control was written to show that reward can rise without capability;
+it showed that a reward weighted away from the target can produce more of it.
+P10 explains why the whole family of weighting arguments was mis-aimed.
+
+**3 and 4 were both written about `exact_match`, and that is the finding.** Both
+predictions presuppose an exact-match gain to attribute — to a tier, or to
+pass@1 against pass@8. There was none to attribute: EM is 0.000 for every 0.5B
+and 1.7B policy in this project, trained or not, and pass@8 is 0.000 across
+1,600 samples before training and 1,600 after. Neither prediction is right or
+wrong; both point at an instrument with no dynamic range on this task.
+
+What did move on the 0.5B was reward, and it moved on both tiers about equally —
+`easy` 0.093 → 0.284, `hard` 0.072 → 0.270 — which is itself evidence for 1,
+since an arithmetic gain would have shown up on `easy` first. `cause_acc` was
+unchanged on both tiers to the digit (`easy` 0.155, `hard` 0.127, before and
+after).
+
+Three of five predictions were aimed at exact match. The go/no-go criterion was
+too (`pass@8 > 0`, which rejected all three 1.7B candidates and had to be
+overridden). The lesson is not that the predictions were sloppy — they were
+specific and falsifiable — but that a conjunction over seven fields is the wrong
+instrument to hang a research question on when no policy in reach ever satisfies
+all seven. What actually distinguished the 0.5B's failure was `cause_acc` sitting
+*exactly* at chance.
+
+**5 held**: `adv_zero_frac` = 0.16, so 16% of groups drew identical rewards
+across all eight samples and contributed an exactly zero gradient.
 
 ## Layout
 
