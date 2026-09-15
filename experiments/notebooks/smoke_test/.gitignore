@@ -23,3 +23,9 @@ runs/**/checkpoint-*/
 !runs/ppo-on-seed-w4/adapter-best/adapter_model.safetensors
 !runs/ppo-on-seed-w4/value_head.pt
 !runs/ppo-on-seed-w4/value_head-best.pt
+
+# The full-answer SFT runs. They work -- that is the problem: supervising all
+# eight fields teaches the task, which leaves PPO nothing to learn and answers a
+# different question than the series is asking. Kept on disk, out of the record.
+runs/frz-full/
+runs/seed11-offdist-full/
