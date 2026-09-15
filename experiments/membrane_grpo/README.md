@@ -66,6 +66,7 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P8 | model selection, then three weight sets on Qwen3-1.7B | done — the diagnosis moves |
 | P9 | seed replication of MAIN and ABLATE | done — **P8's explanation does not replicate** |
 | P10 | the oracle decomposition, no training | done — **the bottleneck is not arithmetic** |
+| P11 | does a seed install a lookup, or only vocabulary? | done — **the lookup** (B′) |
 
 P8 onwards is why the memo has three parts rather than one. P8 found a reward
 weighting that appeared to move held-out `root_cause` 0.295 → 0.430 at p < 1e-4;
@@ -743,6 +744,81 @@ One known risk, stated in advance: a sequence-level reward gives no per-token
 credit, and if GRPO does not learn to say `flat`, flag accuracy caps near 0.67
 and every downstream metric with it. If the fresh run ends below `flags_acc`
 0.70, that cap is recorded as the likely reason for a C.
+
+### Results (P11)
+
+All five runs finished; every figure below is a committed artifact in `runs/`.
+Greedy decoding on the 200 dev cases, prompt `v2-oracle-num`, one seed per
+configuration.
+
+| | frozen | shuffled seed alone | correct seed alone | fresh @200 | shuffled seed @200 | correct seed @200 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `exact_match` | 0.090 | 0.020 | 0.155 | 0.235 | 0.295 | **0.700** |
+| `cause_acc` | 0.290 | 0.145 | 0.320 | 0.380 | 0.435 | **0.850** |
+| `action_acc` | 0.205 | 0.095 | 0.330 | 0.265 | 0.315 | **0.890** |
+| all three flags right | 26/200 | 62/200 | 37/200 | 85/200 | 185/200 | 143/200 |
+| `cause_given_flags` | 1.000 | 0.081 | 0.946 | 0.800 | 0.443 | **0.986** |
+| causes emitted | 2/7 | 2/7 | 3/7 | 4/7 | 3/7 | **7/7** |
+| severe action emitted | 0 | 0 | 19 | 0 | 0 | **37** |
+
+The "@200" columns are `eval.py` on the final adapters (batch 16); the runs'
+own step-200 evaluations (batch 32) read 0.380 / 0.435 / 0.860 on `cause_acc`,
+the one difference being batch composition.
+
+McNemar on `cause_acc`, same 200 cases:
+
+| | difference | discordant | p |
+| --- | --- | --- | --- |
+| fresh → shuffled seed | +0.055 | 18 : 7 | 0.043 |
+| fresh → correct seed | **+0.470** | 99 : 5 | < 1e-4 |
+| shuffled → correct seed | **+0.415** | 88 : 5 | < 1e-4 |
+
+**Original table: C.** Shuffled against fresh is +0.055 — significant, but below
+the +0.15 that A required, and the shuffled run emits 3 of 7 causes, not 6.
+
+**Amended table: B′.** The correct seed beats the shuffled seed by +0.415 at
+p < 1e-4, and beats the fresh run by +0.470, so the seed does help GRPO and what
+it contributes is the lookup. On `exact_match` the gap is +0.405 (83 : 2) and on
+`action_acc` +0.575 (117 : 2).
+
+**The precondition that would have made A′ possible does hold**, which makes B′
+the stronger reading rather than a default. Sampled at temperature 1.0, 8 per
+case, all 1,600 samples counted:
+
+| | `organic_fouling` | severe action | causes | actions |
+| --- | --- | --- | --- | --- |
+| frozen | **0** | **0** | 4/7 | 4/8 |
+| shuffled seed | 93 | 69 | 5/7 | 6/8 |
+| correct seed | 10 | 163 | 5/7 | 6/8 |
+
+The shuffled seed gave both dead labels probability mass — more `organic_fouling`
+than the correct seed did. The vocabulary was installed, and GRPO from it still
+reached half the correct seed's diagnosis in the same 200 steps. **Installing the
+labels was not enough; installing the mapping was what mattered.**
+
+What this does not establish:
+
+* **One seed per run.** The +0.415 is several times the 0.085–0.090 seed-to-seed
+  movement measured under GRPO in P9, but it is still three single trajectories.
+* **Nothing converged.** The correct-seed run's own evaluation went 0.650 → 0.860
+  on `cause_acc` between steps 175 and 200.
+* **One prompt.** Everything here supplies the arithmetic; on `v2` the lookup is
+  rarely reached with correct flags, and nothing here was run on it.
+* **Unexplained, and left so:** the shuffled-seed run reads flags best of the
+  three (185/200 all three right, against 85 and 143) while doing the lookup
+  worst. Flags are never supervised by either seed. No explanation is offered.
+
+**A process fault, and its bounded effect.** The amendment commit (`0e311a5`)
+also swept in the shuffled seed's artifacts, which had just been copied back.
+On the training box the queued script's `git pull` then refused to overwrite the
+matching untracked files, and because that pull sat inside an `&&` list,
+`set -e` did not stop the script: the correct seed, its GRPO run and the first
+round of probes ran on `4fe6f10`. The only code difference between the two
+commits is the seven lines in `eval.py` that count every sample in sample mode,
+which touch neither training nor scoring — so the correct-seed runs stand. The
+probes, which had counted 200 first samples rather than all 1,600, were rerun on
+`0e311a5` after the untracked files were confirmed byte-identical to the
+committed ones and removed; the table above is the rerun.
 
 ## Pre-registered predictions
 
