@@ -1,0 +1,29 @@
+{
+ "label": "frozen",
+ "adapter": null,
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 0,
+ "severe_correct": 0,
+ "severe_slots": 108,
+ "og_emitted": 0,
+ "og_correct": 0,
+ "og_slots": 80,
+ "action_hist": {
+  "acid_clean_low_ph": 248,
+  "alkaline_clean_and_sanitize": 320,
+  "no_clean_evaluate_replacement": 22,
+  "probe_vessels_and_replace_orings": 8,
+  "check_oxidant_and_replace_elements": 2
+ },
+ "cause_hist": {
+  "scaling": 248,
+  "biofouling": 320,
+  "compaction": 22,
+  "mechanical_leak": 8,
+  "oxidation_damage": 2
+ }
+}

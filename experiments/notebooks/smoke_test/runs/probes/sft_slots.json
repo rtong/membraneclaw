@@ -1,0 +1,32 @@
+{
+ "label": "sft_slots",
+ "adapter": "runs/sft-slots/adapter",
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 12,
+ "severe_correct": 12,
+ "severe_slots": 108,
+ "og_emitted": 0,
+ "og_correct": 0,
+ "og_slots": 80,
+ "action_hist": {
+  "no_clean_evaluate_replacement": 194,
+  "check_oxidant_and_replace_elements": 45,
+  "alkaline_clean_and_sanitize": 131,
+  "acid_clean_low_ph": 67,
+  "probe_vessels_and_replace_orings": 88,
+  "alkaline_clean_and_check_sdi": 63,
+  "isolate_and_evaluate_replacement": 12
+ },
+ "cause_hist": {
+  "compaction": 194,
+  "oxidation_damage": 45,
+  "biofouling": 131,
+  "scaling": 75,
+  "mechanical_leak": 88,
+  "colloidal_fouling": 67
+ }
+}

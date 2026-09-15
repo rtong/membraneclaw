@@ -503,3 +503,25 @@ of the fifteen runs.
 What is not shown: that this is arithmetic rather than a better prior over seven labels —
 `numeric_acc` is ~18 hits out of 600 and exact match is 0.000 everywhere. Nor that any of it
 survives a second seed, a second split, or the sealed `test.jsonl`. One seed is one seed.
+
+* `06`–`09` — executed, committed with outputs. `08` supplies the arithmetic in the prompt
+  and `exact_match` leaves 0.000 for the first time; `09` finds that the whole remaining
+  deficit is one flag value (`flat`) the policy emits zero times, and one coefficient
+  (`flat_credit_scale = 3.0`) takes `exact_match` to 0.405 at 400 steps and 0.620 at 500.
+* `10` — executed, committed with outputs. The 500→700 continuation was **stopped at step
+  625** on its no-regression gate. Two more labels turn out to be at exactly zero
+  probability — the cause `organic_fouling` and the severe action — which puts a hard
+  ceiling of **0.695** on `exact_match` and makes the 0.700 the run was aimed at
+  unreachable by any number of further steps. A 3-epoch supervised pass over 228 train
+  cases reaches **0.960 on the sealed `test.jsonl`** and 0.960 on `holdout_shift`.
+
+**`test.jsonl` is no longer sealed.** It was first used in `10`, on four policies, after 29
+runs and 15 paired evaluations that all used `dev`. The cost of that selection is now
+measured rather than assumed: the best PPO policy scores 0.650 on dev and 0.630 on test.
+`holdout_shift` was opened in the same notebook.
+
+**And the series can no longer claim the headline as an RL result.** `10` runs the control:
+the same supervised pass on the *frozen* model, no PPO at all, reaches 0.800. So supervision
+is worth +0.33 over PPO alone and PPO is worth +0.16 over supervision alone, each measured
+against its own control. The `flat`/`organic_fouling` mechanism — a string with no
+probability mass, not a missing capability — is the part of this series that generalises.

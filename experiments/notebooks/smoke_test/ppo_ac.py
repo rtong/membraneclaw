@@ -1164,6 +1164,41 @@ class Config:
     #: continuation's own curve and has to be read with the offset in mind.
     resume_from: str = ""
 
+    #: SFT seeding. `10`'s finding: two output labels have *exactly* zero
+    #: probability at temperature 1.0, in the frozen policy and in the 575-step
+    #: PPO policy alike -- `organic_fouling` 0/600 and the severe action 0/600.
+    #: A policy gradient reweights behaviour that appears in a sample, so zero is
+    #: the one number it cannot move, and `09` said so before this run hit it.
+    #: These seed the labels by maximum likelihood on a *supplied* target, which
+    #: needs no sample of it. `sft_seed_from` is an adapter directory.
+    sft_seed_from: str = ""
+    sft_epochs: int = 1
+    sft_lr: float = 1e-5
+    #: Normal cases per dead-label case in the seed set. 0.0 would seed only the
+    #: dead labels, which teaches "say organic_fouling" rather than "this label
+    #: exists here" -- see `build_sft_examples`.
+    sft_balance: float = 1.0
+    #: Run the seeding instead of a PPO run and exit.
+    sft_only: int = 0
+    #: A *seed*, in the sense the argument for it actually requires: the loss is
+    #: masked to the tokens spelling the two dead label values and nothing else,
+    #: so the pass moves those strings off zero probability and supervises no
+    #: other field. Without this the pass is a full supervised fine-tune of the
+    #: whole answer -- which works, but answers a different question, and cannot
+    #: be described as "PPO learned the task".
+    #: 0 = full-answer supervision. 1 = the dead label strings only (collapses
+    #: the `action` slot -- see `slot_value_spans`). 2 = the `root_cause` and
+    #: `action` values on every seed case, which is the one that holds.
+    sft_labels_only: int = 0
+    #: `11`'s axis. `sft_labels_only = 2` supervises both lookup slots on every
+    #: seed case, which keeps the slot's alternatives represented but leaves
+    #: `organic_fouling` at 0/600 -- the prior is simply stronger than 57 cases
+    #: of evidence. `sft_labels_only = 1` supervises the dead values alone and
+    #: collapses the `action` slot to 600/600. This weights the loss of a
+    #: dead-label case by `w` under mode 2, so 1.0 is mode 2 and the limit is
+    #: mode 1: the two failures of `10` are the two ends of one axis.
+    sft_dead_weight: float = 1.0
+
     #: An entropy bonus applied to the three flag-value tokens and nowhere else.
     #: See `flag_token_mask` for the measurement that motivates it. 0.0 is every
     #: run before `09`; it is independent of `entropy_coef`, which stays global.
@@ -1907,6 +1942,239 @@ def resolve_device(device: str = "auto") -> str:
     return "cpu"
 
 
+# --- SFT seeding ---------------------------------------------------------------
+#
+# Why this exists, and why it is not "more training". Measured at temperature
+# 1.0 over 600 train samples, on the frozen policy and on the 575-step PPO
+# policy alike:
+#
+#     organic_fouling                    0 / 600
+#     isolate_and_evaluate_replacement   0 / 600
+#
+# Both labels are recoverable from fields the policy already produces correctly.
+# `organic_fouling` is the only row in `COVERED` with `salt_passage = "down"`,
+# and on all 29 dev cases where it is the answer the policy writes that flag
+# correctly and then names `compaction` -- a cause whose own rows require
+# `salt_passage` to be `flat` or `up`. It contradicts evidence it just wrote
+# down. The severe action is `flow_pct <= -30` and `numeric_acc` is 1.000.
+#
+# So the knowledge is present and the token is not. That is the one shape a
+# policy gradient provably cannot fix and maximum likelihood trivially can:
+# `grad log pi(y*|x)` is computable for a *given* `y*` whether or not the policy
+# would ever sample it. This puts mass on the labels so that PPO -- which does
+# the actual learning of when to use them -- has something to reweight. The
+# precedent is `flat`: 3/600 = 0.5% was enough for `flat_credit_scale` to drive
+# recall 0.000 -> 0.984. RL handles rare. It does not handle absent.
+
+
+def sft_target(answer: dict[str, Any]) -> str:
+    """The gold completion, in the shape v3's closing asks for.
+
+    One short line naming the three flags, then the JSON object and nothing
+    after it. Matching the instructed format matters: seeding on bare JSON would
+    also teach the policy to drop the reasoning line, which is a second change
+    riding along with the one being tested.
+    """
+    import json
+
+    flags = answer["flags"]
+    line = f"Flow {flags['flow']}, salt passage {flags['salt_passage']}, dP {flags['dp']}."
+    return line + "\n" + json.dumps(answer, indent=2, sort_keys=True)
+
+
+def build_sft_examples(
+    cases: list[dict[str, Any]], balance: float, seed: int
+) -> tuple[list[dict[str, Any]], int, int]:
+    """Every dead-label case, plus `balance` x as many normal ones.
+
+    The normal cases are not padding. Seeding on the dead labels alone teaches
+    "say organic_fouling", which is `09`'s `compaction` over-emission reproduced
+    in the other direction -- the policy already over-produces one cause at the
+    lookup step, and a one-sided seed hands it another. The mixed set teaches
+    that the label exists in one situation, which is the thing actually missing.
+    """
+    import random
+
+    from task.decision_table import SEVERE_ACTION
+
+    dead, rest = [], []
+    for case in cases:
+        answer = case["answer"]
+        target = dead if (
+            answer["root_cause"] == "organic_fouling" or answer["action"] == SEVERE_ACTION
+        ) else rest
+        target.append(case)
+
+    rng = random.Random(seed)
+    # Drawn round-robin over the remaining causes rather than flat, so the seed
+    # does not also reweight whichever cause happens to be commonest in train.
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for case in rest:
+        buckets.setdefault(case["answer"]["root_cause"], []).append(case)
+    for bucket in buckets.values():
+        rng.shuffle(bucket)
+
+    want, normal = int(round(len(dead) * balance)), []
+    while len(normal) < want and any(buckets.values()):
+        for bucket in buckets.values():
+            if bucket and len(normal) < want:
+                normal.append(bucket.pop())
+
+    examples = dead + normal
+    rng.shuffle(examples)
+    return examples, len(dead), len(normal)
+
+
+SEVERE_ACTION_NAME = "isolate_and_evaluate_replacement"
+
+
+def dead_label_spans(text: str, offset: int) -> list[tuple[int, int]]:
+    """Character spans of the two dead label values, searched after `offset`.
+
+    The value only, not the key and not the quotes: the key is already produced
+    correctly on every case, and it is the value token that has zero mass.
+    """
+    from task.decision_table import SEVERE_ACTION
+
+    spans = []
+    for literal in ("organic_fouling", SEVERE_ACTION):
+        start = text.find(literal, offset)
+        while start != -1:
+            spans.append((start, start + len(literal)))
+            start = text.find(literal, start + 1)
+    return spans
+
+
+def slot_value_spans(text: str, offset: int, slots=("root_cause", "action")) -> list[tuple[int, int]]:
+    """Character spans of the *values* of the named slots, whatever they are.
+
+    `sft_labels_only` masked to the dead label strings alone and that collapsed
+    the `action` slot: supervised toward `isolate_and_evaluate_replacement` and
+    never toward anything else, the policy learned to emit it on 600/600 samples.
+    A slot needs its negatives. This supervises the correct value of two slots on
+    every seed case, which is still two fields out of eight -- it cannot teach
+    the arithmetic, the flags or the stage, all of which the policy already gets
+    right -- while leaving the slot's alternatives represented.
+    """
+    spans = []
+    for slot in slots:
+        key = f'"{slot}": "'
+        start = text.find(key, offset)
+        while start != -1:
+            value_start = start + len(key)
+            value_end = text.find('"', value_start)
+            if value_end == -1:
+                break
+            spans.append((value_start, value_end))
+            start = text.find(key, value_end)
+    return spans
+
+
+def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> dict[str, Any]:
+    """One seeding pass. Writes an adapter PPO can `--resume-from`."""
+    import json
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    policy, value_head, tokenizer = load_policy(cfg, device)
+    if cfg.sft_seed_from:
+        policy.load_adapter(cfg.sft_seed_from, adapter_name="default")
+        # The critic is carried across unchanged. Seeding does not touch it, and
+        # re-initialising it would make the continuation spend its first
+        # `critic_window` steps relearning what it already knew -- the same
+        # argument `resume_from` makes, for the same reason.
+        source = Path(cfg.sft_seed_from)
+        head = source.parent / (
+            "value_head-best.pt" if source.name == "adapter-best" else "value_head.pt"
+        )
+        if head.exists():
+            value_head.load_state_dict(torch.load(head, map_location=device))
+        else:
+            progress(f"  no value head at {head}; PPO will resume with a fresh one")
+
+    examples, n_dead, n_normal = build_sft_examples(cases := load_cases(cfg.split), cfg.sft_balance, cfg.seed)
+    progress(
+        f"  seed set: {n_dead} dead-label + {n_normal} normal = {len(examples)}"
+        f" of {len(cases)} {cfg.split} cases, {cfg.sft_epochs} epoch(s), lr {cfg.sft_lr}"
+    )
+
+    template_kwargs: dict[str, Any] = {}
+    if supports_thinking_toggle(tokenizer):
+        template_kwargs["enable_thinking"] = False
+
+    policy.train()
+    params = [p for p in policy.parameters() if p.requires_grad]
+    opt = torch.optim.AdamW(params, lr=cfg.sft_lr)
+    accum = max(1, cfg.prompts_per_step)
+
+    losses: list[dict[str, Any]] = []
+    n_supervised = 0
+    for epoch in range(cfg.sft_epochs):
+        for i, case in enumerate(examples):
+            prompt = tokenizer.apply_chat_template(
+                build_messages_v3(case["record"]),
+                tokenize=False,
+                add_generation_prompt=True,
+                **template_kwargs,
+            )
+            target = sft_target(case["answer"])
+            prompt_len = tokenizer(prompt, return_tensors="pt").input_ids.shape[1]
+            full = prompt + target + (tokenizer.eos_token or "")
+            encoded = tokenizer(full, return_tensors="pt", return_offsets_mapping=True)
+            ids = encoded["input_ids"].to(device)
+            labels = ids.clone()
+            labels[:, :prompt_len] = -100  # loss on the completion only
+            if cfg.sft_labels_only:
+                # Mask everything the policy already produces correctly. Only the
+                # characters spelling a dead label carry gradient, so this cannot
+                # teach the arithmetic, the flags, the stage, or any cause the
+                # policy already emits -- it can only move two strings off zero.
+                spans = (
+                    slot_value_spans(full, len(prompt))
+                    if cfg.sft_labels_only == 2
+                    else dead_label_spans(full, len(prompt))
+                )
+                keep = torch.zeros_like(labels, dtype=torch.bool)
+                offsets = encoded["offset_mapping"][0].tolist()
+                for t, (a, b) in enumerate(offsets):
+                    if a == b:
+                        continue
+                    if any(a < end and b > start for start, end in spans):
+                        keep[0, t] = True
+                labels = torch.where(keep.to(device), labels, torch.full_like(labels, -100))
+                n_supervised += int(keep.sum())
+                if int(keep.sum()) == 0:
+                    continue  # nothing to learn from this case under this mask
+
+            loss = policy(input_ids=ids, labels=labels).loss
+            weight = 1.0
+            if cfg.sft_labels_only == 2 and cfg.sft_dead_weight != 1.0:
+                answer = case["answer"]
+                if answer["root_cause"] == "organic_fouling" or answer["action"] == SEVERE_ACTION_NAME:
+                    weight = cfg.sft_dead_weight
+            ((loss * weight) / accum).backward()
+            if (i + 1) % accum == 0 or i + 1 == len(examples):
+                torch.nn.utils.clip_grad_norm_(params, 1.0)
+                opt.step()
+                opt.zero_grad(set_to_none=True)
+            losses.append({"epoch": epoch, "i": i, "loss": float(loss.detach())})
+        window = [r["loss"] for r in losses if r["epoch"] == epoch]
+        if window:
+            progress(f"  epoch {epoch}: loss {window[0]:.4f} -> {window[-1]:.4f}")
+    if cfg.sft_labels_only:
+        progress(f"  supervised tokens total: {n_supervised} over {len(losses)} examples")
+
+    policy.save_pretrained(out_dir / "adapter")
+    torch.save(value_head.state_dict(), out_dir / "value_head.pt")
+    (out_dir / "sft_losses.jsonl").write_text(
+        "\n".join(json.dumps(r) for r in losses) + "\n"
+    )
+    from dataclasses import asdict
+
+    (out_dir / "config.json").write_text(json.dumps(asdict(cfg), indent=2) + "\n")
+    progress(f"  wrote {out_dir}/adapter and value_head.pt")
+    return {"n_examples": len(examples), "n_dead": n_dead, "n_normal": n_normal}
+
+
 def main() -> None:
     import argparse
     from dataclasses import asdict
@@ -1940,7 +2208,10 @@ def main() -> None:
     cfg = Config(**fields)
     tag = cfg.model.rsplit("/", 1)[-1].replace(".", "").lower()
     out = args.out or SMOKE_DIR / "runs" / f"ppo-{tag}-{cfg.weights.lower()}-s{cfg.seed}"
-    train(cfg, out, resolve_device(args.device))
+    if cfg.sft_only:
+        sft_seed(cfg, out, resolve_device(args.device))
+    else:
+        train(cfg, out, resolve_device(args.device))
 
 
 if __name__ == "__main__":

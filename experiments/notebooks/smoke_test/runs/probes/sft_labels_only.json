@@ -1,0 +1,28 @@
+{
+ "label": "sft_labels_only",
+ "adapter": "runs/sft-labels-only/adapter",
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 600,
+ "severe_correct": 108,
+ "severe_slots": 108,
+ "og_emitted": 14,
+ "og_correct": 9,
+ "og_slots": 80,
+ "action_hist": {
+  "isolate_and_evaluate_replacement": 600
+ },
+ "cause_hist": {
+  "compaction": 242,
+  "mechanical_leak": 51,
+  "organic_fouling": 14,
+  "oxidation_damage": 74,
+  "biofouling": 94,
+  "colloidal_fouling": 100,
+  "scaling": 24,
+  "colloid_fouling": 1
+ }
+}
