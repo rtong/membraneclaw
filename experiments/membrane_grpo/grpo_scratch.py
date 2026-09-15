@@ -202,10 +202,16 @@ def rollout(
     weights: Weights,
     device: str,
     template_kwargs: dict[str, Any] | None = None,
+    prompt_version: str = PROMPT_VERSION,
 ) -> Group:
     """Sample one group, score it, and centre the rewards within the group."""
+    # `prompt_version` is passed through rather than left to `build_messages`'
+    # default. Until it was, rollouts always rendered the default version while
+    # `evaluate` rendered `cfg.prompt_version`: every run so far used the
+    # default, so nothing was affected, but the first run on any other version
+    # would have trained on one prompt and been measured on another, silently.
     text = tokenizer.apply_chat_template(
-        build_messages(case["record"]),
+        build_messages(case["record"], prompt_version),
         tokenize=False,
         add_generation_prompt=True,
         **(template_kwargs or {}),
@@ -286,6 +292,24 @@ class Config:
     eval_batch: int = 32
     eval_split: str = "dev"
     eval_max_tokens: int = 640
+    # A LoRA adapter directory to start from instead of a fresh adapter, e.g.
+    # one written by `seed_sft.py`. Empty means fresh, which is every run before
+    # it existed. The adapter must have been built with this run's `lora_r` and
+    # target modules; `load_policy` refuses one that was not.
+    init_adapter: str = ""
+
+
+def validate_config(cfg: Config) -> None:
+    """Refuse combinations that would run but measure the wrong thing."""
+    if cfg.init_adapter and cfg.beta > 0:
+        # The KL reference is `policy.disable_adapter()`, i.e. the *base* model.
+        # Started from an adapter, the penalty would pull the policy back toward
+        # the base rather than toward where this run began, which is not what a
+        # KL term on a continuation is meant to do.
+        raise ValueError(
+            "init_adapter with beta > 0: the KL reference would be the base model, "
+            "not the adapter the run starts from"
+        )
 
 
 def load_policy(cfg: Config, device: str):
@@ -297,6 +321,18 @@ def load_policy(cfg: Config, device: str):
         tokenizer.pad_token = tokenizer.eos_token
 
     base = AutoModelForCausalLM.from_pretrained(cfg.model, dtype=getattr(torch, cfg.dtype))
+    if cfg.init_adapter:
+        from peft import PeftConfig, PeftModel
+
+        saved = PeftConfig.from_pretrained(cfg.init_adapter)
+        wanted = {"q_proj", "k_proj", "v_proj", "o_proj"}
+        if saved.r != cfg.lora_r or set(saved.target_modules) != wanted:
+            raise ValueError(
+                f"{cfg.init_adapter} has r={saved.r}, targets {sorted(saved.target_modules)}; "
+                f"this run expects r={cfg.lora_r}, targets {sorted(wanted)}"
+            )
+        policy = PeftModel.from_pretrained(base, cfg.init_adapter, is_trainable=True).to(device)
+        return policy, tokenizer
     policy = get_peft_model(
         base,
         LoraConfig(
@@ -352,6 +388,7 @@ def evaluate(policy, tokenizer, cfg: Config, cases: list[dict], step: int) -> di
 
 
 def train(cfg: Config, out_dir: Path, device: str) -> None:
+    validate_config(cfg)
     torch.manual_seed(cfg.seed)
     rng = random.Random(cfg.seed)
 
@@ -398,7 +435,9 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
 
     print(f"{cfg.model} | {cfg.steps} steps | {cfg.prompts_per_step}x{cfg.group_size} | {device}")
     if cfg.eval_every:
-        run_eval(0)  # step 0 must reproduce the frozen baseline
+        # Step 0 must reproduce the starting policy: the frozen baseline, or the
+        # adapter named by `init_adapter` evaluated on its own.
+        run_eval(0)
 
     for step in range(cfg.steps):
         started = time.perf_counter()
@@ -416,6 +455,7 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
                 weights=weights,
                 device=device,
                 template_kwargs=template_kwargs,
+                prompt_version=cfg.prompt_version,
             )
             for case in batch
         ]

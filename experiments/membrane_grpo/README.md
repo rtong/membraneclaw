@@ -678,6 +678,48 @@ been reporting 0.000 on the frozen baseline, which turns out to be 0 of **4** �
 the model assembles a correct flag triple 4 times in 200. `cause_given_flags_n`
 is now recorded alongside it.
 
+## Does a seed install a lookup, or only vocabulary? (P11)
+
+Written before either run. Part 3 found labels that greedy decoding of the
+frozen policy never reaches, and a policy gradient cannot reweight what it never
+samples. A short supervised *seed* before RL (`seed_sft.py`) moves such labels off
+zero: it supervises only the values of `root_cause` and `action`, with the
+arithmetic supplied. But those values are scored with the correct flags already
+in context, so a correctly labelled seed also teaches the lookup. This separates
+the two with a control.
+
+| run | prompt | starts from | weights, seed |
+| --- | --- | --- | --- |
+| `q3-oracle-main-s0` | `v2-oracle-num` | a fresh adapter | `MAIN`, 0 |
+| `seed-shuffled` | `v2-oracle-num` | the frozen model; 387 off-scale records, `(root_cause, action)` pairs permuted across records | — |
+| `q3-oracle-main-shufseed-s0` | `v2-oracle-num` | `seed-shuffled/adapter` | `MAIN`, 0 |
+
+Both GRPO runs are otherwise `q3-main-s0`'s configuration, 200 steps. The
+shuffled seed installs exactly the correct seed's vocabulary — every label and
+every pair as often, the dead-label weight on the same 172 cases — while 348 of
+387 records get another record's labels. A seed with correct labels is not run
+(by decision, to save the GPU hours); that bounds what this can conclude.
+
+**Primary measure:** held-out `cause_acc` at step 200, shuffled-seed run against
+fresh run, McNemar on the same 200 dev cases from `eval.py` on the final
+adapters. **Secondary:** `exact_match`, `action_acc`, and how many of the seven
+causes the final policy emits.
+
+| outcome | criterion | reading |
+| --- | --- | --- |
+| **A** | shuffled ≥ fresh **+0.15**, p < 0.05, and ≥ 6 of 7 causes emitted | vocabulary is enough: GRPO learns the mapping once the labels have mass |
+| **B** | shuffled ≤ fresh **−0.10**, p < 0.05 | the seed installs a mapping, and a wrong one is not undone in 200 steps |
+| **C** | anything else | not separable without the correctly labelled seed |
+
+The ±0.15 / −0.10 bands are set above the seed-to-seed movement already
+measured on this model under GRPO (0.085–0.090 in `cause_acc`, P9). This is one
+seed per run, so A or B would be "consistent with", not established.
+
+One known risk, stated in advance: a sequence-level reward gives no per-token
+credit, and if GRPO does not learn to say `flat`, flag accuracy caps near 0.67
+and every downstream metric with it. If the fresh run ends below `flags_acc`
+0.70, that cap is recorded as the likely reason for a C.
+
 ## Pre-registered predictions
 
 Written before the first training run, and to be scored honestly afterwards even
