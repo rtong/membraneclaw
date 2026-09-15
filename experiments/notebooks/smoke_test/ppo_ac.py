@@ -1198,6 +1198,17 @@ class Config:
     #: dead-label case by `w` under mode 2, so 1.0 is mode 2 and the limit is
     #: mode 1: the two failures of `10` are the two ends of one axis.
     sft_dead_weight: float = 1.0
+    #: A JSONL of cases to seed from, instead of a slice of `train.jsonl`. This
+    #: is the whole point of `11`: a seed drawn from the task's own training
+    #: split cannot be told apart from supervised fine-tuning on the task, so
+    #: "the seed only installed the vocabulary" stays an assertion. These records
+    #: are off-distribution by plant scale -- flows, conductivities, pressures,
+    #: temperatures and recoveries outside every band the four splits occupy --
+    #: while the decision table, which reads percentage *changes*, applies
+    #: unchanged. Whether the labels then transfer to real dev cases is then a
+    #: measurement rather than a story. Composition is taken as given: these
+    #: files are built to a brief, not sampled.
+    sft_cases: str = ""
 
     #: An entropy bonus applied to the three flag-value tokens and nowhere else.
     #: See `flag_token_mask` for the measurement that motivates it. 0.0 is every
@@ -2091,11 +2102,31 @@ def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> di
         else:
             progress(f"  no value head at {head}; PPO will resume with a fresh one")
 
-    examples, n_dead, n_normal = build_sft_examples(cases := load_cases(cfg.split), cfg.sft_balance, cfg.seed)
-    progress(
-        f"  seed set: {n_dead} dead-label + {n_normal} normal = {len(examples)}"
-        f" of {len(cases)} {cfg.split} cases, {cfg.sft_epochs} epoch(s), lr {cfg.sft_lr}"
-    )
+    if cfg.sft_cases:
+        import random
+
+        source = Path(cfg.sft_cases)
+        if not source.is_absolute():
+            source = SMOKE_DIR / source
+        cases = [json.loads(l) for l in source.read_text().splitlines() if l.strip()]
+        examples = list(cases)
+        random.Random(cfg.seed).shuffle(examples)
+        n_dead = sum(
+            c["answer"]["root_cause"] == "organic_fouling"
+            or c["answer"]["action"] == SEVERE_ACTION_NAME
+            for c in examples
+        )
+        n_normal = len(examples) - n_dead
+        progress(f"  seed set: {source.name}, {len(examples)} cases "
+                 f"({n_dead} carry a dead label, {n_normal} do not), "
+                 f"{cfg.sft_epochs} epoch(s), lr {cfg.sft_lr}")
+    else:
+        examples, n_dead, n_normal = build_sft_examples(
+            cases := load_cases(cfg.split), cfg.sft_balance, cfg.seed)
+        progress(
+            f"  seed set: {n_dead} dead-label + {n_normal} normal = {len(examples)}"
+            f" of {len(cases)} {cfg.split} cases, {cfg.sft_epochs} epoch(s), lr {cfg.sft_lr}"
+        )
 
     template_kwargs: dict[str, Any] = {}
     if supports_thinking_toggle(tokenizer):

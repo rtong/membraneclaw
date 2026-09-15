@@ -520,8 +520,23 @@ runs and 15 paired evaluations that all used `dev`. The cost of that selection i
 measured rather than assumed: the best PPO policy scores 0.650 on dev and 0.630 on test.
 `holdout_shift` was opened in the same notebook.
 
+* `11` — executed, committed with outputs. `10`'s seeds were all cut from `train.jsonl`, so
+  "the seed only installed the vocabulary" could not be told apart from supervised fine-tuning
+  on the task. This one seeds from **387 records that belong to no split** — generated to a
+  brief, off-distribution by plant scale, 0 of 387 inside any band the four splits occupy, and
+  every label derived locally by `truth_from_record` rather than supplied by the generator. The
+  loss is masked to two slot vocabularies, 10,752 tokens, touching neither the arithmetic nor
+  the flags. That seed reaches `exact_match` **0.255**; 200 PPO steps take it to **0.930 dev,
+  0.930 test, 0.920 holdout_shift**, with the critic ahead of a position-only clock on **100%
+  of steps from 75 on**. So supervision is worth +0.165 and PPO is worth **+0.675**, and the
+  split is clean: no token of supervision in that run had a task answer as its target.
+
 **And the series can no longer claim the headline as an RL result.** `10` runs the control:
 the same supervised pass on the *frozen* model, no PPO at all, reaches 0.800. So supervision
 is worth +0.33 over PPO alone and PPO is worth +0.16 over supervision alone, each measured
 against its own control. The `flat`/`organic_fouling` mechanism — a string with no
 probability mass, not a missing capability — is the part of this series that generalises.
+
+`11` revises that last paragraph rather than repealing it: with the vocabulary installed
+*before* the reward is applied instead of after, PPO is worth +0.675 on its own control. `10`'s
++0.160 was measured against a seed that had already taught the task.

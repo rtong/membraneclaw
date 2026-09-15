@@ -1,0 +1,22 @@
+{
+ "label": "frz-dead-only",
+ "adapter": "runs/frz-dead-only/adapter",
+ "split": "train",
+ "n_cases": 150,
+ "n_samples_per_case": 4,
+ "temperature": 1.0,
+ "samples": 600,
+ "severe_emitted": 600,
+ "severe_correct": 108,
+ "severe_slots": 108,
+ "og_emitted": 437,
+ "og_correct": 80,
+ "og_slots": 80,
+ "action_hist": {
+  "isolate_and_evaluate_replacement": 600
+ },
+ "cause_hist": {
+  "organic_fouling": 437,
+  "biofouling": 163
+ }
+}
