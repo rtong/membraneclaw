@@ -1,524 +1,0 @@
-error: The following untracked working tree files would be overwritten by merge:
-	experiments/membrane_grpo/runs/paired-seed-shuffled/eval_dev_greedy.json
-	experiments/membrane_grpo/runs/seed-shuffled/adapter/adapter_config.json
-	experiments/membrane_grpo/runs/seed-shuffled/seed_losses.jsonl
-	experiments/membrane_grpo/runs/seed-shuffled/seed_manifest.json
-Please move or remove them before you merge.
-Aborting
-== 2026-09-15T02:20:25-07:00 seed-true
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  43%|████▎     | 135/311 [00:00<00:00, 1347.10it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1679.83it/s]
-  epoch 0: loss 0.0000 -> 0.2667
-  epoch 1: loss 0.1546 -> 0.3884
-  epoch 2: loss 0.0085 -> 0.0001
-{
-  "config": {
-    "model": "Qwen/Qwen3-1.7B",
-    "cases": "seed/seed_cases.jsonl",
-    "shuffle_labels": 0,
-    "shuffle_seed": 0,
-    "dead_weight": 4.0,
-    "epochs": 3,
-    "lr": 0.0001,
-    "weight_decay": 0.01,
-    "accum": 8,
-    "lora_r": 16,
-    "prompt_version": "v2-oracle-num",
-    "seed": 0,
-    "dtype": "bfloat16"
-  },
-  "cases_sha256": "d5454401ff503c8788d65fdacf3051f6f01f7a54fff22e6849cce742567809f1",
-  "n_cases": 387,
-  "n_dead_weighted": 172,
-  "supervised_tokens_per_epoch": 3584,
-  "labels_unchanged_by_shuffle": null
-}
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | greedy n=1 T=0.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  48%|████▊     | 150/311 [00:00<00:00, 1498.57it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1693.68it/s]
-  chat template honours enable_thinking; set to False
-  16/200 cases  32/200 cases  48/200 cases  64/200 cases  80/200 cases  96/200 cases  112/200 cases  128/200 cases  144/200 cases  160/200 cases  176/200 cases  192/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=1
-  reward             0.549
-  exact match        0.155
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.320
-  cause | flags ok   0.946  (n = 37)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.633
-  length             96 tok
-
-=== dev / tier=easy ===
-  cases              129   k=1
-  reward             0.536
-  exact match        0.140
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.295
-  cause | flags ok   0.913  (n = 23)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.630
-  length             96 tok
-
-=== dev / tier=hard ===
-  cases              71   k=1
-  reward             0.574
-  exact match        0.183
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.366
-  cause | flags ok   1.000  (n = 14)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.638
-  length             96 tok
-
-wrote runs/paired-seed-true/eval_dev_greedy.json  (69s)
-P11B_SEED_DONE
-== 2026-09-15T02:24:44-07:00 q3-oracle-main-trueseed-s0 (from the correct seed)
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  52%|█████▏    | 162/311 [00:00<00:00, 1610.15it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1890.18it/s]
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-Qwen/Qwen3-1.7B | 200 steps | 4x8 | cuda
-    eval @0    reward 0.5497 cause 0.320 flags 0.630 EM 0.155 valid 1.000
-  step    0 reward 0.8400 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.9s
-  step    1 reward 0.3500 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.4s
-  step    2 reward 0.3312 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.0s
-  step    3 reward 0.8200 advzero 1.00 uniq 1.2 tok 93 clip 0.000 22.1s
-  step    4 reward 0.5100 advzero 1.00 uniq 1.0 tok 94 clip 0.000 22.1s
-  step    5 reward 0.5575 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.8s
-  step    6 reward 0.3400 advzero 1.00 uniq 1.2 tok 94 clip 0.000 21.9s
-  step    7 reward 0.6500 advzero 1.00 uniq 1.2 tok 94 clip 0.000 21.6s
-  step    8 reward 0.5100 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.3s
-  step    9 reward 0.3500 advzero 1.00 uniq 1.2 tok 95 clip 0.000 22.1s
-  step   10 reward 0.8175 advzero 0.75 uniq 1.2 tok 93 clip 0.000 21.9s
-  step   11 reward 0.5422 advzero 0.50 uniq 1.8 tok 96 clip 0.000 22.2s
-  step   12 reward 0.5100 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.8s
-  step   13 reward 0.5047 advzero 0.75 uniq 1.2 tok 95 clip 0.000 21.9s
-  step   14 reward 0.3191 advzero 0.75 uniq 1.8 tok 92 clip 0.000 22.0s
-  step   15 reward 0.6269 advzero 0.50 uniq 1.8 tok 94 clip 0.000 22.2s
-  step   16 reward 0.8575 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.8s
-  step   17 reward 0.6700 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.6s
-  step   18 reward 0.5100 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.1s
-  step   19 reward 0.8481 advzero 0.50 uniq 1.5 tok 95 clip 0.000 21.9s
-  step   20 reward 0.3875 advzero 1.00 uniq 1.0 tok 94 clip 0.000 22.2s
-  step   21 reward 0.3400 advzero 1.00 uniq 1.2 tok 93 clip 0.000 21.6s
-  step   22 reward 0.3400 advzero 1.00 uniq 1.0 tok 93 clip 0.000 22.0s
-  step   23 reward 0.5091 advzero 0.75 uniq 1.5 tok 98 clip 0.000 22.2s
-  step   24 reward 0.6975 advzero 1.00 uniq 1.2 tok 94 clip 0.000 24.5s
-    eval @25   reward 0.5800 cause 0.355 flags 0.650 EM 0.195 valid 1.000
-  step   25 reward 0.3463 advzero 0.75 uniq 1.8 tok 98 clip 0.000 22.6s
-  step   26 reward 0.6987 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.6s
-  step   27 reward 0.7963 advzero 0.50 uniq 1.8 tok 96 clip 0.000 22.3s
-  step   28 reward 0.7075 advzero 1.00 uniq 1.2 tok 97 clip 0.000 22.3s
-  step   29 reward 0.6975 advzero 1.00 uniq 1.2 tok 96 clip 0.000 22.4s
-  step   30 reward 0.5575 advzero 1.00 uniq 1.0 tok 95 clip 0.000 21.8s
-  step   31 reward 0.9700 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.1s
-  step   32 reward 0.3300 advzero 1.00 uniq 1.0 tok 93 clip 0.000 21.7s
-  step   33 reward 0.6600 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.0s
-  step   34 reward 0.6987 advzero 0.50 uniq 2.0 tok 97 clip 0.000 23.3s
-  step   35 reward 0.5000 advzero 1.00 uniq 1.5 tok 95 clip 0.000 22.1s
-  step   36 reward 0.5000 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.6s
-  step   37 reward 0.5375 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.4s
-  step   38 reward 0.5363 advzero 0.50 uniq 2.0 tok 94 clip 0.000 22.2s
-  step   39 reward 0.6487 advzero 0.75 uniq 1.5 tok 97 clip 0.000 22.4s
-  step   40 reward 0.5147 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.6s
-  step   41 reward 0.7063 advzero 0.75 uniq 1.2 tok 96 clip 0.000 21.7s
-  step   42 reward 0.6225 advzero 0.50 uniq 1.5 tok 98 clip 0.000 22.3s
-  step   43 reward 0.6600 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.0s
-  step   44 reward 0.6619 advzero 0.50 uniq 1.5 tok 96 clip 0.000 22.1s
-  step   45 reward 0.5475 advzero 1.00 uniq 1.2 tok 96 clip 0.000 22.0s
-  step   46 reward 0.9688 advzero 0.75 uniq 1.5 tok 97 clip 0.000 22.5s
-  step   47 reward 0.7075 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.1s
-  step   48 reward 0.8200 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.4s
-  step   49 reward 0.8575 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.4s
-    eval @50   reward 0.7028 cause 0.550 flags 0.668 EM 0.240 valid 1.000
-  step   50 reward 0.9700 advzero 1.00 uniq 1.0 tok 95 clip 0.000 21.9s
-  step   51 reward 0.6288 advzero 0.50 uniq 1.5 tok 97 clip 0.000 22.4s
-  step   52 reward 0.6400 advzero 1.00 uniq 1.2 tok 96 clip 0.000 21.8s
-  step   53 reward 0.5100 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.4s
-  step   54 reward 0.6600 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.9s
-  step   55 reward 0.6600 advzero 0.75 uniq 1.2 tok 95 clip 0.000 22.5s
-  step   56 reward 0.4850 advzero 0.75 uniq 1.8 tok 93 clip 0.000 22.0s
-  step   57 reward 0.6525 advzero 0.75 uniq 1.5 tok 95 clip 0.000 22.0s
-  step   58 reward 0.4900 advzero 1.00 uniq 1.5 tok 95 clip 0.000 22.3s
-  step   59 reward 0.6625 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.1s
-  step   60 reward 0.4875 advzero 0.75 uniq 2.0 tok 96 clip 0.000 22.2s
-  step   61 reward 0.8200 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.2s
-  step   62 reward 0.8175 advzero 0.75 uniq 1.5 tok 95 clip 0.000 21.9s
-  step   63 reward 0.6512 advzero 0.75 uniq 1.5 tok 98 clip 0.000 22.1s
-  step   64 reward 0.6700 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.3s
-  step   65 reward 0.8475 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.2s
-  step   66 reward 0.8200 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.1s
-  step   67 reward 0.8100 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.4s
-  step   68 reward 0.6500 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.8s
-  step   69 reward 0.6600 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.0s
-  step   70 reward 0.4800 advzero 1.00 uniq 1.0 tok 95 clip 0.000 21.8s
-  step   71 reward 0.6900 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.4s
-  step   72 reward 0.8500 advzero 0.75 uniq 1.2 tok 94 clip 0.000 22.3s
-  step   73 reward 0.6400 advzero 1.00 uniq 1.2 tok 98 clip 0.000 22.1s
-  step   74 reward 0.8387 advzero 0.75 uniq 1.2 tok 95 clip 0.000 22.2s
-    eval @75   reward 0.7023 cause 0.550 flags 0.668 EM 0.245 valid 1.000
-  step   75 reward 0.8000 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.4s
-  step   76 reward 0.6400 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.1s
-  step   77 reward 0.9700 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.0s
-  step   78 reward 0.6600 advzero 1.00 uniq 1.2 tok 96 clip 0.000 22.2s
-  step   79 reward 0.6500 advzero 1.00 uniq 1.2 tok 96 clip 0.000 22.5s
-  step   80 reward 0.8375 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.3s
-  step   81 reward 0.8137 advzero 0.75 uniq 1.5 tok 98 clip 0.000 22.4s
-  step   82 reward 0.8562 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.3s
-  step   83 reward 0.8100 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.4s
-  step   84 reward 0.6500 advzero 1.00 uniq 1.2 tok 97 clip 0.000 22.0s
-  step   85 reward 0.5075 advzero 0.75 uniq 1.2 tok 97 clip 0.000 22.2s
-  step   86 reward 0.6500 advzero 1.00 uniq 1.8 tok 97 clip 0.000 22.3s
-  step   87 reward 0.8100 advzero 1.00 uniq 1.0 tok 96 clip 0.000 21.9s
-  step   88 reward 0.6400 advzero 1.00 uniq 1.5 tok 97 clip 0.000 22.6s
-  step   89 reward 0.8300 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.4s
-  step   90 reward 0.9712 advzero 0.75 uniq 1.5 tok 98 clip 0.000 22.2s
-  step   91 reward 0.8300 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.4s
-  step   92 reward 0.6562 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.3s
-  step   93 reward 0.6300 advzero 0.75 uniq 1.8 tok 95 clip 0.000 21.9s
-  step   94 reward 0.5100 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.3s
-  step   95 reward 0.8200 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.9s
-  step   96 reward 0.9900 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.5s
-  step   97 reward 0.9700 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.0s
-  step   98 reward 0.8375 advzero 0.75 uniq 1.2 tok 97 clip 0.000 22.4s
-  step   99 reward 0.8028 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.2s
-    eval @100  reward 0.7072 cause 0.555 flags 0.685 EM 0.270 valid 1.000
-  step  100 reward 0.6975 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.1s
-  step  101 reward 0.5000 advzero 1.00 uniq 1.2 tok 96 clip 0.000 22.0s
-  step  102 reward 0.6500 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.2s
-  step  103 reward 0.8575 advzero 1.00 uniq 1.2 tok 97 clip 0.000 22.5s
-  step  104 reward 0.6975 advzero 1.00 uniq 1.2 tok 96 clip 0.000 21.9s
-  step  105 reward 0.8100 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.2s
-  step  106 reward 0.8100 advzero 1.00 uniq 1.0 tok 93 clip 0.000 22.1s
-  step  107 reward 0.7994 advzero 0.75 uniq 1.5 tok 97 clip 0.000 22.3s  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-  chat template honours enable_thinking; set to False
-  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
-
-  step  108 reward 0.5375 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.1s
-  step  109 reward 0.6600 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.1s
-  step  110 reward 0.5375 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.2s
-  step  111 reward 0.6900 advzero 0.75 uniq 1.5 tok 97 clip 0.000 22.1s
-  step  112 reward 0.8100 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.0s
-  step  113 reward 0.5000 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.0s
-  step  114 reward 0.5000 advzero 1.00 uniq 1.2 tok 95 clip 0.000 21.8s
-  step  115 reward 0.9600 advzero 0.50 uniq 1.5 tok 96 clip 0.000 22.1s
-  step  116 reward 0.6500 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.4s
-  step  117 reward 0.6700 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.4s
-  step  118 reward 0.4888 advzero 0.75 uniq 1.2 tok 95 clip 0.000 22.4s
-  step  119 reward 0.6600 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.5s
-  step  120 reward 0.7075 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.7s
-  step  121 reward 0.4900 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.2s
-  step  122 reward 0.5138 advzero 0.75 uniq 1.2 tok 97 clip 0.000 22.4s
-  step  123 reward 0.5000 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.3s
-  step  124 reward 1.0000 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.3s
-    eval @125  reward 0.7044 cause 0.550 flags 0.693 EM 0.290 valid 1.000
-  step  125 reward 0.8100 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.1s
-  step  126 reward 0.7484 advzero 0.50 uniq 1.5 tok 97 clip 0.000 22.2s
-  step  127 reward 0.8300 advzero 1.00 uniq 1.0 tok 96 clip 0.000 22.3s
-  step  128 reward 0.5763 advzero 0.50 uniq 1.8 tok 94 clip 0.000 22.1s
-  step  129 reward 0.6975 advzero 1.00 uniq 1.0 tok 93 clip 0.000 21.9s
-  step  130 reward 0.5000 advzero 0.50 uniq 1.5 tok 96 clip 0.000 22.1s
-  step  131 reward 0.8275 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.9s
-  step  132 reward 0.9287 advzero 0.75 uniq 1.2 tok 97 clip 0.000 22.4s
-  step  133 reward 0.9822 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.4s
-  step  134 reward 0.8100 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.5s
-  step  135 reward 0.6500 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.9s
-  step  136 reward 0.8300 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.1s
-  step  137 reward 0.5475 advzero 1.00 uniq 1.0 tok 98 clip 0.000 21.2s
-  step  138 reward 0.5675 advzero 0.75 uniq 1.5 tok 96 clip 0.000 20.3s
-  step  139 reward 0.6400 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.2s
-  step  140 reward 0.8175 advzero 0.75 uniq 1.2 tok 95 clip 0.000 22.1s
-  step  141 reward 0.8100 advzero 1.00 uniq 1.0 tok 95 clip 0.000 22.1s
-  step  142 reward 0.6500 advzero 1.00 uniq 1.2 tok 94 clip 0.000 21.6s
-  step  143 reward 0.6775 advzero 0.75 uniq 1.2 tok 97 clip 0.000 22.1s
-  step  144 reward 0.9738 advzero 0.50 uniq 1.5 tok 94 clip 0.000 22.4s
-  step  145 reward 0.8100 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.5s
-  step  146 reward 0.7388 advzero 0.25 uniq 1.8 tok 97 clip 0.000 22.4s
-  step  147 reward 0.6500 advzero 1.00 uniq 1.2 tok 96 clip 0.000 22.4s
-  step  148 reward 0.7438 advzero 0.75 uniq 1.5 tok 96 clip 0.000 22.4s
-  step  149 reward 0.6987 advzero 0.50 uniq 1.5 tok 95 clip 0.000 22.3s
-    eval @150  reward 0.7167 cause 0.570 flags 0.715 EM 0.410 valid 1.000
-  step  150 reward 0.8200 advzero 1.00 uniq 1.2 tok 95 clip 0.000 22.1s
-  step  151 reward 0.8047 advzero 0.75 uniq 1.2 tok 95 clip 0.000 21.8s
-  step  152 reward 0.8400 advzero 0.75 uniq 1.2 tok 93 clip 0.000 22.1s
-  step  153 reward 0.5375 advzero 1.00 uniq 1.2 tok 94 clip 0.000 21.8s
-  step  154 reward 0.6600 advzero 1.00 uniq 1.5 tok 97 clip 0.000 22.1s
-  step  155 reward 0.8200 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.5s
-  step  156 reward 0.6700 advzero 0.75 uniq 1.5 tok 96 clip 0.000 22.3s
-  step  157 reward 0.8700 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.1s
-  step  158 reward 0.8775 advzero 1.00 uniq 1.0 tok 100 clip 0.000 22.4s
-  step  159 reward 0.6975 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.9s
-  step  160 reward 0.7600 advzero 0.50 uniq 1.5 tok 99 clip 0.000 22.3s
-  step  161 reward 0.8263 advzero 0.75 uniq 1.5 tok 93 clip 0.000 21.5s
-  step  162 reward 0.8200 advzero 1.00 uniq 1.2 tok 94 clip 0.000 22.1s
-  step  163 reward 0.8300 advzero 1.00 uniq 1.2 tok 100 clip 0.000 22.7s
-  step  164 reward 0.9747 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.3s
-  step  165 reward 0.8541 advzero 0.75 uniq 1.8 tok 99 clip 0.000 22.9s
-  step  166 reward 0.6600 advzero 1.00 uniq 1.2 tok 98 clip 0.000 22.5s
-  step  167 reward 0.9622 advzero 0.50 uniq 1.5 tok 98 clip 0.000 22.6s
-  step  168 reward 0.8225 advzero 0.75 uniq 1.2 tok 99 clip 0.000 22.4s
-  step  169 reward 1.0000 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.5s
-  step  170 reward 0.8300 advzero 1.00 uniq 1.0 tok 94 clip 0.000 21.7s
-  step  171 reward 0.6600 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.1s
-  step  172 reward 0.7194 advzero 0.50 uniq 1.5 tok 95 clip 0.000 22.5s
-  step  173 reward 0.6600 advzero 1.00 uniq 1.2 tok 96 clip 0.000 21.9s
-  step  174 reward 0.9900 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.2s
-    eval @175  reward 0.7678 cause 0.650 flags 0.773 EM 0.510 valid 1.000
-  step  175 reward 0.7000 advzero 0.75 uniq 1.5 tok 96 clip 0.000 22.1s
-  step  176 reward 0.9463 advzero 0.50 uniq 1.8 tok 96 clip 0.000 22.1s
-  step  177 reward 0.7434 advzero 0.75 uniq 1.5 tok 95 clip 0.000 22.4s
-  step  178 reward 0.6600 advzero 0.50 uniq 1.8 tok 98 clip 0.000 22.5s
-  step  179 reward 0.8678 advzero 0.50 uniq 1.5 tok 95 clip 0.000 21.9s
-  step  180 reward 0.9962 advzero 0.75 uniq 1.2 tok 99 clip 0.000 22.9s
-  step  181 reward 0.8300 advzero 1.00 uniq 1.0 tok 96 clip 0.000 24.3s
-  step  182 reward 0.8275 advzero 0.25 uniq 1.8 tok 98 clip 0.000 22.3s
-  step  183 reward 0.6075 advzero 0.50 uniq 1.8 tok 97 clip 0.000 22.8s
-  step  184 reward 0.8200 advzero 1.00 uniq 1.0 tok 97 clip 0.000 22.4s
-  step  185 reward 0.9688 advzero 0.50 uniq 1.5 tok 95 clip 0.000 22.0s
-  step  186 reward 0.9694 advzero 0.75 uniq 2.0 tok 96 clip 0.000 22.6s
-  step  187 reward 0.8128 advzero 0.50 uniq 1.5 tok 98 clip 0.000 22.5s
-  step  188 reward 0.8400 advzero 1.00 uniq 1.0 tok 100 clip 0.000 22.1s
-  step  189 reward 0.8300 advzero 0.50 uniq 1.5 tok 98 clip 0.000 22.2s
-  step  190 reward 0.9988 advzero 0.75 uniq 1.2 tok 98 clip 0.000 22.9s
-  step  191 reward 0.9900 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.0s
-  step  192 reward 0.9888 advzero 0.75 uniq 1.5 tok 97 clip 0.000 22.2s
-  step  193 reward 1.0000 advzero 1.00 uniq 1.0 tok 98 clip 0.000 22.7s
-  step  194 reward 0.7000 advzero 0.75 uniq 1.2 tok 99 clip 0.000 22.8s
-  step  195 reward 0.7812 advzero 0.50 uniq 1.5 tok 97 clip 0.000 22.7s
-  step  196 reward 0.8675 advzero 1.00 uniq 1.0 tok 96 clip 0.000 23.3s
-  step  197 reward 0.8163 advzero 0.75 uniq 1.2 tok 96 clip 0.000 22.9s
-  step  198 reward 0.9812 advzero 0.75 uniq 1.2 tok 98 clip 0.000 23.3s
-  step  199 reward 0.9988 advzero 0.75 uniq 1.2 tok 99 clip 0.000 23.2s
-    eval @200  reward 0.9078 cause 0.860 flags 0.888 EM 0.710 valid 1.000
-
-wrote runs/q3-oracle-main-trueseed-s0
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | greedy n=1 T=0.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  46%|████▌     | 142/311 [00:00<00:00, 1417.78it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1620.27it/s]
-  chat template honours enable_thinking; set to False
-  16/200 cases  32/200 cases  48/200 cases  64/200 cases  80/200 cases  96/200 cases  112/200 cases  128/200 cases  144/200 cases  160/200 cases  176/200 cases  192/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=1
-  reward             0.902
-  exact match        0.700
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.850
-  cause | flags ok   0.986  (n = 143)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.883
-  length             97 tok
-
-=== dev / tier=easy ===
-  cases              129   k=1
-  reward             0.895
-  exact match        0.713
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.837
-  cause | flags ok   0.989  (n = 94)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.884
-  length             97 tok
-
-=== dev / tier=hard ===
-  cases              71   k=1
-  reward             0.914
-  exact match        0.676
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.873
-  cause | flags ok   0.980  (n = 49)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.883
-  length             97 tok
-
-wrote runs/paired-q3-oracle-main-trueseed-s0/eval_dev_greedy.json  (78s)
-P11B_GRPO_DONE
-== 2026-09-15T03:48:04-07:00 temperature-1.0 label probes
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | sample n=8 T=1.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  48%|████▊     | 150/311 [00:00<00:00, 1497.71it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1920.13it/s]
-  chat template honours enable_thinking; set to False
-  4/200 cases  8/200 cases  12/200 cases  16/200 cases  20/200 cases  24/200 cases  28/200 cases  32/200 cases  36/200 cases  40/200 cases  44/200 cases  48/200 cases  52/200 cases  56/200 cases  60/200 cases  64/200 cases  68/200 cases  72/200 cases  76/200 cases  80/200 cases  84/200 cases  88/200 cases  92/200 cases  96/200 cases  100/200 cases  104/200 cases  108/200 cases  112/200 cases  116/200 cases  120/200 cases  124/200 cases  128/200 cases  132/200 cases  136/200 cases  140/200 cases  144/200 cases  148/200 cases  152/200 cases  156/200 cases  160/200 cases  164/200 cases  168/200 cases  172/200 cases  176/200 cases  180/200 cases  184/200 cases  188/200 cases  192/200 cases  196/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=8
-  reward             0.512
-  exact match        0.090
-  pass@8             0.110
-  unique answers     1.17 / 8
-  distinct-4         0.048
-  zero-variance grp  0.865
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.290
-  cause | flags ok   1.000  (n = 27)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.587
-  length             95 tok
-
-=== dev / tier=easy ===
-  cases              129   k=8
-  reward             0.509
-  exact match        0.101
-  pass@8             0.109
-  unique answers     1.19 / 8
-  distinct-4         0.049
-  zero-variance grp  0.845
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.279
-  cause | flags ok   1.000  (n = 16)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.579
-  length             95 tok
-
-=== dev / tier=hard ===
-  cases              71   k=8
-  reward             0.517
-  exact match        0.070
-  pass@8             0.113
-  unique answers     1.14 / 8
-  distinct-4         0.052
-  zero-variance grp  0.901
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.310
-  cause | flags ok   1.000  (n = 11)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.601
-  length             95 tok
-
-wrote runs/probe-t1-frozen/eval_dev_sample.json  (344s)
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | sample n=8 T=1.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|████▉     | 155/311 [00:00<00:00, 1547.24it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1805.41it/s]
-  chat template honours enable_thinking; set to False
-  4/200 cases  8/200 cases  12/200 cases  16/200 cases  20/200 cases  24/200 cases  28/200 cases  32/200 cases  36/200 cases  40/200 cases  44/200 cases  48/200 cases  52/200 cases  56/200 cases  60/200 cases  64/200 cases  68/200 cases  72/200 cases  76/200 cases  80/200 cases  84/200 cases  88/200 cases  92/200 cases  96/200 cases  100/200 cases  104/200 cases  108/200 cases  112/200 cases  116/200 cases  120/200 cases  124/200 cases  128/200 cases  132/200 cases  136/200 cases  140/200 cases  144/200 cases  148/200 cases  152/200 cases  156/200 cases  160/200 cases  164/200 cases  168/200 cases  172/200 cases  176/200 cases  180/200 cases  184/200 cases  188/200 cases  192/200 cases  196/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=8
-  reward             0.413
-  exact match        0.030
-  pass@8             0.090
-  unique answers     6.25 / 8
-  distinct-4         0.054
-  zero-variance grp  0.005
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.110
-  cause | flags ok   0.191  (n = 47)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.638
-  length             94 tok
-
-=== dev / tier=easy ===
-  cases              129   k=8
-  reward             0.401
-  exact match        0.008
-  pass@8             0.062
-  unique answers     6.20 / 8
-  distinct-4         0.057
-  zero-variance grp  0.008
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.093
-  cause | flags ok   0.071  (n = 28)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.630
-  length             94 tok
-
-=== dev / tier=hard ===
-  cases              71   k=8
-  reward             0.435
-  exact match        0.070
-  pass@8             0.141
-  unique answers     6.35 / 8
-  distinct-4         0.063
-  zero-variance grp  0.000
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.141
-  cause | flags ok   0.368  (n = 19)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.653
-  length             95 tok
-
-wrote runs/probe-t1-seed-shuffled/eval_dev_sample.json  (408s)
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | sample n=8 T=1.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  48%|████▊     | 148/311 [00:00<00:00, 1471.50it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1743.90it/s]
-  chat template honours enable_thinking; set to False
-  4/200 cases  8/200 cases  12/200 cases  16/200 cases  20/200 cases  24/200 cases  28/200 cases  32/200 cases  36/200 cases  40/200 cases  44/200 cases  48/200 cases  52/200 cases  56/200 cases  60/200 cases  64/200 cases  68/200 cases  72/200 cases  76/200 cases  80/200 cases  84/200 cases  88/200 cases  92/200 cases  96/200 cases  100/200 cases  104/200 cases  108/200 cases  112/200 cases  116/200 cases  120/200 cases  124/200 cases  128/200 cases  132/200 cases  136/200 cases  140/200 cases  144/200 cases  148/200 cases  152/200 cases  156/200 cases  160/200 cases  164/200 cases  168/200 cases  172/200 cases  176/200 cases  180/200 cases  184/200 cases  188/200 cases  192/200 cases  196/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=8
-  reward             0.549
-  exact match        0.155
-  pass@8             0.185
-  unique answers     1.28 / 8
-  distinct-4         0.049
-  zero-variance grp  0.830
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.320
-  cause | flags ok   0.973  (n = 37)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.632
-  length             96 tok
-
-=== dev / tier=easy ===
-  cases              129   k=8
-  reward             0.536
-  exact match        0.147
-  pass@8             0.171
-  unique answers     1.25 / 8
-  distinct-4         0.050
-  zero-variance grp  0.860
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.295
-  cause | flags ok   0.957  (n = 23)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.633
-  length             96 tok
-
-=== dev / tier=hard ===
-  cases              71   k=8
-  reward             0.573
-  exact match        0.169
-  pass@8             0.211
-  unique answers     1.35 / 8
-  distinct-4         0.056
-  zero-variance grp  0.775
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.366
-  cause | flags ok   1.000  (n = 14)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.629
-  length             96 tok
-
-wrote runs/probe-t1-seed-true/eval_dev_sample.json  (401s)
-== 2026-09-15T04:07:20-07:00 P11B_ALL_DONE

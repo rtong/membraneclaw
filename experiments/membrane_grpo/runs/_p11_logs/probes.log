@@ -1,169 +1,0 @@
-== 2026-09-15T04:09:29-07:00 probe frozen
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | sample n=8 T=1.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|█████     | 156/311 [00:00<00:00, 1556.55it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1726.09it/s]
-  chat template honours enable_thinking; set to False
-  4/200 cases  8/200 cases  12/200 cases  16/200 cases  20/200 cases  24/200 cases  28/200 cases  32/200 cases  36/200 cases  40/200 cases  44/200 cases  48/200 cases  52/200 cases  56/200 cases  60/200 cases  64/200 cases  68/200 cases  72/200 cases  76/200 cases  80/200 cases  84/200 cases  88/200 cases  92/200 cases  96/200 cases  100/200 cases  104/200 cases  108/200 cases  112/200 cases  116/200 cases  120/200 cases  124/200 cases  128/200 cases  132/200 cases  136/200 cases  140/200 cases  144/200 cases  148/200 cases  152/200 cases  156/200 cases  160/200 cases  164/200 cases  168/200 cases  172/200 cases  176/200 cases  180/200 cases  184/200 cases  188/200 cases  192/200 cases  196/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=8
-  reward             0.512
-  exact match        0.090
-  pass@8             0.110
-  unique answers     1.17 / 8
-  distinct-4         0.048
-  zero-variance grp  0.865
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.290
-  cause | flags ok   1.000  (n = 27)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.587
-  length             95 tok
-
-=== dev / tier=easy ===
-  cases              129   k=8
-  reward             0.509
-  exact match        0.101
-  pass@8             0.109
-  unique answers     1.19 / 8
-  distinct-4         0.049
-  zero-variance grp  0.845
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.279
-  cause | flags ok   1.000  (n = 16)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.579
-  length             95 tok
-
-=== dev / tier=hard ===
-  cases              71   k=8
-  reward             0.517
-  exact match        0.070
-  pass@8             0.113
-  unique answers     1.14 / 8
-  distinct-4         0.052
-  zero-variance grp  0.901
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.310
-  cause | flags ok   1.000  (n = 11)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.601
-  length             95 tok
-
-wrote runs/probe-t1-frozen/eval_dev_sample.json  (345s)
-== 2026-09-15T04:15:16-07:00 probe seed-shuffled
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | sample n=8 T=1.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|████▉     | 155/311 [00:00<00:00, 1548.37it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1696.10it/s]
-  chat template honours enable_thinking; set to False
-  4/200 cases  8/200 cases  12/200 cases  16/200 cases  20/200 cases  24/200 cases  28/200 cases  32/200 cases  36/200 cases  40/200 cases  44/200 cases  48/200 cases  52/200 cases  56/200 cases  60/200 cases  64/200 cases  68/200 cases  72/200 cases  76/200 cases  80/200 cases  84/200 cases  88/200 cases  92/200 cases  96/200 cases  100/200 cases  104/200 cases  108/200 cases  112/200 cases  116/200 cases  120/200 cases  124/200 cases  128/200 cases  132/200 cases  136/200 cases  140/200 cases  144/200 cases  148/200 cases  152/200 cases  156/200 cases  160/200 cases  164/200 cases  168/200 cases  172/200 cases  176/200 cases  180/200 cases  184/200 cases  188/200 cases  192/200 cases  196/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=8
-  reward             0.413
-  exact match        0.030
-  pass@8             0.090
-  unique answers     6.25 / 8
-  distinct-4         0.054
-  zero-variance grp  0.005
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.110
-  cause | flags ok   0.191  (n = 47)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.638
-  length             94 tok
-
-=== dev / tier=easy ===
-  cases              129   k=8
-  reward             0.401
-  exact match        0.008
-  pass@8             0.062
-  unique answers     6.20 / 8
-  distinct-4         0.057
-  zero-variance grp  0.008
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.093
-  cause | flags ok   0.071  (n = 28)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.630
-  length             94 tok
-
-=== dev / tier=hard ===
-  cases              71   k=8
-  reward             0.435
-  exact match        0.070
-  pass@8             0.141
-  unique answers     6.35 / 8
-  distinct-4         0.063
-  zero-variance grp  0.000
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.141
-  cause | flags ok   0.368  (n = 19)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.653
-  length             95 tok
-
-wrote runs/probe-t1-seed-shuffled/eval_dev_sample.json  (409s)
-== 2026-09-15T04:22:06-07:00 probe seed-true
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-hf | Qwen/Qwen3-1.7B | dev (200 cases) | sample n=8 T=1.0 | prompt v2-oracle-num
-Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  49%|████▉     | 152/311 [00:00<00:00, 1517.11it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1877.10it/s]
-  chat template honours enable_thinking; set to False
-  4/200 cases  8/200 cases  12/200 cases  16/200 cases  20/200 cases  24/200 cases  28/200 cases  32/200 cases  36/200 cases  40/200 cases  44/200 cases  48/200 cases  52/200 cases  56/200 cases  60/200 cases  64/200 cases  68/200 cases  72/200 cases  76/200 cases  80/200 cases  84/200 cases  88/200 cases  92/200 cases  96/200 cases  100/200 cases  104/200 cases  108/200 cases  112/200 cases  116/200 cases  120/200 cases  124/200 cases  128/200 cases  132/200 cases  136/200 cases  140/200 cases  144/200 cases  148/200 cases  152/200 cases  156/200 cases  160/200 cases  164/200 cases  168/200 cases  172/200 cases  176/200 cases  180/200 cases  184/200 cases  188/200 cases  192/200 cases  196/200 cases  200/200 cases
-
-=== dev overall ===
-  cases              200   k=8
-  reward             0.549
-  exact match        0.155
-  pass@8             0.185
-  unique answers     1.28 / 8
-  distinct-4         0.049
-  zero-variance grp  0.830
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.320
-  cause | flags ok   0.973  (n = 37)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.632
-  length             96 tok
-
-=== dev / tier=easy ===
-  cases              129   k=8
-  reward             0.536
-  exact match        0.147
-  pass@8             0.171
-  unique answers     1.25 / 8
-  distinct-4         0.050
-  zero-variance grp  0.860
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.295
-  cause | flags ok   0.957  (n = 23)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.633
-  length             96 tok
-
-=== dev / tier=hard ===
-  cases              71   k=8
-  reward             0.573
-  exact match        0.169
-  pass@8             0.211
-  unique answers     1.35 / 8
-  distinct-4         0.056
-  zero-variance grp  0.775
-  validity (gate)    1.000
-  schema ok          1.000
-  cause accuracy     0.366
-  cause | flags ok   1.000  (n = 14)
-  numeric (of 3)     1.000
-  flags   (of 3)     0.629
-  length             96 tok
-
-wrote runs/probe-t1-seed-true/eval_dev_sample.json  (402s)
-== 2026-09-15T04:28:49-07:00 PROBES_DONE
