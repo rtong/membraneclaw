@@ -196,7 +196,8 @@ before the baseline rather than after it.
 ## The frozen baseline, and the go/no-go (P3c)
 
 Qwen2.5-0.5B-Instruct, prompt v2, dev split (`sha256 94b32d05…`), seed 0.
-Artifacts in `runs/baseline-0.5b-v2/`. The test split remains sealed.
+Artifacts in `runs/baseline-0.5b-v2/`. No run in this directory evaluates on
+the test split.
 
 | greedy, pass@1 | dev | holdout_shift |
 | --- | --- | --- |
@@ -604,13 +605,17 @@ McNemar's exact test, same 200 paired cases:
 | base → flags | +0.160 | 34 | 2 | 36 | **< 1e-4** |
 | base → num, `flags_ok` | +0.110 | 26 | 4 | 30 | **0.0001** |
 
-Perfect arithmetic — the ceiling of any calculator, tool or solver — is worth
-+0.035 and does not clear significance. `numeric → flags` is real and
+Perfect arithmetic is worth +0.035 **to the frozen policy** and does not clear
+significance. That bounds what supplying the numbers buys without further
+training. It is not the ceiling of a calculator wired into the task: nothing
+here trains with the numbers supplied, and no run here reaches non-zero exact
+match without them, so how far
+such a policy could be trained is untested. `numeric → flags` is real and
 `flags → cause` is real, but the composite is not: `cause` needs all three flags
 at once, and perfect arithmetic lifts the per-field rate 0.330 → 0.580 while
 lifting the three-way conjunction only 0.02 → 0.13.
 
-### Where it actually fails: four labels that are never emitted
+### Where the frozen policy fails: four labels greedy decoding never reaches
 
 With numbers and flags both given, the 17-row lookup is the whole remaining
 task. `predicted_cause` says what it answered rather than only whether it was
@@ -626,10 +631,12 @@ right:
 | `oxidation_damage` | 28 | **0** | 0/28 | `biofouling` ×22, `scaling` ×6 |
 | `mechanical_leak` | 28 | **0** | 0/28 | `biofouling` ×15, `scaling` ×13 |
 
-Four of seven labels are not in the model's output vocabulary at all, and the
-three that are happen to be exactly the three rows requiring `dp = up`. Of the
-0.745 between the frozen policy and a perfect one, **0.585 — 78% — survives
-handing over everything upstream.** No tool addresses that.
+Greedy decoding never reaches four of the seven labels, and the three it does
+reach are exactly the three rows requiring `dp = up`. Of the 0.745 between the
+frozen policy and a perfect one, **0.585 — 78% — survives handing over everything
+upstream.** This is a property of the argmax under this prompt; which labels a
+*sampled* policy reaches was not measured, and "not in the vocabulary" would be a
+stronger claim than these three evaluations support.
 
 `action` has the same shape plus one failure of its own:
 

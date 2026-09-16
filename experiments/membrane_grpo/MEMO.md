@@ -21,11 +21,12 @@ second seed the same comparison gives +0.025 at p = 0.30, and the seed-to-seed
 spread *within* the winning configuration is larger than the gap between
 configurations.
 
-**On the task: the wall I spent five runs pushing against was the wrong one.**
-Handing the frozen model perfect arithmetic -- the ceiling of any calculator,
-tool or solver -- moves held-out diagnosis by +0.035 and does not reach
-significance. Hand it perfect flags too, leaving nothing but a 17-row lookup,
-and it answers three of the seven causes and never once emits the other four.
+**On the task: for the frozen policy, arithmetic is not the binding wall.**
+Handing the frozen model perfect arithmetic moves held-out diagnosis by +0.035
+and does not reach significance. Hand it perfect flags too, leaving nothing but
+a 17-row lookup, and under greedy decoding it names three of the seven causes
+and never the other four. That is where this policy starts; what training from
+there would reach is not measured here.
 
 The first conclusion was not wrong; it was a statement about a model that could
 not do the task at all, and I had mistaken it for a statement about RL. The
@@ -172,9 +173,13 @@ McNemar's exact test on the same 200 paired cases: baseline → `numeric` is
 +0.035, 9 gained against 2 lost, **p = 0.0654**; `numeric` → `flags` is +0.125,
 25 gained against 0, p < 1e-4; baseline → `flags` is +0.160, p < 1e-4.
 
-**Perfect arithmetic is worth +0.035 and does not clear significance.** That is
-the ceiling of any calculator, tool or solver wired into this task — measured
-rather than argued — and it closes a question I had been treating as open.
+**Perfect arithmetic is worth +0.035 to the frozen policy and does not clear
+significance.** That bounds what supplying the numbers buys *without further
+training*, and nothing more. An earlier draft called it the ceiling of any
+calculator or tool wired into this task. It is not: nothing here trains on top
+of the supplied numbers, and no run here has exact match above zero without them, so
+this measures a starting point and says nothing about how far a policy given the
+numbers could be trained.
 
 **The chain is real link by link and does not transmit.** `numeric → flags`
 holds: all-three-flags goes 4 → 26, p = 0.0001. `flags → cause` holds: +0.125.
@@ -192,9 +197,10 @@ over, the 17-row lookup is the entire remaining task, and:
 | `colloidal_fouling` | 29 | 31 | 25/29 |
 | the other four | 113 | **0** | **0/113** |
 
-This is not a lookup performed badly. Four of the seven labels are not in the
-model's output vocabulary at all, and the three that are happen to be exactly
-the three rows requiring `dp = up`. Of the 0.745 between the frozen policy and a
+This is not a lookup performed badly. Greedy decoding never reaches four of the
+seven labels, and the three it does reach are exactly the three rows requiring
+`dp = up`. That is a property of the argmax under this prompt, not a claim that
+the model cannot produce those strings — sampling was not measured. Of the 0.745 between the frozen policy and a
 perfect one, **0.585 — 78% — survives handing over everything upstream.**
 
 `action` has the same shape and one failure of its own: the severity override —
@@ -210,8 +216,8 @@ leaves the same picture.
 
 What this costs Part 2 is its interpretation, not its numbers. `root_cause` was
 never a measurement of whether the model could read the table. On four rows of
-seven it was measuring whether a label the model never produces happened to come
-out right, and the answer was always no.
+seven it was measuring whether a label greedy decoding never reaches happened to
+come out right, and the answer was always no.
 
 ---
 
@@ -311,11 +317,13 @@ What I cannot claim is *why*. The upstream-weighting explanation held at one
 seed and vanished at the next, and within the configuration that produced it
 the seed matters more than the weighting does.
 
-**On the task** — the arithmetic I built the whole experiment around is not what
-gates the diagnosis. Perfect numbers buy +0.035, not significant; perfect
-numbers and perfect flags still leave 78% of the gap, because four of the seven
-causes and four of the eight actions are never emitted at all, and one stated
-conditional is never applied in 37 chances. Five hours of training were spent
-optimising through a bottleneck that three minutes of evaluation would have
-found. **Measure what the ceiling is before spending the GPU trying to reach
-it.**
+**On the task** — for the frozen policy, the arithmetic I built the whole
+experiment around is not what gates the diagnosis. Perfect numbers buy +0.035,
+not significant; perfect numbers and perfect flags still leave 78% of the gap,
+because greedy decoding never reaches four of the seven causes and one stated
+conditional is never applied in 37 chances. That measures where the policy
+starts, not a ceiling on where training could take it — and the first draft of
+this section, which called it a ceiling, made the same mistake Part 2 did: a true
+measurement promoted into a claim it could not carry. **Measure where a policy
+starts before deciding what training can do from there, and say which of the two
+a number is.**
