@@ -1,0 +1,53 @@
+# NOPASSWD for exactly the service transitions the GPU handover needs, and
+# nothing else. Install on anton:
+#
+#   sudo visudo -c -f deploy/sudoers.d-anton-gpu     # syntax-check FIRST
+#   sudo install -m 0440 -o root -g root deploy/sudoers.d-anton-gpu /etc/sudoers.d/anton-gpu
+#   sudo -l                                          # confirm what it granted
+#
+# `visudo -c` before installing is not optional: a malformed file in
+# /etc/sudoers.d locks sudo for every rule, not just this one. Keep a root shell
+# open in another terminal until `sudo -l` has come back clean.
+#
+# Requires /etc/sudoers to carry its `@includedir /etc/sudoers.d` line (Debian
+# default, but check -- this file does nothing without it).
+#
+# WHAT THIS CHANGES, deliberately: smoke_test/README.md currently says
+#
+#   "Stopping it needs sudo, and this machine has no NOPASSWD rule -- so it is
+#    done by a person at a terminal, not by a notebook and not by an agent"
+#
+# That sentence stops being true here. After installing this, a notebook cell or
+# an agent running as `bayan` can take the card without anyone typing a
+# password. That was a deliberate human gate; this removes it for these four
+# units only. Update that paragraph, or don't install this.
+
+Cmnd_Alias GPU_STACK = \
+    /usr/bin/systemctl stop vllm-qwen, \
+    /usr/bin/systemctl stop vllm-qwen.service, \
+    /usr/bin/systemctl start vllm-qwen, \
+    /usr/bin/systemctl start vllm-qwen.service, \
+    /usr/bin/systemctl restart vllm-qwen, \
+    /usr/bin/systemctl restart vllm-qwen.service, \
+    /usr/bin/systemctl stop membraneclaw-agent, \
+    /usr/bin/systemctl stop membraneclaw-agent.service, \
+    /usr/bin/systemctl start membraneclaw-agent, \
+    /usr/bin/systemctl start membraneclaw-agent.service, \
+    /usr/bin/systemctl restart membraneclaw-agent, \
+    /usr/bin/systemctl restart membraneclaw-agent.service, \
+    /usr/bin/systemctl stop vllm-qwen membraneclaw-agent, \
+    /usr/bin/systemctl start vllm-qwen membraneclaw-agent
+
+# The lease. The instance name is free-form, so this needs a wildcard -- and
+# sudoers matches wildcards with fnmatch(3) against the whole argument string,
+# where `*` also matches spaces. So this grants start/stop of any *existing*
+# unit whose name can be spelled after `gpu-experiment@`, including
+# `gpu-experiment@x other-unit`. It is not arbitrary code execution, and `bayan`
+# already owns every one of these services, so the widening is small -- but if
+# you would rather it were exact, replace these two lines with one entry per
+# lease name you actually use (gpu-experiment@ppo, gpu-experiment@grpo, ...).
+Cmnd_Alias GPU_LEASE = \
+    /usr/bin/systemctl start gpu-experiment@*, \
+    /usr/bin/systemctl stop gpu-experiment@*
+
+bayan ALL=(root) NOPASSWD: GPU_STACK, GPU_LEASE

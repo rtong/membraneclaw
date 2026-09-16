@@ -161,13 +161,34 @@ target `|dV|` above 0.02 — the regression target's own batch-to-batch swing re
 ## The card has to be free first
 
 `anton` has one RTX 5070 Ti at 16 GiB and the vLLM 9B service holds about 14.6 GiB of it.
-Stopping it needs `sudo`, and this machine has no `NOPASSWD` rule — so it is done by a
-person at a terminal, not by a notebook and not by an agent:
+
+**This used to say that stopping it needs a person at a terminal, because the machine had no
+`NOPASSWD` rule. That stopped being true on 2026-09-15**, when `deploy/sudoers.d-anton-gpu`
+was installed: `bayan` may now start and stop `vllm-qwen`, `membraneclaw-agent` and
+`gpu-experiment@*` without a password, and nothing else. A notebook cell or an agent can take
+the card on its own. The human gate that used to sit here was deliberate, and it is gone on
+purpose — but it is gone, so the card now goes to whoever asks first.
+
+```sh
+sudo systemctl start gpu-experiment@<who-and-why>   # take it, and leave a record of who has it
+sudo systemctl stop  gpu-experiment@<who-and-why>   # give it back; the stack restarts itself
+systemctl is-active  'gpu-experiment@*'             # who holds it
+```
+
+The lease is preferable to stopping the units directly: it waits for the VRAM to actually come
+back, restores the stack on release, and leaves a queryable name. The blunt form still works
+and is still what the notebooks' guard checks for:
 
 ```sh
 sudo systemctl stop vllm-qwen membraneclaw-agent    # any branch
 deploy/stack.sh down                                 # branches that have it
 ```
+
+**`Conflicts=` is symmetric and there is no interlock.** `deploy/stack.sh up`, or any plain
+`systemctl start vllm-qwen`, will stop a held lease and take the card back mid-run. Check
+`systemctl is-active 'gpu-experiment@*'` first. Note also that `stack.sh up` reaches `temur`
+over ssh for `reaktoro-mcp`, and the rule installed here does not cover that host — that step
+still prompts.
 
 Notebook 02's first cell refuses to run until that has happened, rather than letting a run
 OOM twenty minutes in. Its threshold is 11 GiB now rather than 8: Qwen3-1.7B is 3.4 GiB of
@@ -340,13 +361,34 @@ partly luck.**
 ## The card has to be free first
 
 `anton` has one RTX 5070 Ti at 16 GiB and the vLLM 9B service holds about 14.6 GiB of it.
-Stopping it needs `sudo`, and this machine has no `NOPASSWD` rule — so it is done by a
-person at a terminal, not by a notebook and not by an agent:
+
+**This used to say that stopping it needs a person at a terminal, because the machine had no
+`NOPASSWD` rule. That stopped being true on 2026-09-15**, when `deploy/sudoers.d-anton-gpu`
+was installed: `bayan` may now start and stop `vllm-qwen`, `membraneclaw-agent` and
+`gpu-experiment@*` without a password, and nothing else. A notebook cell or an agent can take
+the card on its own. The human gate that used to sit here was deliberate, and it is gone on
+purpose — but it is gone, so the card now goes to whoever asks first.
+
+```sh
+sudo systemctl start gpu-experiment@<who-and-why>   # take it, and leave a record of who has it
+sudo systemctl stop  gpu-experiment@<who-and-why>   # give it back; the stack restarts itself
+systemctl is-active  'gpu-experiment@*'             # who holds it
+```
+
+The lease is preferable to stopping the units directly: it waits for the VRAM to actually come
+back, restores the stack on release, and leaves a queryable name. The blunt form still works
+and is still what the notebooks' guard checks for:
 
 ```sh
 sudo systemctl stop vllm-qwen membraneclaw-agent    # any branch
 deploy/stack.sh down                                 # branches that have it
 ```
+
+**`Conflicts=` is symmetric and there is no interlock.** `deploy/stack.sh up`, or any plain
+`systemctl start vllm-qwen`, will stop a held lease and take the card back mid-run. Check
+`systemctl is-active 'gpu-experiment@*'` first. Note also that `stack.sh up` reaches `temur`
+over ssh for `reaktoro-mcp`, and the rule installed here does not cover that host — that step
+still prompts.
 
 Notebook 02's first cell refuses to run until that has happened, rather than letting a run
 OOM twenty minutes in. Its threshold is 11 GiB now rather than 8: Qwen3-1.7B is 3.4 GiB of

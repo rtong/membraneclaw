@@ -1,0 +1,55 @@
+# A GPU lease. Starting an instance takes the card away from the 9B service;
+# stopping it gives the card back. Install on anton (the GPU host) -- temur has
+# neither of the conflicting units, and its RTX 2060 is 6 GiB and sm_75:
+#
+#   sudo cp deploy/gpu-experiment@.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   systemd-analyze verify gpu-experiment@test.service
+#
+# Use, with the instance name saying who holds the card and why:
+#
+#   sudo systemctl start gpu-experiment@notebook06    # take the card
+#   sudo systemctl stop  gpu-experiment@notebook06    # give it back, stack restarts
+#   systemctl is-active  gpu-experiment@notebook06    # who has it
+#
+# Why a unit rather than `systemctl stop vllm-qwen`: this one restores the stack
+# on release, waits for the VRAM to actually come back, and leaves a named,
+# queryable record of who holds the card -- which is the part that matters when
+# GRPO, PPO and the 9B service are three people sharing one 16 GiB board.
+#
+# TRAP -- Conflicts= is symmetric. `deploy/stack.sh up`, or any plain
+# `systemctl start vllm-qwen`, while a lease is held will STOP THE LEASE and
+# take the card back mid-run. There is no lock that prevents this; the lease is
+# a coordination signal, not an interlock. Check `systemctl is-active
+# gpu-experiment@*` before starting the stack.
+
+[Unit]
+Description=GPU lease for %i (holds the card away from the 9B service)
+# Starting this stops both units; systemd does it in the right order.
+Conflicts=vllm-qwen.service membraneclaw-agent.service
+After=vllm-qwen.service membraneclaw-agent.service
+
+[Service]
+# oneshot + RemainAfterExit is the lease: ExecStart runs once to acquire, the
+# unit then sits "active" until stopped, and stopping runs the release.
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=180
+
+# `systemctl stop` returns before the driver has released the VRAM, so a job
+# that starts immediately can still find the card full. Poll nvidia-smi rather
+# than racing it -- and nvidia-smi specifically, because under WSL2
+# torch.cuda.mem_get_info reports memory it could page to host RAM as free
+# (13,454 MiB against nvidia-smi's 544). See OPERATIONS.md.
+#
+# 3000 MiB is the bar: the display holds ~1.6-2.0 GiB with no compute process
+# attached, and a loaded vLLM holds ~14.6 GiB, so the two are not close.
+# `$$` is a literal `$` -- systemd expands `$` itself in ExecStart.
+ExecStart=/usr/bin/bash -c 'for i in $$(seq 1 60); do used=$$(/usr/lib/wsl/lib/nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits); if [ "$$used" -lt 3000 ]; then echo "card free at $${used} MiB"; exit 0; fi; sleep 2; done; echo "VRAM still held at $${used} MiB after 120s" >&2; exit 1'
+
+# --no-block matters: this runs inside our own stop job, and a blocking start of
+# a unit that Conflicts with us would wait on that stop job to finish.
+ExecStopPost=/usr/bin/systemctl --no-block start vllm-qwen.service membraneclaw-agent.service
+
+[Install]
+WantedBy=multi-user.target
