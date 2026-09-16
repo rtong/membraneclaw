@@ -100,9 +100,10 @@ def test_v1_is_still_renderable():
 
 
 def test_an_unknown_version_is_rejected():
+    """Was "v3" until v3 became a real version, which is what this guards."""
     record = generate_case(random.Random(5), "scaling", "easy")[0]
     with pytest.raises(ValueError):
-        build_user_prompt(record, "v3")
+        build_user_prompt(record, "v9")
 
 
 def test_only_v2_permits_working():
@@ -251,3 +252,39 @@ def test_every_v2_variant_prints_the_dp_total():
 def test_the_default_prompt_version_is_untouched():
     """Every committed run is reported against v2; adding variants must not move it."""
     assert PROMPT_VERSION == "v2"
+
+
+def test_v3_renders_exactly_the_text_the_seeded_policy_was_trained_on():
+    """A checksum, because the real reference lives outside this directory.
+
+    `v3` exists to prompt a policy the way it was supervised, so its value is in
+    being byte-identical to that text rather than in being well written. The
+    identity was checked once against the implementation that trained the seed,
+    over all 850 records of all four splits; this pins the rendering so it cannot
+    drift afterwards. If this fails, `v3` changed and a run resuming that policy
+    is no longer prompted the way it was taught.
+    """
+    import hashlib
+    import json
+    from pathlib import Path
+
+    data = Path(__file__).resolve().parent / "data"
+    digest = hashlib.sha256()
+    n = 0
+    for split in ("train", "dev", "test", "holdout_shift"):
+        for line in (data / f"{split}.jsonl").read_text().splitlines():
+            digest.update(json.dumps(build_messages(json.loads(line)["record"], "v3")).encode())
+            n += 1
+    assert n == 850
+    assert digest.hexdigest() == (
+        "917444e32e6095ab4ef74b715f8add8f99cf849611d8ebe2616effe8f80c3d7a"
+    )
+
+
+def test_v3_supplies_the_numbers_and_still_asks_for_the_flags():
+    record = generate_case(random.Random(31), "compaction", "hard")[0]
+    text = build_user_prompt(record, "v3")
+    assert "already computed for you" in text
+    assert "Do not recompute them." in text
+    assert "Step 2 -- turn each change into a flag." in text
+    assert "one short line of plain reasoning for the flags" in text

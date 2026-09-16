@@ -386,3 +386,49 @@ def test_completion_logprobs_scores_the_sampled_tokens(predicts, confident):
         assert got.max() > -0.01, "betting on the sampled tokens should score ~0"
     else:
         assert got.max() < -10.0, "a one-token shift must not look confident"
+
+
+# --- prompt version and starting adapter ------------------------------------------
+
+
+class _PromptCaptured(Exception):
+    pass
+
+
+class _CapturingTokenizer:
+    """Stops `rollout` at the first thing it renders and reports what that was."""
+
+    def apply_chat_template(self, messages, **_):
+        raise _PromptCaptured(messages)
+
+
+@pytest.mark.parametrize("version", ["v2", "v2-oracle-num", "v2-oracle-flags"])
+def test_rollouts_render_the_configured_prompt_version(version):
+    """Training and held-out evaluation must see the same prompt.
+
+    `rollout` used to call `build_messages(record)` with no version, so every
+    training sample used the default while `evaluate` used `cfg.prompt_version`.
+    """
+    import json
+
+    from grpo_scratch import DATA, rollout
+    from reward import MAIN
+    from task.prompt import build_messages
+
+    record = json.loads((DATA / "dev.jsonl").read_text().splitlines()[0])["record"]
+    with pytest.raises(_PromptCaptured) as captured:
+        rollout(
+            None, _CapturingTokenizer(), {"record": record},
+            group_size=1, max_new_tokens=1, temperature=1.0, weights=MAIN,
+            device="cpu", prompt_version=version,
+        )
+    assert captured.value.args[0] == build_messages(record, version)
+
+
+def test_a_kl_penalty_is_refused_when_starting_from_an_adapter():
+    from grpo_scratch import Config, validate_config
+
+    validate_config(Config(init_adapter="runs/x/adapter", beta=0.0))
+    validate_config(Config(beta=0.1))
+    with pytest.raises(ValueError):
+        validate_config(Config(init_adapter="runs/x/adapter", beta=0.1))

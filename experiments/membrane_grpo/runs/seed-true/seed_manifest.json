@@ -1,0 +1,22 @@
+{
+  "config": {
+    "model": "Qwen/Qwen3-1.7B",
+    "cases": "seed/seed_cases.jsonl",
+    "shuffle_labels": 0,
+    "shuffle_seed": 0,
+    "dead_weight": 4.0,
+    "epochs": 3,
+    "lr": 0.0001,
+    "weight_decay": 0.01,
+    "accum": 8,
+    "lora_r": 16,
+    "prompt_version": "v2-oracle-num",
+    "seed": 0,
+    "dtype": "bfloat16"
+  },
+  "cases_sha256": "d5454401ff503c8788d65fdacf3051f6f01f7a54fff22e6849cce742567809f1",
+  "n_cases": 387,
+  "n_dead_weighted": 172,
+  "supervised_tokens_per_epoch": 3584,
+  "labels_unchanged_by_shuffle": null
+}

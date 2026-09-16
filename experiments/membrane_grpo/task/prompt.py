@@ -38,7 +38,7 @@ from .decision_table import (
 
 PROMPT_VERSION = "v2"
 
-VERSIONS = ("v1", "v2", "v2-oracle-num", "v2-oracle-flags")
+VERSIONS = ("v1", "v2", "v2-oracle-num", "v2-oracle-flags", "v3")
 
 # The two oracle variants are diagnostics, not training prompts. Twenty-one
 # 200-step runs on this task never moved `numeric` off ~18 hits in 600, while an
@@ -48,7 +48,14 @@ VERSIONS = ("v1", "v2", "v2-oracle-num", "v2-oracle-flags")
 # model each link in turn and measuring what the next one does, which is the
 # upper bound any real calculator or tool could ever buy. Nothing else about the
 # task changes: same records, same answer key, same reward, same eval path.
-ORACLE_VERSIONS = ("v2-oracle-num", "v2-oracle-flags")
+ORACLE_VERSIONS = ("v2-oracle-num", "v2-oracle-flags", "v3")
+
+# v3 supplies the same three numbers as `v2-oracle-num` and differs from it only
+# in wording. It exists because a seeded policy was supervised under exactly this
+# text, and a run starting from that policy has to be prompted the way it was
+# taught -- byte-identical, including that the values are rendered by `str()`, so
+# a rounded -0.0 prints as "-0.0" and not "0.0". `test_v3_is_byte_identical_to_
+# the_text_the_seed_was_trained_on` pins the rendering against a checksum.
 
 # v1 is kept, and kept working, because the 9B reference run in the README is
 # reported against it. A prompt version that can no longer be rendered is a
@@ -73,6 +80,7 @@ SYSTEM_PROMPTS = {
 # model cannot even copy three given numbers, that is the finding.
 SYSTEM_PROMPTS["v2-oracle-num"] = SYSTEM_PROMPTS["v2"]
 SYSTEM_PROMPTS["v2-oracle-flags"] = SYSTEM_PROMPTS["v2"]
+SYSTEM_PROMPTS["v3"] = SYSTEM_PROMPTS["v2"]
 
 SYSTEM_PROMPT = SYSTEM_PROMPTS[PROMPT_VERSION]
 
@@ -196,6 +204,12 @@ CLOSINGS["v2-oracle-num"] = (
     "no LaTeX, no headings.\n\n"
     "Then end your reply with this JSON object and nothing after it:"
 )
+CLOSINGS["v3"] = (
+    "The three percent changes are given above -- copy them into the JSON\n"
+    "unchanged. Use at most one short line of plain reasoning for the flags -- no\n"
+    "prose, no LaTeX, no headings.\n\n"
+    "Then end your reply with this JSON object and nothing after it:"
+)
 CLOSINGS["v2-oracle-flags"] = (
     "The three percent changes and the three flags are given above -- copy them\n"
     "across unchanged. Use at most one short line of plain text for the\n"
@@ -229,6 +243,17 @@ _STEP2_DERIVE = f"""Step 2 -- turn each change into a flag.
   salt_passage  : down if <= {_num(SP_DOWN_PCT)}, sharp_up if >= +{_num(SP_SHARP_UP_PCT)}, \
 up if >= +{_num(SP_UP_PCT)}, else flat
   dp            : down if <= {_num(DP_DOWN_PCT)}, up if >= +{_num(DP_UP_PCT)}, else flat"""
+
+
+def _step1_given_v3(truth: dict[str, Any]) -> str:
+    """Step 1 exactly as the seeded policy was supervised to read it."""
+    return f"""Step 1 -- the three percent changes, already computed for you.
+
+  normalized_flow_change_pct = {truth["normalized_flow_change_pct"]}
+  salt_passage_change_pct    = {truth["salt_passage_change_pct"]}
+  dp_change_pct              = {truth["dp_change_pct"]}
+
+  Copy these three values into the JSON unchanged. Do not recompute them."""
 
 
 def _step1_given(truth: dict[str, Any]) -> str:
@@ -268,7 +293,7 @@ def build_user_prompt(record: dict[str, Any], version: str = PROMPT_VERSION) -> 
         from .generate import truth_from_record
 
         truth = truth_from_record(record)
-        step1 = _step1_given(truth)
+        step1 = _step1_given_v3(truth) if version == "v3" else _step1_given(truth)
         if version == "v2-oracle-flags":
             step2 = _step2_given(truth)
 

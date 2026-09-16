@@ -66,6 +66,8 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P8 | model selection, then three weight sets on Qwen3-1.7B | done — the diagnosis moves |
 | P9 | seed replication of MAIN and ABLATE | done — **P8's explanation does not replicate** |
 | P10 | the oracle decomposition, no training | done — **the bottleneck is not arithmetic** |
+| P11 | does a seed install a lookup, or only vocabulary? | done — **the lookup** (B′) |
+| P12 | how far does GRPO get from a seeded policy? | done — **dev 0.945, test 0.945** |
 
 P8 onwards is why the memo has three parts rather than one. P8 found a reward
 weighting that appeared to move held-out `root_cause` 0.295 → 0.430 at p < 1e-4;
@@ -677,6 +679,241 @@ result in this project with no seed for it to fail at.
 been reporting 0.000 on the frozen baseline, which turns out to be 0 of **4** —
 the model assembles a correct flag triple 4 times in 200. `cause_given_flags_n`
 is now recorded alongside it.
+
+## Does a seed install a lookup, or only vocabulary? (P11)
+
+Written before either run. Part 3 found labels that greedy decoding of the
+frozen policy never reaches, and a policy gradient cannot reweight what it never
+samples. A short supervised *seed* before RL (`seed_sft.py`) moves such labels off
+zero: it supervises only the values of `root_cause` and `action`, with the
+arithmetic supplied. But those values are scored with the correct flags already
+in context, so a correctly labelled seed also teaches the lookup. This separates
+the two with a control.
+
+| run | prompt | starts from | weights, seed |
+| --- | --- | --- | --- |
+| `q3-oracle-main-s0` | `v2-oracle-num` | a fresh adapter | `MAIN`, 0 |
+| `seed-shuffled` | `v2-oracle-num` | the frozen model; 387 off-scale records, `(root_cause, action)` pairs permuted across records | — |
+| `q3-oracle-main-shufseed-s0` | `v2-oracle-num` | `seed-shuffled/adapter` | `MAIN`, 0 |
+| `seed-true` | `v2-oracle-num` | the frozen model; the same 387 records, labels unshuffled | — |
+| `q3-oracle-main-trueseed-s0` | `v2-oracle-num` | `seed-true/adapter` | `MAIN`, 0 |
+
+Both GRPO runs are otherwise `q3-main-s0`'s configuration, 200 steps. The
+shuffled seed installs exactly the correct seed's vocabulary — every label and
+every pair as often, the dead-label weight on the same 172 cases — while 348 of
+387 records get another record's labels. The last two rows were added by the
+amendment below.
+
+**Primary measure:** held-out `cause_acc` at step 200, shuffled-seed run against
+fresh run, McNemar on the same 200 dev cases from `eval.py` on the final
+adapters. **Secondary:** `exact_match`, `action_acc`, and how many of the seven
+causes the final policy emits.
+
+| outcome | criterion | reading |
+| --- | --- | --- |
+| **A** | shuffled ≥ fresh **+0.15**, p < 0.05, and ≥ 6 of 7 causes emitted | vocabulary is enough: GRPO learns the mapping once the labels have mass |
+| **B** | shuffled ≤ fresh **−0.10**, p < 0.05 | the seed installs a mapping, and a wrong one is not undone in 200 steps |
+| **C** | anything else | not separable without the correctly labelled seed |
+
+The ±0.15 / −0.10 bands are set above the seed-to-seed movement already
+measured on this model under GRPO (0.085–0.090 in `cause_acc`, P9). This is one
+seed per run, so A or B would be "consistent with", not established.
+
+**Amendment, 2026-09-15, before any GRPO result.** The correctly labelled seed
+is now run as well, queued after the two runs above. Written while the fresh
+run was in progress, with no step-200 number from either GRPO run seen; the only
+result seen was the shuffled seed evaluated on its own, before RL (`cause_acc`
+0.145, `cause_given_flags` 0.081 over 62, two causes emitted under greedy
+decoding). The A/B/C table above stays as recorded. With the correct seed in
+hand, the primary comparison becomes shuffled seed against correct seed, both
+after GRPO, at step 200:
+
+| outcome | criterion | reading |
+| --- | --- | --- |
+| **A′** | correct ≥ fresh **+0.15** (p < 0.05), and \|shuffled − correct\| < 0.10 with p ≥ 0.05 | the seed helps GRPO, and only its vocabulary is needed |
+| **B′** | correct ≥ shuffled **+0.15**, p < 0.05 | what the seed contributes is the lookup |
+| **C′** | correct < fresh + 0.15, or p ≥ 0.05 against fresh | the seed does not help GRPO here, so vocabulary against lookup is not tested |
+| **D′** | anything else | inconclusive |
+
+A′ also needs its precondition checked rather than assumed: a temperature-1.0
+probe (`eval.py --mode sample -k 8` on dev, all 1,600 samples counted) of the
+frozen policy and both seeds. If the shuffled seed leaves `organic_fouling` or
+`isolate_and_evaluate_replacement` at zero samples, it failed to install the
+vocabulary it controls for, and A′ is not available whatever the accuracies say.
+
+One known risk, stated in advance: a sequence-level reward gives no per-token
+credit, and if GRPO does not learn to say `flat`, flag accuracy caps near 0.67
+and every downstream metric with it. If the fresh run ends below `flags_acc`
+0.70, that cap is recorded as the likely reason for a C.
+
+### Results (P11)
+
+All five runs finished; every figure below is a committed artifact in `runs/`.
+Greedy decoding on the 200 dev cases, prompt `v2-oracle-num`, one seed per
+configuration.
+
+| | frozen | shuffled seed alone | correct seed alone | fresh @200 | shuffled seed @200 | correct seed @200 |
+| --- | --- | --- | --- | --- | --- | --- |
+| `exact_match` | 0.090 | 0.020 | 0.155 | 0.235 | 0.295 | **0.700** |
+| `cause_acc` | 0.290 | 0.145 | 0.320 | 0.380 | 0.435 | **0.850** |
+| `action_acc` | 0.205 | 0.095 | 0.330 | 0.265 | 0.315 | **0.890** |
+| all three flags right | 26/200 | 62/200 | 37/200 | 85/200 | 185/200 | 143/200 |
+| `cause_given_flags` | 1.000 | 0.081 | 0.946 | 0.800 | 0.443 | **0.986** |
+| causes emitted | 2/7 | 2/7 | 3/7 | 4/7 | 3/7 | **7/7** |
+| severe action emitted | 0 | 0 | 19 | 0 | 0 | **37** |
+
+The "@200" columns are `eval.py` on the final adapters (batch 16); the runs'
+own step-200 evaluations (batch 32) read 0.380 / 0.435 / 0.860 on `cause_acc`,
+the one difference being batch composition.
+
+McNemar on `cause_acc`, same 200 cases:
+
+| | difference | discordant | p |
+| --- | --- | --- | --- |
+| fresh → shuffled seed | +0.055 | 18 : 7 | 0.043 |
+| fresh → correct seed | **+0.470** | 99 : 5 | < 1e-4 |
+| shuffled → correct seed | **+0.415** | 88 : 5 | < 1e-4 |
+
+**Original table: C.** Shuffled against fresh is +0.055 — significant, but below
+the +0.15 that A required, and the shuffled run emits 3 of 7 causes, not 6.
+
+**Amended table: B′.** The correct seed beats the shuffled seed by +0.415 at
+p < 1e-4, and beats the fresh run by +0.470, so the seed does help GRPO and what
+it contributes is the lookup. On `exact_match` the gap is +0.405 (83 : 2) and on
+`action_acc` +0.575 (117 : 2).
+
+**The precondition that would have made A′ possible does hold**, which makes B′
+the stronger reading rather than a default. Sampled at temperature 1.0, 8 per
+case, all 1,600 samples counted:
+
+| | `organic_fouling` | severe action | causes | actions |
+| --- | --- | --- | --- | --- |
+| frozen | **0** | **0** | 4/7 | 4/8 |
+| shuffled seed | 93 | 69 | 5/7 | 6/8 |
+| correct seed | 10 | 163 | 5/7 | 6/8 |
+
+The shuffled seed gave both dead labels probability mass — more `organic_fouling`
+than the correct seed did. The vocabulary was installed, and GRPO from it still
+reached half the correct seed's diagnosis in the same 200 steps. **Installing the
+labels was not enough; installing the mapping was what mattered.**
+
+What this does not establish:
+
+* **One seed per run.** The +0.415 is several times the 0.085–0.090 seed-to-seed
+  movement measured under GRPO in P9, but it is still three single trajectories.
+* **Nothing converged.** The correct-seed run's own evaluation went 0.650 → 0.860
+  on `cause_acc` between steps 175 and 200.
+* **One prompt.** Everything here supplies the arithmetic; on `v2` the lookup is
+  rarely reached with correct flags, and nothing here was run on it.
+* **Unexplained, and left so:** the shuffled-seed run reads flags best of the
+  three (185/200 all three right, against 85 and 143) while doing the lookup
+  worst. Flags are never supervised by either seed. No explanation is offered.
+
+**A process fault, and its bounded effect.** The amendment commit (`0e311a5`)
+also swept in the shuffled seed's artifacts, which had just been copied back.
+On the training box the queued script's `git pull` then refused to overwrite the
+matching untracked files, and because that pull sat inside an `&&` list,
+`set -e` did not stop the script: the correct seed, its GRPO run and the first
+round of probes ran on `4fe6f10`. The only code difference between the two
+commits is the seven lines in `eval.py` that count every sample in sample mode,
+which touch neither training nor scoring — so the correct-seed runs stand. The
+probes, which had counted 200 first samples rather than all 1,600, were rerun on
+`0e311a5` after the untracked files were confirmed byte-identical to the
+committed ones and removed; the table above is the rerun.
+
+## Can GRPO reach 90% from a seeded policy? (P12)
+
+Written before the run. P11 answered what the seed contributes; this asks how
+far GRPO gets from one. The starting policy is a supervised seed trained under
+`v3`, so the run is prompted with `v3` -- byte-identical to the text that seed
+was taught on, verified against that implementation over all 850 records of all
+four splits, 0 mismatches, and pinned in `test_prompt.py` by checksum.
+
+| | |
+| --- | --- |
+| start | `runs/seed-nb11-v3/adapter` — the seeded policy the sibling experiment reached 0.930 from, weights committed here (sha256 `038cf4199f64…`) |
+| run | `runs/q3-v3-seeded-s0`: GRPO, `MAIN` weights, seed 0, `v3`, **400 steps**, eval every 25 |
+| everything else | `q3-main-s0`'s configuration, as in P11 |
+
+400 steps rather than 200 because P11's correct-seed run was still climbing when
+it stopped -- `exact_match` 0.510 at step 175 and 0.710 at step 200 -- so 200
+would measure the budget rather than the ceiling.
+
+**Which starting policy, and why.** Two exist. `seed_sft.py --prompt-version v3`
+builds one here from the same records and the same recipe; `runs/seed-nb11-v3` is
+the one the sibling experiment trained and then reached 0.930 from with a
+different RL algorithm. Same recipe, same data, byte-identical prompt — and
+measurably different policies:
+
+| seeded policy, dev, greedy, `v3` | `exact_match` | `cause_acc` | `action_acc` | `flags_acc` |
+| --- | --- | --- | --- | --- |
+| built here (`runs/seed-sft-v3`) | 0.165 | 0.430 | 0.515 | 0.630 |
+| the sibling's (`runs/seed-nb11-v3`) | 0.250 | 0.395 | — | — |
+
+A recipe reproduced across two implementations does not reproduce a policy, which
+is worth recording on its own. P12 runs from the sibling's, because the question
+is what GRPO reaches from *that* policy, against 0.930 from the same start —
+one variable, the algorithm. Its weights are committed here rather than
+referenced across directories, since nothing in this directory can rebuild them.
+The seed built here stays as the reproducibility note above.
+
+Two GRPO attempts were started and stopped before this: one from the sibling
+policy, one from the seed built here. Neither reached an evaluation point --
+both were killed during training, and `eval.jsonl` was empty for both.
+
+**The question is a number:** does held-out `exact_match` on dev reach **0.90**?
+
+| outcome | criterion |
+| --- | --- |
+| **reached** | dev `exact_match` ≥ 0.90 at any evaluation point, confirmed by a fresh greedy `eval.py` on that adapter |
+| **close** | 0.80 ≤ best < 0.90 |
+| **short** | best < 0.80 |
+
+Whatever the outcome, the final adapter is also evaluated on `test` and
+`holdout_shift`: three splits agreeing is what separates a result from a dev
+artifact. One seed, one run -- P9 measured seed-to-seed movement of 0.085-0.090
+in `cause_acc` under GRPO, and nothing here is repeated.
+
+### Results (P12): reached
+
+400 GRPO steps from the seeded policy, `v3`, `MAIN` weights, seed 0. Final
+adapter, greedy, through `eval.py` on three splits:
+
+| | n | `exact_match` | `cause` | `action` | `flags` | `cause_given_flags` | causes emitted | severe emitted |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| the seed, step 0 | 200 dev | 0.250 | 0.395 | 0.490 | 0.672 | 0.962 | 4/7 | 37 |
+| **final, dev** | 200 | **0.945** | 0.980 | 0.990 | 0.982 | 1.000 | **7/7** | 37 |
+| **final, test** | 200 | **0.945** | 0.965 | 0.975 | 0.982 | 1.000 | **7/7** | 37 |
+| **final, `holdout_shift`** | 50 | **0.960** | 0.980 | 0.980 | 0.987 | 1.000 | **7/7** | 9 |
+
+**`exact_match` 0.945 on dev, against the 0.90 asked for: reached.** The three
+splits agree within 0.015, and `test` was selected on by nothing in this run.
+All seven causes are emitted and the severity override fires on all 37 severe
+dev cases, the two things no unseeded GRPO run here ever did. McNemar, seed
+against final on dev: `exact_match` +0.695 (144 : 5), `cause` +0.585 (118 : 1),
+`action` +0.500 (100 : 0), all p < 1e-4.
+
+The curve, held out on dev every 25 steps:
+
+| step | 0 | 100 | 200 | 250 | 300 | 350 | 400 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `cause` | 0.385 | 0.785 | 0.825 | 0.915 | 0.950 | 0.960 | 0.975 |
+| `exact_match` | 0.255 | 0.485 | 0.725 | 0.825 | 0.900 | 0.920 | 0.945 |
+
+**The 400-step budget decided the answer.** At step 200 `exact_match` was 0.725;
+the same run stopped there would have read "close", and the pre-registered
+threshold would have been measuring the budget. It first crosses 0.90 at step
+300 and is still climbing at 400.
+
+`flags_acc` leads and `exact_match` follows: at step 150 flags were already
+0.887 with `exact_match` 0.670, because exact match is a conjunction over seven
+fields and waits for the last of them. `cause_given_flags` ends at 1.000 — given
+three correct flags the lookup is no longer wrong on a single case, dev or test.
+
+Limits, unchanged by the size of the number: one seed, one run; the arithmetic
+is supplied by the prompt, so this is the task with a calculator, not the task;
+and nothing was still converging when it stopped, so 0.945 is a floor for this
+configuration rather than a ceiling.
 
 ## Pre-registered predictions
 
