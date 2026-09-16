@@ -67,7 +67,7 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P9 | seed replication of MAIN and ABLATE | done — **P8's explanation does not replicate** |
 | P10 | the oracle decomposition, no training | done — **the bottleneck is not arithmetic** |
 | P11 | does a seed install a lookup, or only vocabulary? | done — **the lookup** (B′) |
-| P12 | how far does GRPO get from a seeded policy? | running |
+| P12 | how far does GRPO get from a seeded policy? | done — **dev 0.945, test 0.945** |
 
 P8 onwards is why the memo has three parts rather than one. P8 found a reward
 weighting that appeared to move held-out `root_cause` 0.295 → 0.430 at p < 1e-4;
@@ -873,6 +873,47 @@ Whatever the outcome, the final adapter is also evaluated on `test` and
 `holdout_shift`: three splits agreeing is what separates a result from a dev
 artifact. One seed, one run -- P9 measured seed-to-seed movement of 0.085-0.090
 in `cause_acc` under GRPO, and nothing here is repeated.
+
+### Results (P12): reached
+
+400 GRPO steps from the seeded policy, `v3`, `MAIN` weights, seed 0. Final
+adapter, greedy, through `eval.py` on three splits:
+
+| | n | `exact_match` | `cause` | `action` | `flags` | `cause_given_flags` | causes emitted | severe emitted |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| the seed, step 0 | 200 dev | 0.250 | 0.395 | 0.490 | 0.672 | 0.962 | 4/7 | 37 |
+| **final, dev** | 200 | **0.945** | 0.980 | 0.990 | 0.982 | 1.000 | **7/7** | 37 |
+| **final, test** | 200 | **0.945** | 0.965 | 0.975 | 0.982 | 1.000 | **7/7** | 37 |
+| **final, `holdout_shift`** | 50 | **0.960** | 0.980 | 0.980 | 0.987 | 1.000 | **7/7** | 9 |
+
+**`exact_match` 0.945 on dev, against the 0.90 asked for: reached.** The three
+splits agree within 0.015, and `test` was selected on by nothing in this run.
+All seven causes are emitted and the severity override fires on all 37 severe
+dev cases, the two things no unseeded GRPO run here ever did. McNemar, seed
+against final on dev: `exact_match` +0.695 (144 : 5), `cause` +0.585 (118 : 1),
+`action` +0.500 (100 : 0), all p < 1e-4.
+
+The curve, held out on dev every 25 steps:
+
+| step | 0 | 100 | 200 | 250 | 300 | 350 | 400 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `cause` | 0.385 | 0.785 | 0.825 | 0.915 | 0.950 | 0.960 | 0.975 |
+| `exact_match` | 0.255 | 0.485 | 0.725 | 0.825 | 0.900 | 0.920 | 0.945 |
+
+**The 400-step budget decided the answer.** At step 200 `exact_match` was 0.725;
+the same run stopped there would have read "close", and the pre-registered
+threshold would have been measuring the budget. It first crosses 0.90 at step
+300 and is still climbing at 400.
+
+`flags_acc` leads and `exact_match` follows: at step 150 flags were already
+0.887 with `exact_match` 0.670, because exact match is a conjunction over seven
+fields and waits for the last of them. `cause_given_flags` ends at 1.000 — given
+three correct flags the lookup is no longer wrong on a single case, dev or test.
+
+Limits, unchanged by the size of the number: one seed, one run; the arithmetic
+is supplied by the prompt, so this is the task with a calculator, not the task;
+and nothing was still converging when it stopped, so 0.945 is a floor for this
+configuration rather than a ceiling.
 
 ## Pre-registered predictions
 
