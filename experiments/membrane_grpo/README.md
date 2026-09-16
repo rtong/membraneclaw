@@ -831,13 +831,24 @@ four splits, 0 mismatches, and pinned in `test_prompt.py` by checksum.
 
 | | |
 | --- | --- |
-| start | `runs/seed-sft-v3/adapter` (`adapter_model.safetensors` sha256 `038cf4199f64…`, LoRA r=16, q/k/v/o) |
+| seed | `runs/seed-sft-v3`: `seed_sft.py --prompt-version v3`, this directory's own code and the recipe P11 used |
+| start | `runs/seed-sft-v3/adapter` |
 | run | `runs/q3-v3-seeded-s0`: GRPO, `MAIN` weights, seed 0, `v3`, **400 steps**, eval every 25 |
 | everything else | `q3-main-s0`'s configuration, as in P11 |
 
 400 steps rather than 200 because P11's correct-seed run was still climbing when
 it stopped -- `exact_match` 0.510 at step 175 and 0.710 at step 200 -- so 200
 would measure the budget rather than the ceiling.
+
+**Correction, before any GRPO step was evaluated.** The first attempt started
+from an adapter copied in from the sibling notebook directory, i.e. trained by
+code outside this experiment. Everything a run here starts from should be built
+here, so the seed is retrained by `seed_sft.py` under `v3` and the copy is
+deleted. The recipe is unchanged and the prompt is byte-identical, so only the
+weights differ. One number from the discarded attempt was seen: the copied
+adapter evaluated at `exact_match` 0.250 on dev, against 0.255 reported for it
+elsewhere. No GRPO evaluation point from that attempt was seen; the run was
+stopped during training.
 
 **The question is a number:** does held-out `exact_match` on dev reach **0.90**?
 
