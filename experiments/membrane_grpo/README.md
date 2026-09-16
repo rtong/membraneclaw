@@ -67,6 +67,7 @@ Data is synthetic and every parameter is hand-picked for teaching. See
 | P9 | seed replication of MAIN and ABLATE | done — **P8's explanation does not replicate** |
 | P10 | the oracle decomposition, no training | done — **the bottleneck is not arithmetic** |
 | P11 | does a seed install a lookup, or only vocabulary? | done — **the lookup** (B′) |
+| P12 | how far does GRPO get from a seeded policy? | running |
 
 P8 onwards is why the memo has three parts rather than one. P8 found a reward
 weighting that appeared to move held-out `root_cause` 0.295 → 0.430 at p < 1e-4;
@@ -819,6 +820,37 @@ which touch neither training nor scoring — so the correct-seed runs stand. The
 probes, which had counted 200 first samples rather than all 1,600, were rerun on
 `0e311a5` after the untracked files were confirmed byte-identical to the
 committed ones and removed; the table above is the rerun.
+
+## Can GRPO reach 90% from a seeded policy? (P12)
+
+Written before the run. P11 answered what the seed contributes; this asks how
+far GRPO gets from one. The starting policy is a supervised seed trained under
+`v3`, so the run is prompted with `v3` -- byte-identical to the text that seed
+was taught on, verified against that implementation over all 850 records of all
+four splits, 0 mismatches, and pinned in `test_prompt.py` by checksum.
+
+| | |
+| --- | --- |
+| start | `runs/seed-sft-v3/adapter` (`adapter_model.safetensors` sha256 `038cf4199f64…`, LoRA r=16, q/k/v/o) |
+| run | `runs/q3-v3-seeded-s0`: GRPO, `MAIN` weights, seed 0, `v3`, **400 steps**, eval every 25 |
+| everything else | `q3-main-s0`'s configuration, as in P11 |
+
+400 steps rather than 200 because P11's correct-seed run was still climbing when
+it stopped -- `exact_match` 0.510 at step 175 and 0.710 at step 200 -- so 200
+would measure the budget rather than the ceiling.
+
+**The question is a number:** does held-out `exact_match` on dev reach **0.90**?
+
+| outcome | criterion |
+| --- | --- |
+| **reached** | dev `exact_match` ≥ 0.90 at any evaluation point, confirmed by a fresh greedy `eval.py` on that adapter |
+| **close** | 0.80 ≤ best < 0.90 |
+| **short** | best < 0.80 |
+
+Whatever the outcome, the final adapter is also evaluated on `test` and
+`holdout_shift`: three splits agreeing is what separates a result from a dev
+artifact. One seed, one run -- P9 measured seed-to-seed movement of 0.085-0.090
+in `cause_acc` under GRPO, and nothing here is repeated.
 
 ## Pre-registered predictions
 
