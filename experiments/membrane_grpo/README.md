@@ -831,8 +831,7 @@ four splits, 0 mismatches, and pinned in `test_prompt.py` by checksum.
 
 | | |
 | --- | --- |
-| seed | `runs/seed-sft-v3`: `seed_sft.py --prompt-version v3`, this directory's own code and the recipe P11 used |
-| start | `runs/seed-sft-v3/adapter` |
+| start | `runs/seed-nb11-v3/adapter` — the seeded policy the sibling experiment reached 0.930 from, weights committed here (sha256 `038cf4199f64…`) |
 | run | `runs/q3-v3-seeded-s0`: GRPO, `MAIN` weights, seed 0, `v3`, **400 steps**, eval every 25 |
 | everything else | `q3-main-s0`'s configuration, as in P11 |
 
@@ -840,15 +839,27 @@ four splits, 0 mismatches, and pinned in `test_prompt.py` by checksum.
 it stopped -- `exact_match` 0.510 at step 175 and 0.710 at step 200 -- so 200
 would measure the budget rather than the ceiling.
 
-**Correction, before any GRPO step was evaluated.** The first attempt started
-from an adapter copied in from the sibling notebook directory, i.e. trained by
-code outside this experiment. Everything a run here starts from should be built
-here, so the seed is retrained by `seed_sft.py` under `v3` and the copy is
-deleted. The recipe is unchanged and the prompt is byte-identical, so only the
-weights differ. One number from the discarded attempt was seen: the copied
-adapter evaluated at `exact_match` 0.250 on dev, against 0.255 reported for it
-elsewhere. No GRPO evaluation point from that attempt was seen; the run was
-stopped during training.
+**Which starting policy, and why.** Two exist. `seed_sft.py --prompt-version v3`
+builds one here from the same records and the same recipe; `runs/seed-nb11-v3` is
+the one the sibling experiment trained and then reached 0.930 from with a
+different RL algorithm. Same recipe, same data, byte-identical prompt — and
+measurably different policies:
+
+| seeded policy, dev, greedy, `v3` | `exact_match` | `cause_acc` | `action_acc` | `flags_acc` |
+| --- | --- | --- | --- | --- |
+| built here (`runs/seed-sft-v3`) | 0.165 | 0.430 | 0.515 | 0.630 |
+| the sibling's (`runs/seed-nb11-v3`) | 0.250 | 0.395 | — | — |
+
+A recipe reproduced across two implementations does not reproduce a policy, which
+is worth recording on its own. P12 runs from the sibling's, because the question
+is what GRPO reaches from *that* policy, against 0.930 from the same start —
+one variable, the algorithm. Its weights are committed here rather than
+referenced across directories, since nothing in this directory can rebuild them.
+The seed built here stays as the reproducibility note above.
+
+Two GRPO attempts were started and stopped before this: one from the sibling
+policy, one from the seed built here. Neither reached an evaluation point --
+both were killed during training, and `eval.jsonl` was empty for both.
 
 **The question is a number:** does held-out `exact_match` on dev reach **0.90**?
 

@@ -21,6 +21,12 @@ runs/**/*.safetensors
 !runs/q3-main-s0/adapter/adapter_model.safetensors
 !runs/q3-ablate-s0/adapter/adapter_model.safetensors
 !runs/q3-probe-s0/adapter/adapter_model.safetensors
+# P12 starts GRPO from a supervised seed that this directory's code did not
+# produce -- it is the sibling experiment's seeding pass under v3, kept so the
+# run starts from exactly the policy that experiment started from and the only
+# difference is the RL algorithm. Nothing here can rebuild it, so the weights
+# are the artefact: without them P12 is a number with no starting point.
+!runs/seed-nb11-v3/adapter/adapter_model.safetensors
 # PEFT regenerates this boilerplate on every save_pretrained
 runs/**/adapter/README.md
 runs/**/*.bin
