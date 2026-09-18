@@ -288,6 +288,22 @@ class Config:
     eval_max_tokens: int = 640
 
 
+def _lora_targets(model_id):
+    """LoRA target modules, attention-architecture aware.
+
+    Qwen3.5 uses hybrid attention: only 1 in 4 layers is full self-attention
+    (q/k/v/o_proj); the rest are GatedDeltaNet linear-attention layers whose
+    projections are in_proj_qkv/a/b/z and out_proj. Targeting only q/k/v/o
+    would leave 18/24 layers frozen on a 24-layer Qwen3.5 model.
+    """
+    if "qwen3.5" in model_id.lower():
+        return [
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "in_proj_qkv", "in_proj_a", "in_proj_b", "in_proj_z", "out_proj",
+        ]
+    return ["q_proj", "k_proj", "v_proj", "o_proj"]
+
+
 def load_policy(cfg: Config, device: str):
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -302,7 +318,7 @@ def load_policy(cfg: Config, device: str):
         LoraConfig(
             r=cfg.lora_r,
             lora_alpha=2 * cfg.lora_r,
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+            target_modules=_lora_targets(cfg.model),
             task_type="CAUSAL_LM",
         ),
     ).to(device)
