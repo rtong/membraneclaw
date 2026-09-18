@@ -94,14 +94,14 @@ def main() -> None:
         logging_steps=10,
         save_strategy="no",
         report_to="none",
+        max_length=4096,
+        packing=False,
     )
     trainer = SFTTrainer(
         model=policy,
         args=cfg,
         train_dataset=ds,
         processing_class=tok,
-        max_seq_length=4096,
-        packing=False,
     )
     trainer.train()
     policy.save_pretrained(args.out)
