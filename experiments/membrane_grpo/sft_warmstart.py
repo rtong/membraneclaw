@@ -25,11 +25,12 @@ from pathlib import Path
 
 import torch
 from datasets import Dataset
-from peft import PeftModel
+from peft import LoraConfig, PeftModel, get_peft_model
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import SFTTrainer, SFTConfig
 
 from task.prompt import PROMPT_VERSION, build_messages
+from grpo_scratch import _lora_targets
 from task.schema import canonical
 
 # The three cause rows GRPO collapsed; everything else the adapter already does well.
@@ -40,7 +41,9 @@ ROOT = Path(__file__).resolve().parent
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="Qwen/Qwen3.5-0.8B")
-    ap.add_argument("--from-adapter", required=True, help="GRPO adapter dir to continue from")
+    ap.add_argument("--from-adapter", default=None, help="GRPO adapter dir to continue from (warm-start)")
+    ap.add_argument("--cold-start", action="store_true", help="fresh LoRA from base model")
+    ap.add_argument("--lora-r", type=int, default=16)
     ap.add_argument("--out", required=True, help="where to save the SFT adapter")
     ap.add_argument("--epochs", type=float, default=2)
     ap.add_argument("--lr", type=float, default=1e-5)
@@ -55,18 +58,31 @@ def main() -> None:
         tok.pad_token = tok.eos_token
 
     base = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.bfloat16)
-    policy = PeftModel.from_pretrained(base, args.from_adapter)
-    # from_pretrained loads the adapter frozen; re-enable training (same fix as grpo resume).
-    for name, param in policy.named_parameters():
-        if "lora_" in name:
-            param.requires_grad = True
+    if args.cold_start:
+        policy = get_peft_model(
+            base,
+            LoraConfig(
+                r=args.lora_r,
+                lora_alpha=2 * args.lora_r,
+                target_modules=_lora_targets(args.model),
+                task_type="CAUSAL_LM",
+            ),
+        )
+        print("cold-start: fresh LoRA from base")
+    else:
+        assert args.from_adapter, "--from-adapter required for warm-start"
+        policy = PeftModel.from_pretrained(base, args.from_adapter)
+        # from_pretrained loads the adapter frozen; re-enable training (same fix as grpo resume).
+        for name, param in policy.named_parameters():
+            if "lora_" in name:
+                param.requires_grad = True
     n_train = sum(p.numel() for p in policy.parameters() if p.requires_grad)
     print(f"trainable params: {n_train:,}")
 
     rows: list[dict] = []
     for line in open(ROOT / "data" / "train.jsonl"):
         case = json.loads(line)
-        rep = args.upsample if case["answer"]["root_cause"] in CONFUSED else 1
+        rep = 1 if args.cold_start else (args.upsample if case["answer"]["root_cause"] in CONFUSED else 1)
         rows.extend([case] * rep)
     random.Random(args.seed).shuffle(rows)
 
