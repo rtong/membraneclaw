@@ -286,6 +286,11 @@ class Config:
     eval_batch: int = 32
     eval_split: str = "dev"
     eval_max_tokens: int = 640
+    # Continue training from a saved adapter (e.g. a finished run's out_dir/adapter).
+    # Optimizer state is not restored; lr is constant so only momentum resets.
+    resume_from: str = ""
+    # Step number offset for a continued run, so curves stay continuous.
+    start_step: int = 0
 
 
 def _lora_targets(model_id):
@@ -305,7 +310,7 @@ def _lora_targets(model_id):
 
 
 def load_policy(cfg: Config, device: str):
-    from peft import LoraConfig, get_peft_model
+    from peft import LoraConfig, PeftModel, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
     tokenizer = AutoTokenizer.from_pretrained(cfg.model, padding_side="left")
@@ -313,15 +318,19 @@ def load_policy(cfg: Config, device: str):
         tokenizer.pad_token = tokenizer.eos_token
 
     base = AutoModelForCausalLM.from_pretrained(cfg.model, dtype=getattr(torch, cfg.dtype))
-    policy = get_peft_model(
-        base,
-        LoraConfig(
-            r=cfg.lora_r,
-            lora_alpha=2 * cfg.lora_r,
-            target_modules=_lora_targets(cfg.model),
-            task_type="CAUSAL_LM",
-        ),
-    ).to(device)
+    if cfg.resume_from:
+        policy = PeftModel.from_pretrained(base, cfg.resume_from).to(device)
+        print(f"  resumed adapter from {cfg.resume_from}")
+    else:
+        policy = get_peft_model(
+            base,
+            LoraConfig(
+                r=cfg.lora_r,
+                lora_alpha=2 * cfg.lora_r,
+                target_modules=_lora_targets(cfg.model),
+                task_type="CAUSAL_LM",
+            ),
+        ).to(device)
     return policy, tokenizer
 
 
@@ -414,9 +423,9 @@ def train(cfg: Config, out_dir: Path, device: str) -> None:
 
     print(f"{cfg.model} | {cfg.steps} steps | {cfg.prompts_per_step}x{cfg.group_size} | {device}")
     if cfg.eval_every:
-        run_eval(0)  # step 0 must reproduce the frozen baseline
+        run_eval(cfg.start_step)  # must reproduce the run being continued
 
-    for step in range(cfg.steps):
+    for step in range(cfg.start_step, cfg.start_step + cfg.steps):
         started = time.perf_counter()
         batch = [rng.choice(cases) for _ in range(cfg.prompts_per_step)]
 
