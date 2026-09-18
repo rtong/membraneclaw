@@ -44,6 +44,8 @@ def main() -> None:
     ap.add_argument("--from-adapter", default=None, help="GRPO adapter dir to continue from (warm-start)")
     ap.add_argument("--cold-start", action="store_true", help="fresh LoRA from base model")
     ap.add_argument("--lora-r", type=int, default=16)
+    ap.add_argument("--train-jsonl", default="data/train.jsonl",
+                    help="training cases; uses cot_completion when present")
     ap.add_argument("--out", required=True, help="where to save the SFT adapter")
     ap.add_argument("--epochs", type=float, default=2)
     ap.add_argument("--lr", type=float, default=1e-5)
@@ -80,7 +82,7 @@ def main() -> None:
     print(f"trainable params: {n_train:,}")
 
     rows: list[dict] = []
-    for line in open(ROOT / "data" / "train.jsonl"):
+    for line in open(ROOT / args.train_jsonl):
         case = json.loads(line)
         rep = 1 if args.cold_start else (args.upsample if case["answer"]["root_cause"] in CONFUSED else 1)
         rows.extend([case] * rep)
@@ -92,7 +94,8 @@ def main() -> None:
             tokenize=False,
             add_generation_prompt=True,
         )
-        return {"prompt": prompt, "completion": canonical(case["answer"])}
+        completion = case.get("cot_completion") or canonical(case["answer"])
+        return {"prompt": prompt, "completion": completion}
 
     ds = Dataset.from_list([to_text(c) for c in rows])
     n_conf = sum(1 for c in rows if c["answer"]["root_cause"] in CONFUSED)
