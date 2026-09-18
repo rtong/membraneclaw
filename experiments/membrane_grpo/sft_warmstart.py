@@ -88,7 +88,7 @@ def main() -> None:
         per_device_train_batch_size=args.batch,
         learning_rate=args.lr,
         lr_scheduler_type="cosine",
-        warmup_ratio=0.05,
+        warmup_steps=10,
         bf16=True,
         seed=args.seed,
         logging_steps=10,
