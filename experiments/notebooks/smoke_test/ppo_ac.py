@@ -148,6 +148,18 @@ FROZEN_BASELINE_V3: dict[str, dict[str, float]] = {
     "Qwen/Qwen3-1.7B": {"MAIN": 0.5151, "ABLATE": 0.6561},
 }
 
+#: The tool line's warm start. Not the raw model's reward under the tool prompt
+#: (0.2343) -- PPO on this line starts from the tool seed, and a head warm-started
+#: at the raw model's level sits 0.39 below every return it will ever see.
+#: `12`'s first gate run did exactly that: it resolved `FROZEN_BASELINE`'s v2
+#: 0.2615, inherited it through `resume_from`, and spent 40 steps climbing
+#: 0.295 -> 0.412 while the lam = 0.95 targets, bootstrapped off that same V,
+#: climbed with it. This is `runs/tool/sft_raw_dev.json` -> overall.reward, the
+#: seed's held-out reward under ABLATE; MAIN was never measured on it.
+FROZEN_BASELINE_TOOL: dict[str, dict[str, float]] = {
+    "Qwen/Qwen3-1.7B": {"ABLATE": 0.6521},
+}
+
 FROZEN_BASELINE: dict[str, dict[str, float]] = {
     "Qwen/Qwen3-1.7B": {
         "MAIN": 0.3015,
@@ -239,6 +251,13 @@ __all__ = [
     "build_messages_v4",
     "v3_prompts",
     "compute_changes",
+    "CALCULATOR_TOOL",
+    "build_messages_tool",
+    "calculate",
+    "gold_expressions",
+    "tool_call_target",
+    "tool_generate",
+    "tool_rollout",
     "critic_fit",
     "evaluate",
     "value_init_bias_for",
@@ -421,6 +440,666 @@ def build_messages_v3(record: dict[str, Any]) -> list[dict[str, str]]:
         {"role": "system", "content": SYSTEM_PROMPTS["v2"]},
         {"role": "user", "content": build_user_prompt_v3(record)},
     ]
+
+
+# --- the calculator: the arithmetic goes back to the model, with a tool --------
+#
+# v3 took the arithmetic away from the model and printed the three answers in the
+# prompt. That made `numeric_acc` 1.000 by construction and it made the task a
+# different task: `08` said as much -- "what a calculator tool would achieve,
+# minus the tool-call protocol and minus the extraction step". This puts both of
+# those back, and changes no word of the task to do it.
+#
+# **The prompt is v2's, unchanged.** System turn and user turn are exactly
+# `task.prompt.build_messages(record, "v2")` -- same formulas, same closing, same
+# demand to compute -- and `12` checks that byte for byte on every case. The one
+# addition is the tool declaration Qwen3's chat template writes into the system
+# turn when a tool is offered, and `CALCULATOR_TOOL` describes a generic
+# calculator with no example that could hint at the task's expressions. Nothing
+# in the prompt says to use it: that the tool exists is the prompt's business,
+# when to call it is what the SFT teaches. The model still has to read twelve
+# numbers off the record and write three expressions from the stated formulas;
+# the harness only evaluates what it is handed.
+#
+# One layout is used everywhere -- SFT, rollout, evaluation -- and it is the
+# layout the model actually generates in: prompt, then the policy's turn (ending
+# in `<|im_end|>`), then the tool responses and a fresh assistant header, then
+# the policy's next turn. Re-rendering a finished episode through the chat
+# template is *not* the same token sequence: the template drops the empty
+# `<think></think>` block from an earlier assistant turn, which the model did see
+# when it wrote that turn. Building by concatenation keeps the trained tokens
+# identical to the sampled ones.
+
+CALCULATOR_TOOL: dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": "calculator",
+        "description": (
+            "Evaluate an arithmetic expression and return the result. "
+            "Supports + - * / ** and parentheses, plus round(x, n) and abs(x)."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "expression": {"type": "string", "description": "the arithmetic expression"}
+            },
+            "required": ["expression"],
+        },
+    },
+}
+
+#: Tool calls honoured per assistant turn. Three are needed; the cap only stops a
+#: policy that has learned to spam calls from blowing the sequence length.
+MAX_CALLS_PER_TURN = 8
+#: Longest expression evaluated. The gold flow expression is about 90 characters.
+MAX_EXPRESSION_CHARS = 400
+
+
+def calculate(expression: str) -> str:
+    """Evaluate one expression and return what the tool sends back, as text.
+
+    Walks the AST rather than calling `eval`: numbers, the five binary operators,
+    unary signs, and `round` / `abs` / `min` / `max`, nothing else. Errors come
+    back as `error: ...` text rather than raising -- the policy sees them, and a
+    malformed call has to cost a turn, not crash a rollout.
+    """
+    import ast
+    import math
+    import operator
+
+    binary = {
+        ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
+        ast.Div: operator.truediv, ast.Pow: operator.pow, ast.Mod: operator.mod,
+    }
+    unary = {ast.UAdd: operator.pos, ast.USub: operator.neg}
+    functions = {"round": round, "abs": abs, "min": min, "max": max}
+
+    def walk(node):
+        if isinstance(node, ast.Expression):
+            return walk(node.body)
+        if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+            return node.value
+        if isinstance(node, ast.BinOp) and type(node.op) in binary:
+            left, right = walk(node.left), walk(node.right)
+            if isinstance(node.op, ast.Pow) and (abs(right) > 100 or abs(left) > 1e6):
+                raise ValueError("exponent out of range")
+            return binary[type(node.op)](left, right)
+        if isinstance(node, ast.UnaryOp) and type(node.op) in unary:
+            return unary[type(node.op)](walk(node.operand))
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id in functions and not node.keywords):
+            args = [walk(a) for a in node.args]
+            if node.func.id == "round" and len(args) == 2:
+                args[1] = int(args[1])
+            return functions[node.func.id](*args)
+        raise ValueError(f"unsupported syntax: {type(node).__name__}")
+
+    if not isinstance(expression, str) or not expression.strip():
+        return "error: empty expression"
+    if len(expression) > MAX_EXPRESSION_CHARS:
+        return "error: expression too long"
+    try:
+        value = walk(ast.parse(expression.strip(), mode="eval"))
+        value = float(value)
+        if not math.isfinite(value):
+            return "error: result is not finite"
+    except ZeroDivisionError:
+        return "error: division by zero"
+    except (SyntaxError, ValueError, TypeError, OverflowError, RecursionError) as exc:
+        return f"error: {str(exc) or type(exc).__name__}"
+    # Ten significant figures: enough that nothing the task needs is lost, few
+    # enough that float noise (-22.400000000000002) never reaches the policy.
+    return format(value, ".10g")
+
+
+def parse_tool_calls(turn: str) -> list[dict[str, Any]]:
+    """Every `<tool_call>...</tool_call>` block in one assistant turn, in order.
+
+    A block whose body is not a valid call is still returned, with `error` set,
+    so it is answered with an error rather than silently skipped.
+    """
+    import json
+    import re
+
+    calls = []
+    for body in re.findall(r"<tool_call>(.*?)</tool_call>", turn, flags=re.S):
+        try:
+            obj = json.loads(body.strip())
+            args = obj.get("arguments", {})
+            if isinstance(args, str):
+                args = json.loads(args)
+            if obj.get("name") != "calculator":
+                raise ValueError(f"unknown tool {obj.get('name')!r}")
+            calls.append({"expression": args["expression"]})
+        except (json.JSONDecodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
+            calls.append({"error": f"error: malformed tool call ({type(exc).__name__})"})
+    return calls
+
+
+def run_tool_call(call: dict[str, Any]) -> str:
+    return call["error"] if "error" in call else calculate(call["expression"])
+
+
+def build_messages_tool(record: dict[str, Any]) -> list[dict[str, str]]:
+    """v2's messages, untouched. The tool is passed to the chat template, not here."""
+    return build_messages(record, "v2")
+
+
+def gold_expressions(record: dict[str, Any]) -> dict[str, str]:
+    """The three calculator expressions a correct policy would write.
+
+    Built from the numbers *as the prompt prints them* (`task.prompt._num`), since
+    those are the only numbers the policy can see, and in `compute_changes`'
+    operation order, so Python evaluates them to the same float. Whether that
+    reproduces the answer key is checked, not assumed: `12` runs it over every
+    case of every split.
+    """
+    from task.prompt import _num
+
+    t0, t1 = record["t0"], record["t1"]
+
+    def nf(t):
+        return f"{_num(t['permeate_flow_m3_h'])} * 1.03 ** (25 - {_num(t['feed_temp_C'])})"
+
+    def sp(t):
+        return f"{_num(t['permeate_conductivity_uS_cm'])} / {_num(t['feed_conductivity_uS_cm'])} * 100"
+
+    def dp(t):
+        return f"({_num(t['dp_lead_bar'])} + {_num(t['dp_tail_bar'])})"
+
+    def pct(before: str, after: str) -> str:
+        return f"round(({after} - {before}) / ({before}) * 100, 1)"
+
+    return {
+        "normalized_flow_change_pct": pct(nf(t0), nf(t1)),
+        "salt_passage_change_pct": pct(sp(t0), sp(t1)),
+        "dp_change_pct": pct(dp(t0), dp(t1)),
+    }
+
+
+def tool_call_target(record: dict[str, Any]) -> str:
+    """The first assistant turn, as SFT supervises it: three calls and nothing else.
+
+    Exactly the text Qwen3's template writes for an assistant message carrying
+    three `tool_calls`. No answer field, no flag, no label appears in it -- the
+    numbers come back from the tool, and everything after the tool response is
+    left to the model.
+    """
+    import json
+
+    blocks = [
+        "<tool_call>\n"
+        + json.dumps({"name": "calculator", "arguments": {"expression": expr}})
+        + "\n</tool_call>"
+        for expr in gold_expressions(record).values()
+    ]
+    return "\n".join(blocks)
+
+
+def generation_prefix(tokenizer, template_kwargs: dict[str, Any]) -> str:
+    """What `add_generation_prompt` appends: the assistant header, and under
+    `enable_thinking=False` the empty think block."""
+    probe = [{"role": "user", "content": "x"}]
+    with_prompt = tokenizer.apply_chat_template(
+        probe, tokenize=False, add_generation_prompt=True, **template_kwargs)
+    without = tokenizer.apply_chat_template(
+        probe, tokenize=False, add_generation_prompt=False, **template_kwargs)
+    return with_prompt[len(without):]
+
+
+def tool_response_text(results: list[str], prefix: str) -> str:
+    """Everything between the policy's `<|im_end|>` and its next turn.
+
+    The tool block is Qwen3's template output for consecutive `tool` messages;
+    `12` checks it against the template character for character.
+    """
+    body = "".join(f"\n<tool_response>\n{r}\n</tool_response>" for r in results)
+    return "\n<|im_start|>user" + body + "<|im_end|>\n" + prefix
+
+
+@dataclass
+class Episode:
+    """One multi-turn completion. `ids` is everything after the prompt."""
+
+    prompt_ids: list[int]
+    ids: list[int] = field(default_factory=list)
+    #: Per entry of `ids`: True if the policy sampled it, False if the tool wrote it.
+    policy: list[bool] = field(default_factory=list)
+    #: The policy's own tokens, decoded. This is what gets scored.
+    text: str = ""
+    calls: list[dict[str, Any]] = field(default_factory=list)
+    results: list[str] = field(default_factory=list)
+    #: Calls written in the last allowed turn, which were never answered.
+    unanswered: int = 0
+    truncated: bool = False
+    #: Compacted index of the first policy token of each turn.
+    turn_starts: list[int] = field(default_factory=list)
+    #: The harness's own verdict, taken as each call returned (only when it is
+    #: handed the answer key): numeric field -> compacted index of the
+    #: `</tool_call>` token of the first call whose result matched that field.
+    #: The key never reaches the policy's context -- it scores, it does not reply.
+    call_hits: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def policy_tokens(self) -> int:
+        return sum(self.policy)
+
+
+def _sample_round(policy, inputs: list[list[int]], budgets: list[int], *, pad: int,
+                  temperature: float, device: str) -> list[list[int]]:
+    """One `generate` over a round's rows, left-padded; each row cut to its budget.
+
+    Shared by both harnesses, so a round is sampled identically whichever one
+    is orchestrating it.
+    """
+    width = max(len(x) for x in inputs)
+    input_ids = torch.tensor([[pad] * (width - len(x)) + x for x in inputs], device=device)
+    attention = torch.tensor([[0] * (width - len(x)) + [1] * len(x) for x in inputs], device=device)
+    sample = temperature > 0
+    out = policy.generate(
+        input_ids=input_ids,
+        attention_mask=attention,
+        do_sample=sample,
+        temperature=temperature if sample else None,
+        top_p=1.0 if sample else None,
+        max_new_tokens=max(budgets),
+        pad_token_id=pad,
+    )
+    return [row[:b] for row, b in zip(out[:, width:].tolist(), budgets)]
+
+
+@dataclass
+class _Turn:
+    """What one sampled turn asked for. `calls` is empty when the episode ends."""
+
+    calls: list[dict[str, Any]]
+    #: Offset, within the turn, of each call's `</tool_call>` token.
+    closes: list[int]
+    #: Compacted index of the turn's first token.
+    start: int
+    text: str
+
+
+def _take_turn(ep: Episode, row: list[int], tokenizer, *, last_round: bool) -> _Turn:
+    """Append one sampled turn to `ep` and read the calls out of it."""
+    eos_ids = {tokenizer.eos_token_id, tokenizer.pad_token_id}
+    im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    close_call = tokenizer.convert_tokens_to_ids("</tool_call>")
+    cut = next((k for k, t in enumerate(row) if t in eos_ids), None)
+    take = row if cut is None else row[: cut + 1]
+    start = ep.policy_tokens
+    ep.turn_starts.append(start)
+    ep.ids += take
+    ep.policy += [True] * len(take)
+    text = tokenizer.decode(take, skip_special_tokens=True)
+    if cut is None:
+        ep.truncated = True
+        return _Turn([], [], start, text)
+    calls = parse_tool_calls(text)
+    if not calls or row[cut] != im_end:
+        return _Turn([], [], start, text)
+    if last_round:
+        ep.unanswered += len(calls)
+        return _Turn([], [], start, text)
+    # Where each call ends, in the compacted sequence. `</tool_call>` is one
+    # added token, so its k-th occurrence closes the k-th block; if the counts
+    # disagree (the string spelled out of sub-word pieces), every call in the
+    # turn falls back to the turn's last token.
+    closes = [k for k, t in enumerate(take) if t == close_call]
+    if len(closes) != len(calls):
+        closes = [len(take) - 1] * len(calls)
+    return _Turn(calls[:MAX_CALLS_PER_TURN], closes[:MAX_CALLS_PER_TURN], start, text)
+
+
+def _record_results(ep: Episode, turn: _Turn, results: list[str], tokenizer, prefix: str,
+                    answer: dict[str, Any] | None) -> None:
+    """Score the returned calls (if the harness holds the key), then append the
+    tool's turn to the episode."""
+    from reward import NUMERIC_TOLERANCE_PP
+    from task.schema import NUMERIC_KEYS
+
+    if answer is not None:
+        for result, close in zip(results, turn.closes):
+            try:
+                value = float(result)
+            except ValueError:
+                continue
+            for key in NUMERIC_KEYS:
+                if key not in ep.call_hits and abs(value - answer[key]) <= NUMERIC_TOLERANCE_PP:
+                    ep.call_hits[key] = turn.start + close
+                    break
+    ep.calls += turn.calls
+    ep.results += results
+    env = tokenizer(tool_response_text(results, prefix), add_special_tokens=False).input_ids
+    ep.ids += env
+    ep.policy += [False] * len(env)
+
+
+def _render_tool_prompt(tokenizer, messages, template_kwargs) -> str:
+    return tokenizer.apply_chat_template(
+        messages, tools=[CALCULATOR_TOOL], tokenize=False, add_generation_prompt=True,
+        **template_kwargs,
+    )
+
+
+@torch.no_grad()
+def tool_generate(
+    policy,
+    tokenizer,
+    messages: list[list[dict[str, str]]],
+    *,
+    temperature: float,
+    max_new_tokens: int,
+    max_rounds: int,
+    template_kwargs: dict[str, Any],
+    device: str,
+    answers: list[dict[str, Any]] | None = None,
+) -> list[Episode]:
+    """Decode with the calculator in the loop, for a batch of prompts.
+
+    `max_new_tokens` caps the policy's tokens summed over all its turns, so a
+    tool episode never gets more generation budget than a single-turn one.
+    `max_rounds` is how many times the tool may answer; a turn that still calls
+    it after that ends the episode.
+
+    `answers`, when given, lets the harness score each call the moment it
+    returns (`Episode.call_hits`). That is for the learner only; what the
+    policy sees next is the calculator's result and nothing else.
+    """
+    pad = tokenizer.pad_token_id
+    prefix = generation_prefix(tokenizer, template_kwargs)
+    episodes = [
+        Episode(prompt_ids=tokenizer(_render_tool_prompt(tokenizer, m, template_kwargs),
+                                     add_special_tokens=False).input_ids)
+        for m in messages
+    ]
+    live = list(range(len(episodes)))
+    for rnd in range(max_rounds + 1):
+        budget = {i: max_new_tokens - episodes[i].policy_tokens for i in live}
+        live = [i for i in live if budget[i] > 0]
+        if not live:
+            break
+        rows = _sample_round(
+            policy, [episodes[i].prompt_ids + episodes[i].ids for i in live],
+            [budget[i] for i in live], pad=pad, temperature=temperature, device=device,
+        )
+        still = []
+        for row, i in zip(rows, live):
+            turn = _take_turn(episodes[i], row, tokenizer, last_round=rnd == max_rounds)
+            if not turn.calls:
+                continue
+            results = [run_tool_call(c) for c in turn.calls]
+            _record_results(episodes[i], turn, results, tokenizer, prefix,
+                            None if answers is None else answers[i])
+            still.append(i)
+        live = still
+    for ep in episodes:
+        ep.text = tokenizer.decode(
+            [t for t, p in zip(ep.ids, ep.policy) if p], skip_special_tokens=True)
+    return episodes
+
+
+# --- 13b: Qwen-Agent as the harness ----------------------------------------------
+#
+# `membraneclaw-agent` runs on qwen-agent 0.0.34 (`agent/core.py`): an agent over a
+# vLLM endpoint with `use_raw_api`, so tools reach the chat template natively and
+# the server parses the calls. This puts the policy under training behind that
+# same orchestration. qwen-agent owns the loop -- it takes the calls the model
+# made, runs them through its tool map, appends the results and asks again --
+# and `PolicyChat` stands where vLLM stands: it renders, decodes and parses. What
+# it adds is what a text API cannot give a trainer: the exact token ids of every
+# turn, kept per episode and never re-rendered.
+#
+# Each episode's agent runs in its own thread. `_RoundBatcher` holds every
+# request until each live episode has either asked for its next turn or
+# finished, then samples them as one batch with `_sample_round` -- the same rows,
+# in the same order, padded the same way as `tool_generate`. So the two harnesses
+# are one decoding procedure with two orchestrators, which is what `13`'s
+# equivalence gate checks.
+#
+# qwen-agent is imported read-only from the repository's own `.venv`, appended
+# after this venv on `sys.path`. Nothing is installed.
+
+AGENT_SITE = (SMOKE_DIR.parents[2] / ".venv" / "lib"
+              / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages")
+
+#: Live agent runs, by id. qwen-agent builds its model object from a config dict,
+#: so the run is handed over by name rather than by reference.
+_AGENT_RUNS: dict[str, "_AgentRun"] = {}
+
+
+def _qwen_agent():
+    if str(AGENT_SITE) not in sys.path:
+        sys.path.append(str(AGENT_SITE))
+    import logging
+
+    import qwen_agent
+
+    logging.getLogger("qwen_agent_logger").setLevel(logging.WARNING)
+    return qwen_agent
+
+
+class _RoundBatcher:
+    """Collects one turn request per live episode and samples them as one batch.
+
+    Every `generate` runs on the batcher's own worker thread, never on an agent's
+    thread: CUDA is then touched from one thread only, which is how
+    `tool_generate` touches it. (`13b`'s first training attempt died with
+    `CUDA error: unknown error`, together with WSL's dxg driver logging failed
+    ioctls, while rounds were being sampled on whichever agent thread happened
+    to complete them.)
+    """
+
+    def __init__(self, policy, n: int, *, pad: int, temperature: float, device: str):
+        import threading
+
+        self.policy, self.pad, self.temperature, self.device = policy, pad, temperature, device
+        self.cv = threading.Condition()
+        self.live = set(range(n))
+        self.pending: dict[int, tuple[list[int], int]] = {}
+        self.done: dict[int, list[int]] = {}
+        self.error: BaseException | None = None
+        self.worker = threading.Thread(target=self._serve, daemon=True)
+        self.worker.start()
+
+    def _serve(self) -> None:
+        while True:
+            with self.cv:
+                while not (self.pending and self.live <= set(self.pending)) and self.live:
+                    self.cv.wait()
+                if not self.live:
+                    return
+                order = sorted(self.pending)
+                batch = [self.pending[j] for j in order]
+                self.pending.clear()
+            try:
+                rows = _sample_round(
+                    self.policy, [ids for ids, _ in batch], [b for _, b in batch],
+                    pad=self.pad, temperature=self.temperature, device=self.device,
+                )
+            except BaseException as exc:  # handed to every waiting episode
+                with self.cv:
+                    self.error = exc
+                    self.cv.notify_all()
+                return
+            with self.cv:
+                self.done.update(zip(order, rows))
+                self.cv.notify_all()
+
+    def request(self, i: int, ids: list[int], budget: int) -> list[int]:
+        with self.cv:
+            self.pending[i] = (ids, budget)
+            self.cv.notify_all()
+            while i not in self.done:
+                if self.error is not None:
+                    raise RuntimeError("sampling failed on the batcher thread") from self.error
+                self.cv.wait()
+            return self.done.pop(i)
+
+    def finish(self, i: int) -> None:
+        with self.cv:
+            self.live.discard(i)
+            self.cv.notify_all()
+
+
+class _AgentRun:
+    """The token-level state of a batch of agent episodes."""
+
+    def __init__(self, policy, tokenizer, messages, *, temperature, max_new_tokens, max_rounds,
+                 template_kwargs, device, answers):
+        self.tokenizer, self.max_new_tokens, self.max_rounds = tokenizer, max_new_tokens, max_rounds
+        self.template_kwargs, self.answers = template_kwargs, answers
+        self.expected = [_render_tool_prompt(tokenizer, m, template_kwargs) for m in messages]
+        self.prefix = generation_prefix(tokenizer, template_kwargs)
+        self.episodes = [Episode(prompt_ids=[]) for _ in messages]
+        self.rounds = [0] * len(messages)
+        self.open_turn: list[_Turn | None] = [None] * len(messages)
+        self.batcher = _RoundBatcher(policy, len(messages), pad=tokenizer.pad_token_id,
+                                     temperature=temperature, device=device)
+
+    def turn(self, i: int, messages, tools) -> list:
+        from qwen_agent.llm.schema import ASSISTANT, FUNCTION, FunctionCall, Message
+
+        ep = self.episodes[i]
+        if not ep.prompt_ids:
+            plain = [{"role": m.role, "content": m.content} for m in messages]
+            text = self.tokenizer.apply_chat_template(
+                plain, tools=tools, tokenize=False, add_generation_prompt=True, **self.template_kwargs)
+            if text != self.expected[i]:
+                raise RuntimeError("qwen-agent handed over a prompt that is not the task's prompt")
+            ep.prompt_ids = self.tokenizer(text, add_special_tokens=False).input_ids
+        else:
+            turn = self.open_turn[i]
+            results = [m.content for m in messages if m.role == FUNCTION][len(ep.results):]
+            if turn is None or len(results) != len(turn.calls):
+                raise RuntimeError(f"episode {i}: expected {0 if turn is None else len(turn.calls)} "
+                                   f"tool results, got {len(results)}")
+            _record_results(ep, turn, results, self.tokenizer, self.prefix,
+                            None if self.answers is None else self.answers[i])
+            self.open_turn[i] = None
+        budget = self.max_new_tokens - ep.policy_tokens
+        if budget <= 0:
+            return [Message(ASSISTANT, "")]
+        row = self.batcher.request(i, ep.prompt_ids + ep.ids, budget)
+        turn = _take_turn(ep, row, self.tokenizer, last_round=self.rounds[i] == self.max_rounds)
+        if not turn.calls:
+            return [Message(ASSISTANT, turn.text)]
+        self.rounds[i] += 1
+        self.open_turn[i] = turn
+        import json
+        import re
+
+        out = []
+        content = re.sub(r"<tool_call>.*?</tool_call>", "", turn.text, flags=re.S).strip()
+        if content:
+            out.append(Message(ASSISTANT, content))
+        for k, call in enumerate(turn.calls):
+            # A malformed block still becomes a call, answered by the tool with
+            # the same error text `tool_generate` sends, so the two harnesses
+            # show the policy the same thing.
+            args = ({"__error__": call["error"]} if "error" in call
+                    else {"expression": call["expression"]})
+            out.append(Message(ASSISTANT, "", function_call=FunctionCall(
+                name="calculator", arguments=json.dumps(args)), extra={"function_id": str(k)}))
+        return out
+
+
+def _agent_classes():
+    _qwen_agent()
+    from qwen_agent.llm.base import LLM_REGISTRY, register_llm
+    from qwen_agent.llm.function_calling import BaseFnCallModel
+    from qwen_agent.tools.base import BaseTool
+
+    if "ppo_policy" not in LLM_REGISTRY:
+
+        @register_llm("ppo_policy")
+        class PolicyChat(BaseFnCallModel):
+            def __init__(self, cfg):
+                super().__init__(cfg)
+                self.run_id, self.episode = cfg["run"], cfg["episode"]
+
+            def _chat_stream(self, messages, delta_stream, generate_cfg):
+                yield _AGENT_RUNS[self.run_id].turn(self.episode, messages, generate_cfg.get("tools"))
+
+            def _chat_no_stream(self, messages, generate_cfg):
+                return _AGENT_RUNS[self.run_id].turn(self.episode, messages, generate_cfg.get("tools"))
+
+    class CalculatorTool(BaseTool):
+        name = CALCULATOR_TOOL["function"]["name"]
+        description = CALCULATOR_TOOL["function"]["description"]
+        parameters = CALCULATOR_TOOL["function"]["parameters"]
+
+        def call(self, params, **kwargs) -> str:
+            import json
+
+            args = json.loads(params) if isinstance(params, str) else params
+            if "__error__" in args:
+                return args["__error__"]
+            return calculate(args.get("expression", ""))
+
+    return CalculatorTool
+
+
+@torch.no_grad()
+def agent_generate(
+    policy,
+    tokenizer,
+    messages: list[list[dict[str, str]]],
+    *,
+    temperature: float,
+    max_new_tokens: int,
+    max_rounds: int,
+    template_kwargs: dict[str, Any],
+    device: str,
+    answers: list[dict[str, Any]] | None = None,
+) -> list[Episode]:
+    """`tool_generate`, with qwen-agent's `FnCallAgent` running each episode."""
+    import threading
+    import uuid
+
+    CalculatorTool = _agent_classes()
+    import qwen_agent.agents.fncall_agent as fncall_agent
+    from qwen_agent.agents import FnCallAgent
+
+    # One call per round plus the final answer, and never more: a turn past
+    # `max_rounds` is closed by `_take_turn` before the agent could run its calls.
+    fncall_agent.MAX_LLM_CALL_PER_RUN = max_rounds + 1
+    run_id = uuid.uuid4().hex
+    run = _AGENT_RUNS[run_id] = _AgentRun(
+        policy, tokenizer, messages, temperature=temperature, max_new_tokens=max_new_tokens,
+        max_rounds=max_rounds, template_kwargs=template_kwargs, device=device, answers=answers)
+    errors: list[BaseException] = []
+
+    def drive(i: int) -> None:
+        try:
+            system, *rest = messages[i]
+            agent = FnCallAgent(
+                function_list=[CalculatorTool()],
+                llm={"model": "ppo-policy", "model_type": "ppo_policy", "run": run_id, "episode": i,
+                     "generate_cfg": {"use_raw_api": True}},
+                system_message=system["content"],
+            )
+            for _ in agent.run(messages=rest):
+                pass
+        except BaseException as exc:  # surfaced after join, never swallowed
+            errors.append(exc)
+        finally:
+            run.batcher.finish(i)
+
+    threads = [threading.Thread(target=drive, args=(i,), daemon=True) for i in range(len(messages))]
+    try:
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    finally:
+        _AGENT_RUNS.pop(run_id, None)
+    if errors:
+        raise errors[0]
+    for ep in run.episodes:
+        ep.text = tokenizer.decode(
+            [t for t, p in zip(ep.ids, ep.policy) if p], skip_special_tokens=True)
+    return run.episodes
 
 
 def load_cases(split: str = "train") -> list[dict[str, Any]]:
@@ -714,6 +1393,7 @@ def dense_rewards(
     weights: Weights,
     tokenizer,
     flat_scale: float = FLAT_CREDIT_SCALE,
+    call_hits: list[dict[str, int]] | None = None,
 ) -> torch.Tensor:
     """Per-token rewards that land where each field is written, not at the end.
 
@@ -727,6 +1407,14 @@ def dense_rewards(
 
     Row sums equal `Rollout.rewards` up to float error, so the sequence-level
     objective is untouched.
+
+    `call_hits` (tool episodes, `13`) moves the numeric credit earlier still: a
+    field's third of `weights.numeric` is paid on the `</tool_call>` of the call
+    whose result matched it, as the harness judged when that call returned, and
+    *settled* where the JSON writes the field -- plus the copy's own credit,
+    minus what the call was already paid. A right call copied wrongly nets zero;
+    a right number never computed by a call is paid at the copy, as before. The
+    row sum is still exactly `score(...).total`.
     """
     out = torch.zeros_like(mask, dtype=torch.float32)
     lengths = mask.sum(dim=-1).long()
@@ -749,6 +1437,23 @@ def dense_rewards(
         for offset, credit in placed.values():
             index = next((i for i, end in enumerate(bounds) if end >= offset), length - 1)
             out[b, index] += credit
+
+        if call_hits is not None and call_hits[b]:
+            import re
+
+            unit = weights.numeric / 3
+            for key, pattern in _FIELD_PATTERNS[:3]:
+                if key not in call_hits[b]:
+                    continue
+                out[b, min(call_hits[b][key], length - 1)] += unit
+                copy = None
+                for copy in re.finditer(pattern, text):
+                    pass
+                if copy is None:
+                    terminal -= unit
+                else:
+                    index = next((i for i, end in enumerate(bounds) if end >= copy.end()), length - 1)
+                    out[b, index] -= unit
         out[b, length - 1] += terminal
     return out
 
@@ -896,6 +1601,7 @@ def ppo_actor_loss(
     entropy_coef: float = 0.0,
     focus_mask: torch.Tensor | None = None,
     focus_entropy_coef: float = 0.0,
+    entropy_mask: torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, dict[str, float]]:
     """The clipped surrogate, with a per-token advantage.
 
@@ -928,7 +1634,18 @@ def ppo_actor_loss(
     surrogate = float(loss.detach())  # the clipped surrogate alone, as in every prior run
     entropy_mean = None
     if entropy is not None:
-        entropy_mean = (entropy * mask).sum() / active
+        if entropy_mask is None:
+            entropy_mean = (entropy * mask).sum() / active
+        else:
+            # `12`'s 200-step run: the bonus, averaged over a sequence whose calls
+            # are 72% of it, pushed on tokens the SFT had made near-deterministic
+            # and no reward lands on. Scoped, the call tokens drop out of the sum
+            # and the denominator stays every active token, so each answer token
+            # is pushed exactly as hard as it was unscoped -- one change, not two.
+            # (`13b`'s first scoped run divided by the answer tokens instead, a
+            # 3.7x stronger push on them, and its answer entropy doubled in 25
+            # steps; it was stopped at step 50.)
+            entropy_mean = (entropy * entropy_mask * mask).sum() / active
         if entropy_coef:
             loss = loss - entropy_coef * entropy_mean
         if focus_entropy_coef and focus_mask is not None:
@@ -955,6 +1672,9 @@ def ppo_actor_loss(
         }
         if entropy_mean is not None:
             stats["policy_entropy"] = float(entropy_mean)
+            if entropy_mask is not None:
+                scoped = entropy_mask * mask
+                stats["answer_entropy"] = float((entropy * scoped).sum() / scoped.sum().clamp(min=1.0))
         if focus_mask is not None and entropy is not None:
             focused = focus_mask * mask
             stats["flag_entropy"] = float(
@@ -1158,6 +1878,45 @@ class Config:
     #: meaningful with `dense_rewards`. 1.0 is every run before `09`.
     flat_credit_scale: float = 1.0
 
+    #: v2's prompt, unchanged and with nothing precomputed, plus a calculator the
+    #: policy may call (`CALCULATOR_TOOL`). Replaces v3 rather than stacking on
+    #: it: with this on, `prompt_v3` / `prompt_v4` are ignored.
+    prompt_tool: bool = False
+    #: How many times the tool may answer within one episode.
+    tool_rounds: int = 2
+    #: Steps at the start of a run on which the critic is fitted and the actor is
+    #: not stepped. `13a`'s first run collapsed because the policy moved before
+    #: `V` had learned what a new reward placement does to the return; this lets
+    #: the critic see it first. 0 is every run before `13`.
+    critic_warmup: int = 0
+    #: Where the entropy bonus applies on a tool episode: "all" policy tokens (every
+    #: run before `13`) or only the "answer" turn. See `ppo_actor_loss`.
+    entropy_scope: str = "all"
+    #: Stop the run (saving `adapter-stopped/`) once the sampled `numeric_acc`,
+    #: averaged over the last 10 steps, falls below this. 0 disables it. The
+    #: arithmetic has to hold every step; a run that has lost it is not worth
+    #: continuing, and the policy at the point of failure is worth keeping.
+    numeric_stop: float = 0.0
+    #: Who orchestrates a tool episode: "native" (`tool_generate`) or
+    #: "qwen_agent" (`agent_generate`, `13b`). Same decoding either way.
+    harness: str = "native"
+    #: `13`: pay the numeric credit on the call that computed it, as the harness
+    #: judges each call on return, settled at the JSON copy. Needs `prompt_tool`
+    #: and `dense_rewards`. See `dense_rewards`.
+    call_credit: bool = False
+    #: SFT on `tool_call_target` instead of an answer: the loss covers the three
+    #: calls and nothing after them. Uses every case of `split`, shuffled.
+    sft_tool: bool = False
+    #: With `resume_from`: load the adapter but not the value head, which starts
+    #: fresh at `value_init_bias`. For a seed whose head was never trained -- an
+    #: SFT pass does not touch it -- the saved head is only a bias, and that bias
+    #: was resolved for whatever prompt the seed was run under, not for the
+    #: policy PPO is about to start from.
+    value_head_reset: bool = False
+    #: No training: one greedy tool pass over `eval_split`, written to `--out`
+    #: in `runs/paired/`'s envelope, with every episode beside it.
+    eval_only: int = 0
+
     #: A finished run directory to continue from -- its `adapter/` and
     #: `value_head.pt` are loaded instead of starting from the frozen model. The
     #: step counter restarts at 0, so `eval.jsonl` in the new directory is the
@@ -1293,7 +2052,12 @@ class Config:
         if self.value_clip_eps is not None and self.value_clip_eps < 0:
             self.value_clip_eps = None
         if self.value_init_bias < 0:
-            table = FROZEN_BASELINE_V3 if (self.prompt_v3 or self.prompt_v4) else FROZEN_BASELINE
+            if self.prompt_tool:
+                table = FROZEN_BASELINE_TOOL
+            elif self.prompt_v3 or self.prompt_v4:
+                table = FROZEN_BASELINE_V3
+            else:
+                table = FROZEN_BASELINE
             self.value_init_bias = table.get(self.model, {}).get(self.weights, 0.0)
 
 
@@ -1416,7 +2180,9 @@ def load_policy(cfg: "Config", device: str):
         source = Path(cfg.resume_from)
         policy.load_adapter(str(source / "adapter"), adapter_name="default")
         head_state = source / "value_head.pt"
-        if head_state.exists():
+        if cfg.value_head_reset:
+            pass  # the head keeps the fresh init at cfg.value_init_bias
+        elif head_state.exists():
             value_head.load_state_dict(torch.load(head_state, map_location=device))
         else:  # pragma: no cover - a run killed before it saved
             raise FileNotFoundError(f"no value_head.pt under {source}")
@@ -1432,6 +2198,35 @@ class Rollout:
     mask: torch.Tensor
     completions: list[str]
     rewards: list[float]
+    # Tool episodes only; all None on the single-turn path, which is unchanged.
+    #
+    # A tool episode's completion span interleaves the policy's tokens with the
+    # tool's, and the tool's are not actions: they get no log-prob term, no
+    # reward, no value target. So everything downstream of the forward pass runs
+    # on the policy's tokens *compacted* -- `mask`, `completions` and
+    # `policy_ids` describe that compacted sequence, and `policy_index` maps each
+    # of its positions back to a column of the completion span. GAE then runs
+    # straight from the last token of one turn to the first of the next, which is
+    # the MDP: the tool response is part of the transition, and the next state
+    # already contains it. Without compaction `gae` would read the tool block as
+    # padding, cut the return there, and pay the tool call nothing for the answer
+    # it made possible.
+    policy_index: torch.Tensor | None = None
+    policy_ids: torch.Tensor | None = None
+    completion_len: int | None = None
+    episodes: list[Episode] | None = None
+    #: Compacted: 1 on the policy's last turn -- the answer -- and 0 on the turns
+    #: before it, which are calls.
+    answer_mask: torch.Tensor | None = None
+
+
+def take_policy(x: torch.Tensor, index: torch.Tensor | None) -> torch.Tensor:
+    """Gather the policy's positions out of a (batch, completion[, d]) tensor."""
+    if index is None:
+        return x
+    if x.dim() == 3:
+        return torch.gather(x, 1, index.unsqueeze(-1).expand(-1, -1, x.shape[-1]))
+    return torch.gather(x, 1, index)
 
 
 @torch.no_grad()
@@ -1506,6 +2301,132 @@ def rollout(
     )
 
 
+@torch.no_grad()
+def tool_rollout(
+    policy,
+    tokenizer,
+    cases: list[dict[str, Any]],
+    *,
+    samples_per_prompt: int,
+    max_new_tokens: int,
+    temperature: float,
+    weights: Weights,
+    device: str,
+    template_kwargs: dict[str, Any] | None = None,
+    max_rounds: int = 2,
+    score_calls: bool = False,
+    harness: str = "native",
+) -> Rollout:
+    """`rollout` with the calculator in the loop. See `Rollout` for the layout."""
+    expanded = [c for c in cases for _ in range(samples_per_prompt)]
+    generate = agent_generate if harness == "qwen_agent" else tool_generate
+    episodes = generate(
+        policy, tokenizer, [build_messages_tool(c["record"]) for c in expanded],
+        temperature=temperature, max_new_tokens=max_new_tokens, max_rounds=max_rounds,
+        template_kwargs=template_kwargs or {}, device=device,
+        answers=[c["answer"] for c in expanded] if score_calls else None,
+    )
+    pad = tokenizer.pad_token_id
+    prompt_width = max(len(ep.prompt_ids) for ep in episodes)
+    span = max(1, max(len(ep.ids) for ep in episodes))
+    compact = max(1, max(ep.policy_tokens for ep in episodes))
+
+    sequences, attention, index, ids, mask, answer = [], [], [], [], [], []
+    for ep in episodes:
+        left = prompt_width - len(ep.prompt_ids)
+        right = span - len(ep.ids)
+        sequences.append([pad] * left + ep.prompt_ids + ep.ids + [pad] * right)
+        attention.append([0] * left + [1] * (len(ep.prompt_ids) + len(ep.ids)) + [0] * right)
+        where = [k for k, mine in enumerate(ep.policy) if mine]
+        fill = compact - len(where)
+        index.append(where + [0] * fill)
+        ids.append([ep.ids[k] for k in where] + [pad] * fill)
+        mask.append([1.0] * len(where) + [0.0] * fill)
+        last = ep.turn_starts[-1] if ep.turn_starts else 0
+        answer.append([0.0] * last + [1.0] * (len(where) - last) + [0.0] * fill)
+
+    def _reward(c: str, case: dict[str, Any]) -> float:
+        try:
+            return score(c, case["answer"], weights).total
+        except (OverflowError, ValueError, TypeError, KeyError):
+            return 0.0
+
+    completions = [ep.text for ep in episodes]
+    return Rollout(
+        cases=expanded,
+        sequences=torch.tensor(sequences, device=device),
+        attention_mask=torch.tensor(attention, device=device),
+        mask=torch.tensor(mask, device=device),
+        completions=completions,
+        rewards=[_reward(c, case) for c, case in zip(completions, expanded)],
+        policy_index=torch.tensor(index, device=device),
+        policy_ids=torch.tensor(ids, device=device),
+        completion_len=span,
+        episodes=episodes,
+        answer_mask=torch.tensor(answer, device=device),
+    )
+
+
+def numeric_rate(completions: list[str], cases: list[dict[str, Any]]) -> float:
+    """Mean of `numeric_correct / 3` over a batch, as `summarise` computes it."""
+    hits = []
+    for text, case in zip(completions, cases):
+        try:
+            hits.append((score(text, case["answer"]).diagnostics.get("numeric_correct", 0) or 0) / 3)
+        except (OverflowError, ValueError, TypeError, KeyError):
+            hits.append(0.0)
+    return sum(hits) / max(1, len(hits))
+
+
+def region_entropy(logprobs: torch.Tensor, mask: torch.Tensor, answer: torch.Tensor) -> dict[str, float]:
+    """`entropy_proxy` split into the calls and the answer.
+
+    `12`'s 200-step run collapsed with the aggregate going 0.003 -> 2.1; this is
+    the early warning, per region, so a drift in the calls is visible before it
+    reaches the arithmetic.
+    """
+    out = {}
+    for name, region in (("calls", (1 - answer) * mask), ("answer", answer * mask)):
+        n = float(region.sum())
+        if n:
+            out[f"entropy_proxy_{name}"] = round(float(-(logprobs * region).sum()) / n, 6)
+    return out
+
+
+def turn_values(episodes: list[Episode], values: torch.Tensor, returns: torch.Tensor) -> dict[str, float]:
+    """What the critic says, and what it is regressed to, at the start of each turn.
+
+    Turn 1 starts on the bare prompt; turn 2 starts right after the tool has
+    answered. The gap between the two is what the calls were worth, in the
+    critic's own estimate.
+    """
+    out: dict[str, float] = {}
+    for turn in (0, 1):
+        rows = [(b, ep.turn_starts[turn]) for b, ep in enumerate(episodes) if len(ep.turn_starts) > turn]
+        if not rows:
+            continue
+        v = [float(values[b, t]) for b, t in rows]
+        g = [float(returns[b, t]) for b, t in rows]
+        out[f"value_turn{turn + 1}"] = round(sum(v) / len(v), 6)
+        out[f"return_turn{turn + 1}"] = round(sum(g) / len(g), 6)
+    return out
+
+
+def tool_stats(episodes: list[Episode]) -> dict[str, float]:
+    """How the calculator was used, over a batch of episodes."""
+    n = max(1, len(episodes))
+    calls = sum(len(ep.calls) for ep in episodes)
+    errors = sum(r.startswith("error") for ep in episodes for r in ep.results)
+    return {
+        "tool_use_rate": sum(bool(ep.calls) for ep in episodes) / n,
+        "tool_calls_mean": calls / n,
+        "tool_error_rate": errors / calls if calls else 0.0,
+        "tool_unanswered": sum(ep.unanswered for ep in episodes) / n,
+        "tool_env_tokens": sum(len(ep.ids) - ep.policy_tokens for ep in episodes) / n,
+        "truncated_rate": sum(ep.truncated for ep in episodes) / n,
+    }
+
+
 # --- held-out evaluation ------------------------------------------------------
 
 
@@ -1525,6 +2446,13 @@ def evaluate(policy, tokenizer, cfg: "Config", cases: list[dict], step: int) -> 
     # generate_hf still moves the encoded batch onto a device, so it needs the
     # one the live policy is already on rather than a re-derived guess.
     device = str(next(policy.parameters()).device)
+    if cfg.prompt_tool:
+        # `generate_hf` is one `generate` call and cannot hand a turn to a tool,
+        # so decoding is `tool_generate`'s. Scoring is still `summarise`, on the
+        # policy's own text, so the metrics mean what they meant for every run.
+        results, episodes = generate_tool_results(policy, tokenizer, cfg, cases)
+        metrics = summarise(results, WEIGHT_SETS[cfg.weights])
+        return {**_eval_record(step, metrics), **tool_stats(episodes)}
     with v3_prompts(cfg.prompt_v4) if (cfg.prompt_v3 or cfg.prompt_v4) else contextlib.nullcontext():
         results = generate_hf(
             cases,
@@ -1541,6 +2469,10 @@ def evaluate(policy, tokenizer, cfg: "Config", cases: list[dict], step: int) -> 
             loaded=(policy, tokenizer),
         )
     metrics = summarise(results, WEIGHT_SETS[cfg.weights])
+    return _eval_record(step, metrics)
+
+
+def _eval_record(step: int, metrics: dict[str, Any]) -> dict[str, Any]:
     return {
         "step": step,
         "reward": metrics["reward"],
@@ -1553,6 +2485,38 @@ def evaluate(policy, tokenizer, cfg: "Config", cases: list[dict], step: int) -> 
         "action_acc": metrics["action_acc"],
         "completion_tokens": metrics["completion_tokens_mean"],
     }
+
+
+def generate_tool_results(policy, tokenizer, cfg: "Config", cases: list[dict]):
+    """Greedy tool episodes over `cases`, wrapped as `eval.CaseResult`s.
+
+    Same seed, batch size and token budget as `generate_hf` is given in
+    `evaluate`. Returns the episodes too, so a caller can see the calls.
+    """
+    from eval import CaseResult, Sample
+
+    device = str(next(policy.parameters()).device)
+    was_training = policy.training
+    policy.eval()
+    torch.manual_seed(cfg.seed)
+    template_kwargs = {"enable_thinking": False} if supports_thinking_toggle(tokenizer) else {}
+    results, episodes = [], []
+    for start in range(0, len(cases), cfg.eval_batch):
+        chunk = cases[start : start + cfg.eval_batch]
+        generate = agent_generate if cfg.harness == "qwen_agent" else tool_generate
+        batch = generate(
+            policy, tokenizer, [build_messages_tool(c["record"]) for c in chunk],
+            temperature=0.0, max_new_tokens=cfg.eval_max_tokens,
+            max_rounds=cfg.tool_rounds, template_kwargs=template_kwargs, device=device,
+        )
+        for case, ep in zip(chunk, batch):
+            results.append(CaseResult(case, [Sample(case["id"], ep.text, ep.policy_tokens)]))
+        episodes += batch
+        print(f"  {len(results)}/{len(cases)} cases", end="\r", file=sys.stderr)
+    print(file=sys.stderr)
+    if was_training:
+        policy.train()
+    return results, episodes
 
 
 # --- training -----------------------------------------------------------------
@@ -1618,6 +2582,13 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         record = evaluate(policy, tokenizer, cfg, eval_cases, step)
         with eval_path.open("a") as fh:
             fh.write(json.dumps(record) + "\n")
+        # The latest policy, every evaluation, so a run the machine takes down
+        # can be picked up with `--resume-from <run>/last` rather than lost:
+        # `13b`'s first full run died at step 34 when WSL shut down with it.
+        if step:
+            policy.save_pretrained(out_dir / "last" / "adapter")
+            torch.save(value_head.state_dict(), out_dir / "last" / "value_head.pt")
+            (out_dir / "last" / "step.json").write_text(json.dumps({"step": step}) + "\n")
         if record["reward"] > best["reward"]:
             best.update(reward=record["reward"], step=step, cause_acc=record["cause_acc"])
             policy.save_pretrained(out_dir / "adapter-best")
@@ -1627,6 +2598,8 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             f"    eval @{step:<4} reward {record['reward']:.4f} "
             f"cause {record['cause_acc']:.3f} flags {record['flags_acc']:.3f} "
             f"EM {record['exact_match']:.3f} valid {record['validity_gate']:.3f}"
+            f" numeric {record['numeric_acc']:.3f}"
+            + (f" tool {record['tool_use_rate']:.3f}" if "tool_use_rate" in record else "")
         )
         return record
 
@@ -1664,43 +2637,77 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
         batch = [rng.choice(cases) for _ in range(cfg.prompts_per_step)]
 
         policy.eval()
-        roll = rollout(
-            policy,
-            tokenizer,
-            batch,
-            samples_per_prompt=cfg.samples_per_prompt,
-            max_new_tokens=cfg.max_new_tokens,
-            temperature=cfg.temperature,
-            weights=weights,
-            device=device,
-            template_kwargs=template_kwargs,
-            prompt_v3=cfg.prompt_v3 or cfg.prompt_v4,
-            prompt_v4=cfg.prompt_v4,
-        )
+        if cfg.prompt_tool:
+            roll = tool_rollout(
+                policy,
+                tokenizer,
+                batch,
+                samples_per_prompt=cfg.samples_per_prompt,
+                max_new_tokens=cfg.max_new_tokens,
+                temperature=cfg.temperature,
+                weights=weights,
+                device=device,
+                template_kwargs=template_kwargs,
+                max_rounds=cfg.tool_rounds,
+                score_calls=cfg.call_credit,
+                harness=cfg.harness,
+            )
+        else:
+            roll = rollout(
+                policy,
+                tokenizer,
+                batch,
+                samples_per_prompt=cfg.samples_per_prompt,
+                max_new_tokens=cfg.max_new_tokens,
+                temperature=cfg.temperature,
+                weights=weights,
+                device=device,
+                template_kwargs=template_kwargs,
+                prompt_v3=cfg.prompt_v3 or cfg.prompt_v4,
+                prompt_v4=cfg.prompt_v4,
+            )
         gen_seconds = time.perf_counter() - started
 
         sequences, mask = roll.sequences, roll.mask
         attn = roll.attention_mask
-        completion_len = mask.shape[1]
+        # On the single-turn path the completion span *is* the policy's sequence
+        # and `index` is None, so every `take_policy` below is the identity and
+        # the runs already in `runs/` are untouched. See `Rollout`.
+        index = roll.policy_index
+        completion_len = roll.completion_len or mask.shape[1]
+        completion_ids = roll.policy_ids if index is not None else sequences[:, -completion_len:]
         rewards = torch.tensor(roll.rewards, device=device, dtype=torch.float32)
         if cfg.dense_rewards:
             per_token_rewards = dense_rewards(
                 roll.completions,
-                sequences[:, -completion_len:],
+                completion_ids,
                 mask,
                 roll.cases,
                 weights,
                 tokenizer,
                 cfg.flat_credit_scale,
+                call_hits=[ep.call_hits for ep in roll.episodes] if cfg.call_credit else None,
             )
         else:
             per_token_rewards = terminal_rewards(rewards, mask)
+        if cfg.call_credit and not (cfg.prompt_tool and cfg.dense_rewards):
+            raise ValueError("call_credit needs prompt_tool and dense_rewards")
+        call_record: dict[str, float] = {}
+        if cfg.call_credit:
+            # The invariant the change rests on, checked live: moving the credit
+            # onto the calls must leave every row's total exactly where it was.
+            plain = dense_rewards(
+                roll.completions, completion_ids, mask, roll.cases, weights, tokenizer,
+                cfg.flat_credit_scale,
+            )
+            call_record = {
+                "call_numeric_acc": sum(len(ep.call_hits) for ep in roll.episodes) / (3 * len(roll.episodes)),
+                "call_credit_sum_err": float((per_token_rewards.sum(1) - plain.sum(1)).abs().max()),
+            }
 
         flag_mask = None
         if cfg.flag_entropy_coef:
-            flag_mask = flag_token_mask(
-                roll.completions, sequences[:, -completion_len:], mask, tokenizer
-            )
+            flag_mask = flag_token_mask(roll.completions, completion_ids, mask, tokenizer)
 
         policy.train()
         with torch.no_grad():
@@ -1712,6 +2719,9 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                     value_detach=cfg.value_detach, return_hidden=True,
                     value_layer=cfg.value_layer,
                 )
+                if index is not None:
+                    at = index[sl]
+                    lp, v, h = take_policy(lp, at), take_policy(v, at), take_policy(h, at)
                 old_lp.append(lp)
                 old_v.append(v)
                 old_h.append(h)
@@ -1835,12 +2845,19 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                 else:
                     logprobs, values = fwd
                     entropy = None
+                if index is not None:
+                    at = index[sl]
+                    logprobs, values = take_policy(logprobs, at), take_policy(values, at)
+                    entropy = None if entropy is None else take_policy(entropy, at)
                 a_loss, stats = ppo_actor_loss(
                     logprobs, old_logprobs[sl], advantages[sl], mask[sl],
                     clip_eps=cfg.clip_eps, normalize=cfg.normalize,
                     entropy=entropy, entropy_coef=cfg.entropy_coef,
                     focus_mask=None if flag_mask is None else flag_mask[sl],
                     focus_entropy_coef=cfg.flag_entropy_coef,
+                    entropy_mask=(roll.answer_mask[sl]
+                                  if cfg.entropy_scope == "answer" and roll.answer_mask is not None
+                                  else None),
                 )
                 loss = a_loss
                 if not cfg.value_detach:
@@ -1857,7 +2874,8 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                     epoch_stats[k] = epoch_stats.get(k, 0.0) + val * share
             params = actor_params if cfg.value_detach else actor_params + critic_params
             grad_norm = torch.nn.utils.clip_grad_norm_(params, 1.0)
-            optimizer.step()
+            if step >= cfg.critic_warmup:
+                optimizer.step()
             if not cfg.value_detach:
                 critic_optimizer.step()
             actor_stats = epoch_stats  # the last epoch: where the policy ended up
@@ -1897,6 +2915,15 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             "step_seconds": round(time.perf_counter() - started, 2),
             **{k: round(v, 6) for k, v in actor_stats.items()},
             **{k: round(v, 6) for k, v in critic_stats.items()},
+            **({k: round(v, 6) for k, v in tool_stats(roll.episodes).items()}
+               if roll.episodes is not None else {}),
+            # The arithmetic gate, on every step rather than every `eval_every`:
+            # the share of the batch's three numbers inside tolerance, sampled.
+            **({"train_numeric_acc": round(numeric_rate(roll.completions, roll.cases), 6)}
+               if roll.episodes is not None else {}),
+            **{k: round(v, 8) for k, v in call_record.items()},
+            **(turn_values(roll.episodes, old_values, returns) if roll.episodes is not None else {}),
+            **(region_entropy(old_logprobs, mask, roll.answer_mask) if roll.answer_mask is not None else {}),
         }
         # How far the critic actually moved this step. The knob that sets it is
         # `value_lr`, and the first CPU smoke run had it two orders of magnitude
@@ -1926,10 +2953,26 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             f"clip {record['clip_frac']:.3f} "
             f"tok {record['completion_tokens']:.0f} "
             f"|g| {record['grad_norm']:.3f} {record['step_seconds']:.1f}s"
+            + (f" num {record['train_numeric_acc']:.3f} calls {record['tool_calls_mean']:.2f}"
+               if "train_numeric_acc" in record else "")
+            + (f" call-num {record['call_numeric_acc']:.3f} sum-err {record['call_credit_sum_err']:.1e}"
+               if "call_numeric_acc" in record else "")
         )
 
         if cfg.eval_every and (step + 1) % cfg.eval_every == 0:
             run_eval(step + 1)
+
+        if cfg.numeric_stop and "train_numeric_acc" in record and len(history) >= 10:
+            recent = [r["train_numeric_acc"] for r in history[-10:]]
+            if sum(recent) / 10 < cfg.numeric_stop:
+                policy.save_pretrained(out_dir / "adapter-stopped")
+                torch.save(value_head.state_dict(), out_dir / "value_head-stopped.pt")
+                (out_dir / "stopped.json").write_text(json.dumps({
+                    "step": step, "numeric_last10": recent, "threshold": cfg.numeric_stop,
+                }, indent=2) + "\n")
+                progress(f"STOPPED at step {step}: sampled numeric_acc over the last 10 steps "
+                         f"{sum(recent) / 10:.3f} < {cfg.numeric_stop}; adapter-stopped/ written")
+                break
 
     policy.save_pretrained(out_dir / "adapter")
     torch.save(value_head.state_dict(), out_dir / "value_head.pt")
@@ -1951,6 +2994,62 @@ def resolve_device(device: str = "auto") -> str:
     if torch.backends.mps.is_available():
         return "mps"
     return "cpu"
+
+
+def eval_only(cfg: Config, out: Path, device: str, *, progress=print) -> dict[str, Any]:
+    """One greedy tool pass over `eval_split`, from `resume_from` or the raw model.
+
+    Writes `out` in the envelope `runs/paired/*.json` uses -- `paired_test.py`
+    reads it unmodified -- and `out` with `.episodes.jsonl` beside it: the
+    policy's text, every call it made and what the tool said back.
+    """
+    import hashlib
+    import json
+
+    from eval import summarise
+
+    if not cfg.prompt_tool:
+        raise ValueError("eval_only is the tool path; the single-turn path has eval.py")
+    policy, _, tokenizer = load_policy(cfg, device)
+    source = DATA / f"{cfg.eval_split}.jsonl"
+    cases = load_cases(cfg.eval_split)[: cfg.eval_cases]
+    results, episodes = generate_tool_results(policy, tokenizer, cfg, cases)
+    overall = summarise(results, WEIGHT_SETS[cfg.weights])
+    overall.update(tool_stats(episodes))
+    envelope = {
+        "model": cfg.model,
+        "backend": "hf+calculator" + ("+qwen_agent" if cfg.harness == "qwen_agent" else ""),
+        "split": cfg.eval_split,
+        "split_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "prompt_version": "v2",
+        "tools": [CALCULATOR_TOOL],
+        "tool_rounds": cfg.tool_rounds,
+        "weights": cfg.weights,
+        "mode": "greedy",
+        "k": 1,
+        "temperature": 0.0,
+        "max_tokens": cfg.eval_max_tokens,
+        "seed": cfg.seed,
+        "adapter": cfg.resume_from or None,
+        "overall": overall,
+    }
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(envelope, indent=2) + "\n")
+    with out.with_suffix(".episodes.jsonl").open("w") as fh:
+        for case, ep in zip(cases, episodes):
+            fh.write(json.dumps({
+                "id": case["id"], "text": ep.text, "calls": ep.calls, "results": ep.results,
+                "unanswered": ep.unanswered, "truncated": ep.truncated,
+                "policy_tokens": ep.policy_tokens, "env_tokens": len(ep.ids) - ep.policy_tokens,
+            }) + "\n")
+    progress(
+        f"  {cfg.eval_split}: EM {overall['exact_match']:.3f} numeric {overall['numeric_acc']:.3f} "
+        f"flags {overall['flags_acc']:.3f} cause {overall['cause_acc']:.3f} "
+        f"schema {overall['schema_ok']:.3f} | tool use {overall['tool_use_rate']:.3f} "
+        f"calls {overall['tool_calls_mean']:.2f} errors {overall['tool_error_rate']:.3f}"
+    )
+    progress(f"  wrote {out}")
+    return envelope
 
 
 # --- SFT seeding ---------------------------------------------------------------
@@ -2102,7 +3201,17 @@ def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> di
         else:
             progress(f"  no value head at {head}; PPO will resume with a fresh one")
 
-    if cfg.sft_cases:
+    if cfg.sft_tool:
+        import random
+
+        if cfg.sft_labels_only or cfg.sft_cases:
+            raise ValueError("sft_tool supervises the calls only; it takes no label mask or seed file")
+        examples = load_cases(cfg.split)
+        random.Random(cfg.seed).shuffle(examples)
+        n_dead, n_normal = 0, len(examples)
+        progress(f"  tool seed: {len(examples)} {cfg.split} cases, loss on the three calls only, "
+                 f"{cfg.sft_epochs} epoch(s), lr {cfg.sft_lr}")
+    elif cfg.sft_cases:
         import random
 
         source = Path(cfg.sft_cases)
@@ -2141,13 +3250,26 @@ def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> di
     n_supervised = 0
     for epoch in range(cfg.sft_epochs):
         for i, case in enumerate(examples):
-            prompt = tokenizer.apply_chat_template(
-                build_messages_v3(case["record"]),
-                tokenize=False,
-                add_generation_prompt=True,
-                **template_kwargs,
-            )
-            target = sft_target(case["answer"])
+            if cfg.sft_tool:
+                # The prompt is the one `tool_generate` decodes from, and the
+                # target is the text a correct first turn would sample -- so the
+                # supervised tokens are the tokens PPO will later score.
+                prompt = tokenizer.apply_chat_template(
+                    build_messages_tool(case["record"]),
+                    tools=[CALCULATOR_TOOL],
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    **template_kwargs,
+                )
+                target = tool_call_target(case["record"])
+            else:
+                prompt = tokenizer.apply_chat_template(
+                    build_messages_v3(case["record"]),
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    **template_kwargs,
+                )
+                target = sft_target(case["answer"])
             prompt_len = tokenizer(prompt, return_tensors="pt").input_ids.shape[1]
             full = prompt + target + (tokenizer.eos_token or "")
             encoded = tokenizer(full, return_tensors="pt", return_offsets_mapping=True)
@@ -2236,10 +3358,20 @@ def main() -> None:
     fields["prompt_v3"] = bool(fields["prompt_v3"])
     fields["dense_rewards"] = bool(fields["dense_rewards"])
     fields["prompt_v4"] = bool(fields["prompt_v4"])
+    fields["prompt_tool"] = bool(fields["prompt_tool"])
+    fields["sft_tool"] = bool(fields["sft_tool"])
+    fields["value_head_reset"] = bool(fields["value_head_reset"])
+    fields["call_credit"] = bool(fields["call_credit"])
+    if fields["entropy_scope"] not in ("all", "answer"):
+        parser.error("--entropy-scope must be all or answer")
+    if fields["harness"] not in ("native", "qwen_agent"):
+        parser.error("--harness must be native or qwen_agent")
     cfg = Config(**fields)
     tag = cfg.model.rsplit("/", 1)[-1].replace(".", "").lower()
     out = args.out or SMOKE_DIR / "runs" / f"ppo-{tag}-{cfg.weights.lower()}-s{cfg.seed}"
-    if cfg.sft_only:
+    if cfg.eval_only:
+        eval_only(cfg, out, resolve_device(args.device))
+    elif cfg.sft_only:
         sft_seed(cfg, out, resolve_device(args.device))
     else:
         train(cfg, out, resolve_device(args.device))
