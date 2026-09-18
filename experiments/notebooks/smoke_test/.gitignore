@@ -8,3 +8,39 @@ runs/**/adapter*/README.md
 runs/**/*.bin
 runs/**/*.pt
 runs/**/checkpoint-*/
+
+# Two exceptions, named individually so no future run is caught by them.
+#
+# `11`'s result cannot be regenerated: bf16 matmuls on this card are not bitwise
+# deterministic, so re-running the same seeding command and the same 200 PPO
+# steps produces a different policy -- this series measured that divergence at
+# step 3. The numbers stay reproducible from eval.jsonl/metrics.jsonl; the
+# policies do not. So the zero point PPO started from, and the policy it
+# reached, are kept as files rather than as instructions for making them.
+!runs/frz-slots-w4/adapter/adapter_model.safetensors
+!runs/frz-slots-w4/value_head.pt
+!runs/ppo-on-seed-w4/adapter/adapter_model.safetensors
+!runs/ppo-on-seed-w4/adapter-best/adapter_model.safetensors
+!runs/ppo-on-seed-w4/value_head.pt
+!runs/ppo-on-seed-w4/value_head-best.pt
+
+# `12`'s tool seed: the zero point any continuation of that line starts from, and
+# not regenerable bit for bit for the same reason as `11`'s.
+!runs/tool-sft-raw/adapter/adapter_model.safetensors
+!runs/tool-sft-raw/value_head.pt
+
+# `13b`'s policy at step 200 -- the line's current best, and what a resume or a
+# per-turn-discount run starts from. The final `adapter/` is the same step.
+!runs/ppo-tool-qwen-agent-scoped-200/adapter-best/adapter_model.safetensors
+!runs/ppo-tool-qwen-agent-scoped-200/value_head-best.pt
+
+# Every run's rolling resume point and the raw job logs stay local; the
+# notebooks quote what the logs showed.
+runs/**/last/
+runs/tool/*.log
+
+# The full-answer SFT runs. They work -- that is the problem: supervising all
+# eight fields teaches the task, which leaves PPO nothing to learn and answers a
+# different question than the series is asking. Kept on disk, out of the record.
+runs/frz-full/
+runs/seed11-offdist-full/
