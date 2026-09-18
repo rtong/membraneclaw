@@ -1,0 +1,6 @@
+{
+  "reward": 0.70545,
+  "step": 40,
+  "criterion": "held-out reward",
+  "cause_acc": 0.43
+}

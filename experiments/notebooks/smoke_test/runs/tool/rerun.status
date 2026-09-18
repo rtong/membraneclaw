@@ -1,0 +1,12 @@
+A exit 0
+B exit 0
+13a exit 143
+12-200 exit 0
+diag12 exit 0
+13a-lam1 exit 0
+13b-eq exit 0
+13a-warmup exit 143
+13b-train exit 1
+13b-train exit 0
+13b-train killed by WSL shutdown at 19:48 (step 34), no exit line
+13b-train exit 0
