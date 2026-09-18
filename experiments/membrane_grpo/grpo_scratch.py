@@ -320,6 +320,10 @@ def load_policy(cfg: Config, device: str):
     base = AutoModelForCausalLM.from_pretrained(cfg.model, dtype=getattr(torch, cfg.dtype))
     if cfg.resume_from:
         policy = PeftModel.from_pretrained(base, cfg.resume_from).to(device)
+        # from_pretrained loads the adapter frozen; re-enable training.
+        for name, param in policy.named_parameters():
+            if "lora_" in name:
+                param.requires_grad = True
         print(f"  resumed adapter from {cfg.resume_from}")
     else:
         policy = get_peft_model(
