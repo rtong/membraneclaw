@@ -1463,7 +1463,7 @@ def gae(
     values: torch.Tensor,
     mask: torch.Tensor,
     *,
-    gamma: float = 1.0,
+    gamma: float | torch.Tensor = 1.0,
     lam: float = 1.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Generalised advantage estimation over the completion span.
@@ -1475,6 +1475,10 @@ def gae(
     Returns `(advantages, returns)`, both zero outside the mask. `returns` is
     the GAE return `A_t + V(s_t)`, which is what the critic regresses against.
 
+    `gamma` is a scalar, applied on every step, or a (batch, tokens) tensor
+    whose column t discounts the step from s_t to s_{t+1} -- which is how a
+    discount applied per turn reaches it (`turn_discounts`).
+
     The bootstrap past the last active token is zero, not `V(s_L)`: the episode
     genuinely ends there. Bootstrapping off a padded position would let the
     critic's own error leak in as if it were future reward.
@@ -1482,19 +1486,36 @@ def gae(
     batch, tokens = mask.shape
     advantages = torch.zeros_like(values)
     running = torch.zeros(batch, dtype=values.dtype, device=values.device)
+    per_step = torch.is_tensor(gamma)
 
     for t in range(tokens - 1, -1, -1):
         m = mask[:, t]
+        g = gamma[:, t] if per_step else gamma
         # Zero past the end of the span, so V(s_{t+1}) is 0 on the last token.
         next_value = values[:, t + 1] * mask[:, t + 1] if t + 1 < tokens else torch.zeros_like(running)
-        delta = rewards[:, t] + gamma * next_value - values[:, t]
-        running = delta + gamma * lam * running
+        delta = rewards[:, t] + g * next_value - values[:, t]
+        running = delta + g * lam * running
         # An inactive position contributes nothing and must not carry the
         # accumulator backwards across the padding boundary either.
         running = running * m
         advantages[:, t] = running
 
     return advantages * mask, (advantages + values) * mask
+
+
+def turn_discounts(episodes: list[Episode], mask: torch.Tensor, gamma: float) -> torch.Tensor:
+    """`gae`'s per-position discount when `gamma` applies per turn.
+
+    `gamma` on the last token of every turn the tool answered -- the step across
+    the tool's response, from the calls to the state that already holds their
+    results -- and 1.0 everywhere else, so inside a turn the return is the
+    undiscounted sum it has always been. Compacted indexing, like `mask`.
+    """
+    out = torch.ones_like(mask)
+    for b, ep in enumerate(episodes):
+        for start in ep.turn_starts[1:]:
+            out[b, start - 1] = gamma
+    return out
 
 
 def critic_fit(
@@ -1892,6 +1913,12 @@ class Config:
     #: Where the entropy bonus applies on a tool episode: "all" policy tokens (every
     #: run before `13`) or only the "answer" turn. See `ppo_actor_loss`.
     entropy_scope: str = "all"
+    #: Where `gamma` applies on a tool episode: every "token" (every run through
+    #: `13b`) or only across each "turn" boundary, with 1.0 inside a turn. Over
+    #: ~336 tokens a per-token discount mostly measures distance in tokens; a
+    #: per-turn one discounts by how many times the episode waited on the tool.
+    #: See `turn_discounts`.
+    gamma_scope: str = "token"
     #: Stop the run (saving `adapter-stopped/`) once the sampled `numeric_acc`,
     #: averaged over the last 10 steps, falls below this. 0 disables it. The
     #: arithmetic has to hold every step; a run that has lost it is not worth
@@ -2606,7 +2633,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     per_step = cfg.prompts_per_step * cfg.samples_per_prompt
     progress(
         f"{cfg.model} | {cfg.steps} steps | {cfg.prompts_per_step}x{cfg.samples_per_prompt}"
-        f"={per_step} seq/step | lam={cfg.lam} | {device}"
+        f"={per_step} seq/step | gamma={cfg.gamma} per {cfg.gamma_scope} | lam={cfg.lam} | {device}"
     )
 
     history: list[dict[str, Any]] = []
@@ -2755,8 +2782,10 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                 # in this batch's tensor, so recompute it on the full feature.
                 old_values = value_head(hidden_cache)
 
+            discount = (turn_discounts(roll.episodes, mask, cfg.gamma)
+                        if cfg.gamma_scope == "turn" else cfg.gamma)
             advantages, returns = gae(
-                per_token_rewards, old_values, mask, gamma=cfg.gamma, lam=cfg.lam
+                per_token_rewards, old_values, mask, gamma=discount, lam=cfg.lam
             )
             if cfg.whiten_advantages:
                 advantages = whiten(advantages, mask)
@@ -3348,6 +3377,10 @@ def main() -> None:
     parser.set_defaults(value_init_bias=-1.0)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--device", default="auto")
+    # Operational, like --device: not part of Config, so it changes no run's record or numbers. The card is
+    # shared, and PyTorch's caching allocator otherwise grows to whatever the card has and never gives it back.
+    parser.add_argument("--max-vram-mib", type=int, default=0,
+                        help="cap this process's CUDA caching allocator at this many MiB (0: no cap)")
     args = parser.parse_args()
     if args.weights not in WEIGHT_SETS:
         parser.error(f"--weights must be one of {sorted(WEIGHT_SETS)}")
@@ -3366,9 +3399,17 @@ def main() -> None:
         parser.error("--entropy-scope must be all or answer")
     if fields["harness"] not in ("native", "qwen_agent"):
         parser.error("--harness must be native or qwen_agent")
+    if fields["gamma_scope"] not in ("token", "turn"):
+        parser.error("--gamma-scope must be token or turn")
+    if fields["gamma_scope"] == "turn" and not fields["prompt_tool"]:
+        parser.error("--gamma-scope turn needs --prompt-tool 1: a single-turn episode has no turn boundary")
     cfg = Config(**fields)
     tag = cfg.model.rsplit("/", 1)[-1].replace(".", "").lower()
     out = args.out or SMOKE_DIR / "runs" / f"ppo-{tag}-{cfg.weights.lower()}-s{cfg.seed}"
+    if args.max_vram_mib and torch.cuda.is_available():
+        total = torch.cuda.get_device_properties(0).total_memory
+        torch.cuda.set_per_process_memory_fraction(min(1.0, args.max_vram_mib * 2**20 / total))
+        print(f"CUDA allocator capped at {args.max_vram_mib} MiB of {total // 2**20}")
     if cfg.eval_only:
         eval_only(cfg, out, resolve_device(args.device))
     elif cfg.sft_only:
