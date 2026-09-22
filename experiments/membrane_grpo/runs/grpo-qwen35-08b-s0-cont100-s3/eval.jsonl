@@ -1,0 +1,5 @@
+{"step": 300, "reward": 0.62915, "exact_match": 0.005, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.605, "flags_acc": 0.895, "numeric_acc": 0.29666666666666663, "action_acc": 0.5, "completion_tokens": 110.845}
+{"step": 325, "reward": 0.60975, "exact_match": 0.0, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.57, "flags_acc": 0.9, "numeric_acc": 0.29833333333333334, "action_acc": 0.47, "completion_tokens": 111.045}
+{"step": 350, "reward": 0.62035, "exact_match": 0.01, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.59, "flags_acc": 0.8966666666666667, "numeric_acc": 0.30166666666666664, "action_acc": 0.48, "completion_tokens": 111.155}
+{"step": 375, "reward": 0.6253, "exact_match": 0.0, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.6, "flags_acc": 0.8983333333333333, "numeric_acc": 0.28833333333333333, "action_acc": 0.495, "completion_tokens": 110.98}
+{"step": 400, "reward": 0.6347, "exact_match": 0.01, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.61, "flags_acc": 0.9183333333333333, "numeric_acc": 0.29, "action_acc": 0.51, "completion_tokens": 111.13}
