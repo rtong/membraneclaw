@@ -1,0 +1,39 @@
+CUDA allocator capped at 10500 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  53%|█████▎    | 166/311 [00:00<00:00, 1651.38it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1899.33it/s]
+  seed set: seed_cases.jsonl, 150 of 387 cases (63 carry a dead label: 32 severe, 35 organic_fouling), 4 epoch(s), lr 5e-05
+  loss on the values of action in the answer turn of the gold tool episode
+Traceback (most recent call last):
+  File "/home/bayan/MembraneClaw/experiments/notebooks/smoke_test/ppo_ac.py", line 3587, in <module>
+    main()
+    ~~~~^^
+  File "/home/bayan/MembraneClaw/experiments/notebooks/smoke_test/ppo_ac.py", line 3581, in main
+    sft_seed(cfg, out, resolve_device(args.device))
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/bayan/MembraneClaw/experiments/notebooks/smoke_test/ppo_ac.py", line 3493, in sft_seed
+    ((loss * weight) / accum).backward()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/bayan/MembraneClaw/experiments/membrane_grpo/.venv/lib/python3.13/site-packages/torch/_tensor.py", line 623, in backward
+    torch.autograd.backward(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        self, gradient, retain_graph, create_graph, inputs=inputs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/bayan/MembraneClaw/experiments/membrane_grpo/.venv/lib/python3.13/site-packages/torch/autograd/__init__.py", line 395, in backward
+    _engine_run_backward(
+    ~~~~~~~~~~~~~~~~~~~~^
+        tensors,
+        ^^^^^^^^
+    ...<5 lines>...
+        accumulate_grad=True,
+        ^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/bayan/MembraneClaw/experiments/membrane_grpo/.venv/lib/python3.13/site-packages/torch/autograd/graph.py", line 979, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        t_outputs, *args, **kwargs
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )  # Calls into the C++ engine to run the backward pass
+    ^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 896.00 MiB. GPU 0 has a total capacity of 15.89 GiB of which 5.04 GiB is free. 10.25 GiB allowed; Of the allocated memory 9.48 GiB is allocated by PyTorch, and 73.83 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)

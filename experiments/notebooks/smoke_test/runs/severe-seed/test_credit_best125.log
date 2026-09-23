@@ -1,0 +1,7 @@
+CUDA allocator capped at 13000 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  46%|████▋     | 144/311 [00:00<00:00, 1431.87it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1700.88it/s]
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+  test: EM 0.825 numeric 0.992 flags 0.942 cause 0.925 schema 1.000 | tool use 1.000 calls 3.00 errors 0.002
+  calls, teacher-forced: entropy 0.000423 NLL 0.000118 over 48072 tokens
+  labels: severe 38/200 (37 right, answer on 37) | organic_fouling 27/200 (27 right, answer on 29)
+  wrote runs/severe-seed/test_credit_best125.json

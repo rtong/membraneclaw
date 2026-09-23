@@ -1,0 +1,6 @@
+CUDA allocator capped at 10500 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  53%|█████▎    | 165/311 [00:00<00:00, 1644.50it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1924.83it/s]
+  16/200 cases  32/200 cases  48/200 cases  64/200 cases  80/200 cases  96/200 cases  112/200 cases  128/200 cases  144/200 cases  160/200 cases  176/200 cases  192/200 cases  200/200 cases
+  dev: EM 0.145 numeric 1.000 flags 0.695 cause 0.325 schema 1.000 | tool use 1.000 calls 3.00 errors 0.000
+  labels: severe 0/200 (0 right, answer on 37) | organic_fouling 1/200 (1 right, answer on 29)
+  wrote runs/severe-seed/dev_calls_epoch1.json

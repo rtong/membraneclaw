@@ -1,0 +1,3 @@
+CUDA allocator capped at 13000 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  52%|█████▏    | 161/311 [00:00<00:00, 1598.53it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1863.45it/s]
+terminate called without an active exception

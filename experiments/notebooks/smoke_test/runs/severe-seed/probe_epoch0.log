@@ -1,0 +1,6 @@
+CUDA allocator capped at 13000 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|█████     | 157/311 [00:00<00:00, 1568.44it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 2048.18it/s]
+  32/600 cases  64/600 cases  96/600 cases  128/600 cases  160/600 cases  192/600 cases  224/600 cases  256/600 cases  288/600 cases  320/600 cases  352/600 cases  384/600 cases  416/600 cases  448/600 cases  480/600 cases  512/600 cases  544/600 cases  576/600 cases  600/600 cases
+  train: EM 0.055 numeric 0.996 flags 0.634 cause 0.255 schema 0.982 | tool use 1.000 calls 3.03 errors 0.001
+  labels: severe 1/600 (0 right, answer on 108) | organic_fouling 48/600 (27 right, answer on 80)
+  wrote runs/severe-seed/probe_epoch0.json

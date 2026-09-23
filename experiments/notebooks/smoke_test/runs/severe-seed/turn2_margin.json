@@ -1,0 +1,60 @@
+{
+  "n_cases": 64,
+  "split": "dev",
+  "policies": [
+    {
+      "policy": "raw",
+      "adapter": null,
+      "p_answer_mean": 0.9949553972110152,
+      "p_answer_min": 0.9716624617576599,
+      "p_call_mean": 0.00022180321271036973,
+      "p_call_max": 0.004503803793340921,
+      "call_wins": 0
+    },
+    {
+      "policy": "tool seed",
+      "adapter": "runs/tool-sft-raw",
+      "p_answer_mean": 0.9754381943494081,
+      "p_answer_min": 0.8278288245201111,
+      "p_call_mean": 0.0066823924751133745,
+      "p_call_max": 0.11203444749116898,
+      "call_wins": 0
+    },
+    {
+      "policy": "action-only seed, 1 epoch",
+      "adapter": "runs/tool-seed-severe-150/epoch1",
+      "p_answer_mean": 0.014388782801688649,
+      "p_answer_min": 0.00245559960603714,
+      "p_call_mean": 0.9522868683561683,
+      "p_call_max": 0.9906595945358276,
+      "call_wins": 64
+    },
+    {
+      "policy": "action + calls anchored, 1 epoch",
+      "adapter": "runs/tool-seed-severe-150-calls/epoch1",
+      "p_answer_mean": 0.9934200849384069,
+      "p_answer_min": 0.9536863565444946,
+      "p_call_mean": 0.0018978100640651974,
+      "p_call_max": 0.032633353024721146,
+      "call_wins": 0
+    },
+    {
+      "policy": "joint, action only, 1 epoch",
+      "adapter": "runs/tool-seed-joint-150/epoch1",
+      "p_answer_mean": 0.998550116084516,
+      "p_answer_min": 0.9928601384162903,
+      "p_call_mean": 9.076476367830821e-05,
+      "p_call_max": 0.0019166710553690791,
+      "call_wins": 0
+    },
+    {
+      "policy": "joint, both slots, 3 epochs",
+      "adapter": "runs/tool-seed-joint-slots-150/epoch3",
+      "p_answer_mean": 0.999424229376018,
+      "p_answer_min": 0.997671902179718,
+      "p_call_mean": 1.3552954915535542e-05,
+      "p_call_max": 0.00017922154802363366,
+      "call_wins": 0
+    }
+  ]
+}

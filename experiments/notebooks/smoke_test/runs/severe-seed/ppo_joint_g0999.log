@@ -1,0 +1,226 @@
+CUDA allocator capped at 13700 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  57%|█████▋    | 177/311 [00:00<00:00, 1769.65it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1956.41it/s]
+  chat template honours enable_thinking; set to False
+Qwen/Qwen3-1.7B | 200 steps | 8x1=8 seq/step | gamma=0.999 per token | lam=0.95 | cuda
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+/home/bayan/MembraneClaw/experiments/membrane_grpo/.venv/lib/python3.13/site-packages/peft/utils/save_and_load.py:438: UserWarning: Could not find a config file in Qwen/Qwen3-1.7B - will assume that the vocabulary was not modified.
+  warnings.warn(
+    eval @0    reward 0.6711 cause 0.315 flags 0.690 EM 0.085 valid 1.000 numeric 1.000 tool 1.000
+  step    0 reward 0.6900 V 0.666 ev +0.000/+0.559 adv -0.011+-0.102 clip 0.003 tok 335 |g| 0.009 22.0s num 1.000 calls 3.00
+  step    1 reward 0.7075 V 0.665 ev +0.496/+0.725 adv -0.009+-0.084 clip 0.001 tok 334 |g| 0.005 21.4s num 1.000 calls 3.00
+  step    2 reward 0.6512 V 0.658 ev +0.678/+0.794 adv -0.012+-0.076 clip 0.001 tok 336 |g| 0.004 21.7s num 1.000 calls 3.00
+  step    3 reward 0.6600 V 0.657 ev +0.767/+0.831 adv -0.009+-0.070 clip 0.001 tok 335 |g| 0.007 21.7s num 1.000 calls 3.00
+  step    4 reward 0.6750 V 0.655 ev +0.811/+0.853 adv -0.008+-0.066 clip 0.001 tok 335 |g| 0.003 21.5s num 1.000 calls 3.00
+  step    5 reward 0.7100 V 0.654 ev +0.836/+0.867 adv -0.009+-0.061 clip 0.001 tok 335 |g| 0.006 21.5s num 1.000 calls 3.00
+  step    6 reward 0.7175 V 0.653 ev +0.861/+0.883 adv -0.007+-0.056 clip 0.000 tok 332 |g| 0.013 21.6s num 1.000 calls 3.00
+  step    7 reward 0.6150 V 0.651 ev +0.871/+0.892 adv -0.010+-0.059 clip 0.001 tok 335 |g| 0.007 21.9s num 1.000 calls 3.00
+  step    8 reward 0.6750 V 0.650 ev +0.883/+0.899 adv -0.010+-0.055 clip 0.000 tok 337 |g| 0.007 21.8s num 1.000 calls 3.00
+  step    9 reward 0.7112 V 0.649 ev +0.895/+0.907 adv -0.007+-0.051 clip 0.001 tok 333 |g| 0.008 21.3s num 1.000 calls 3.00
+  step   10 reward 0.5350 V 0.648 ev +0.886/+0.902 adv -0.017+-0.060 clip 0.002 tok 335 |g| 0.008 21.4s num 1.000 calls 3.00
+  step   11 reward 0.6362 V 0.647 ev +0.907/+0.916 adv -0.009+-0.051 clip 0.001 tok 336 |g| 0.007 21.8s num 1.000 calls 3.00
+  step   12 reward 0.7012 V 0.646 ev +0.917/+0.924 adv -0.006+-0.048 clip 0.001 tok 336 |g| 0.008 21.5s num 1.000 calls 3.00
+  step   13 reward 0.5962 V 0.646 ev +0.919/+0.929 adv -0.013+-0.051 clip 0.001 tok 337 |g| 0.004 21.7s num 1.000 calls 3.00
+  step   14 reward 0.6750 V 0.645 ev +0.918/+0.924 adv -0.008+-0.049 clip 0.000 tok 337 |g| 0.007 21.7s num 1.000 calls 3.00
+  step   15 reward 0.6112 V 0.645 ev +0.929/+0.936 adv -0.010+-0.047 clip 0.001 tok 335 |g| 0.006 21.6s num 1.000 calls 3.00
+  step   16 reward 0.6500 V 0.645 ev +0.925/+0.930 adv -0.007+-0.047 clip 0.001 tok 335 |g| 0.004 21.6s num 1.000 calls 3.00
+  step   17 reward 0.6825 V 0.644 ev +0.938/+0.942 adv -0.006+-0.043 clip 0.002 tok 336 |g| 0.004 21.6s num 1.000 calls 3.00
+  step   18 reward 0.6650 V 0.644 ev +0.928/+0.932 adv -0.007+-0.046 clip 0.001 tok 336 |g| 0.005 21.8s num 1.000 calls 3.00
+  step   19 reward 0.6850 V 0.644 ev +0.934/+0.937 adv -0.004+-0.044 clip 0.002 tok 335 |g| 0.005 21.5s num 1.000 calls 3.00
+  step   20 reward 0.6887 V 0.643 ev +0.931/+0.934 adv -0.008+-0.046 clip 0.001 tok 335 |g| 0.007 21.5s num 1.000 calls 3.00
+  step   21 reward 0.7112 V 0.643 ev +0.935/+0.937 adv -0.004+-0.043 clip 0.001 tok 338 |g| 0.002 21.7s num 1.000 calls 3.00
+  step   22 reward 0.6112 V 0.642 ev +0.946/+0.949 adv -0.010+-0.043 clip 0.001 tok 335 |g| 0.007 21.5s num 1.000 calls 3.00
+  step   23 reward 0.6050 V 0.642 ev +0.935/+0.939 adv -0.012+-0.046 clip 0.002 tok 336 |g| 0.004 21.7s num 1.000 calls 3.00
+  step   24 reward 0.6925 V 0.641 ev +0.941/+0.944 adv -0.007+-0.042 clip 0.001 tok 335 |g| 0.004 21.6s num 1.000 calls 3.00
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @25   reward 0.6886 cause 0.315 flags 0.788 EM 0.155 valid 1.000 numeric 1.000 tool 1.000
+  step   25 reward 0.7562 V 0.641 ev +0.942/+0.946 adv -0.001+-0.040 clip 0.001 tok 333 |g| 0.002 21.8s num 1.000 calls 3.00
+  step   26 reward 0.5850 V 0.639 ev +0.953/+0.960 adv -0.011+-0.041 clip 0.000 tok 337 |g| 0.005 21.7s num 1.000 calls 3.00
+  step   27 reward 0.6462 V 0.638 ev +0.943/+0.949 adv -0.009+-0.043 clip 0.001 tok 335 |g| 0.003 21.5s num 1.000 calls 3.00
+  step   28 reward 0.6800 V 0.638 ev +0.950/+0.954 adv -0.004+-0.039 clip 0.001 tok 333 |g| 0.005 21.8s num 1.000 calls 3.00
+  step   29 reward 0.7200 V 0.637 ev +0.942/+0.945 adv -0.003+-0.042 clip 0.003 tok 337 |g| 0.005 21.9s num 1.000 calls 3.00
+  step   30 reward 0.5954 V 0.636 ev +0.952/+0.956 adv -0.009+-0.040 clip 0.002 tok 338 |g| 0.003 21.6s num 0.958 calls 3.00
+  step   31 reward 0.8175 V 0.636 ev +0.934/+0.937 adv +0.003+-0.042 clip 0.001 tok 335 |g| 0.008 21.8s num 1.000 calls 3.00
+  step   32 reward 0.7425 V 0.635 ev +0.948/+0.951 adv -0.002+-0.039 clip 0.001 tok 333 |g| 0.008 21.5s num 1.000 calls 3.00
+  step   33 reward 0.6812 V 0.635 ev +0.950/+0.953 adv -0.007+-0.040 clip 0.001 tok 337 |g| 0.006 21.4s num 1.000 calls 3.00
+  step   34 reward 0.7150 V 0.635 ev +0.949/+0.951 adv -0.003+-0.039 clip 0.000 tok 336 |g| 0.005 21.9s num 1.000 calls 3.00
+  step   35 reward 0.8013 V 0.635 ev +0.945/+0.947 adv +0.002+-0.040 clip 0.001 tok 337 |g| 0.007 21.9s num 1.000 calls 3.00
+  step   36 reward 0.6750 V 0.634 ev +0.957/+0.960 adv -0.006+-0.037 clip 0.000 tok 336 |g| 0.007 21.4s num 1.000 calls 3.00
+  step   37 reward 0.7250 V 0.634 ev +0.947/+0.949 adv -0.004+-0.040 clip 0.001 tok 336 |g| 0.003 21.8s num 1.000 calls 3.00
+  step   38 reward 0.7700 V 0.635 ev +0.947/+0.949 adv -0.001+-0.039 clip 0.002 tok 336 |g| 0.003 21.6s num 1.000 calls 3.00
+  step   39 reward 0.6962 V 0.634 ev +0.956/+0.958 adv -0.004+-0.037 clip 0.001 tok 336 |g| 0.005 21.8s num 1.000 calls 3.00
+  step   40 reward 0.5862 V 0.634 ev +0.959/+0.962 adv -0.011+-0.038 clip 0.001 tok 336 |g| 0.007 21.7s num 1.000 calls 3.00
+  step   41 reward 0.5550 V 0.633 ev +0.968/+0.971 adv -0.012+-0.036 clip 0.001 tok 338 |g| 0.010 21.8s num 1.000 calls 3.00
+  step   42 reward 0.6004 V 0.633 ev +0.957/+0.959 adv -0.009+-0.038 clip 0.002 tok 338 |g| 0.007 21.7s num 0.958 calls 2.88
+  step   43 reward 0.6775 V 0.633 ev +0.959/+0.961 adv -0.004+-0.035 clip 0.002 tok 330 |g| 0.003 21.3s num 1.000 calls 3.00
+  step   44 reward 0.7550 V 0.633 ev +0.938/+0.941 adv -0.000+-0.042 clip 0.003 tok 337 |g| 0.003 21.8s num 1.000 calls 3.00
+  step   45 reward 0.7108 V 0.632 ev +0.954/+0.957 adv -0.005+-0.037 clip 0.001 tok 339 |g| 0.007 21.9s num 0.917 calls 3.00
+  step   46 reward 0.5908 V 0.632 ev +0.963/+0.965 adv -0.008+-0.035 clip 0.001 tok 334 |g| 0.009 21.6s num 0.917 calls 3.00
+  step   47 reward 0.7200 V 0.632 ev +0.954/+0.956 adv -0.002+-0.036 clip 0.002 tok 336 |g| 0.003 21.7s num 1.000 calls 3.00
+  step   48 reward 0.8412 V 0.632 ev +0.938/+0.942 adv +0.003+-0.041 clip 0.001 tok 338 |g| 0.006 21.7s num 1.000 calls 3.00
+  step   49 reward 0.8062 V 0.632 ev +0.950/+0.953 adv +0.001+-0.037 clip 0.001 tok 338 |g| 0.002 21.9s num 1.000 calls 3.00
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @50   reward 0.7561 cause 0.475 flags 0.862 EM 0.230 valid 1.000 numeric 1.000 tool 1.000
+  step   50 reward 0.7400 V 0.632 ev +0.953/+0.955 adv +0.000+-0.036 clip 0.000 tok 336 |g| 0.004 21.6s num 1.000 calls 3.00
+  step   51 reward 0.6750 V 0.632 ev +0.960/+0.962 adv -0.005+-0.035 clip 0.000 tok 337 |g| 0.012 21.8s num 1.000 calls 3.00
+  step   52 reward 0.7875 V 0.632 ev +0.953/+0.955 adv +0.001+-0.036 clip 0.001 tok 336 |g| 0.006 21.6s num 1.000 calls 3.00
+  step   53 reward 0.7212 V 0.633 ev +0.964/+0.965 adv -0.001+-0.032 clip 0.001 tok 336 |g| 0.002 21.9s num 1.000 calls 3.00
+  step   54 reward 0.7467 V 0.633 ev +0.948/+0.950 adv +0.000+-0.037 clip 0.001 tok 336 |g| 0.007 21.6s num 0.958 calls 3.00
+  step   55 reward 0.6900 V 0.632 ev +0.969/+0.969 adv -0.002+-0.032 clip 0.001 tok 335 |g| 0.004 21.6s num 1.000 calls 3.00
+  step   56 reward 0.7238 V 0.632 ev +0.964/+0.966 adv -0.001+-0.032 clip 0.001 tok 335 |g| 0.002 21.8s num 1.000 calls 3.00
+  step   57 reward 0.7712 V 0.632 ev +0.961/+0.962 adv +0.001+-0.033 clip 0.001 tok 336 |g| 0.007 21.7s num 1.000 calls 3.00
+  step   58 reward 0.7012 V 0.632 ev +0.966/+0.967 adv -0.003+-0.031 clip 0.000 tok 334 |g| 0.004 21.5s num 1.000 calls 3.00
+  step   59 reward 0.7512 V 0.632 ev +0.953/+0.955 adv +0.000+-0.035 clip 0.001 tok 335 |g| 0.005 21.7s num 1.000 calls 3.00
+  step   60 reward 0.7350 V 0.632 ev +0.959/+0.960 adv -0.000+-0.034 clip 0.000 tok 337 |g| 0.004 22.1s num 1.000 calls 3.00
+  step   61 reward 0.7212 V 0.631 ev +0.964/+0.966 adv -0.001+-0.031 clip 0.002 tok 336 |g| 0.001 21.5s num 1.000 calls 3.00
+  step   62 reward 0.8650 V 0.631 ev +0.941/+0.945 adv +0.005+-0.038 clip 0.000 tok 336 |g| 0.004 21.5s num 1.000 calls 3.00
+  step   63 reward 0.7875 V 0.631 ev +0.956/+0.958 adv +0.000+-0.034 clip 0.001 tok 337 |g| 0.004 22.0s num 1.000 calls 3.00
+  step   64 reward 0.8213 V 0.631 ev +0.945/+0.947 adv +0.005+-0.036 clip 0.001 tok 333 |g| 0.002 21.3s num 1.000 calls 3.00
+  step   65 reward 0.7800 V 0.631 ev +0.958/+0.959 adv +0.001+-0.033 clip 0.000 tok 337 |g| 0.001 21.5s num 1.000 calls 3.00
+  step   66 reward 0.8262 V 0.633 ev +0.957/+0.959 adv +0.002+-0.033 clip 0.001 tok 339 |g| 0.003 21.9s num 1.000 calls 3.00
+  step   67 reward 0.8475 V 0.633 ev +0.944/+0.947 adv +0.007+-0.035 clip 0.000 tok 337 |g| 0.002 21.8s num 1.000 calls 3.00
+  step   68 reward 0.6613 V 0.631 ev +0.966/+0.967 adv -0.006+-0.032 clip 0.001 tok 340 |g| 0.002 21.6s num 1.000 calls 3.00
+  step   69 reward 0.7575 V 0.633 ev +0.958/+0.959 adv +0.002+-0.033 clip 0.001 tok 334 |g| 0.001 21.6s num 1.000 calls 3.00
+  step   70 reward 0.8525 V 0.633 ev +0.944/+0.947 adv +0.007+-0.035 clip 0.001 tok 335 |g| 0.002 21.7s num 1.000 calls 3.00
+  step   71 reward 0.7562 V 0.634 ev +0.953/+0.954 adv +0.001+-0.034 clip 0.000 tok 336 |g| 0.006 21.4s num 1.000 calls 3.00
+  step   72 reward 0.7662 V 0.633 ev +0.959/+0.960 adv +0.000+-0.032 clip 0.001 tok 337 |g| 0.001 21.9s num 1.000 calls 3.00
+  step   73 reward 0.6737 V 0.632 ev +0.971/+0.973 adv -0.004+-0.029 clip 0.000 tok 336 |g| 0.002 21.8s num 1.000 calls 3.00
+  step   74 reward 0.6150 V 0.633 ev +0.882/+0.884 adv -0.006+-0.039 clip 0.001 tok 373 |g| 0.006 34.4s num 0.875 calls 3.38
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @75   reward 0.7493 cause 0.445 flags 0.898 EM 0.290 valid 1.000 numeric 1.000 tool 1.000
+  step   75 reward 0.7288 V 0.634 ev +0.968/+0.968 adv -0.000+-0.029 clip 0.000 tok 335 |g| 0.001 21.4s num 1.000 calls 3.00
+  step   76 reward 0.8262 V 0.635 ev +0.948/+0.950 adv +0.007+-0.034 clip 0.000 tok 332 |g| 0.002 21.6s num 1.000 calls 3.00
+  step   77 reward 0.7800 V 0.634 ev +0.955/+0.956 adv +0.001+-0.033 clip 0.000 tok 337 |g| 0.004 21.8s num 1.000 calls 3.00
+  step   78 reward 0.7162 V 0.634 ev +0.962/+0.963 adv -0.001+-0.032 clip 0.000 tok 336 |g| 0.004 21.7s num 1.000 calls 3.00
+  step   79 reward 0.8262 V 0.636 ev +0.948/+0.949 adv +0.003+-0.034 clip 0.001 tok 366 |g| 0.001 31.2s num 1.000 calls 3.25
+  step   80 reward 0.7612 V 0.636 ev +0.961/+0.962 adv +0.000+-0.031 clip 0.000 tok 335 |g| 0.001 21.6s num 1.000 calls 3.00
+  step   81 reward 0.6950 V 0.635 ev +0.964/+0.965 adv -0.002+-0.031 clip 0.000 tok 337 |g| 0.005 21.4s num 1.000 calls 3.00
+  step   82 reward 0.7525 V 0.634 ev +0.965/+0.966 adv -0.000+-0.030 clip 0.000 tok 335 |g| 0.002 21.6s num 1.000 calls 3.00
+  step   83 reward 0.7662 V 0.635 ev +0.961/+0.962 adv +0.000+-0.031 clip 0.001 tok 340 |g| 0.002 21.6s num 1.000 calls 3.00
+  step   84 reward 0.6875 V 0.634 ev +0.968/+0.969 adv -0.004+-0.030 clip 0.000 tok 336 |g| 0.003 21.6s num 1.000 calls 3.00
+  step   85 reward 0.6850 V 0.632 ev +0.962/+0.963 adv -0.003+-0.032 clip 0.000 tok 334 |g| 0.001 21.3s num 1.000 calls 3.00
+  step   86 reward 0.6575 V 0.637 ev +0.972/+0.972 adv -0.004+-0.029 clip 0.000 tok 336 |g| 0.009 21.6s num 1.000 calls 3.00
+  step   87 reward 0.6700 V 0.634 ev +0.890/+0.894 adv -0.004+-0.041 clip 0.000 tok 341 |g| 0.003 24.2s num 0.875 calls 3.12
+  step   88 reward 0.7975 V 0.635 ev +0.958/+0.959 adv +0.003+-0.031 clip 0.000 tok 334 |g| 0.002 21.4s num 1.000 calls 3.00
+  step   89 reward 0.7162 V 0.636 ev +0.966/+0.966 adv -0.002+-0.030 clip 0.001 tok 338 |g| 0.004 21.5s num 1.000 calls 3.00
+  step   90 reward 0.7850 V 0.634 ev +0.958/+0.958 adv +0.003+-0.032 clip 0.001 tok 337 |g| 0.002 21.8s num 1.000 calls 3.00
+  step   91 reward 0.6175 V 0.635 ev +0.969/+0.971 adv -0.007+-0.031 clip 0.000 tok 342 |g| 0.009 21.7s num 1.000 calls 3.00
+  step   92 reward 0.8163 V 0.634 ev +0.954/+0.955 adv +0.003+-0.032 clip 0.000 tok 336 |g| 0.002 21.6s num 1.000 calls 3.00
+  step   93 reward 0.7425 V 0.635 ev +0.968/+0.968 adv -0.001+-0.029 clip 0.003 tok 342 |g| 0.001 22.8s num 1.000 calls 3.00
+  step   94 reward 0.6275 V 0.635 ev +0.974/+0.976 adv -0.006+-0.029 clip 0.004 tok 339 |g| 0.003 21.6s num 1.000 calls 3.00
+  step   95 reward 0.7850 V 0.634 ev +0.964/+0.965 adv +0.001+-0.030 clip 0.002 tok 340 |g| 0.003 21.7s num 1.000 calls 3.00
+  step   96 reward 0.7562 V 0.634 ev +0.958/+0.959 adv -0.000+-0.031 clip 0.000 tok 336 |g| 0.003 22.0s num 1.000 calls 3.00
+  step   97 reward 0.5500 V 0.633 ev +0.921/+0.924 adv -0.012+-0.039 clip 0.001 tok 341 |g| 0.005 24.3s num 0.875 calls 3.12
+  step   98 reward 0.7650 V 0.634 ev +0.933/+0.935 adv +0.001+-0.035 clip 0.001 tok 368 |g| 0.005 32.4s num 0.875 calls 3.38
+  step   99 reward 0.6437 V 0.632 ev +0.972/+0.973 adv -0.006+-0.029 clip 0.000 tok 341 |g| 0.003 21.9s num 1.000 calls 3.00
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @100  reward 0.7702 cause 0.485 flags 0.902 EM 0.310 valid 1.000 numeric 1.000 tool 1.000
+  step  100 reward 0.6850 V 0.632 ev +0.968/+0.968 adv -0.004+-0.030 clip 0.001 tok 340 |g| 0.004 21.8s num 1.000 calls 3.00
+  step  101 reward 0.7562 V 0.631 ev +0.962/+0.962 adv -0.001+-0.031 clip 0.001 tok 339 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  102 reward 0.6900 V 0.632 ev +0.964/+0.964 adv -0.001+-0.030 clip 0.002 tok 338 |g| 0.003 21.5s num 1.000 calls 3.00
+  step  103 reward 0.7467 V 0.631 ev +0.963/+0.963 adv -0.002+-0.030 clip 0.002 tok 336 |g| 0.004 22.0s num 0.958 calls 3.00
+  step  104 reward 0.7162 V 0.630 ev +0.967/+0.967 adv -0.003+-0.030 clip 0.002 tok 336 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  105 reward 0.8875 V 0.631 ev +0.936/+0.938 adv +0.006+-0.037 clip 0.001 tok 339 |g| 0.004 21.5s num 1.000 calls 3.00
+  step  106 reward 0.6979 V 0.629 ev +0.949/+0.950 adv -0.001+-0.034 clip 0.002 tok 366 |g| 0.007 31.6s num 0.958 calls 3.38
+  step  107 reward 0.7087 V 0.630 ev +0.966/+0.967 adv -0.004+-0.029 clip 0.001 tok 338 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  108 reward 0.7154 V 0.629 ev +0.949/+0.950 adv -0.001+-0.034 clip 0.002 tok 362 |g| 0.010 32.6s num 0.958 calls 3.38
+  step  109 reward 0.8762 V 0.632 ev +0.948/+0.949 adv +0.008+-0.033 clip 0.001 tok 338 |g| 0.002 21.8s num 1.000 calls 3.00
+  step  110 reward 0.8712 V 0.630 ev +0.942/+0.944 adv +0.007+-0.034 clip 0.001 tok 337 |g| 0.005 22.0s num 1.000 calls 3.00
+  step  111 reward 0.6925 V 0.629 ev +0.968/+0.968 adv -0.003+-0.029 clip 0.001 tok 340 |g| 0.006 22.0s num 1.000 calls 3.00
+  step  112 reward 0.8475 V 0.631 ev +0.939/+0.942 adv +0.005+-0.035 clip 0.002 tok 340 |g| 0.006 21.7s num 1.000 calls 3.00
+  step  113 reward 0.7762 V 0.628 ev +0.960/+0.961 adv +0.001+-0.030 clip 0.001 tok 339 |g| 0.003 21.7s num 1.000 calls 3.00
+  step  114 reward 0.8287 V 0.631 ev +0.954/+0.955 adv +0.005+-0.032 clip 0.000 tok 335 |g| 0.004 21.5s num 1.000 calls 3.00
+  step  115 reward 0.7325 V 0.628 ev +0.959/+0.959 adv -0.002+-0.031 clip 0.002 tok 336 |g| 0.004 21.6s num 1.000 calls 3.00
+  step  116 reward 0.7229 V 0.631 ev +0.964/+0.964 adv -0.003+-0.030 clip 0.002 tok 338 |g| 0.004 22.8s num 0.958 calls 3.00
+  step  117 reward 0.7837 V 0.629 ev +0.960/+0.961 adv +0.003+-0.030 clip 0.000 tok 340 |g| 0.002 21.8s num 1.000 calls 3.00
+  step  118 reward 0.7662 V 0.630 ev +0.959/+0.960 adv +0.000+-0.030 clip 0.001 tok 336 |g| 0.002 21.8s num 1.000 calls 3.00
+  step  119 reward 0.7712 V 0.631 ev +0.959/+0.960 adv +0.001+-0.030 clip 0.001 tok 336 |g| 0.004 21.6s num 1.000 calls 3.00
+  step  120 reward 0.7762 V 0.629 ev +0.960/+0.961 adv -0.000+-0.030 clip 0.001 tok 340 |g| 0.004 22.1s num 1.000 calls 3.00
+  step  121 reward 0.8575 V 0.631 ev +0.951/+0.952 adv +0.006+-0.032 clip 0.001 tok 337 |g| 0.005 21.8s num 1.000 calls 3.00
+  step  122 reward 0.6717 V 0.630 ev +0.925/+0.927 adv -0.004+-0.037 clip 0.002 tok 368 |g| 0.003 32.7s num 0.833 calls 3.38
+  step  123 reward 0.7062 V 0.629 ev +0.962/+0.963 adv -0.002+-0.030 clip 0.001 tok 335 |g| 0.002 21.5s num 1.000 calls 3.00
+  step  124 reward 0.7900 V 0.633 ev +0.948/+0.949 adv +0.004+-0.034 clip 0.000 tok 338 |g| 0.002 21.5s num 1.000 calls 3.00
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @125  reward 0.8264 cause 0.650 flags 0.888 EM 0.485 valid 1.000 numeric 1.000 tool 1.000
+  step  125 reward 0.8850 V 0.631 ev +0.941/+0.943 adv +0.007+-0.034 clip 0.000 tok 339 |g| 0.006 21.8s num 1.000 calls 3.00
+  step  126 reward 0.7600 V 0.631 ev +0.870/+0.873 adv -0.000+-0.041 clip 0.001 tok 344 |g| 0.004 24.8s num 0.875 calls 3.00
+  step  127 reward 0.5262 V 0.631 ev +0.911/+0.914 adv -0.012+-0.037 clip 0.001 tok 374 |g| 0.006 34.5s num 0.875 calls 3.38
+  step  128 reward 0.7325 V 0.632 ev +0.968/+0.969 adv -0.002+-0.027 clip 0.001 tok 340 |g| 0.002 21.7s num 1.000 calls 3.00
+  step  129 reward 0.9387 V 0.633 ev +0.953/+0.957 adv +0.010+-0.029 clip 0.001 tok 340 |g| 0.002 22.8s num 1.000 calls 3.00
+  step  130 reward 0.9500 V 0.632 ev +0.942/+0.944 adv +0.011+-0.032 clip 0.000 tok 337 |g| 0.002 21.4s num 1.000 calls 3.00
+  step  131 reward 0.7112 V 0.632 ev +0.963/+0.964 adv -0.003+-0.030 clip 0.000 tok 338 |g| 0.004 21.6s num 1.000 calls 3.00
+  step  132 reward 0.7850 V 0.634 ev +0.954/+0.955 adv +0.001+-0.031 clip 0.001 tok 340 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  133 reward 0.8471 V 0.634 ev +0.938/+0.939 adv +0.006+-0.034 clip 0.002 tok 342 |g| 0.005 23.1s num 0.917 calls 3.00
+  step  134 reward 0.8400 V 0.632 ev +0.940/+0.941 adv +0.006+-0.034 clip 0.001 tok 337 |g| 0.008 21.6s num 1.000 calls 3.00
+  step  135 reward 0.8350 V 0.633 ev +0.952/+0.952 adv +0.004+-0.031 clip 0.000 tok 340 |g| 0.003 21.5s num 1.000 calls 3.00
+  step  136 reward 0.8387 V 0.636 ev +0.954/+0.955 adv +0.005+-0.030 clip 0.000 tok 338 |g| 0.001 21.8s num 1.000 calls 3.00
+  step  137 reward 0.8900 V 0.633 ev +0.950/+0.951 adv +0.008+-0.030 clip 0.001 tok 339 |g| 0.004 21.5s num 1.000 calls 3.00
+  step  138 reward 0.6512 V 0.633 ev +0.953/+0.954 adv -0.008+-0.034 clip 0.001 tok 337 |g| 0.002 21.6s num 1.000 calls 3.00
+  step  139 reward 0.8975 V 0.635 ev +0.949/+0.951 adv +0.009+-0.031 clip 0.001 tok 338 |g| 0.001 21.8s num 1.000 calls 3.00
+  step  140 reward 0.7150 V 0.633 ev +0.951/+0.952 adv -0.004+-0.033 clip 0.002 tok 340 |g| 0.007 21.8s num 1.000 calls 3.00
+  step  141 reward 0.8887 V 0.636 ev +0.960/+0.962 adv +0.007+-0.028 clip 0.001 tok 339 |g| 0.000 21.8s num 1.000 calls 3.00
+  step  142 reward 0.9283 V 0.634 ev +0.926/+0.929 adv +0.009+-0.032 clip 0.000 tok 369 |g| 0.006 32.0s num 0.917 calls 3.38
+  step  143 reward 0.9213 V 0.636 ev +0.950/+0.952 adv +0.009+-0.030 clip 0.001 tok 339 |g| 0.010 21.5s num 1.000 calls 3.00
+  step  144 reward 0.9213 V 0.635 ev +0.944/+0.946 adv +0.010+-0.031 clip 0.000 tok 338 |g| 0.000 21.6s num 1.000 calls 3.00
+  step  145 reward 0.7600 V 0.635 ev +0.865/+0.870 adv +0.001+-0.038 clip 0.000 tok 376 |g| 0.002 34.6s num 0.875 calls 3.38
+  step  146 reward 0.9075 V 0.637 ev +0.961/+0.963 adv +0.008+-0.027 clip 0.000 tok 335 |g| 0.003 21.6s num 1.000 calls 3.00
+  step  147 reward 0.7950 V 0.637 ev +0.947/+0.948 adv +0.003+-0.033 clip 0.001 tok 338 |g| 0.001 21.8s num 1.000 calls 3.00
+  step  148 reward 0.6813 V 0.636 ev +0.929/+0.930 adv -0.003+-0.037 clip 0.002 tok 348 |g| 0.012 25.5s num 0.875 calls 3.12
+  step  149 reward 0.8350 V 0.638 ev +0.949/+0.950 adv +0.006+-0.031 clip 0.000 tok 341 |g| 0.001 21.5s num 1.000 calls 3.00
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @150  reward 0.8664 cause 0.750 flags 0.902 EM 0.560 valid 1.000 numeric 1.000 tool 1.000
+  step  150 reward 0.8213 V 0.637 ev +0.948/+0.949 adv +0.005+-0.032 clip 0.000 tok 338 |g| 0.002 22.0s num 1.000 calls 3.00
+  step  151 reward 0.9213 V 0.639 ev +0.952/+0.954 adv +0.010+-0.029 clip 0.000 tok 337 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  152 reward 0.8250 V 0.638 ev +0.946/+0.947 adv +0.002+-0.031 clip 0.001 tok 338 |g| 0.002 21.9s num 1.000 calls 3.00
+  step  153 reward 0.9075 V 0.640 ev +0.949/+0.952 adv +0.009+-0.029 clip 0.001 tok 338 |g| 0.002 21.5s num 1.000 calls 3.00
+  step  154 reward 0.8350 V 0.638 ev +0.946/+0.947 adv +0.004+-0.031 clip 0.000 tok 342 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  155 reward 0.8829 V 0.639 ev +0.953/+0.953 adv +0.005+-0.028 clip 0.001 tok 337 |g| 0.004 21.8s num 0.958 calls 3.00
+  step  156 reward 0.7787 V 0.641 ev +0.955/+0.956 adv +0.000+-0.030 clip 0.002 tok 337 |g| 0.001 21.5s num 1.000 calls 3.00
+  step  157 reward 0.8712 V 0.640 ev +0.947/+0.948 adv +0.006+-0.030 clip 0.001 tok 340 |g| 0.001 21.8s num 1.000 calls 3.00
+  step  158 reward 0.8554 V 0.641 ev +0.956/+0.957 adv +0.004+-0.028 clip 0.000 tok 339 |g| 0.003 22.0s num 0.958 calls 3.00
+  step  159 reward 0.8838 V 0.642 ev +0.959/+0.961 adv +0.008+-0.028 clip 0.000 tok 338 |g| 0.001 21.6s num 1.000 calls 3.00
+  step  160 reward 0.7975 V 0.641 ev +0.958/+0.959 adv +0.001+-0.029 clip 0.001 tok 340 |g| 0.003 21.7s num 1.000 calls 3.00
+  step  161 reward 0.8488 V 0.643 ev +0.946/+0.947 adv +0.005+-0.031 clip 0.001 tok 340 |g| 0.005 21.6s num 1.000 calls 3.00
+  step  162 reward 1.0000 V 0.644 ev +0.951/+0.953 adv +0.015+-0.028 clip 0.000 tok 336 |g| 0.001 21.6s num 1.000 calls 3.00
+  step  163 reward 0.9812 V 0.644 ev +0.963/+0.967 adv +0.011+-0.025 clip 0.000 tok 339 |g| 0.001 21.5s num 1.000 calls 3.00
+  step  164 reward 0.9213 V 0.645 ev +0.954/+0.956 adv +0.007+-0.027 clip 0.001 tok 337 |g| 0.006 21.7s num 1.000 calls 3.00
+  step  165 reward 0.9812 V 0.646 ev +0.947/+0.951 adv +0.015+-0.030 clip 0.001 tok 340 |g| 0.001 21.7s num 1.000 calls 3.00
+  step  166 reward 0.9075 V 0.647 ev +0.956/+0.958 adv +0.008+-0.027 clip 0.001 tok 338 |g| 0.002 21.7s num 1.000 calls 3.00
+  step  167 reward 0.7612 V 0.646 ev +0.950/+0.952 adv -0.001+-0.032 clip 0.001 tok 338 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  168 reward 0.8496 V 0.647 ev +0.961/+0.961 adv +0.001+-0.026 clip 0.001 tok 340 |g| 0.002 21.8s num 0.917 calls 2.75
+  step  169 reward 0.8017 V 0.647 ev +0.942/+0.943 adv +0.003+-0.033 clip 0.001 tok 336 |g| 0.004 21.6s num 0.958 calls 3.00
+  step  170 reward 0.8213 V 0.648 ev +0.949/+0.951 adv +0.003+-0.031 clip 0.001 tok 340 |g| 0.007 21.9s num 1.000 calls 3.00
+  step  171 reward 0.9075 V 0.648 ev +0.959/+0.960 adv +0.008+-0.027 clip 0.000 tok 337 |g| 0.005 21.8s num 1.000 calls 3.00
+  step  172 reward 0.8425 V 0.649 ev +0.953/+0.953 adv +0.004+-0.030 clip 0.002 tok 342 |g| 0.001 22.6s num 1.000 calls 3.00
+  step  173 reward 0.8879 V 0.650 ev +0.955/+0.956 adv +0.005+-0.027 clip 0.001 tok 337 |g| 0.003 21.8s num 0.958 calls 3.00
+  step  174 reward 0.8262 V 0.650 ev +0.913/+0.914 adv +0.004+-0.031 clip 0.001 tok 374 |g| 0.005 34.3s num 0.875 calls 3.38
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @175  reward 0.8903 cause 0.810 flags 0.925 EM 0.635 valid 1.000 numeric 1.000 tool 1.000
+  step  175 reward 0.8887 V 0.652 ev +0.961/+0.963 adv +0.006+-0.026 clip 0.000 tok 341 |g| 0.001 22.0s num 1.000 calls 3.00
+  step  176 reward 0.9625 V 0.651 ev +0.962/+0.964 adv +0.012+-0.025 clip 0.000 tok 338 |g| 0.001 21.5s num 1.000 calls 3.00
+  step  177 reward 0.9075 V 0.653 ev +0.967/+0.968 adv +0.007+-0.024 clip 0.000 tok 339 |g| 0.002 21.6s num 1.000 calls 3.00
+  step  178 reward 0.9213 V 0.652 ev +0.948/+0.950 adv +0.009+-0.029 clip 0.001 tok 340 |g| 0.001 21.9s num 1.000 calls 3.00
+  step  179 reward 0.9213 V 0.655 ev +0.961/+0.963 adv +0.008+-0.025 clip 0.002 tok 334 |g| 0.003 21.8s num 1.000 calls 3.00
+  step  180 reward 0.9400 V 0.654 ev +0.959/+0.960 adv +0.010+-0.026 clip 0.001 tok 339 |g| 0.002 21.8s num 1.000 calls 3.00
+  step  181 reward 0.8200 V 0.656 ev +0.950/+0.951 adv +0.002+-0.030 clip 0.001 tok 337 |g| 0.003 21.6s num 1.000 calls 3.00
+  step  182 reward 0.9350 V 0.656 ev +0.956/+0.957 adv +0.008+-0.026 clip 0.002 tok 340 |g| 0.001 21.7s num 1.000 calls 3.00
+  step  183 reward 0.8525 V 0.657 ev +0.954/+0.955 adv +0.004+-0.029 clip 0.001 tok 337 |g| 0.001 21.8s num 1.000 calls 3.00
+  step  184 reward 0.9263 V 0.657 ev +0.964/+0.965 adv +0.009+-0.025 clip 0.001 tok 340 |g| 0.001 21.6s num 1.000 calls 3.00
+  step  185 reward 0.9812 V 0.658 ev +0.970/+0.971 adv +0.011+-0.023 clip 0.001 tok 338 |g| 0.001 21.9s num 1.000 calls 3.00
+  step  186 reward 0.8525 V 0.659 ev +0.960/+0.961 adv +0.003+-0.027 clip 0.002 tok 336 |g| 0.003 21.6s num 1.000 calls 3.00
+  step  187 reward 0.9525 V 0.660 ev +0.971/+0.972 adv +0.009+-0.023 clip 0.001 tok 336 |g| 0.002 21.8s num 1.000 calls 3.00
+  step  188 reward 0.8658 V 0.659 ev +0.945/+0.946 adv +0.006+-0.030 clip 0.002 tok 340 |g| 0.006 22.7s num 0.917 calls 3.00
+  step  189 reward 0.9025 V 0.660 ev +0.959/+0.960 adv +0.005+-0.027 clip 0.001 tok 335 |g| 0.002 22.0s num 1.000 calls 3.00
+  step  190 reward 0.9950 V 0.661 ev +0.966/+0.967 adv +0.014+-0.024 clip 0.001 tok 340 |g| 0.001 21.9s num 1.000 calls 3.00
+  step  191 reward 0.8425 V 0.661 ev +0.955/+0.956 adv +0.002+-0.028 clip 0.002 tok 338 |g| 0.004 21.8s num 1.000 calls 3.00
+  step  192 reward 0.9062 V 0.663 ev +0.946/+0.947 adv +0.008+-0.030 clip 0.005 tok 337 |g| 0.002 22.2s num 1.000 calls 3.00
+  step  193 reward 0.8375 V 0.662 ev +0.873/+0.877 adv +0.002+-0.033 clip 0.001 tok 339 |g| 0.005 24.2s num 0.875 calls 3.12
+  step  194 reward 0.9437 V 0.664 ev +0.963/+0.965 adv +0.012+-0.027 clip 0.002 tok 337 |g| 0.002 21.7s num 1.000 calls 3.00
+  step  195 reward 0.8575 V 0.664 ev +0.963/+0.964 adv +0.003+-0.026 clip 0.000 tok 341 |g| 0.002 21.6s num 1.000 calls 3.00
+  step  196 reward 0.8063 V 0.664 ev +0.883/+0.886 adv +0.001+-0.035 clip 0.002 tok 340 |g| 0.004 23.1s num 0.875 calls 3.00
+  step  197 reward 0.8371 V 0.665 ev +0.956/+0.957 adv +0.002+-0.028 clip 0.000 tok 337 |g| 0.002 21.6s num 0.917 calls 3.00
+  step  198 reward 0.8900 V 0.666 ev +0.959/+0.960 adv +0.007+-0.026 clip 0.001 tok 340 |g| 0.002 21.8s num 1.000 calls 3.00
+  step  199 reward 0.7362 V 0.666 ev +0.926/+0.927 adv -0.001+-0.036 clip 0.003 tok 366 |g| 0.003 32.3s num 0.875 calls 3.38
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @200  reward 0.8959 cause 0.825 flags 0.928 EM 0.635 valid 1.000 numeric 1.000 tool 1.000
+
+wrote runs/ppo-tool-joint-seed-200-g0999
