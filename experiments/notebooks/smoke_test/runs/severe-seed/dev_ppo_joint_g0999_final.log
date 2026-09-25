@@ -1,0 +1,7 @@
+CUDA allocator capped at 13000 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  52%|█████▏    | 161/311 [00:00<00:00, 1608.74it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1986.47it/s]
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+  dev: EM 0.635 numeric 1.000 flags 0.928 cause 0.825 schema 1.000 | tool use 1.000 calls 3.00 errors 0.000
+  calls, teacher-forced: entropy 0.003662 NLL 0.013663 over 48119 tokens
+  labels: severe 0/200 (0 right, answer on 37) | organic_fouling 29/200 (29 right, answer on 29)
+  wrote runs/severe-seed/dev_ppo_joint_g0999_final.json

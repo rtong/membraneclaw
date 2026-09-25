@@ -1,0 +1,1 @@
+{"step": 0, "reward": 0.97185, "exact_match": 0.855, "validity_gate": 1.0, "schema_ok": 1.0, "cause_acc": 0.95, "flags_acc": 0.955, "numeric_acc": 0.99, "action_acc": 0.955, "completion_tokens": 337.925, "tool_use_rate": 1.0, "tool_calls_mean": 3.0, "tool_error_rate": 0.0, "tool_unanswered": 0.0, "tool_env_tokens": 39.075, "truncated_rate": 0.0}

@@ -1,0 +1,52 @@
+CUDA allocator capped at 13700 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|████▉     | 154/311 [00:00<00:00, 1538.17it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1907.82it/s]
+  chat template honours enable_thinking; set to False
+Qwen/Qwen3-1.7B | 200 steps | 8x1=8 seq/step | gamma=1.0 per token | lam=0.95 | cuda
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+/home/bayan/MembraneClaw/experiments/membrane_grpo/.venv/lib/python3.13/site-packages/peft/utils/save_and_load.py:438: UserWarning: Could not find a config file in Qwen/Qwen3-1.7B - will assume that the vocabulary was not modified.
+  warnings.warn(
+    eval @0    reward 0.6868 cause 0.335 flags 0.697 EM 0.150 valid 1.000 numeric 1.000 tool 1.000
+  step    0 reward 0.6387 V 0.684 ev +0.000/+0.597 adv -0.003+-0.108 clip 0.002 tok 334 |g| 0.003 36.9s num 1.000 calls 3.00
+  step    1 reward 0.7050 V 0.685 ev +0.532/+0.753 adv +0.001+-0.083 clip 0.001 tok 344 |g| 0.003 41.3s num 1.000 calls 3.12
+  step    2 reward 0.6650 V 0.685 ev +0.698/+0.808 adv -0.001+-0.079 clip 0.002 tok 335 |g| 0.006 37.2s num 1.000 calls 3.00
+  step    3 reward 0.5725 V 0.685 ev +0.684/+0.742 adv -0.004+-0.076 clip 0.003 tok 371 |g| 0.007 68.9s num 0.875 calls 3.38
+  step    4 reward 0.5287 V 0.681 ev +0.742/+0.782 adv -0.006+-0.076 clip 0.002 tok 375 |g| 0.014 58.8s num 0.875 calls 3.38
+  step    5 reward 0.7488 V 0.684 ev +0.845/+0.874 adv +0.004+-0.060 clip 0.001 tok 333 |g| 0.003 35.6s num 1.000 calls 3.00
+  step    6 reward 0.7225 V 0.683 ev +0.871/+0.891 adv +0.003+-0.057 clip 0.000 tok 332 |g| 0.009 36.5s num 1.000 calls 3.00
+  step    7 reward 0.6062 V 0.683 ev +0.873/+0.894 adv -0.001+-0.061 clip 0.001 tok 335 |g| 0.006 36.8s num 1.000 calls 3.00
+  step    8 reward 0.6750 V 0.683 ev +0.884/+0.899 adv -0.001+-0.057 clip 0.002 tok 336 |g| 0.006 37.4s num 1.000 calls 3.00
+  step    9 reward 0.7150 V 0.683 ev +0.891/+0.904 adv +0.002+-0.055 clip 0.001 tok 334 |g| 0.002 37.4s num 1.000 calls 3.00
+  step   10 reward 0.5687 V 0.682 ev +0.896/+0.910 adv -0.005+-0.059 clip 0.002 tok 336 |g| 0.005 36.4s num 1.000 calls 3.00
+  step   11 reward 0.5862 V 0.681 ev +0.908/+0.919 adv -0.004+-0.056 clip 0.004 tok 338 |g| 0.006 36.3s num 1.000 calls 3.00
+  step   12 reward 0.6933 V 0.681 ev +0.912/+0.919 adv +0.003+-0.051 clip 0.004 tok 337 |g| 0.007 37.3s num 0.917 calls 2.88
+  step   13 reward 0.7137 V 0.681 ev +0.927/+0.936 adv +0.004+-0.048 clip 0.001 tok 338 |g| 0.005 36.9s num 1.000 calls 3.00
+  step   14 reward 0.7662 V 0.682 ev +0.929/+0.935 adv +0.007+-0.045 clip 0.001 tok 340 |g| 0.010 38.3s num 1.000 calls 3.00
+  step   15 reward 0.5775 V 0.681 ev +0.930/+0.938 adv -0.003+-0.050 clip 0.002 tok 335 |g| 0.012 36.8s num 1.000 calls 3.00
+  step   16 reward 0.6262 V 0.681 ev +0.932/+0.938 adv -0.000+-0.049 clip 0.002 tok 335 |g| 0.010 37.9s num 1.000 calls 3.00
+  step   17 reward 0.7129 V 0.681 ev +0.939/+0.943 adv +0.004+-0.044 clip 0.003 tok 337 |g| 0.007 39.5s num 0.958 calls 3.00
+  step   18 reward 0.6512 V 0.681 ev +0.917/+0.922 adv -0.000+-0.050 clip 0.003 tok 336 |g| 0.010 38.5s num 0.875 calls 3.00
+  step   19 reward 0.7196 V 0.680 ev +0.940/+0.943 adv +0.006+-0.043 clip 0.002 tok 328 |g| 0.007 38.3s num 0.917 calls 3.00
+  step   20 reward 0.7562 V 0.680 ev +0.945/+0.947 adv +0.007+-0.042 clip 0.001 tok 336 |g| 0.009 37.8s num 1.000 calls 3.00
+  step   21 reward 0.7279 V 0.681 ev +0.938/+0.941 adv +0.005+-0.044 clip 0.003 tok 342 |g| 0.008 38.4s num 0.958 calls 3.00
+  step   22 reward 0.7087 V 0.681 ev +0.943/+0.946 adv +0.003+-0.044 clip 0.000 tok 338 |g| 0.009 39.9s num 1.000 calls 3.00
+  step   23 reward 0.8262 V 0.681 ev +0.945/+0.947 adv +0.009+-0.041 clip 0.001 tok 337 |g| 0.006 39.2s num 1.000 calls 3.00
+  step   24 reward 0.7137 V 0.682 ev +0.940/+0.942 adv +0.003+-0.045 clip 0.002 tok 337 |g| 0.010 37.8s num 1.000 calls 3.00
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+    eval @25   reward 0.7274 cause 0.415 flags 0.842 EM 0.140 valid 1.000 numeric 0.998 tool 1.000
+  step   25 reward 0.7079 V 0.682 ev +0.933/+0.939 adv +0.004+-0.046 clip 0.001 tok 334 |g| 0.012 39.6s num 0.958 calls 3.00
+  step   26 reward 0.6387 V 0.682 ev +0.874/+0.876 adv -0.000+-0.055 clip 0.002 tok 328 |g| 0.010 41.1s num 0.875 calls 2.88
+  step   27 reward 0.6229 V 0.682 ev +0.949/+0.954 adv -0.002+-0.044 clip 0.003 tok 336 |g| 0.008 40.3s num 0.958 calls 3.00
+  step   28 reward 0.6062 V 0.682 ev +0.955/+0.959 adv -0.000+-0.042 clip 0.002 tok 337 |g| 0.005 39.3s num 1.000 calls 3.00
+  step   29 reward 0.6654 V 0.682 ev +0.952/+0.956 adv +0.003+-0.042 clip 0.002 tok 335 |g| 0.007 39.5s num 0.958 calls 3.00
+  step   30 reward 0.6200 V 0.683 ev +0.956/+0.960 adv +0.000+-0.042 clip 0.001 tok 343 |g| 0.007 39.7s num 1.000 calls 3.00
+  step   31 reward 0.5862 V 0.683 ev +0.893/+0.897 adv -0.002+-0.047 clip 0.003 tok 377 |g| 0.006 81.0s num 0.875 calls 3.38
+  step   32 reward 0.6663 V 0.682 ev +0.956/+0.959 adv +0.002+-0.041 clip 0.001 tok 338 |g| 0.006 38.4s num 1.000 calls 3.00
+  step   33 reward 0.6808 V 0.683 ev +0.942/+0.945 adv +0.001+-0.045 clip 0.002 tok 344 |g| 0.009 41.2s num 0.917 calls 3.00
+  step   34 reward 0.4971 V 0.683 ev +0.889/+0.893 adv -0.008+-0.054 clip 0.002 tok 383 |g| 0.007 59.4s num 0.792 calls 3.50
+  step   35 reward 0.5312 V 0.683 ev +0.912/+0.915 adv -0.005+-0.049 clip 0.002 tok 356 |g| 0.008 47.2s num 0.875 calls 3.12
+  step   36 reward 0.5442 V 0.685 ev +0.858/+0.862 adv -0.002+-0.054 clip 0.003 tok 410 |g| 0.009 82.3s num 0.708 calls 3.75
+  step   37 reward 0.5696 V 0.685 ev +0.875/+0.879 adv -0.005+-0.056 clip 0.003 tok 353 |g| 0.008 69.3s num 0.792 calls 3.12
+STOPPED at step 37: sampled numeric_acc over the last 10 steps 0.892 < 0.9; adapter-stopped/ written
+
+wrote runs/ppo-tool-severe-seed-200
+NOTE: best held-out reward 0.7274 was at step 25, not at the end. adapter-best/ holds that policy; adapter/ holds the final one.

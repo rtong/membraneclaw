@@ -1,0 +1,7 @@
+CUDA allocator capped at 10500 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  49%|████▉     | 153/311 [00:00<00:00, 1525.23it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1812.52it/s]
+  16/600 cases  32/600 cases  48/600 cases  64/600 cases  80/600 cases  96/600 cases  112/600 cases  128/600 cases  144/600 cases  160/600 cases  176/600 cases  192/600 cases  208/600 cases  224/600 cases  240/600 cases  256/600 cases  272/600 cases  288/600 cases  304/600 cases  320/600 cases  336/600 cases  352/600 cases  368/600 cases  384/600 cases  400/600 cases  416/600 cases  432/600 cases  448/600 cases  464/600 cases  480/600 cases  496/600 cases  512/600 cases  528/600 cases  544/600 cases  560/600 cases  576/600 cases  592/600 cases  600/600 cases
+  train: EM 0.057 numeric 0.993 flags 0.566 cause 0.385 schema 0.995 | tool use 1.000 calls 3.00 errors 0.002
+  calls, teacher-forced: entropy 0.000227 NLL 0.000020 over 36174 tokens
+  labels: severe 78/600 (21 right, answer on 108) | organic_fouling 96/600 (43 right, answer on 80)
+  wrote runs/severe-seed/probe_slots_epoch3.json

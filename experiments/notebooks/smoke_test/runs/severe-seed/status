@@ -1,0 +1,72 @@
+sft exit 0
+probe epoch0 exit 0
+probe epoch1 exit 1
+queue stopped after probe epoch1 OOM; dev epoch1 left running (pid 3170197); rest in run14_probe_r2.sh
+dev epoch1 wrote
+r2 stopped during probe epoch1: dev epoch1 failed gate (c) -- the seed repeats the calls instead of answering
+anchor sft exit 0
+dev anchor_epoch1 exit 0
+dev anchor_epoch2 exit 0
+dev anchor_epoch3 exit 0
+probe anchor_epoch1 exit 0
+anchor probes stopped at epoch2: epoch1 already too heavy at T=1 (sampled numeric 0.688, severe FP 10.6%); doses go lower
+calls sft exit 1
+dev calls_epoch1 exit 1
+calls_epoch1 fails (c); stop
+calls all done
+calls queue relaunched with sft_loss (logits at labelled positions only)
+calls sft exit 0
+dev calls_epoch1 exit 0
+probe calls_epoch1 exit 0
+calls_epoch1: chosen
+calls all done
+ppo g1 start 2026-09-21T21:42:08-07:00
+ppo g1 exit 0
+joint queue start 2026-09-21T22:27:23-07:00: PPO g1 stopped at 37 on sampled numeric; seeding on top of tool-sft-raw loosens the calls
+dev toolsftraw exit 0
+joint sft exit 0
+dev joint_epoch1 exit 0
+joint_epoch1 dev: ok
+probe joint_epoch1 exit 0
+joint_epoch1 probe: fail-b
+dev joint_epoch2 exit 0
+joint_epoch2 dev: ok
+probe joint_epoch2 exit 0
+joint_epoch2 probe: pass
+joint chosen: epoch2
+joint all done
+ppo joint g1 start 2026-09-22T00:07:44-07:00
+ppo joint g1 criteria (set at step ~25, before step 50): step 40 = calls entropy <= 0.001 and no numeric stop; critic 50-74 ahead of clock on >= 50% of steps (13b: 23/25, 24/25). EM/flags fell 0->25 (0.085->0.055, 0.690->0.562): reported, not gated.
+ppo joint g1 exit 0
+dev ppo_joint_g1_best150 exit 0
+dev 13b_s0_final exit 0
+eval g1 done
+ppo joint gamma 0.99 start 2026-09-22T02:55:59-07:00
+ppo joint gamma 0.99 exit 0
+ppo joint gamma 0.999 start 2026-09-22T03:42:13-07:00
+ppo joint gamma 0.999 exit 0
+dev ppo_joint_g0999_final exit 0
+ppo joint gamma 0.99 stop080 start 2026-09-22T13:00:10-07:00
+g099 stop080 killed at ~step 100: held-out numeric 0.668, EM 0.005 -- collapsed below the 0.90 rule but above 0.80
+ppo joint gamma 0.99 stop080 exit 0
+joint slots sft exit 0
+dev slots_epoch1 exit 0
+slots_epoch1 dev: fail-e
+dev slots_epoch2 exit 0
+slots_epoch2 dev: ok
+probe slots_epoch2 exit 0
+slots_epoch2 probe: fail-b
+dev slots_epoch3 exit 0
+slots_epoch3 dev: ok
+probe slots_epoch3 exit 0
+slots_epoch3 probe: fail-b
+joint slots all done
+ppo severe-credit start 2026-09-22T22:47:05-07:00
+ppo severe-credit exit 0
+dev credit_best125 exit 0
+test credit_best125 exit 0
+holdout_shift credit_best125 exit 0
+test slots_epoch3 (seed only) exit 0
+holdout_shift slots_epoch3 (seed only) exit 0
+ppo severe-credit cont100 start 2026-09-23T03:01:32-07:00
+ppo severe-credit cont100 exit 0

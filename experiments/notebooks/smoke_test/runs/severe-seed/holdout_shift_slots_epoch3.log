@@ -1,0 +1,7 @@
+CUDA allocator capped at 13000 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  46%|████▌     | 143/311 [00:00<00:00, 1422.36it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1971.93it/s]
+  32/50 cases  50/50 cases
+  holdout_shift: EM 0.120 numeric 1.000 flags 0.607 cause 0.460 schema 1.000 | tool use 1.000 calls 3.00 errors 0.000
+  calls, teacher-forced: entropy 0.000230 NLL 0.000021 over 11996 tokens
+  labels: severe 4/50 (4 right, answer on 10) | organic_fouling 10/50 (4 right, answer on 8)
+  wrote runs/severe-seed/holdout_shift_slots_epoch3.json

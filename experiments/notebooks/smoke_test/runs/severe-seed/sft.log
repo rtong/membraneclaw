@@ -1,0 +1,11 @@
+CUDA allocator capped at 13000 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:   4%|▍         | 12/311 [00:00<00:02, 100.91it/s]Loading weights:   7%|▋         | 23/311 [00:00<00:03, 77.34it/s] Loading weights:  11%|█         | 34/311 [00:00<00:03, 88.30it/s]Loading weights:  15%|█▌        | 48/311 [00:00<00:02, 101.29it/s]Loading weights:  19%|█▉        | 60/311 [00:00<00:02, 96.40it/s] Loading weights:  24%|██▍       | 74/311 [00:00<00:02, 102.80it/s]Loading weights:  27%|██▋       | 85/311 [00:00<00:02, 95.97it/s] Loading weights:  79%|███████▉  | 246/311 [00:00<00:00, 500.74it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 312.94it/s]
+  seed set: seed_cases.jsonl, 150 of 387 cases (63 carry a dead label: 32 severe, 35 organic_fouling), 3 epoch(s), lr 0.0001
+  loss on the values of action in the answer turn of the gold tool episode
+  epoch 0: loss 0.0000 -> 0.0345
+/home/bayan/MembraneClaw/experiments/membrane_grpo/.venv/lib/python3.13/site-packages/peft/utils/save_and_load.py:438: UserWarning: Could not find a config file in Qwen/Qwen3-1.7B - will assume that the vocabulary was not modified.
+  warnings.warn(
+  epoch 1: loss 0.0123 -> 0.0670
+  epoch 2: loss 0.0135 -> 0.0489
+  supervised tokens total: 2838 over 450 examples
+  wrote runs/tool-seed-severe-150/adapter and value_head.pt

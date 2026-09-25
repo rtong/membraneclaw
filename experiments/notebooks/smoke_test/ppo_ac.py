@@ -617,6 +617,29 @@ def gold_expressions(record: dict[str, Any]) -> dict[str, str]:
     }
 
 
+def tool_answer_text(results: list[str], answer: dict[str, Any]) -> str:
+    """The answer turn, in the shape the tool seed writes it.
+
+    `runs/tool-sft-raw` writes exactly this on 195 of 200 dev cases (its own
+    values put back in): the JSON in the schema's key order, indent 2, the flags
+    on one line, the three numbers copied from the calculator as it printed them.
+    A seed that supervises one slot of this turn should condition on the text the
+    policy actually produces around it, not on `sft_target`'s sorted dump.
+    """
+    f = answer["flags"]
+    return (
+        "{\n"
+        f'  "normalized_flow_change_pct": {results[0]},\n'
+        f'  "salt_passage_change_pct": {results[1]},\n'
+        f'  "dp_change_pct": {results[2]},\n'
+        f'  "flags": {{"flow": "{f["flow"]}", "salt_passage": "{f["salt_passage"]}", "dp": "{f["dp"]}"}},\n'
+        f'  "stage": "{answer["stage"]}",\n'
+        f'  "root_cause": "{answer["root_cause"]}",\n'
+        f'  "action": "{answer["action"]}"\n'
+        "}"
+    )
+
+
 def tool_call_target(record: dict[str, Any]) -> str:
     """The first assistant turn, as SFT supervises it: three calls and nothing else.
 
@@ -1236,6 +1259,7 @@ def field_credits(
     answer: dict[str, Any],
     weights: Weights,
     flat_scale: float = FLAT_CREDIT_SCALE,
+    severe_scale: float = 1.0,
 ) -> tuple[dict[str, float], float]:
     """Split one completion's reward into per-field credits and a terminal rest.
 
@@ -1280,7 +1304,11 @@ def field_credits(
         **{f"flags.{k}": _flag_credit(k, hit) for k, hit in zip(FLAG_KEYS, flags)},
         "stage": weights.stage * (obj.get("stage") == answer["stage"]),
         "root_cause": weights.root_cause * (obj.get("root_cause") == answer["root_cause"]),
-        "action": weights.action * (obj.get("action") == answer["action"]),
+        # `14`, and the same argument as `_flag_credit`: pay more for the severe
+        # action when the policy gets it right. Its emissions are mostly wrong at
+        # the seed, so the label's average return is negative and PPO deletes it.
+        "action": weights.action * (obj.get("action") == answer["action"])
+        * (severe_scale if answer["action"] == SEVERE_ACTION_NAME else 1.0),
     }
     terminal = weights.format * float(validate(obj).ok)
 
@@ -1394,6 +1422,7 @@ def dense_rewards(
     tokenizer,
     flat_scale: float = FLAT_CREDIT_SCALE,
     call_hits: list[dict[str, int]] | None = None,
+    severe_scale: float = 1.0,
 ) -> torch.Tensor:
     """Per-token rewards that land where each field is written, not at the end.
 
@@ -1430,7 +1459,7 @@ def dense_rewards(
         bounds = [len(tokenizer.decode(ids[: i + 1], skip_special_tokens=True)) for i in range(length)]
 
         try:
-            placed, terminal = field_credits(text, case["answer"], weights, flat_scale)
+            placed, terminal = field_credits(text, case["answer"], weights, flat_scale, severe_scale)
         except (OverflowError, ValueError, TypeError, KeyError):
             placed, terminal = {}, 0.0
 
@@ -1463,7 +1492,7 @@ def gae(
     values: torch.Tensor,
     mask: torch.Tensor,
     *,
-    gamma: float = 1.0,
+    gamma: float | torch.Tensor = 1.0,
     lam: float = 1.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Generalised advantage estimation over the completion span.
@@ -1475,6 +1504,10 @@ def gae(
     Returns `(advantages, returns)`, both zero outside the mask. `returns` is
     the GAE return `A_t + V(s_t)`, which is what the critic regresses against.
 
+    `gamma` is a scalar, applied on every step, or a (batch, tokens) tensor
+    whose column t discounts the step from s_t to s_{t+1} -- which is how a
+    discount applied per turn reaches it (`turn_discounts`).
+
     The bootstrap past the last active token is zero, not `V(s_L)`: the episode
     genuinely ends there. Bootstrapping off a padded position would let the
     critic's own error leak in as if it were future reward.
@@ -1482,19 +1515,36 @@ def gae(
     batch, tokens = mask.shape
     advantages = torch.zeros_like(values)
     running = torch.zeros(batch, dtype=values.dtype, device=values.device)
+    per_step = torch.is_tensor(gamma)
 
     for t in range(tokens - 1, -1, -1):
         m = mask[:, t]
+        g = gamma[:, t] if per_step else gamma
         # Zero past the end of the span, so V(s_{t+1}) is 0 on the last token.
         next_value = values[:, t + 1] * mask[:, t + 1] if t + 1 < tokens else torch.zeros_like(running)
-        delta = rewards[:, t] + gamma * next_value - values[:, t]
-        running = delta + gamma * lam * running
+        delta = rewards[:, t] + g * next_value - values[:, t]
+        running = delta + g * lam * running
         # An inactive position contributes nothing and must not carry the
         # accumulator backwards across the padding boundary either.
         running = running * m
         advantages[:, t] = running
 
     return advantages * mask, (advantages + values) * mask
+
+
+def turn_discounts(episodes: list[Episode], mask: torch.Tensor, gamma: float) -> torch.Tensor:
+    """`gae`'s per-position discount when `gamma` applies per turn.
+
+    `gamma` on the last token of every turn the tool answered -- the step across
+    the tool's response, from the calls to the state that already holds their
+    results -- and 1.0 everywhere else, so inside a turn the return is the
+    undiscounted sum it has always been. Compacted indexing, like `mask`.
+    """
+    out = torch.ones_like(mask)
+    for b, ep in enumerate(episodes):
+        for start in ep.turn_starts[1:]:
+            out[b, start - 1] = gamma
+    return out
 
 
 def critic_fit(
@@ -1877,6 +1927,13 @@ class Config:
     #: Multiplier on the dense credit for a correctly-called `flat` flag. Only
     #: meaningful with `dense_rewards`. 1.0 is every run before `09`.
     flat_credit_scale: float = 1.0
+    #: The same lever on the severe action, for `14`. From a seed that says it on
+    #: 27% of the samples where it says it, PPO removed the label instead of
+    #: sharpening it -- said 26 times / 2 right on dev before, 0 times after --
+    #: because a label that is wrong three times in four costs reward on average.
+    #: This pays more for the times it is right, as `flat_credit_scale` did for a
+    #: value the policy would not say (3/600 -> recall 0.984).
+    severe_credit_scale: float = 1.0
 
     #: v2's prompt, unchanged and with nothing precomputed, plus a calculator the
     #: policy may call (`CALCULATOR_TOOL`). Replaces v3 rather than stacking on
@@ -1892,6 +1949,12 @@ class Config:
     #: Where the entropy bonus applies on a tool episode: "all" policy tokens (every
     #: run before `13`) or only the "answer" turn. See `ppo_actor_loss`.
     entropy_scope: str = "all"
+    #: Where `gamma` applies on a tool episode: every "token" (every run through
+    #: `13b`) or only across each "turn" boundary, with 1.0 inside a turn. Over
+    #: ~336 tokens a per-token discount mostly measures distance in tokens; a
+    #: per-turn one discounts by how many times the episode waited on the tool.
+    #: See `turn_discounts`.
+    gamma_scope: str = "token"
     #: Stop the run (saving `adapter-stopped/`) once the sampled `numeric_acc`,
     #: averaged over the last 10 steps, falls below this. 0 disables it. The
     #: arithmetic has to hold every step; a run that has lost it is not worth
@@ -1906,6 +1969,9 @@ class Config:
     call_credit: bool = False
     #: SFT on `tool_call_target` instead of an answer: the loss covers the three
     #: calls and nothing after them. Uses every case of `split`, shuffled.
+    #: `14`: with `sft_cases` and `sft_labels_only = 2`, the target is instead the
+    #: whole gold episode -- calls, the calculator's replies, the answer -- and the
+    #: loss covers the values of `sft_slots` in the answer and nothing else.
     sft_tool: bool = False
     #: With `resume_from`: load the adapter but not the value head, which starts
     #: fresh at `value_init_bias`. For a seed whose head was never trained -- an
@@ -1916,6 +1982,10 @@ class Config:
     #: No training: one greedy tool pass over `eval_split`, written to `--out`
     #: in `runs/paired/`'s envelope, with every episode beside it.
     eval_only: int = 0
+    #: `eval_only` as an emission probe (`10`'s): sample each case this many times
+    #: at this temperature instead of once greedily, and count the two labels.
+    eval_samples: int = 1
+    eval_temperature: float = 0.0
 
     #: A finished run directory to continue from -- its `adapter/` and
     #: `value_head.pt` are loaded instead of starting from the frozen model. The
@@ -1968,6 +2038,37 @@ class Config:
     #: measurement rather than a story. Composition is taken as given: these
     #: files are built to a brief, not sampled.
     sft_cases: str = ""
+    #: The first N of `sft_cases` after the seeded shuffle; 0 takes them all.
+    #: `14` seeds from 150 of `11`'s 387.
+    sft_max_cases: int = 0
+    #: The slots `sft_labels_only = 2` supervises, comma-separated. `14` seeds
+    #: `action` alone: on the tool line `organic_fouling` is already emitted,
+    #: and `root_cause` is left where the tool seed put it.
+    sft_slots: str = "root_cause,action"
+    #: With the tool-episode seed: also supervise the answer turn's first token,
+    #: the one that says "answer now" rather than "call again". Measured on 48
+    #: dev cases with the gold first turn in context, `runs/tool-sft-raw` opens the
+    #: answer with p 0.977; one epoch of the `action`-only seed took that to
+    #: 0.015 and `<tool_call>` to 0.953, and the policy re-issued its calls until
+    #: the budget ran out. The token carries no task content.
+    sft_anchor_open: bool = False
+    #: With the tool-episode seed: also supervise the first turn, the three gold
+    #: calls -- `tool_call_target`, `sft_tool`'s own target, so no label is in it.
+    #: With the answer's opening anchored, one epoch at lr 1e-4 still broke the
+    #: calls under sampling: at temperature 1.0, 90 of 600 episodes made a call
+    #: the calculator rejected (2 of 600 before the seed) and sampled
+    #: `numeric_acc` fell 0.996 -> 0.688, though greedy dev held at 0.995.
+    sft_anchor_calls: bool = False
+    #: With the tool-episode seed: also train, in the same shuffled pass, on every
+    #: case of `split` exactly as `sft_tool` does -- the three calls, nothing else.
+    #: So the tool seed and the label seed are one SFT from the raw model, and the
+    #: calls are trained to `runs/tool-sft-raw`'s sharpness rather than protected
+    #: from drift. Seeding on top of that adapter instead, even with the calls
+    #: anchored, left their teacher-forced entropy at 4.2x the tool seed's
+    #: (0.00106 vs 0.00026 on 64 dev cases), and PPO from there raised it to
+    #: 11x by step 25 and stopped on sampled arithmetic at step 37 -- where 13b's
+    #: PPO kept it at 0.00029 through step 200.
+    sft_tool_replay: bool = False
 
     #: An entropy bonus applied to the three flag-value tokens and nowhere else.
     #: See `flag_token_mask` for the measurement that motivates it. 0.0 is every
@@ -2487,8 +2588,10 @@ def _eval_record(step: int, metrics: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def generate_tool_results(policy, tokenizer, cfg: "Config", cases: list[dict]):
-    """Greedy tool episodes over `cases`, wrapped as `eval.CaseResult`s.
+def generate_tool_results(policy, tokenizer, cfg: "Config", cases: list[dict],
+                          temperature: float = 0.0):
+    """Tool episodes over `cases` (greedy unless `temperature` says otherwise),
+    wrapped as `eval.CaseResult`s.
 
     Same seed, batch size and token budget as `generate_hf` is given in
     `evaluate`. Returns the episodes too, so a caller can see the calls.
@@ -2506,7 +2609,7 @@ def generate_tool_results(policy, tokenizer, cfg: "Config", cases: list[dict]):
         generate = agent_generate if cfg.harness == "qwen_agent" else tool_generate
         batch = generate(
             policy, tokenizer, [build_messages_tool(c["record"]) for c in chunk],
-            temperature=0.0, max_new_tokens=cfg.eval_max_tokens,
+            temperature=temperature, max_new_tokens=cfg.eval_max_tokens,
             max_rounds=cfg.tool_rounds, template_kwargs=template_kwargs, device=device,
         )
         for case, ep in zip(chunk, batch):
@@ -2606,7 +2709,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
     per_step = cfg.prompts_per_step * cfg.samples_per_prompt
     progress(
         f"{cfg.model} | {cfg.steps} steps | {cfg.prompts_per_step}x{cfg.samples_per_prompt}"
-        f"={per_step} seq/step | lam={cfg.lam} | {device}"
+        f"={per_step} seq/step | gamma={cfg.gamma} per {cfg.gamma_scope} | lam={cfg.lam} | {device}"
     )
 
     history: list[dict[str, Any]] = []
@@ -2687,6 +2790,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                 tokenizer,
                 cfg.flat_credit_scale,
                 call_hits=[ep.call_hits for ep in roll.episodes] if cfg.call_credit else None,
+                severe_scale=cfg.severe_credit_scale,
             )
         else:
             per_token_rewards = terminal_rewards(rewards, mask)
@@ -2698,7 +2802,7 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
             # onto the calls must leave every row's total exactly where it was.
             plain = dense_rewards(
                 roll.completions, completion_ids, mask, roll.cases, weights, tokenizer,
-                cfg.flat_credit_scale,
+                cfg.flat_credit_scale, severe_scale=cfg.severe_credit_scale,
             )
             call_record = {
                 "call_numeric_acc": sum(len(ep.call_hits) for ep in roll.episodes) / (3 * len(roll.episodes)),
@@ -2755,8 +2859,10 @@ def train(cfg: Config, out_dir: Path, device: str, *, progress=print) -> list[di
                 # in this batch's tensor, so recompute it on the full feature.
                 old_values = value_head(hidden_cache)
 
+            discount = (turn_discounts(roll.episodes, mask, cfg.gamma)
+                        if cfg.gamma_scope == "turn" else cfg.gamma)
             advantages, returns = gae(
-                per_token_rewards, old_values, mask, gamma=cfg.gamma, lam=cfg.lam
+                per_token_rewards, old_values, mask, gamma=discount, lam=cfg.lam
             )
             if cfg.whiten_advantages:
                 advantages = whiten(advantages, mask)
@@ -2996,8 +3102,69 @@ def resolve_device(device: str = "auto") -> str:
     return "cpu"
 
 
+def emission_probe(cases: list[dict[str, Any]], episodes: list["Episode"]) -> dict[str, Any]:
+    """`10`'s probe on tool episodes: how often each dead label is said, and when.
+
+    `*_slots` is how many of the sampled cases have that label as the answer, so
+    `severe_emitted` reads against it: zero is a label with no mass, far above it
+    a slot that has collapsed onto the label.
+    """
+    from task.schema import parse_answer
+
+    out = {"samples": len(cases), "severe_emitted": 0, "severe_correct": 0, "severe_slots": 0,
+           "og_emitted": 0, "og_correct": 0, "og_slots": 0, "action_hist": {}, "cause_hist": {}}
+    for case, ep in zip(cases, episodes):
+        obj = parse_answer(ep.text).obj or {}
+        action, cause = obj.get("action"), obj.get("root_cause")
+        severe = case["answer"]["action"] == SEVERE_ACTION_NAME
+        organic = case["answer"]["root_cause"] == "organic_fouling"
+        out["severe_slots"] += severe
+        out["og_slots"] += organic
+        out["severe_emitted"] += action == SEVERE_ACTION_NAME
+        out["severe_correct"] += action == SEVERE_ACTION_NAME and severe
+        out["og_emitted"] += cause == "organic_fouling"
+        out["og_correct"] += cause == "organic_fouling" and organic
+        out["action_hist"][str(action)] = out["action_hist"].get(str(action), 0) + 1
+        out["cause_hist"][str(cause)] = out["cause_hist"].get(str(cause), 0) + 1
+    return out
+
+
+@torch.no_grad()
+def call_sharpness(policy, tokenizer, cases: list[dict[str, Any]]) -> dict[str, float]:
+    """How peaked the policy is on the calls, with the gold calls teacher-forced.
+
+    Mean per-token entropy and NLL over `tool_call_target` + `<|im_end|>`. Greedy
+    decoding cannot see a loosened call distribution -- the argmax survives long
+    after the tail has grown -- and sampled `numeric_acc` sees it only once it has
+    cost a call. `14`'s first PPO run started at 4.2x the tool seed's entropy here
+    with greedy dev at `numeric_acc` 1.000, and stopped on sampled arithmetic at
+    step 37.
+    """
+    device = str(next(policy.parameters()).device)
+    was_training = policy.training
+    policy.eval()
+    template_kwargs = {"enable_thinking": False} if supports_thinking_toggle(tokenizer) else {}
+    entropy = nll = 0.0
+    n = 0
+    for case in cases:
+        ids, labels = tool_calls_example(case, tokenizer, template_kwargs)
+        k = int((labels != -100).sum())
+        logits = policy(input_ids=ids.to(device), logits_to_keep=k + 1).logits[0, :-1].float()
+        logp = logits.log_softmax(-1)
+        entropy += float(-(logp.exp() * logp).sum())
+        nll += float(-logp.gather(-1, ids[0, -k:, None].to(device)).sum())
+        n += k
+    if was_training:
+        policy.train()
+    return {"call_entropy": entropy / n, "call_nll": nll / n, "call_tokens": n}
+
+
 def eval_only(cfg: Config, out: Path, device: str, *, progress=print) -> dict[str, Any]:
-    """One greedy tool pass over `eval_split`, from `resume_from` or the raw model.
+    """One tool pass over `eval_split`, from `resume_from` or the raw model.
+
+    Greedy by default. With `eval_samples` / `eval_temperature` it is `10`'s
+    emission probe instead: every case sampled `eval_samples` times, and the
+    envelope carries a `probe` block counting the two dead labels.
 
     Writes `out` in the envelope `runs/paired/*.json` uses -- `paired_test.py`
     reads it unmodified -- and `out` with `.episodes.jsonl` beside it: the
@@ -3013,9 +3180,14 @@ def eval_only(cfg: Config, out: Path, device: str, *, progress=print) -> dict[st
     policy, _, tokenizer = load_policy(cfg, device)
     source = DATA / f"{cfg.eval_split}.jsonl"
     cases = load_cases(cfg.eval_split)[: cfg.eval_cases]
-    results, episodes = generate_tool_results(policy, tokenizer, cfg, cases)
+    sharpness = call_sharpness(policy, tokenizer, cases)
+    k = max(1, cfg.eval_samples)
+    cases = [c for c in cases for _ in range(k)]
+    results, episodes = generate_tool_results(policy, tokenizer, cfg, cases, cfg.eval_temperature)
     overall = summarise(results, WEIGHT_SETS[cfg.weights])
     overall.update(tool_stats(episodes))
+    overall.update(sharpness)
+    probe = emission_probe(cases, episodes)
     envelope = {
         "model": cfg.model,
         "backend": "hf+calculator" + ("+qwen_agent" if cfg.harness == "qwen_agent" else ""),
@@ -3025,13 +3197,14 @@ def eval_only(cfg: Config, out: Path, device: str, *, progress=print) -> dict[st
         "tools": [CALCULATOR_TOOL],
         "tool_rounds": cfg.tool_rounds,
         "weights": cfg.weights,
-        "mode": "greedy",
-        "k": 1,
-        "temperature": 0.0,
+        "mode": "sample" if cfg.eval_temperature > 0 else "greedy",
+        "k": k,
+        "temperature": cfg.eval_temperature,
         "max_tokens": cfg.eval_max_tokens,
         "seed": cfg.seed,
         "adapter": cfg.resume_from or None,
         "overall": overall,
+        "probe": probe,
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(envelope, indent=2) + "\n")
@@ -3047,6 +3220,14 @@ def eval_only(cfg: Config, out: Path, device: str, *, progress=print) -> dict[st
         f"flags {overall['flags_acc']:.3f} cause {overall['cause_acc']:.3f} "
         f"schema {overall['schema_ok']:.3f} | tool use {overall['tool_use_rate']:.3f} "
         f"calls {overall['tool_calls_mean']:.2f} errors {overall['tool_error_rate']:.3f}"
+    )
+    progress(f"  calls, teacher-forced: entropy {sharpness['call_entropy']:.6f} "
+             f"NLL {sharpness['call_nll']:.6f} over {sharpness['call_tokens']} tokens")
+    progress(
+        f"  labels: severe {probe['severe_emitted']}/{probe['samples']} "
+        f"({probe['severe_correct']} right, answer on {probe['severe_slots']}) | "
+        f"organic_fouling {probe['og_emitted']}/{probe['samples']} "
+        f"({probe['og_correct']} right, answer on {probe['og_slots']})"
     )
     progress(f"  wrote {out}")
     return envelope
@@ -3180,6 +3361,81 @@ def slot_value_spans(text: str, offset: int, slots=("root_cause", "action")) -> 
     return spans
 
 
+def tool_seed_example(case: dict[str, Any], tokenizer, template_kwargs: dict[str, Any],
+                      slots: tuple[str, ...], anchor_open: bool = False,
+                      anchor_calls: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
+    """`14`'s seed example: the gold tool episode, with the loss on slot values only.
+
+    Built the way `tool_generate` builds an episode -- prompt, the policy's first
+    turn, the tool's reply, the policy's second turn, each tokenized on its own
+    and concatenated -- so the supervised tokens sit in the context PPO will
+    later sample them in. The calls and the replies are context, not targets:
+    the calculator's own output for the gold expressions. Only the tokens
+    spelling the values of `slots` in the answer turn carry a label, and with
+    `anchor_open` the answer turn's first token (see `Config.sft_anchor_open`),
+    and with `anchor_calls` the whole first turn (see `Config.sft_anchor_calls`).
+    """
+    im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    record, answer = case["record"], case["answer"]
+    results = [calculate(expr) for expr in gold_expressions(record).values()]
+    prompt = _render_tool_prompt(tokenizer, build_messages_tool(record), template_kwargs)
+    prompt_ids = tokenizer(prompt, add_special_tokens=False).input_ids
+    calls_ids = tokenizer(tool_call_target(record), add_special_tokens=False).input_ids + [im_end]
+    context = (
+        prompt_ids + calls_ids
+        + tokenizer(tool_response_text(results, generation_prefix(tokenizer, template_kwargs)),
+                    add_special_tokens=False).input_ids
+    )
+    text = tool_answer_text(results, answer)
+    encoded = tokenizer(text, add_special_tokens=False, return_offsets_mapping=True)
+    spans = slot_value_spans(text, 0, slots)
+    keep = [a != b and any(a < end and b > start for start, end in spans)
+            for a, b in encoded["offset_mapping"]]
+    if anchor_open:
+        keep[0] = True
+    ids = torch.tensor([context + encoded["input_ids"] + [im_end]])
+    labels = torch.full_like(ids, -100)
+    if anchor_calls:
+        first = slice(len(prompt_ids), len(prompt_ids) + len(calls_ids))
+        labels[0, first] = ids[0, first]
+    for t, k in enumerate(keep):
+        if k:
+            labels[0, len(context) + t] = ids[0, len(context) + t]
+    return ids, labels
+
+
+def tool_calls_example(case: dict[str, Any], tokenizer,
+                       template_kwargs: dict[str, Any]) -> tuple[torch.Tensor, torch.Tensor]:
+    """`sft_tool`'s example, built the way `tool_seed_example` builds one: the
+    prompt, then the three gold calls and `<|im_end|>`, with the loss on the calls."""
+    im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    record = case["record"]
+    prompt = _render_tool_prompt(tokenizer, build_messages_tool(record), template_kwargs)
+    prompt_ids = tokenizer(prompt, add_special_tokens=False).input_ids
+    calls_ids = tokenizer(tool_call_target(record), add_special_tokens=False).input_ids + [im_end]
+    ids = torch.tensor([prompt_ids + calls_ids])
+    labels = ids.clone()
+    labels[0, : len(prompt_ids)] = -100
+    return ids, labels
+
+
+def sft_loss(policy, ids: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    """`policy(input_ids=ids, labels=labels).loss`, with the logits computed only
+    where a label is.
+
+    The same mean next-token cross-entropy. What it saves is the largest tensor
+    of a seed step: the full-sequence logits the stock loss upcasts to fp32 --
+    1,500 tokens x 151,936 x 4 bytes on a tool episode, about 0.9 GB -- when a
+    masked seed labels a few dozen of those positions.
+    """
+    model = policy.get_base_model()
+    hidden = model.model(input_ids=ids).last_hidden_state[:, :-1]
+    targets = labels[:, 1:]
+    where = targets != -100
+    logits = model.lm_head(hidden[where]).float()
+    return torch.nn.functional.cross_entropy(logits, targets[where])
+
+
 def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> dict[str, Any]:
     """One seeding pass. Writes an adapter PPO can `--resume-from`."""
     import json
@@ -3201,11 +3457,15 @@ def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> di
         else:
             progress(f"  no value head at {head}; PPO will resume with a fresh one")
 
-    if cfg.sft_tool:
+    tool_episode = cfg.sft_tool and bool(cfg.sft_cases)
+    slots = tuple(s.strip() for s in cfg.sft_slots.split(",") if s.strip())
+    if tool_episode and cfg.sft_labels_only != 2:
+        raise ValueError("a tool-episode seed supervises slot values only: it needs sft_labels_only = 2")
+    if cfg.sft_tool and not tool_episode:
         import random
 
-        if cfg.sft_labels_only or cfg.sft_cases:
-            raise ValueError("sft_tool supervises the calls only; it takes no label mask or seed file")
+        if cfg.sft_labels_only:
+            raise ValueError("sft_tool supervises the calls only; it takes no label mask")
         examples = load_cases(cfg.split)
         random.Random(cfg.seed).shuffle(examples)
         n_dead, n_normal = 0, len(examples)
@@ -3220,15 +3480,28 @@ def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> di
         cases = [json.loads(l) for l in source.read_text().splitlines() if l.strip()]
         examples = list(cases)
         random.Random(cfg.seed).shuffle(examples)
+        if cfg.sft_max_cases:
+            examples = examples[: cfg.sft_max_cases]
         n_dead = sum(
             c["answer"]["root_cause"] == "organic_fouling"
             or c["answer"]["action"] == SEVERE_ACTION_NAME
             for c in examples
         )
         n_normal = len(examples) - n_dead
-        progress(f"  seed set: {source.name}, {len(examples)} cases "
-                 f"({n_dead} carry a dead label, {n_normal} do not), "
+        n_severe = sum(c["answer"]["action"] == SEVERE_ACTION_NAME for c in examples)
+        n_organic = sum(c["answer"]["root_cause"] == "organic_fouling" for c in examples)
+        progress(f"  seed set: {source.name}, {len(examples)} of {len(cases)} cases "
+                 f"({n_dead} carry a dead label: {n_severe} severe, {n_organic} organic_fouling), "
                  f"{cfg.sft_epochs} epoch(s), lr {cfg.sft_lr}")
+        if cfg.sft_labels_only == 2:
+            progress(f"  loss on the values of {', '.join(slots)}"
+                     + (" in the answer turn of the gold tool episode" if tool_episode else ""))
+        if tool_episode and cfg.sft_tool_replay:
+            replay = [dict(c, _replay=True) for c in load_cases(cfg.split)]
+            examples = examples + replay
+            random.Random(cfg.seed).shuffle(examples)
+            progress(f"  + {len(replay)} {cfg.split} cases as the tool seed trains them (calls only), "
+                     f"one shuffled pass of {len(examples)}")
     else:
         examples, n_dead, n_normal = build_sft_examples(
             cases := load_cases(cfg.split), cfg.sft_balance, cfg.seed)
@@ -3250,55 +3523,67 @@ def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> di
     n_supervised = 0
     for epoch in range(cfg.sft_epochs):
         for i, case in enumerate(examples):
-            if cfg.sft_tool:
-                # The prompt is the one `tool_generate` decodes from, and the
-                # target is the text a correct first turn would sample -- so the
-                # supervised tokens are the tokens PPO will later score.
-                prompt = tokenizer.apply_chat_template(
-                    build_messages_tool(case["record"]),
-                    tools=[CALCULATOR_TOOL],
-                    tokenize=False,
-                    add_generation_prompt=True,
-                    **template_kwargs,
-                )
-                target = tool_call_target(case["record"])
+            if tool_episode:
+                if case.get("_replay"):
+                    ids, labels = tool_calls_example(case, tokenizer, template_kwargs)
+                else:
+                    ids, labels = tool_seed_example(case, tokenizer, template_kwargs, slots,
+                                                    cfg.sft_anchor_open, cfg.sft_anchor_calls)
+                ids, labels = ids.to(device), labels.to(device)
+                kept = int((labels != -100).sum())
+                n_supervised += kept
+                if kept == 0:
+                    continue
             else:
-                prompt = tokenizer.apply_chat_template(
-                    build_messages_v3(case["record"]),
-                    tokenize=False,
-                    add_generation_prompt=True,
-                    **template_kwargs,
-                )
-                target = sft_target(case["answer"])
-            prompt_len = tokenizer(prompt, return_tensors="pt").input_ids.shape[1]
-            full = prompt + target + (tokenizer.eos_token or "")
-            encoded = tokenizer(full, return_tensors="pt", return_offsets_mapping=True)
-            ids = encoded["input_ids"].to(device)
-            labels = ids.clone()
-            labels[:, :prompt_len] = -100  # loss on the completion only
-            if cfg.sft_labels_only:
-                # Mask everything the policy already produces correctly. Only the
-                # characters spelling a dead label carry gradient, so this cannot
-                # teach the arithmetic, the flags, the stage, or any cause the
-                # policy already emits -- it can only move two strings off zero.
-                spans = (
-                    slot_value_spans(full, len(prompt))
-                    if cfg.sft_labels_only == 2
-                    else dead_label_spans(full, len(prompt))
-                )
-                keep = torch.zeros_like(labels, dtype=torch.bool)
-                offsets = encoded["offset_mapping"][0].tolist()
-                for t, (a, b) in enumerate(offsets):
-                    if a == b:
-                        continue
-                    if any(a < end and b > start for start, end in spans):
-                        keep[0, t] = True
-                labels = torch.where(keep.to(device), labels, torch.full_like(labels, -100))
-                n_supervised += int(keep.sum())
-                if int(keep.sum()) == 0:
-                    continue  # nothing to learn from this case under this mask
+                if cfg.sft_tool:
+                    # The prompt is the one `tool_generate` decodes from, and the
+                    # target is the text a correct first turn would sample -- so the
+                    # supervised tokens are the tokens PPO will later score.
+                    prompt = tokenizer.apply_chat_template(
+                        build_messages_tool(case["record"]),
+                        tools=[CALCULATOR_TOOL],
+                        tokenize=False,
+                        add_generation_prompt=True,
+                        **template_kwargs,
+                    )
+                    target = tool_call_target(case["record"])
+                else:
+                    prompt = tokenizer.apply_chat_template(
+                        build_messages_v3(case["record"]),
+                        tokenize=False,
+                        add_generation_prompt=True,
+                        **template_kwargs,
+                    )
+                    target = sft_target(case["answer"])
+                prompt_len = tokenizer(prompt, return_tensors="pt").input_ids.shape[1]
+                full = prompt + target + (tokenizer.eos_token or "")
+                encoded = tokenizer(full, return_tensors="pt", return_offsets_mapping=True)
+                ids = encoded["input_ids"].to(device)
+                labels = ids.clone()
+                labels[:, :prompt_len] = -100  # loss on the completion only
+                if cfg.sft_labels_only:
+                    # Mask everything the policy already produces correctly. Only the
+                    # characters spelling a dead label carry gradient, so this cannot
+                    # teach the arithmetic, the flags, the stage, or any cause the
+                    # policy already emits -- it can only move two strings off zero.
+                    spans = (
+                        slot_value_spans(full, len(prompt), slots)
+                        if cfg.sft_labels_only == 2
+                        else dead_label_spans(full, len(prompt))
+                    )
+                    keep = torch.zeros_like(labels, dtype=torch.bool)
+                    offsets = encoded["offset_mapping"][0].tolist()
+                    for t, (a, b) in enumerate(offsets):
+                        if a == b:
+                            continue
+                        if any(a < end and b > start for start, end in spans):
+                            keep[0, t] = True
+                    labels = torch.where(keep.to(device), labels, torch.full_like(labels, -100))
+                    n_supervised += int(keep.sum())
+                    if int(keep.sum()) == 0:
+                        continue  # nothing to learn from this case under this mask
 
-            loss = policy(input_ids=ids, labels=labels).loss
+            loss = sft_loss(policy, ids, labels)
             weight = 1.0
             if cfg.sft_labels_only == 2 and cfg.sft_dead_weight != 1.0:
                 answer = case["answer"]
@@ -3313,6 +3598,12 @@ def sft_seed(cfg: "Config", out_dir: Path, device: str, *, progress=print) -> di
         window = [r["loss"] for r in losses if r["epoch"] == epoch]
         if window:
             progress(f"  epoch {epoch}: loss {window[0]:.4f} -> {window[-1]:.4f}")
+        if cfg.sft_epochs > 1:
+            # One seed per dose: `epoch<k>/` is a directory `resume_from` accepts,
+            # so the same pass yields the 1-, 2-, ... epoch seeds to choose among.
+            stage_dir = out_dir / f"epoch{epoch + 1}"
+            policy.save_pretrained(stage_dir / "adapter")
+            torch.save(value_head.state_dict(), stage_dir / "value_head.pt")
     if cfg.sft_labels_only:
         progress(f"  supervised tokens total: {n_supervised} over {len(losses)} examples")
 
@@ -3348,6 +3639,10 @@ def main() -> None:
     parser.set_defaults(value_init_bias=-1.0)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--device", default="auto")
+    # Operational, like --device: not part of Config, so it changes no run's record or numbers. The card is
+    # shared, and PyTorch's caching allocator otherwise grows to whatever the card has and never gives it back.
+    parser.add_argument("--max-vram-mib", type=int, default=0,
+                        help="cap this process's CUDA caching allocator at this many MiB (0: no cap)")
     args = parser.parse_args()
     if args.weights not in WEIGHT_SETS:
         parser.error(f"--weights must be one of {sorted(WEIGHT_SETS)}")
@@ -3360,15 +3655,26 @@ def main() -> None:
     fields["prompt_v4"] = bool(fields["prompt_v4"])
     fields["prompt_tool"] = bool(fields["prompt_tool"])
     fields["sft_tool"] = bool(fields["sft_tool"])
+    fields["sft_anchor_open"] = bool(fields["sft_anchor_open"])
+    fields["sft_anchor_calls"] = bool(fields["sft_anchor_calls"])
+    fields["sft_tool_replay"] = bool(fields["sft_tool_replay"])
     fields["value_head_reset"] = bool(fields["value_head_reset"])
     fields["call_credit"] = bool(fields["call_credit"])
     if fields["entropy_scope"] not in ("all", "answer"):
         parser.error("--entropy-scope must be all or answer")
     if fields["harness"] not in ("native", "qwen_agent"):
         parser.error("--harness must be native or qwen_agent")
+    if fields["gamma_scope"] not in ("token", "turn"):
+        parser.error("--gamma-scope must be token or turn")
+    if fields["gamma_scope"] == "turn" and not fields["prompt_tool"]:
+        parser.error("--gamma-scope turn needs --prompt-tool 1: a single-turn episode has no turn boundary")
     cfg = Config(**fields)
     tag = cfg.model.rsplit("/", 1)[-1].replace(".", "").lower()
     out = args.out or SMOKE_DIR / "runs" / f"ppo-{tag}-{cfg.weights.lower()}-s{cfg.seed}"
+    if args.max_vram_mib and torch.cuda.is_available():
+        total = torch.cuda.get_device_properties(0).total_memory
+        torch.cuda.set_per_process_memory_fraction(min(1.0, args.max_vram_mib * 2**20 / total))
+        print(f"CUDA allocator capped at {args.max_vram_mib} MiB of {total // 2**20}")
     if cfg.eval_only:
         eval_only(cfg, out, resolve_device(args.device))
     elif cfg.sft_only:

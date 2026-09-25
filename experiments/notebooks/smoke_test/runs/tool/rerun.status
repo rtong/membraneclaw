@@ -10,3 +10,5 @@ diag12 exit 0
 13b-train exit 0
 13b-train killed by WSL shutdown at 19:48 (step 34), no exit line
 13b-train exit 0
+13b-seed1 exit 0
+13b-gamma-turn exit 0

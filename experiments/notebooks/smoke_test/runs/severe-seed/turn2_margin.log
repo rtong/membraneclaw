@@ -1,0 +1,13 @@
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|█████     | 156/311 [00:00<00:00, 1553.04it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1903.63it/s]
+raw                                P(answer) 0.995  P(call) 0.000  call wins 0/64
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  52%|█████▏    | 162/311 [00:00<00:00, 1616.88it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1884.98it/s]
+tool seed                          P(answer) 0.975  P(call) 0.007  call wins 0/64
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  51%|█████▏    | 160/311 [00:00<00:00, 1598.07it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1828.72it/s]
+action-only seed, 1 epoch          P(answer) 0.014  P(call) 0.952  call wins 64/64
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  53%|█████▎    | 164/311 [00:00<00:00, 1637.44it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1847.88it/s]
+action + calls anchored, 1 epoch   P(answer) 0.993  P(call) 0.002  call wins 0/64
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|█████     | 156/311 [00:00<00:00, 1553.17it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1917.28it/s]
+joint, action only, 1 epoch        P(answer) 0.999  P(call) 0.000  call wins 0/64
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  48%|████▊     | 150/311 [00:00<00:00, 1493.55it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1889.70it/s]
+joint, both slots, 3 epochs        P(answer) 0.999  P(call) 0.000  call wins 0/64
+wrote runs/severe-seed/turn2_margin.json

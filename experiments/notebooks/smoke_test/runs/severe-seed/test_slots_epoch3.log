@@ -1,0 +1,7 @@
+CUDA allocator capped at 13000 MiB of 16275
+Loading weights:   0%|          | 0/311 [00:00<?, ?it/s]Loading weights:  50%|████▉     | 154/311 [00:00<00:00, 1534.83it/s]Loading weights: 100%|██████████| 311/311 [00:00<00:00, 1830.98it/s]
+  32/200 cases  64/200 cases  96/200 cases  128/200 cases  160/200 cases  192/200 cases  200/200 cases
+  test: EM 0.055 numeric 0.995 flags 0.577 cause 0.385 schema 0.995 | tool use 1.000 calls 3.02 errors 0.010
+  calls, teacher-forced: entropy 0.000249 NLL 0.000053 over 48072 tokens
+  labels: severe 8/200 (6 right, answer on 37) | organic_fouling 25/200 (13 right, answer on 29)
+  wrote runs/severe-seed/test_slots_epoch3.json
