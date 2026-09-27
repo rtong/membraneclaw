@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+
+# The metrics, evaluations, configs and figures are the record; weights and
+# caches are not. Every run directory keeps config.json, metrics.jsonl,
+# eval.jsonl, best.json and ending.json in git.
+*_runs/**/adapter*/
+*_runs/**/*.pt
+*_runs/**/last/
+*_runs/**/*.log
+*_cache.pt
+*_runs/**/*.safetensors
+*_runs/**/README.md

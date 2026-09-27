@@ -1,0 +1,29 @@
+{
+  "step": 500,
+  "reward": 0.9072,
+  "exact_match": 0.38,
+  "validity_gate": 1.0,
+  "schema_ok": 1.0,
+  "cause_acc": 0.85,
+  "flags_acc": 0.9016666666666667,
+  "numeric_acc": 1.0,
+  "action_acc": 0.71,
+  "cause_given_flags": 0.7943262411347518,
+  "predicted_cause_hist": {
+    "scaling": 59,
+    "oxidation_damage": 28,
+    "organic_fouling": 29,
+    "biofouling": 28,
+    "mechanical_leak": 28,
+    "compaction": 28
+  },
+  "tool_use_rate": 1.0,
+  "tool_calls_mean": 3.0,
+  "tool_error_rate": 0.0,
+  "tool_unanswered": 0.0,
+  "truncated_rate": 0.0,
+  "answer_closed_rate": 1.0,
+  "policy_tokens_mean": 364.53,
+  "critic_residual_median": 0.023318,
+  "critic_ahead_frac": 1.0
+}
