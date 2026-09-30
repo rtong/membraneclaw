@@ -1,0 +1,133 @@
+{
+ "overall": {
+  "n": 8,
+  "reward": 0.010540674603174602,
+  "components": {
+   "calls": 0.03794642857142857,
+   "decision": 0.0,
+   "violations": 0.0,
+   "values": 0.0,
+   "format": 0.0,
+   "efficiency": 0.0
+  },
+  "called_any": 0.625,
+  "first_call_right_tool": 0.25,
+  "calls_per_episode": 3.625,
+  "calls_malformed": 0.0,
+  "calls_errored": 1.0,
+  "evidence": 0.0,
+  "answer_found": 0.0,
+  "decision_correct": 0.0,
+  "truncated": 1.0,
+  "unanswered": 0.0,
+  "policy_tokens": 1536.0,
+  "total_tokens": 3642.25
+ },
+ "families": {
+  "ro_check": {
+   "n": 2,
+   "reward": 0.0,
+   "components": {
+    "calls": 0.0,
+    "decision": 0.0,
+    "violations": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 0.5,
+   "first_call_right_tool": 0.0,
+   "calls_per_episode": 3.0,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 1.0,
+   "unanswered": 0.0,
+   "policy_tokens": 1536.0,
+   "total_tokens": 3611.0
+  },
+  "ro_scan_area": {
+   "n": 2,
+   "reward": 0.0,
+   "components": {
+    "calls": 0.0,
+    "decision": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0,
+    "values": 0.0
+   },
+   "called_any": 0.5,
+   "first_call_right_tool": 0.0,
+   "calls_per_episode": 3.0,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 1.0,
+   "unanswered": 0.0,
+   "policy_tokens": 1536.0,
+   "total_tokens": 3590.0
+  },
+  "swro_check": {
+   "n": 2,
+   "reward": 0.0,
+   "components": {
+    "calls": 0.0,
+    "decision": 0.0,
+    "violations": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 0.5,
+   "first_call_right_tool": 0.0,
+   "calls_per_episode": 2.5,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 1.0,
+   "unanswered": 0.0,
+   "policy_tokens": 1536.0,
+   "total_tokens": 3592.0
+  },
+  "swro_option": {
+   "n": 2,
+   "reward": 0.04216269841269841,
+   "components": {
+    "calls": 0.15178571428571427,
+    "decision": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 6.0,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 1.0,
+   "unanswered": 0.0,
+   "policy_tokens": 1536.0,
+   "total_tokens": 3776.0
+  }
+ },
+ "meta": {
+  "adapter": null,
+  "split": "dev",
+  "temperature": 0.0,
+  "samples": 1,
+  "max_new_tokens": 1536,
+  "stop_at_json": false,
+  "seconds": 93.32113528251648,
+  "solves": 13,
+  "peak_vram_mib": 2932.07080078125
+ }
+}
