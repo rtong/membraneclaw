@@ -1,0 +1,23 @@
+{
+  "model": "Qwen/Qwen3.5-0.8B",
+  "label": "scaffold",
+  "reasoning": true,
+  "epochs": 3,
+  "lr": 0.0001,
+  "accum": 8,
+  "lora_r": 16,
+  "seed": 0,
+  "examples": 1200,
+  "lora_targets": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "in_proj_qkv",
+    "in_proj_z",
+    "in_proj_a",
+    "in_proj_b",
+    "out_proj"
+  ],
+  "strategy": "blind: every candidate simulated in one turn, then the answer"
+}

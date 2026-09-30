@@ -1,0 +1,179 @@
+{
+ "overall": {
+  "n": 240,
+  "reward": 0.6490672713529856,
+  "components": {
+   "calls": 0.9801785714285713,
+   "decision": 0.3779166666666667,
+   "violations": 0.8308333333333333,
+   "values": 0.7535545023696683,
+   "format": 1.0,
+   "efficiency": 0.3402777777777778
+  },
+  "called_any": 1.0,
+  "first_call_right_tool": 1.0,
+  "calls_per_episode": 2.5416666666666665,
+  "calls_malformed": 0.0,
+  "calls_errored": 0.0,
+  "evidence": 0.8833333333333333,
+  "answer_found": 1.0,
+  "decision_correct": 0.4041666666666667,
+  "truncated": 0.0,
+  "unanswered": 0.0,
+  "policy_tokens": 489.7583333333333,
+  "total_tokens": 4598.454166666666
+ },
+ "families": {
+  "ro_check": {
+   "n": 40,
+   "reward": 0.9211071428571429,
+   "components": {
+    "calls": 0.9964285714285713,
+    "decision": 0.875,
+    "violations": 0.845,
+    "values": 0.9375,
+    "format": 1.0,
+    "efficiency": 0.875
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 1.0,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.975,
+   "answer_found": 1.0,
+   "decision_correct": 0.875,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 222.7,
+   "total_tokens": 3137.9
+  },
+  "ro_membrane": {
+   "n": 40,
+   "reward": 0.5624480347694634,
+   "components": {
+    "calls": 0.975,
+    "decision": 0.2,
+    "format": 1.0,
+    "efficiency": 0.14166666666666666,
+    "values": 0.7758620689655172
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 2.7,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.875,
+   "answer_found": 1.0,
+   "decision_correct": 0.2,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 541.825,
+   "total_tokens": 5014.075
+  },
+  "ro_scan_area": {
+   "n": 40,
+   "reward": 0.5126176303854876,
+   "components": {
+    "calls": 0.9862500000000001,
+    "decision": 0.1075,
+    "values": 0.6617647058823529,
+    "format": 1.0,
+    "efficiency": 0.0375
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 4.1,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.875,
+   "answer_found": 1.0,
+   "decision_correct": 0.125,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 763.125,
+   "total_tokens": 6417.3
+  },
+  "ro_scan_pressure": {
+   "n": 40,
+   "reward": 0.47092261904761906,
+   "components": {
+    "calls": 0.9855357142857143,
+    "decision": 0.057499999999999996,
+    "values": 0.5625,
+    "format": 1.0,
+    "efficiency": 0.0125
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 3.925,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.9,
+   "answer_found": 1.0,
+   "decision_correct": 0.075,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 744.0,
+   "total_tokens": 6246.275
+  },
+  "swro_check": {
+   "n": 40,
+   "reward": 0.9099999999999999,
+   "components": {
+    "calls": 0.9708333333333334,
+    "decision": 0.8625,
+    "violations": 0.8166666666666667,
+    "values": 0.9625,
+    "format": 1.0,
+    "efficiency": 0.825
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 1.0,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.85,
+   "answer_found": 1.0,
+   "decision_correct": 0.95,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 211.2,
+   "total_tokens": 2805.125
+  },
+  "swro_option": {
+   "n": 40,
+   "reward": 0.5173082010582011,
+   "components": {
+    "calls": 0.9670238095238096,
+    "decision": 0.16499999999999998,
+    "values": 0.5555555555555556,
+    "format": 1.0,
+    "efficiency": 0.15
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 2.525,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.825,
+   "answer_found": 1.0,
+   "decision_correct": 0.2,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 455.7,
+   "total_tokens": 3970.05
+  }
+ },
+ "meta": {
+  "adapter": "04_natural_watertap_runs/seed-verdict2/epoch3",
+  "split": "dev",
+  "temperature": 0.0,
+  "samples": 1,
+  "max_new_tokens": 1536,
+  "stop_at_json": true,
+  "seconds": 761.3040437698364,
+  "solves": 610,
+  "peak_vram_mib": 4861.70947265625
+ }
+}

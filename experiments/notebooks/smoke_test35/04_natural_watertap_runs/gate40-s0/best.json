@@ -1,0 +1,21 @@
+{
+  "step": 40,
+  "reward": 0.8380439814814815,
+  "decision_correct": 0.8,
+  "evidence": 0.8916666666666667,
+  "answer_found": 1.0,
+  "calls_per_episode": 2.55,
+  "calls_errored": 0.0032679738562091504,
+  "truncated": 0.0,
+  "policy_tokens": 479.5083333333333,
+  "components": {
+    "calls": 0.976031746031746,
+    "decision": 0.765,
+    "violations": 0.8520325203252032,
+    "values": 0.8106796116504854,
+    "format": 1.0,
+    "efficiency": 0.5913888888888889
+  },
+  "critic_residual_median": 0.063896,
+  "critic_ahead_frac": 0.96
+}

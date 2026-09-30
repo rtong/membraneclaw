@@ -1,0 +1,179 @@
+{
+ "overall": {
+  "n": 240,
+  "reward": 0.002997232457797934,
+  "components": {
+   "calls": 0.010806878306878308,
+   "decision": 0.0,
+   "violations": 0.0,
+   "values": 0.0,
+   "format": 0.0,
+   "efficiency": 0.0
+  },
+  "called_any": 0.7833333333333333,
+  "first_call_right_tool": 0.15,
+  "calls_per_episode": 4.529166666666667,
+  "calls_malformed": 0.0,
+  "calls_errored": 0.9935602575896965,
+  "evidence": 0.004166666666666667,
+  "answer_found": 0.0,
+  "decision_correct": 0.0,
+  "truncated": 0.5583333333333333,
+  "unanswered": 0.43333333333333335,
+  "policy_tokens": 1367.925,
+  "total_tokens": 3547.3458333333333
+ },
+ "families": {
+  "ro_check": {
+   "n": 40,
+   "reward": 0.00125,
+   "components": {
+    "calls": 0.005,
+    "decision": 0.0,
+    "violations": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 0.775,
+   "first_call_right_tool": 0.025,
+   "calls_per_episode": 4.6,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.9945652173913043,
+   "evidence": 0.025,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 0.45,
+   "unanswered": 0.55,
+   "policy_tokens": 1347.775,
+   "total_tokens": 3500.175
+  },
+  "ro_membrane": {
+   "n": 40,
+   "reward": 0.00627125850340136,
+   "components": {
+    "calls": 0.021726190476190475,
+    "decision": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0,
+    "values": 0.0
+   },
+   "called_any": 0.9,
+   "first_call_right_tool": 0.1,
+   "calls_per_episode": 5.4,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.9722222222222222,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 0.3,
+   "unanswered": 0.7,
+   "policy_tokens": 1208.275,
+   "total_tokens": 3561.8
+  },
+  "ro_scan_area": {
+   "n": 40,
+   "reward": 0.0,
+   "components": {
+    "calls": 0.0,
+    "decision": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 0.675,
+   "first_call_right_tool": 0.0,
+   "calls_per_episode": 3.4,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 0.95,
+   "unanswered": 0.05,
+   "policy_tokens": 1529.375,
+   "total_tokens": 3616.5
+  },
+  "ro_scan_pressure": {
+   "n": 40,
+   "reward": 0.0,
+   "components": {
+    "calls": 0.0,
+    "decision": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 0.725,
+   "first_call_right_tool": 0.025,
+   "calls_per_episode": 4.325,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 0.425,
+   "unanswered": 0.575,
+   "policy_tokens": 1336.575,
+   "total_tokens": 3473.75
+  },
+  "swro_check": {
+   "n": 40,
+   "reward": 0.0011284722222222223,
+   "components": {
+    "calls": 0.004513888888888889,
+    "decision": 0.0,
+    "violations": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 0.675,
+   "first_call_right_tool": 0.3,
+   "calls_per_episode": 3.775,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 0.675,
+   "unanswered": 0.3,
+   "policy_tokens": 1407.95,
+   "total_tokens": 3538.075
+  },
+  "swro_option": {
+   "n": 40,
+   "reward": 0.00933366402116402,
+   "components": {
+    "calls": 0.03360119047619047,
+    "decision": 0.0,
+    "values": 0.0,
+    "format": 0.0,
+    "efficiency": 0.0
+   },
+   "called_any": 0.95,
+   "first_call_right_tool": 0.45,
+   "calls_per_episode": 5.675,
+   "calls_malformed": 0.0,
+   "calls_errored": 1.0,
+   "evidence": 0.0,
+   "answer_found": 0.0,
+   "decision_correct": 0.0,
+   "truncated": 0.55,
+   "unanswered": 0.425,
+   "policy_tokens": 1377.6,
+   "total_tokens": 3593.775
+  }
+ },
+ "meta": {
+  "adapter": null,
+  "split": "dev",
+  "temperature": 0.0,
+  "samples": 1,
+  "max_new_tokens": 1536,
+  "stop_at_json": false,
+  "seconds": 1663.2040374279022,
+  "solves": 319,
+  "peak_vram_mib": 6468.82666015625
+ }
+}
