@@ -1,0 +1,376 @@
+[
+ {
+  "type": "function",
+  "function": {
+   "name": "simulate_ro",
+   "description": "Simulate a reverse osmosis module with the WaterTAP ReverseOsmosis0D model.\n\nSolves a steady-state seawater RO unit and reports water/salt flux, permeate\nquality, water recovery, salt rejection and concentration polarization. Any\nargument left unset keeps its default (see describe_ro_parameters).\n\nReturns JSON. On failure returns {\"error\": ...} rather than raising.\n",
+   "parameters": {
+    "properties": {
+     "feed_flow_mass_kg_s": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Flow Mass Kg S"
+     },
+     "feed_nacl_mass_frac": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Nacl Mass Frac"
+     },
+     "feed_pressure_bar": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Pressure Bar"
+     },
+     "feed_temperature_c": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Temperature C"
+     },
+     "membrane_area_m2": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Membrane Area M2"
+     },
+     "A_comp": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "A Comp"
+     },
+     "B_comp": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "B Comp"
+     },
+     "permeate_pressure_bar": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Permeate Pressure Bar"
+     },
+     "pressure_drop_bar": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Pressure Drop Bar"
+     },
+     "channel_height_m": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Channel Height M"
+     },
+     "spacer_porosity": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Spacer Porosity"
+     },
+     "module_length_m": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Module Length M"
+     },
+     "cp_modulus": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Cp Modulus"
+     },
+     "mass_transfer_coeff": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Mass Transfer Coeff"
+     },
+     "concentration_polarization": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Concentration Polarization"
+     },
+     "mass_transfer_coefficient": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Mass Transfer Coefficient"
+     }
+    },
+    "title": "simulate_roArguments",
+    "type": "object"
+   }
+  }
+ },
+ {
+  "type": "function",
+  "function": {
+   "name": "simulate_swro_system",
+   "description": "Simulate and cost a *full seawater RO desalination plant*.\n\nUse this \u2014 not simulate_ro \u2014 for any question about cost, energy, or the plant\nas a whole. It solves the whole train (pretreatment, high pressure pump, RO,\nenergy recovery, post-treatment) and reports **levelized cost of water in $/m3**\nand **specific energy consumption in kWh/m3**, which simulate_ro cannot produce\nbecause it models a single membrane unit with no pump, energy recovery or costing.\n\nEnergy recovery is chosen with erd_type: 'pressure_exchanger' (default, adds a\npressure exchanger and a booster pump) or 'pump_as_turbine'. The pxr/p2\nefficiencies apply only to the former and erd_efficiency only to the latter.\n\nSlower than simulate_ro \u2014 it solves the entire flowsheet twice. Any argument\nleft unset keeps its default (see describe_ro_parameters).\n\nReturns JSON. On failure returns {\"error\": ...} rather than raising.\n",
+   "parameters": {
+    "properties": {
+     "erd_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Erd Type"
+     },
+     "feed_flow_m3_s": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Flow M3 S"
+     },
+     "feed_tds_g_L": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Tds G L"
+     },
+     "feed_tss_g_L": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Tss G L"
+     },
+     "feed_temperature_c": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Feed Temperature C"
+     },
+     "ro_area_m2": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Ro Area M2"
+     },
+     "A_comp": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "A Comp"
+     },
+     "B_comp": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "B Comp"
+     },
+     "p1_pressure_bar": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "P1 Pressure Bar"
+     },
+     "p1_efficiency": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "P1 Efficiency"
+     },
+     "pxr_efficiency": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Pxr Efficiency"
+     },
+     "p2_efficiency": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "P2 Efficiency"
+     },
+     "erd_efficiency": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "default": null,
+      "title": "Erd Efficiency"
+     }
+    },
+    "title": "simulate_swro_systemArguments",
+    "type": "object"
+   }
+  }
+ }
+]

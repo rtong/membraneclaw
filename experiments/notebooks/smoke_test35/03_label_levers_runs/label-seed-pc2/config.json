@@ -1,0 +1,54 @@
+{
+  "model": "Qwen/Qwen3.5-0.8B",
+  "epochs": 3,
+  "lr": 0.0001,
+  "accum": 8,
+  "lora_r": 16,
+  "seed": 0,
+  "replay": "every train case: the three gold calls, <|im_end|>, the answer's opening {, the stage value",
+  "replay_slots": [
+    "stage"
+  ],
+  "label_cases": "smoke_test/data/seed_cases.jsonl",
+  "causes": [
+    "scaling",
+    "oxidation_damage",
+    "organic_fouling",
+    "colloidal_fouling",
+    "biofouling",
+    "compaction",
+    "mechanical_leak"
+  ],
+  "max_cases": 40,
+  "per_cause": 2,
+  "label_case_ids": [
+    "seed-0196",
+    "seed-0084",
+    "seed-0125",
+    "seed-0362",
+    "seed-0270",
+    "seed-0036",
+    "seed-0199",
+    "seed-0234",
+    "seed-0188",
+    "seed-0359",
+    "seed-0385",
+    "seed-0381",
+    "seed-0028",
+    "seed-0216"
+  ],
+  "label_cause_counts": {
+    "scaling": 2,
+    "oxidation_damage": 2,
+    "organic_fouling": 2,
+    "colloidal_fouling": 2,
+    "biofouling": 2,
+    "compaction": 2,
+    "mechanical_leak": 2
+  },
+  "slots": [
+    "root_cause",
+    "action"
+  ],
+  "grad_checkpoint": true
+}

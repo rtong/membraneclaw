@@ -1,0 +1,6 @@
+{
+  "stopped_at": 75,
+  "reason": "critic gate: value_ev not above the position clock at two evaluations",
+  "best_step": 50,
+  "best_reward": 0.2508833333333333
+}

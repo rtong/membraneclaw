@@ -1,0 +1,60 @@
+{
+  "padding": [
+    {
+      "pads": 10,
+      "tokens": 80,
+      "f32_padded": 0.00035,
+      "bf16_unpadded": 0.01094,
+      "bf16_padded": 0.01097
+    },
+    {
+      "pads": 0,
+      "tokens": 300,
+      "f32_padded": 0.0,
+      "bf16_unpadded": 0.01399,
+      "bf16_padded": 0.01399
+    },
+    {
+      "pads": 8,
+      "tokens": 9,
+      "f32_padded": 0.00064,
+      "bf16_unpadded": 0.03233,
+      "bf16_padded": 0.02115
+    },
+    {
+      "pads": 7,
+      "tokens": 102,
+      "f32_padded": 0.00017,
+      "bf16_unpadded": 0.00536,
+      "bf16_padded": 0.00494
+    },
+    {
+      "pads": 1,
+      "tokens": 85,
+      "f32_padded": 0.00011,
+      "bf16_unpadded": 0.00505,
+      "bf16_padded": 0.00495
+    },
+    {
+      "pads": 5,
+      "tokens": 102,
+      "f32_padded": 8e-05,
+      "bf16_unpadded": 0.00237,
+      "bf16_padded": 0.00156
+    },
+    {
+      "pads": 2,
+      "tokens": 87,
+      "f32_padded": 9e-05,
+      "bf16_unpadded": 0.00981,
+      "bf16_padded": 0.00793
+    },
+    {
+      "pads": 2,
+      "tokens": 84,
+      "f32_padded": 0.00021,
+      "bf16_unpadded": 0.00812,
+      "bf16_padded": 0.00709
+    }
+  ]
+}

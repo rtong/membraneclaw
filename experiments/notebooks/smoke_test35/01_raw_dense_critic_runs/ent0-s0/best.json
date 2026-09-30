@@ -1,0 +1,17 @@
+{
+  "step": 50,
+  "reward": 0.2508833333333333,
+  "exact_match": 0.0,
+  "validity_gate": 1.0,
+  "schema_ok": 1.0,
+  "cause_acc": 0.14,
+  "flags_acc": 0.5066666666666666,
+  "numeric_acc": 0.011666666666666665,
+  "action_acc": 0.14,
+  "completion_tokens_mean": 103.09,
+  "predicted_cause_hist": {
+    "oxidation_damage": 200
+  },
+  "critic_residual_median": -0.017906,
+  "critic_ahead_frac": 0.28
+}
