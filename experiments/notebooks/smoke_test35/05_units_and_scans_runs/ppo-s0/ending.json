@@ -1,0 +1,6 @@
+{
+  "stopped_at": 244,
+  "reason": "tool gate: sampled call fidelity over the last 10 steps 0.883 < 0.9",
+  "best_step": 175,
+  "best_reward": 0.9528406084656085
+}
