@@ -1,0 +1,68 @@
+{
+ "endpoint": "https://temur.tail35bed8.ts.net/mcp",
+ "split": "test",
+ "identical": 12,
+ "n": 12,
+ "rows": [
+  {
+   "id": "ro_check-test-00216",
+   "point": "p0",
+   "identical": true
+  },
+  {
+   "id": "ro_scan_area-test-00098",
+   "point": "p3",
+   "identical": true
+  },
+  {
+   "id": "ro_scan_area-test-00194",
+   "point": "p2",
+   "identical": true
+  },
+  {
+   "id": "swro_option-test-00227",
+   "point": "p2",
+   "identical": true
+  },
+  {
+   "id": "swro_option-test-00107",
+   "point": "p0",
+   "identical": true
+  },
+  {
+   "id": "swro_check-test-00010",
+   "point": "p0",
+   "identical": true
+  },
+  {
+   "id": "ro_check-test-00066",
+   "point": "p0",
+   "identical": true
+  },
+  {
+   "id": "swro_check-test-00130",
+   "point": "p0",
+   "identical": true
+  },
+  {
+   "id": "swro_check-test-00124",
+   "point": "p0",
+   "identical": true
+  },
+  {
+   "id": "ro_scan_pressure-test-00103",
+   "point": "p2",
+   "identical": true
+  },
+  {
+   "id": "ro_scan_pressure-test-00235",
+   "point": "p4",
+   "identical": true
+  },
+  {
+   "id": "ro_scan_area-test-00200",
+   "point": "p2",
+   "identical": true
+  }
+ ]
+}

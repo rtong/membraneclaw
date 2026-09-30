@@ -1,0 +1,179 @@
+{
+ "overall": {
+  "n": 240,
+  "reward": 0.8437316688712522,
+  "components": {
+   "calls": 0.9534722222222223,
+   "decision": 0.785,
+   "violations": 0.819875,
+   "values": 0.8452380952380952,
+   "format": 0.975,
+   "efficiency": 0.5957638888888889
+  },
+  "called_any": 0.975,
+  "first_call_right_tool": 0.975,
+  "calls_per_episode": 2.5208333333333335,
+  "calls_malformed": 0.0,
+  "calls_errored": 0.01487603305785124,
+  "evidence": 0.8541666666666666,
+  "answer_found": 0.975,
+  "decision_correct": 0.8375,
+  "truncated": 0.025,
+  "unanswered": 0.0,
+  "policy_tokens": 520.8791666666667,
+  "total_tokens": 4574.9375
+ },
+ "families": {
+  "ro_check": {
+   "n": 40,
+   "reward": 0.8615345238095238,
+   "components": {
+    "calls": 0.9552380952380952,
+    "decision": 0.76,
+    "violations": 0.7422500000000001,
+    "values": 0.9875,
+    "format": 1.0,
+    "efficiency": 0.7
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 1.0,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.775,
+   "answer_found": 1.0,
+   "decision_correct": 0.9,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 223.425,
+   "total_tokens": 3137.125
+  },
+  "ro_membrane": {
+   "n": 40,
+   "reward": 0.9051719576719577,
+   "components": {
+    "calls": 0.9869047619047618,
+    "decision": 0.8825,
+    "values": 0.8787878787878788,
+    "format": 1.0,
+    "efficiency": 0.6291666666666667
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 2.8,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.925,
+   "answer_found": 1.0,
+   "decision_correct": 0.9,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 556.35,
+   "total_tokens": 5119.675
+  },
+  "ro_scan_area": {
+   "n": 40,
+   "reward": 0.7829100529100529,
+   "components": {
+    "calls": 0.936845238095238,
+    "decision": 0.7125,
+    "values": 0.7777777777777778,
+    "format": 0.975,
+    "efficiency": 0.26708333333333334
+   },
+   "called_any": 0.975,
+   "first_call_right_tool": 0.975,
+   "calls_per_episode": 3.975,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.031446540880503145,
+   "evidence": 0.75,
+   "answer_found": 0.975,
+   "decision_correct": 0.8,
+   "truncated": 0.025,
+   "unanswered": 0.0,
+   "policy_tokens": 782.475,
+   "total_tokens": 6222.225
+  },
+  "ro_scan_pressure": {
+   "n": 40,
+   "reward": 0.6440013227513227,
+   "components": {
+    "calls": 0.8617857142857144,
+    "decision": 0.5575,
+    "format": 0.875,
+    "efficiency": 0.2033333333333333,
+    "values": 0.48333333333333334
+   },
+   "called_any": 0.875,
+   "first_call_right_tool": 0.875,
+   "calls_per_episode": 3.725,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.026845637583892617,
+   "evidence": 0.8,
+   "answer_found": 0.875,
+   "decision_correct": 0.575,
+   "truncated": 0.125,
+   "unanswered": 0.0,
+   "policy_tokens": 864.5,
+   "total_tokens": 6102.925
+  },
+  "swro_check": {
+   "n": 40,
+   "reward": 0.9538779761904761,
+   "components": {
+    "calls": 0.9860119047619047,
+    "decision": 0.9324999999999999,
+    "violations": 0.8975,
+    "values": 0.975,
+    "format": 1.0,
+    "efficiency": 0.925
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 1.0,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.925,
+   "answer_found": 1.0,
+   "decision_correct": 0.95,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 206.15,
+   "total_tokens": 2803.15
+  },
+  "swro_option": {
+   "n": 40,
+   "reward": 0.9148941798941799,
+   "components": {
+    "calls": 0.994047619047619,
+    "decision": 0.865,
+    "values": 0.8870967741935484,
+    "format": 1.0,
+    "efficiency": 0.85
+   },
+   "called_any": 1.0,
+   "first_call_right_tool": 1.0,
+   "calls_per_episode": 2.625,
+   "calls_malformed": 0.0,
+   "calls_errored": 0.0,
+   "evidence": 0.95,
+   "answer_found": 1.0,
+   "decision_correct": 0.9,
+   "truncated": 0.0,
+   "unanswered": 0.0,
+   "policy_tokens": 492.375,
+   "total_tokens": 4064.525
+  }
+ },
+ "meta": {
+  "adapter": "04_natural_watertap_runs/ppo-s0/adapter-best",
+  "split": "test",
+  "temperature": 0.0,
+  "samples": 1,
+  "max_new_tokens": 1536,
+  "stop_at_json": true,
+  "seconds": 865.5013091564178,
+  "solves": 601,
+  "peak_vram_mib": 5020.25927734375
+ }
+}

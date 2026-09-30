@@ -1,0 +1,130 @@
+{
+ "arg_tol": 0.005,
+ "scenarios": {
+  "simulate_ro": 12,
+  "simulate_swro_system": 12
+ },
+ "worst_by_input": {
+  "simulate_ro": {
+   "feed_flow_mass_kg_s": {
+    "permeate.flow_kg_s": 0.0028045900933720835,
+    "permeate.nacl_ppm": 0.0037255454167801627,
+    "performance.water_recovery_pct": 0.0038217756027847383,
+    "performance.salt_rejection_pct": 4.567893665796685e-05,
+    "flux.water_LMH": 0.0028053198876583085
+   },
+   "feed_nacl_mass_frac": {
+    "permeate.flow_kg_s": 0.011508723028171852,
+    "permeate.nacl_ppm": 0.013426683810941586,
+    "performance.water_recovery_pct": 0.011377080440050369,
+    "performance.salt_rejection_pct": 0.0001452607516903015,
+    "flux.water_LMH": 0.011517486830439738
+   },
+   "membrane_area_m2": {
+    "permeate.flow_kg_s": 0.0038028129462015503,
+    "permeate.nacl_ppm": 0.0037103623986531886,
+    "performance.water_recovery_pct": 0.0038026079160429216,
+    "performance.salt_rejection_pct": 4.556882475403867e-05,
+    "flux.water_LMH": 0.0028088799953702726
+   },
+   "feed_pressure_bar": {
+    "permeate.flow_kg_s": 0.013370187551348445,
+    "permeate.nacl_ppm": 0.009698572939718986,
+    "performance.water_recovery_pct": 0.013374966048280035,
+    "performance.salt_rejection_pct": 0.00017077636418783015,
+    "flux.water_LMH": 0.01337648402383973
+   },
+   "feed_temperature_c": {
+    "permeate.flow_kg_s": 0.0009316985692129354,
+    "permeate.nacl_ppm": 0.000663564354439039,
+    "performance.water_recovery_pct": 0.0009318732885348346,
+    "performance.salt_rejection_pct": 5.8637065365463314e-06,
+    "flux.water_LMH": 0.0009319286642719415
+   },
+   "A_comp": {
+    "permeate.flow_kg_s": 0.0028367757905864988,
+    "permeate.nacl_ppm": 0.002551782693619775,
+    "performance.water_recovery_pct": 0.002837239062262631,
+    "performance.salt_rejection_pct": 2.7477255116425958e-05,
+    "flux.water_LMH": 0.002837385775328549
+   },
+   "B_comp": {
+    "permeate.flow_kg_s": 0.0002597888027596751,
+    "permeate.nacl_ppm": 0.004945810408931606,
+    "performance.water_recovery_pct": 0.0002574453566513979,
+    "performance.salt_rejection_pct": 8.265178832544962e-05,
+    "flux.water_LMH": 0.0002567009410082699
+   }
+  },
+  "simulate_swro_system": {
+   "feed_flow_m3_s": {
+    "costing.specific_energy_kWh_m3": 0.0007249739555394985,
+    "costing.LCOW_usd_m3": 0.0018116988504015552,
+    "performance.product_flow_m3_s": 0.0054593662668374066,
+    "performance.system_recovery_pct": 0.0004602521726957409
+   },
+   "feed_tds_g_L": {
+    "costing.specific_energy_kWh_m3": 0.0036993114239871616,
+    "costing.LCOW_usd_m3": 0.003916183109126781,
+    "performance.product_flow_m3_s": 0.0054162958960581875,
+    "performance.system_recovery_pct": 0.0054162958960581875
+   },
+   "feed_temperature_c": {
+    "costing.specific_energy_kWh_m3": 7.994379471165658e-05,
+    "costing.LCOW_usd_m3": 0.00034666511948122647,
+    "performance.product_flow_m3_s": 0.00047428761535250885,
+    "performance.system_recovery_pct": 0.00047428761535250885
+   },
+   "p1_pressure_bar": {
+    "costing.specific_energy_kWh_m3": 0.0037790875277901037,
+    "costing.LCOW_usd_m3": 0.004193045142968366,
+    "performance.product_flow_m3_s": 0.007343530689347566,
+    "performance.system_recovery_pct": 0.007343530689347566
+   },
+   "pxr_efficiency": {
+    "costing.specific_energy_kWh_m3": 0.0051518745847154435,
+    "costing.LCOW_usd_m3": 0.0018736063606532571,
+    "performance.product_flow_m3_s": 4.440892098500626e-16,
+    "performance.system_recovery_pct": 6.661338147750939e-16
+   },
+   "p1_efficiency": {
+    "costing.specific_energy_kWh_m3": 0.004675048277144933,
+    "costing.LCOW_usd_m3": 0.0024857467654610943,
+    "performance.product_flow_m3_s": 2.220446049250313e-16,
+    "performance.system_recovery_pct": 2.220446049250313e-16
+   },
+   "erd_efficiency": {
+    "costing.specific_energy_kWh_m3": 3.3306690738754696e-16,
+    "costing.LCOW_usd_m3": 0.0,
+    "performance.product_flow_m3_s": 2.220446049250313e-16,
+    "performance.system_recovery_pct": 2.220446049250313e-16
+   }
+  }
+ },
+ "worst_by_metric": {
+  "simulate_ro": {
+   "permeate.flow_kg_s": 0.013370187551348445,
+   "permeate.nacl_ppm": 0.013426683810941586,
+   "performance.water_recovery_pct": 0.013374966048280035,
+   "performance.salt_rejection_pct": 0.00017077636418783015,
+   "flux.water_LMH": 0.01337648402383973
+  },
+  "simulate_swro_system": {
+   "costing.specific_energy_kWh_m3": 0.0051518745847154435,
+   "costing.LCOW_usd_m3": 0.004193045142968366,
+   "performance.product_flow_m3_s": 0.007343530689347566,
+   "performance.system_recovery_pct": 0.007343530689347566
+  }
+ },
+ "margin": {
+  "permeate.flow_kg_s": 0.02,
+  "permeate.nacl_ppm": 0.02,
+  "performance.water_recovery_pct": 0.02,
+  "performance.salt_rejection_pct": 0.001,
+  "flux.water_LMH": 0.02,
+  "costing.specific_energy_kWh_m3": 0.02,
+  "costing.LCOW_usd_m3": 0.02,
+  "performance.product_flow_m3_s": 0.02,
+  "performance.system_recovery_pct": 0.02
+ }
+}
