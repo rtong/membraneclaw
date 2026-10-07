@@ -36,6 +36,8 @@ also run in the training venv):
   worker      JSON-lines tool server for rollouts (deployed argument handling, no rate limit)
   check       decontamination against the benchmark, reward sanity (oracle = 1), null baselines
   xcheck      re-solve a sample of gold points through the deployed MCP on temur
+  mlx-check   on another machine: every gold point of a split solved again and compared with the data
+  mlx-probe   ``probe`` through mlx-lm on Apple silicon, for models this notebook does not train
 """
 from __future__ import annotations
 
@@ -3097,6 +3099,313 @@ def cmd_xcheck(args) -> None:
     (HERE / f"{PREFIX}_xcheck.json").write_text(json.dumps(out, indent=1) + "\n")
 
 
+# ----------------------------------------------------------------------------------------------
+# The probe on Apple silicon (mlx-lm), for models this notebook does not train. Prompt, tool pool,
+# episode bookkeeping, scoring and summary are the ones above; only the generation step differs:
+# one episode at a time, greedy.
+#   * The model's state over the tokens every prompt starts with (system message + tool declarations)
+#     is computed once and copied per episode; each turn then feeds only the tokens that are new.
+#   * Activations run in float32 (``--f32 1``), the weights as stored. In bf16 the logits of
+#     Qwen3.5-4B move by about 0.5 with how the same context is cut into pieces, and greedy episodes
+#     with and without the cache part ways; in float32 they are token-identical.
+#   * ``--stop-at-json 1`` is ``probe``'s rule: a call-free turn ends where its first top-level {...}
+#     closes. An untrained model also writes braces that are not an answer (LaTeX: 10^{-12}), and the
+#     rule ends those turns in the middle of a sentence. ``--stop-at-json 2`` ends the turn only where
+#     an answer object closes. With ``--reuse <state of a rule-1 run>`` only the episodes rule 1 ended
+#     on a brace that was not an answer are generated again -- greedy decoding makes every other
+#     episode the same under both rules -- and ``--verify N`` regenerates N of the reused ones and
+#     compares their tokens.
+#   * A run that is interrupted continues from its .state.jsonl when started again with the same
+#     arguments.
+# ----------------------------------------------------------------------------------------------
+#: Where the seconds go: reading context, writing tokens, copying the shared prefix, waiting for tools.
+MLX_CLOCK = {"turns": 0, "prefill_tokens": 0, "prefill_s": 0.0, "new_tokens": 0, "generate_s": 0.0, "copy_s": 0.0,
+             "tool_s": 0.0}
+
+
+def mlx_answer_closed(text: str, rule: int) -> bool:
+    """Has this turn's answer closed? rule 1: its first top-level {...}; rule 2: an answer object."""
+    if "<tool_call>" in text:
+        return False
+    return bool(json_spans(text)) if rule == 1 else extract_answer(text)[0] is not None
+
+
+def mlx_turn(model, hf_tok, ids: list[int], budget: int, *, im_end: int, eot: int, stop_at_json: int,
+             cache: dict, prompt_cache=None) -> tuple[list[int], bool, bool]:
+    """One policy turn, greedy: (tokens taken, ended by <|im_end|>, answer closed at its JSON).
+    With ``prompt_cache``, ``ids`` is only what the cache has not seen; mlx-lm feeds every token it
+    yields into the cache before yielding it, so afterwards the cache holds ids + the tokens taken."""
+    import os
+    import mlx.core as mx
+    from mlx_lm.generate import stream_generate
+    from mlx_lm.sample_utils import make_sampler
+    ended = closed = False
+    out, text, t0, last = [], "", time.time(), None
+    kw = {} if prompt_cache is None else {"prompt_cache": prompt_cache}
+    for r in stream_generate(model, hf_tok, prompt=mx.array(ids), max_tokens=budget, sampler=make_sampler(temp=0.0),
+                             **kw):
+        t, last = r.token, r
+        if t == eot:  # ``probe`` suppresses <|endoftext|>; here it ends the turn
+            break
+        out.append(t)
+        if t == im_end:
+            ended = True
+            break
+        if stop_at_json:
+            piece = _tok_text(hf_tok, t, cache)
+            text += piece
+            if "}" in piece and mlx_answer_closed(text, stop_at_json):
+                closed = True
+                break
+    prefill = last.prompt_tokens / last.prompt_tps if last is not None and last.prompt_tps else 0.0
+    if os.environ.get("MLX_PROBE_DEBUG"):
+        print(f"  turn: read {len(ids)} tok in {prefill:.1f}s, wrote {len(out)} tok in {time.time() - t0 - prefill:.1f}s "
+              f"({last.generation_tps:.1f} tok/s by mlx-lm), peak {last.peak_memory:.1f} GB", flush=True)
+    MLX_CLOCK["turns"] += 1
+    MLX_CLOCK["prefill_tokens"] += len(ids)
+    MLX_CLOCK["prefill_s"] += prefill
+    MLX_CLOCK["new_tokens"] += len(out)
+    MLX_CLOCK["generate_s"] += time.time() - t0 - prefill
+    return out, ended, closed
+
+
+def mlx_shared_prefix(model, prompts: list[list[int]]):
+    """The model's state after the tokens all prompts share (at least one token is left to each)."""
+    import mlx.core as mx
+    from mlx_lm.generate import generate_step
+    from mlx_lm.models.cache import make_prompt_cache
+    n = min(len(p) for p in prompts) - 1
+    for p in prompts[1:]:
+        n = next((i for i in range(n) if p[i] != prompts[0][i]), n)
+    base = make_prompt_cache(model)
+    for _ in generate_step(mx.array(prompts[0][:n]), model, max_tokens=0, prompt_cache=base):
+        pass
+    mx.eval([c.state for c in base])
+    return base, prompts[0][:n]
+
+
+def mlx_rollout(model, hf_tok, case: dict, pool, *, max_new_tokens: int, stop_at_json: int, cache: dict,
+                prefix: str, im_end: int, eot: int, base=None):
+    """One episode, ``rollout``'s rules for one row: (prompt, turn, tool results, turn, ...)."""
+    import copy
+    ep = Episode(case, hf_tok(render_prompt(hf_tok, case), add_special_tokens=False).input_ids)
+    prompt_cache, fed = None, 0  # fed = how many tokens of prompt_ids + ids the cache already holds
+    if base is not None:
+        assert ep.prompt_ids[:len(base[1])] == base[1]
+        t0 = time.time()
+        prompt_cache, fed = copy.deepcopy(base[0]), len(base[1])
+        MLX_CLOCK["copy_s"] += time.time() - t0
+    for rnd in range(MAX_ROUNDS + 1):
+        budget = max_new_tokens - ep.policy_tokens
+        if budget <= 0:
+            ep.truncated = True
+            break
+        context = ep.prompt_ids + ep.ids
+        take, ended, closed = mlx_turn(model, hf_tok, context[fed:], budget, im_end=im_end, eot=eot,
+                                       stop_at_json=stop_at_json, cache=cache, prompt_cache=prompt_cache)
+        if prompt_cache is not None:
+            fed = len(context) + len(take)
+        ep.turn_starts.append(len(ep.ids))
+        ep.ids += take
+        ep.policy += [True] * len(take)
+        text = hf_tok.decode(take, skip_special_tokens=True)
+        ep.turns.append(text)
+        if closed:
+            ep.final_text, ep.answer_closed = text, True
+            break
+        if not ended:
+            ep.truncated, ep.final_text = True, text
+            break
+        calls = parse_calls(text)
+        if not calls:
+            ep.final_text = text
+            break
+        if rnd == MAX_ROUNDS:
+            ep.unanswered = len(calls)
+            break
+        n_sims = sum(x.get("name") != CONVERT for x in ep.calls)
+        n_conv = len(ep.calls) - n_sims
+        jobs, where = [], []
+        for c in calls:
+            if c.get("malformed"):
+                c["result"] = MALFORMED_CALL_ERROR
+            elif c.get("name") == CONVERT:
+                n_conv += 1
+                if n_conv > MAX_CONVERTS:
+                    c["result"] = CONVERT_BUDGET_ERROR
+                else:
+                    jobs.append((c["name"], c["arguments"]))
+                    where.append(c)
+            else:
+                n_sims += 1
+                if n_sims > MAX_CALLS:
+                    c["result"] = CALL_BUDGET_ERROR
+                else:
+                    jobs.append((c["name"], c["arguments"]))
+                    where.append(c)
+        t0 = time.time()
+        for c, result in zip(where, pool.call_many(jobs)):
+            c["result"] = result
+        MLX_CLOCK["tool_s"] += time.time() - t0
+        for c in calls:
+            c["turn"] = len(ep.turns) - 1
+            ep.calls.append(c)
+        env = hf_tok(tool_response_text([c["result"] for c in calls], prefix), add_special_tokens=False).input_ids
+        ep.ids += env
+        ep.policy += [False] * len(env)
+    return ep
+
+
+def mlx_episode_row(ep, sc: dict) -> dict:
+    """The probe's row, with each call's result text beside its error flag."""
+    row = ep.to_json() | {"score": {k: sc[k] for k in ("total", "components", "evidence", "decision_correct")}}
+    for c, full in zip(row["calls"], ep.calls):
+        c["result"] = full["result"]
+    return row
+
+
+def _json_numbers(obj, path=""):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            yield from _json_numbers(v, f"{path}.{k}")
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            yield from _json_numbers(v, f"{path}[{i}]")
+    elif isinstance(obj, (int, float)) and not isinstance(obj, bool):
+        yield path, float(obj)
+
+
+def cmd_mlx_check(args) -> None:
+    """Are this machine's simulators the ones the data was made with? Every gold point of the split,
+    solved again and compared with the stored result."""
+    import platform
+    split, workers = args.split, args.workers
+    jobs = [(c["tool"], p["args"], p["result"]) for c in load_split(split) for p in c["points"]]
+    pool, t0 = ToolPool(workers), time.time()
+    try:
+        got = pool.call_many([(tool, args) for tool, args, _ in jobs])
+    finally:
+        pool.close()
+    same, worst = 0, 0.0
+    for (_, _, want), have in zip(jobs, got):
+        if have == want:
+            same += 1
+            continue
+        try:
+            w, h = dict(_json_numbers(json.loads(want))), dict(_json_numbers(json.loads(have)))
+            rel = max(abs(w[k] - h[k]) / max(abs(w[k]), 1e-12) for k in w) if set(w) == set(h) else float("inf")
+        except ValueError:
+            rel = float("inf")
+        worst = max(worst, rel)
+    out = {"split": split, "points": len(jobs), "identical_text": same, "worst_rel_diff": worst,
+           "seconds": time.time() - t0, "machine": platform.machine(), "system": platform.system()}
+    (HERE / f"{PREFIX}_mlx_checks.json").write_text(json.dumps(out, indent=1) + "\n")
+    print(json.dumps(out, indent=1))
+
+
+MLX_STATE_FIELDS = ("ids", "policy", "turns", "turn_starts", "calls", "final_text", "truncated", "unanswered",
+                    "answer_closed")
+
+
+def cmd_mlx_probe(args) -> None:
+    """``probe`` for a machine without CUDA: the same episodes, scored and summarised the same way, with the
+    generation step done by mlx-lm one episode at a time (greedy). Rows carry each call's result text."""
+    from mlx_lm import load
+    from transformers import AutoTokenizer
+    import mlx.core as mx
+    model, _ = load(args.model)
+    if args.f32:
+        model.set_dtype(mx.float32)
+    hf_tok = AutoTokenizer.from_pretrained(args.tokenizer or args.model, padding_side="left")
+    if hf_tok.pad_token is None:
+        hf_tok.pad_token = hf_tok.eos_token
+    im_end, eot = hf_tok.convert_tokens_to_ids("<|im_end|>"), hf_tok.convert_tokens_to_ids("<|endoftext|>")
+    prefix = generation_prefix(hf_tok)
+    cases = load_split(args.split)
+    if args.limit:
+        cases = random.Random(0).sample(cases, args.limit)
+    out_dir = RUNS / args.out
+    out_dir.mkdir(parents=True, exist_ok=True)
+    tag = f"{args.split}-T0" + ("", "-stop", "-stopans")[args.stop_at_json]
+    reuse = {}
+    if args.reuse:
+        assert args.stop_at_json == 2, "--reuse is for the answer-object rule"
+        for line in open(args.reuse):
+            d = json.loads(line)
+            if not d["answer_closed"] or extract_answer(d["final_text"])[0] is not None:
+                reuse[d["id"]] = d
+    check = set(random.Random(0).sample(sorted(reuse), min(args.verify, len(reuse))))
+    reused = {"reused": 0, "generated": 0, "verified_identical": 0, "verified_different": []}
+    pool = ToolPool(args.workers)
+    cache: dict = {}
+    episodes, scores, t0 = [], [], time.time()
+    prompts = [hf_tok(render_prompt(hf_tok, c), add_special_tokens=False).input_ids for c in cases]
+    base = mlx_shared_prefix(model, prompts) if args.prompt_cache else None
+    if base:
+        print(f"shared prefix {len(base[1])} of {min(map(len, prompts))}-{max(map(len, prompts))} prompt tokens "
+              f"cached in {time.time() - t0:.0f}s", flush=True)
+    state_path = out_dir / f"{tag}.state.jsonl"
+    done = [json.loads(line) for line in state_path.open()] if state_path.exists() else []
+    assert [d["id"] for d in done] == [c["id"] for c in cases[:len(done)]], "state file is from another run"
+    seconds_before = done[-1]["seconds"] if done else 0.0
+    for d, case, ids in zip(done, cases, prompts):
+        ep = Episode(case, ids)
+        for k in MLX_STATE_FIELDS:
+            setattr(ep, k, d[k])
+        episodes.append(ep)
+        scores.append(score_episode(ep))
+    if done:
+        print(f"resumed: {len(done)} episodes from {state_path.name}", flush=True)
+    try:
+        with (out_dir / f"{tag}.episodes.jsonl").open("a" if done else "w") as fh, state_path.open("a") as st:
+            for i, case in enumerate(cases, 1):
+                if i <= len(done):
+                    continue
+                old = reuse.get(case["id"])
+                if old is not None and case["id"] not in check:
+                    ep = Episode(case, prompts[i - 1])
+                    for k in MLX_STATE_FIELDS:
+                        setattr(ep, k, old[k])
+                    reused["reused"] += 1
+                else:
+                    ep = mlx_rollout(model, hf_tok, case, pool, max_new_tokens=args.max_new_tokens,
+                                     stop_at_json=args.stop_at_json, cache=cache, prefix=prefix, im_end=im_end, eot=eot,
+                                     base=base)
+                    reused["generated"] += 1
+                    if old is not None:
+                        same = ep.ids == old["ids"]
+                        reused["verified_identical"] += same
+                        if not same:
+                            reused["verified_different"].append(case["id"])
+                        print(f"verify {case['id']}: {'identical' if same else 'DIFFERENT'} ({len(ep.ids)} tokens)", flush=True)
+                sc = score_episode(ep)
+                episodes.append(ep)
+                scores.append(sc)
+                fh.write(json.dumps(mlx_episode_row(ep, sc)) + "\n")
+                fh.flush()
+                st.write(json.dumps({"id": case["id"], "seconds": seconds_before + time.time() - t0}
+                                    | {k: getattr(ep, k) for k in MLX_STATE_FIELDS}) + "\n")
+                st.flush()
+                if i % 8 == 0 or i == len(cases):
+                    print(f"{i}/{len(cases)}  reward so far {sum(s['total'] for s in scores) / i:.3f}  "
+                          f"{time.time() - t0:.0f}s  solves {pool.solved}  | {MLX_CLOCK['turns']} turns: read "
+                          f"{MLX_CLOCK['prefill_tokens']} tok {MLX_CLOCK['prefill_s']:.0f}s, wrote {MLX_CLOCK['new_tokens']} tok "
+                          f"{MLX_CLOCK['generate_s']:.0f}s, copies {MLX_CLOCK['copy_s']:.0f}s, tools {MLX_CLOCK['tool_s']:.0f}s",
+                          flush=True)
+    finally:
+        pool.close()
+    summary = summarise(episodes, scores)
+    summary["meta"] = {"model": args.model, "backend": "mlx-lm", "split": args.split, "temperature": 0.0, "samples": 1,
+                       "max_new_tokens": args.max_new_tokens, "stop_at_json": bool(args.stop_at_json),
+                       "stop_rule": ("none", "first top-level {...} of a call-free turn",
+                                     "answer object of a call-free turn")[args.stop_at_json],
+                       "reuse": (reused | {"from": args.reuse}) if args.reuse else None,
+                       "seconds": seconds_before + time.time() - t0, "solves": pool.solved, "limit": args.limit,
+                       "prompt_cache": bool(args.prompt_cache), "float32": bool(args.f32), "clock": MLX_CLOCK}
+    (out_dir / f"{tag}.json").write_text(json.dumps(summary, indent=1) + "\n")
+    print(json.dumps(summary["overall"], indent=1))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -3161,6 +3470,25 @@ def main() -> None:
     p.add_argument("--split", default="dev")
     p.add_argument("--n", type=int, default=12)
     p.set_defaults(fn=cmd_xcheck)
+    p = sub.add_parser("mlx-check")
+    p.add_argument("--split", default="dev")
+    p.add_argument("--workers", type=int, default=4)
+    p.set_defaults(fn=cmd_mlx_check)
+    p = sub.add_parser("mlx-probe")
+    p.add_argument("--model", required=True, help="HF id or a local MLX model directory")
+    p.add_argument("--split", default="dev")
+    p.add_argument("--out", required=True)
+    p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--max-new-tokens", type=int, default=2048)
+    p.add_argument("--stop-at-json", type=int, default=2, choices=[0, 1, 2],
+                   help="0 no rule, 1 probe's (first {...}), 2 the answer object only")
+    p.add_argument("--reuse", default=None, help="state file of a --stop-at-json 1 run of the same model and split")
+    p.add_argument("--verify", type=int, default=0, help="regenerate this many reused episodes and compare tokens")
+    p.add_argument("--workers", type=int, default=4)
+    p.add_argument("--tokenizer", default=None, help="HF tokenizer id (default: the model's)")
+    p.add_argument("--prompt-cache", type=int, default=1)
+    p.add_argument("--f32", type=int, default=1, help="float32 activations; the weights stay as stored")
+    p.set_defaults(fn=cmd_mlx_probe)
     args = ap.parse_args()
     args.fn(args)
 
