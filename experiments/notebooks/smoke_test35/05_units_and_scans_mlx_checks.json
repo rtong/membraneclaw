@@ -1,0 +1,9 @@
+{
+ "split": "dev",
+ "points": 610,
+ "identical_text": 0,
+ "worst_rel_diff": 8.752421837076116e-10,
+ "seconds": 61.740816831588745,
+ "machine": "arm64",
+ "system": "Darwin"
+}

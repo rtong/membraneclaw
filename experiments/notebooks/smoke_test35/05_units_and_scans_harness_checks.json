@@ -1,0 +1,15 @@
+{
+ "split": "dev",
+ "n": 60,
+ "calls_parse_roundtrip": 60,
+ "token_ids_equal_template": 60,
+ "pool_results_identical_to_gold_exact_args": 100,
+ "pool_calls": 100,
+ "episodes_by_call_turns": {
+  "1": 28,
+  "2": 32
+ },
+ "convert_calls": 118,
+ "reference_score_through_pool_min": 0.942857142857143,
+ "reference_score_through_pool_mean": 0.98668430335097
+}
