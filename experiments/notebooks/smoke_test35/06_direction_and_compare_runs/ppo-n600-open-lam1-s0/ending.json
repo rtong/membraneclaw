@@ -1,0 +1,6 @@
+{
+  "stopped_at": 200,
+  "reason": "converged: 8 evaluations without beating 0.8795 (step 0)",
+  "best_step": 0,
+  "best_reward": 0.8794788779709415
+}
