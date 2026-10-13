@@ -1,0 +1,6 @@
+{
+  "stopped_at": 121,
+  "reason": "answer collapse: sampled answered rate over the last 10 steps 0.388 < 0.5 x the warm-up mean 0.820",
+  "best_step": 0,
+  "best_reward": 0.8794788779709415
+}

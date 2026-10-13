@@ -1,0 +1,25 @@
+{
+ "split": "dev",
+ "n": 60,
+ "calls_parse_roundtrip": 60,
+ "token_ids_equal_template": 60,
+ "pool_results_identical_to_gold_exact_args": 100,
+ "pool_calls": 100,
+ "episodes_by_call_turns": {
+  "2": 28,
+  "3": 32
+ },
+ "convert_calls": 108,
+ "compare_calls": 60,
+ "reference_score_through_pool_min": 0.942857142857143,
+ "reference_score_through_pool_mean": 0.98668430335097,
+ "train_reference_policy_tokens": {
+  "episodes": 1200,
+  "median": 806,
+  "p90": 1336,
+  "max": 2148,
+  "budget": 3072,
+  "over_budget": 0
+ },
+ "compare_tool": true
+}
