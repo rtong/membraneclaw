@@ -77,6 +77,13 @@ ADV_UNIT=token LAM=1 RUN=ppo-n600-open-lam1-s0 ./06_direction_and_compare_ppo_ru
 ADV_UNIT=token LAM=0.95 SAMPLE_EVERY=5 RUN=ppo-n600-open-s0 ./06_direction_and_compare_ppo_run.sh                  # the token at 05's lambda 0.95: the run that collapsed
 ADV_UNIT=token LAM=0.95 SAMPLE_EVERY=5 RUN=ppo-n1200-open-s0 SEED_RUN=label-seed-n1200 ./06_direction_and_compare_ppo_run.sh     # the next dose
 ./06_direction_and_compare_eval_heldout.sh         # the seed and a run's best (when not step 0) on test / holdout_shift; SEED_RUN= PPO_RUN= for the others
+
+# 07 (06's questions and blind references, read in place; runs on CUDA or Apple silicon's MPS)
+./07_recover_from_errors_reference.sh              # the recovery episodes of train and dev (one input slipped, the simulator's errors, the fix), the harness and data checks
+./07_recover_from_errors_seed.sh                   # the seed (200 of 06's reference episodes + 100 recovery episodes, one epoch) and the control (06's 300); dev at T=1, alive, the forced probe
+./07_recover_from_errors_ppo_run.sh                # PPO from the seed with 06's last configuration (turn credit, lambda 0.95 per turn, lr 2e-6, tool gate off)
+SEED_RUN=seed-n300-r0 RUN=ppo-n300-r0-turn-s0 ./07_recover_from_errors_ppo_run.sh   # the same from the control
+./07_recover_from_errors_eval_heldout.sh           # seed, control and the run's checkpoints on test / holdout_shift; the forced probe on the run's checkpoints
 ```
 
 The notebooks read finished runs and cached measurements; they retrain nothing.
