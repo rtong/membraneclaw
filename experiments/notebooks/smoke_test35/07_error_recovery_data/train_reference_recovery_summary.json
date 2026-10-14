@@ -1,0 +1,387 @@
+{
+ "episodes": 1200,
+ "no slip qualifies": [],
+ "slips": {
+  "unconverted": 662,
+  "factor": 538
+ },
+ "unconverted, by unit": {
+  "g/kg -> mass fraction": 32,
+  "MPa -> bar": 110,
+  "kPa -> bar": 127,
+  "LMH/bar -> m/s/Pa": 26,
+  "L/s -> m\u00b3/s": 42,
+  "ft\u00b2 -> m\u00b2": 31,
+  "LMH -> m/s": 26,
+  "% -> mass fraction": 39,
+  "m\u00b3/d -> m\u00b3/s": 10,
+  "\u2030 -> mass fraction": 48,
+  "% -> fraction": 66,
+  "mg/kg -> mass fraction": 37,
+  "psi -> bar": 23,
+  "mg/L -> g/L": 21,
+  "kg/h -> kg/s": 13,
+  "m\u00b3/h -> m\u00b3/s": 7,
+  "MGD -> m\u00b3/s": 4
+ },
+ "factor, by argument": {
+  "p1_pressure_bar x10": 19,
+  "feed_temperature_c x10": 59,
+  "feed_flow_mass_kg_s x0.1": 53,
+  "p1_pressure_bar x0.1": 21,
+  "A_comp x10": 35,
+  "membrane_area_m2 x10": 60,
+  "p1_efficiency x10": 12,
+  "feed_pressure_bar x10": 51,
+  "feed_nacl_mass_frac x10": 46,
+  "feed_pressure_bar x0.1": 58,
+  "feed_flow_m3_s x0.1": 18,
+  "pxr_efficiency x10": 13,
+  "feed_tds_g_L x10": 26,
+  "erd_efficiency x10": 7,
+  "feed_tds_g_L x0.1": 8,
+  "feed_nacl_mass_frac x0.1": 22,
+  "feed_flow_m3_s x10": 24,
+  "B_comp x0.1": 3,
+  "feed_flow_mass_kg_s x10": 2,
+  "membrane_area_m2 x0.1": 1
+ },
+ "tried": [
+  {
+   "kind": "factor",
+   "slip": "A_comp",
+   "outcome": "errs",
+   "n": 35
+  },
+  {
+   "kind": "factor",
+   "slip": "A_comp",
+   "outcome": "runs silently",
+   "n": 55
+  },
+  {
+   "kind": "factor",
+   "slip": "B_comp",
+   "outcome": "errs",
+   "n": 3
+  },
+  {
+   "kind": "factor",
+   "slip": "B_comp",
+   "outcome": "runs silently",
+   "n": 83
+  },
+  {
+   "kind": "factor",
+   "slip": "erd_efficiency",
+   "outcome": "errs",
+   "n": 7
+  },
+  {
+   "kind": "factor",
+   "slip": "erd_efficiency",
+   "outcome": "runs silently",
+   "n": 2
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_flow_m3_s",
+   "outcome": "errs",
+   "n": 42
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_flow_mass_kg_s",
+   "outcome": "errs",
+   "n": 55
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_flow_mass_kg_s",
+   "outcome": "runs silently",
+   "n": 42
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_nacl_mass_frac",
+   "outcome": "errs",
+   "n": 68
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_nacl_mass_frac",
+   "outcome": "runs silently",
+   "n": 24
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_pressure_bar",
+   "outcome": "errs",
+   "n": 109
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_tds_g_L",
+   "outcome": "errs",
+   "n": 34
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_tds_g_L",
+   "outcome": "runs silently",
+   "n": 6
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_temperature_c",
+   "outcome": "errs",
+   "n": 59
+  },
+  {
+   "kind": "factor",
+   "slip": "feed_temperature_c",
+   "outcome": "runs silently",
+   "n": 65
+  },
+  {
+   "kind": "factor",
+   "slip": "membrane_area_m2",
+   "outcome": "errs",
+   "n": 61
+  },
+  {
+   "kind": "factor",
+   "slip": "membrane_area_m2",
+   "outcome": "runs silently",
+   "n": 58
+  },
+  {
+   "kind": "factor",
+   "slip": "p1_efficiency",
+   "outcome": "errs",
+   "n": 12
+  },
+  {
+   "kind": "factor",
+   "slip": "p1_efficiency",
+   "outcome": "runs silently",
+   "n": 16
+  },
+  {
+   "kind": "factor",
+   "slip": "p1_pressure_bar",
+   "outcome": "errs",
+   "n": 40
+  },
+  {
+   "kind": "factor",
+   "slip": "pxr_efficiency",
+   "outcome": "errs",
+   "n": 13
+  },
+  {
+   "kind": "factor",
+   "slip": "pxr_efficiency",
+   "outcome": "runs silently",
+   "n": 8
+  },
+  {
+   "kind": "unconverted",
+   "slip": "% -> fraction",
+   "outcome": "errs",
+   "n": 276
+  },
+  {
+   "kind": "unconverted",
+   "slip": "% -> mass fraction",
+   "outcome": "errs",
+   "n": 81
+  },
+  {
+   "kind": "unconverted",
+   "slip": "% -> mass fraction",
+   "outcome": "over the budget",
+   "n": 12
+  },
+  {
+   "kind": "unconverted",
+   "slip": "L/s -> m\u00b3/s",
+   "outcome": "errs",
+   "n": 85
+  },
+  {
+   "kind": "unconverted",
+   "slip": "LMH -> m/s",
+   "outcome": "errs",
+   "n": 114
+  },
+  {
+   "kind": "unconverted",
+   "slip": "LMH -> m/s",
+   "outcome": "over the budget",
+   "n": 13
+  },
+  {
+   "kind": "unconverted",
+   "slip": "LMH/bar -> m/s/Pa",
+   "outcome": "errs",
+   "n": 113
+  },
+  {
+   "kind": "unconverted",
+   "slip": "LMH/bar -> m/s/Pa",
+   "outcome": "over the budget",
+   "n": 8
+  },
+  {
+   "kind": "unconverted",
+   "slip": "MGD -> m\u00b3/s",
+   "outcome": "errs",
+   "n": 14
+  },
+  {
+   "kind": "unconverted",
+   "slip": "MPa -> bar",
+   "outcome": "errs",
+   "n": 341
+  },
+  {
+   "kind": "unconverted",
+   "slip": "MPa -> bar",
+   "outcome": "over the budget",
+   "n": 11
+  },
+  {
+   "kind": "unconverted",
+   "slip": "ft\u00b2 -> m\u00b2",
+   "outcome": "errs",
+   "n": 173
+  },
+  {
+   "kind": "unconverted",
+   "slip": "ft\u00b2 -> m\u00b2",
+   "outcome": "over the budget",
+   "n": 7
+  },
+  {
+   "kind": "unconverted",
+   "slip": "g/kg -> mass fraction",
+   "outcome": "errs",
+   "n": 76
+  },
+  {
+   "kind": "unconverted",
+   "slip": "g/kg -> mass fraction",
+   "outcome": "over the budget",
+   "n": 20
+  },
+  {
+   "kind": "unconverted",
+   "slip": "kPa -> bar",
+   "outcome": "errs",
+   "n": 379
+  },
+  {
+   "kind": "unconverted",
+   "slip": "kPa -> bar",
+   "outcome": "over the budget",
+   "n": 11
+  },
+  {
+   "kind": "unconverted",
+   "slip": "kg/h -> kg/s",
+   "outcome": "errs",
+   "n": 59
+  },
+  {
+   "kind": "unconverted",
+   "slip": "kg/h -> kg/s",
+   "outcome": "over the budget",
+   "n": 10
+  },
+  {
+   "kind": "unconverted",
+   "slip": "mg/L -> g/L",
+   "outcome": "errs",
+   "n": 76
+  },
+  {
+   "kind": "unconverted",
+   "slip": "mg/kg -> mass fraction",
+   "outcome": "errs",
+   "n": 82
+  },
+  {
+   "kind": "unconverted",
+   "slip": "mg/kg -> mass fraction",
+   "outcome": "over the budget",
+   "n": 13
+  },
+  {
+   "kind": "unconverted",
+   "slip": "m\u00b3/d -> m\u00b3/s",
+   "outcome": "errs",
+   "n": 28
+  },
+  {
+   "kind": "unconverted",
+   "slip": "m\u00b3/h -> m\u00b3/s",
+   "outcome": "errs",
+   "n": 18
+  },
+  {
+   "kind": "unconverted",
+   "slip": "psi -> bar",
+   "outcome": "errs",
+   "n": 88
+  },
+  {
+   "kind": "unconverted",
+   "slip": "psi -> bar",
+   "outcome": "over the budget",
+   "n": 2
+  },
+  {
+   "kind": "unconverted",
+   "slip": "t/h -> kg/s",
+   "outcome": "over the budget",
+   "n": 8
+  },
+  {
+   "kind": "unconverted",
+   "slip": "t/h -> kg/s",
+   "outcome": "runs silently",
+   "n": 64
+  },
+  {
+   "kind": "unconverted",
+   "slip": "\u00b0F -> C",
+   "outcome": "over the budget",
+   "n": 10
+  },
+  {
+   "kind": "unconverted",
+   "slip": "\u00b0F -> C",
+   "outcome": "runs silently",
+   "n": 116
+  },
+  {
+   "kind": "unconverted",
+   "slip": "\u2030 -> mass fraction",
+   "outcome": "errs",
+   "n": 87
+  },
+  {
+   "kind": "unconverted",
+   "slip": "\u2030 -> mass fraction",
+   "outcome": "over the budget",
+   "n": 12
+  }
+ ],
+ "reward": {
+  "min": 0.8958333333333334,
+  "mean": 0.9523455556605359
+ },
+ "solves": 10167,
+ "seconds": 1235
+}
