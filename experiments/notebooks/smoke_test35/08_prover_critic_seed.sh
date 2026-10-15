@@ -8,7 +8,7 @@
 #   ./08_prover_critic_seed.sh
 #   FIX=1 ./08_prover_critic_seed.sh     seed-rtfix-n300-e4: the same with 07's diagnosis line opening each recovery
 #                                        episode's fix (--fix-lines 1). On the forced probe it misnamed unit errors as
-#                                        x10 factor errors (83 of 144) and recovered least (0.361; the recipe alone
+#                                        x10 factor errors (84 of 144) and recovered least (0.361; the recipe alone
 #                                        0.562, 07's seed 0.812): a run from it was stopped at its step-0 evaluation.
 set -euo pipefail
 cd "$(dirname "$0")"
