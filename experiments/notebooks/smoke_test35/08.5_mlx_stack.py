@@ -13,12 +13,14 @@ a step. This notebook is 08, copied, with all of it on MLX (``--trainer mlx``; P
     backward (``mlx_checkpoint_layers``): one episode's forward + backward peaks under 10 GB;
   * the reference (07's seed, frozen) and the separate critic (Qwen3-4B, layer 27, the system turn cached:
     ``MLXSeparateCritic``) on MLX; AdamW bias-corrected as PyTorch's (MLX's default is not);
-  * unchanged: the harness, the reward, the batch's masks, GAE by the turn, the prover's progress, the critic's
-    closed-form heads (PyTorch, on the CPU), the gates, the evaluations.
+  * the bookkeeping too -- the batch's masks, GAE by the turn, the prover's progress, the critic's closed-form heads
+    (float64 on MLX's CPU stream) -- ported from PyTorch (``mx_batch``, ``mx_gae_turn``, ``MXCriticHeads``, ...):
+    ``train_ppo_mlx`` runs the step with no PyTorch in the process, enforced (``block_torch``: transformers then loads
+    its tokenizers only, and any `import torch` raises);
+  * unchanged: the harness, the reward, the gates, the evaluations, the records.
 
-The run takes the configuration of 08's first run (ppo-qwen3-4b-bo4-a0.8-s0, continued from 120 to 200 steps) with
-another seed: 08's runs start from 07's first 25 steps, which needs 07's seed, so this one takes its own warm-up and
-step-0 evaluation.
+The run is D37 -- 08's configuration with three of the 37 PPO implementation details (``08_prover_critic_ppo_run.sh``'s
+D37=1), 200 steps -- from 07's seed and 07's first 25 steps, so it pairs step by step with 07 and with 08's first run.
 The checks against 08's PyTorch pieces and the run are in 08.5_mlx_stack.ipynb.
 
 What follows is 08's header, as 08 wrote it.
@@ -3681,13 +3683,16 @@ PPO_DEFAULTS = {
     # details' 0.5; 03-07: 1.0). The details' lr (2.5e-4 to 3e-4) and entropy bonus are not taken: they train small
     # networks from scratch, and here a LoRA of a pretrained 0.8B model ran away at lr 1e-5 (06).
     "lr_anneal": 0, "max_grad_norm": 1.0,
+    # 08: the step the annealing starts from (0: the actor's first step, critic_warmup) -- a run continued with the
+    # details from a later step anneals from there to 0 at its last step
+    "lr_anneal_start": 0,
     # 08: where the rollouts and evaluations are generated. "torch": transformers' generate on the device (03-07).
     # "mlx": mlx-lm on Apple silicon (MLXPolicy / rollout_mlx), the policy's LoRA folded in before each rollout; the
     # update and every log-probability stay PyTorch's.
     "generator": "torch",
-    # 08.5: where the update, the reference's log-probs and the separate critic's reads run. "torch": PyTorch on the
-    # device (03-08). "mlx": the MLX stack (MLXTrainable, MLXSeparateCritic) -- with the MLX generator and a separate
-    # Qwen3 critic; the bookkeeping (masks, GAE, the prover, the critic's heads) on the CPU.
+    # 08.5: "torch": 08's ``train_ppo`` (PyTorch on the device). "mlx": ``train_ppo_mlx`` -- the whole step on MLX, with
+    # no PyTorch in the process: generation, the update, the reference's and the critic's reads, and the bookkeeping
+    # (masks, GAE, the prover, the critic's closed-form heads) as MLX arrays. Needs the MLX generator and a Qwen3 critic.
     "trainer": "torch",
     # 08: also save the continuation state (last/) every this many steps, not only at the evaluations (0: only
     # there) -- a run on a laptop's battery loses at most this many steps to a shutdown.
@@ -3700,45 +3705,25 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     import signal
     from collections import deque
     import torch
-    # 08.5: the MLX stack (PPO_DEFAULTS "trainer"): every model on MLX, PyTorch's tensors on the CPU
-    mlx_trainer = cfg.get("trainer", "torch") == "mlx"
-    if mlx_trainer and (cfg.get("generator") != "mlx" or cfg.get("critic", "policy") == "policy"):
-        raise SystemExit("--trainer mlx needs --generator mlx and a separate --critic (a Qwen3 model)")
-    device = "cpu" if mlx_trainer else pick_device()  # 07: CUDA, MPS or CPU (06: CUDA only)
+    device = pick_device()  # 07: CUDA, MPS or CPU (06: CUDA only)
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
     cases = load_split(cfg["split"])
     eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
     torch.manual_seed(cfg["seed"])
     rng = random.Random(cfg["seed"])
+    policy, tok = load_trainable(run_dir / "last" / "adapter" if resume else HERE / cfg["start_from"])
     reference = None
-    if mlx_trainer:
-        import mlx.core as mx
-        import mlx.optimizers as optim
-        from mlx.utils import tree_flatten, tree_unflatten
-        from transformers import AutoTokenizer
-        mx.random.seed(cfg["seed"])
-        tok = AutoTokenizer.from_pretrained(MODEL, padding_side="left")
-        policy = MLXTrainable(run_dir / "last" / "adapter" if resume else HERE / cfg["start_from"])
-        if cfg["kl_coef"]:
-            reference = MLXTrainable(HERE / cfg["start_from"], trainable=False)
-        hidden_size = policy.model.language_model.args.hidden_size
-        actor_params = None
-        # AdamW as PyTorch's: bias-corrected (MLX's default is not), no weight decay
-        opt = optim.AdamW(learning_rate=cfg["lr"], betas=[0.9, 0.999], eps=cfg["adam_eps"], weight_decay=0.0,
-                          bias_correction=True)
-    else:
-        policy, tok = load_trainable(run_dir / "last" / "adapter" if resume else HERE / cfg["start_from"])
-        if cfg["kl_coef"]:
-            reference, _ = load_trainable(HERE / cfg["start_from"])
-            reference.eval()
-            for p in reference.parameters():
-                p.requires_grad_(False)
-        hidden_size = policy.get_base_model().config.get_text_config().hidden_size
-        actor_params = [p for p in policy.parameters() if p.requires_grad]
-        opt = torch.optim.AdamW(actor_params, lr=cfg["lr"], weight_decay=0.0, eps=cfg["adam_eps"])
+    if cfg["kl_coef"]:
+        reference, _ = load_trainable(HERE / cfg["start_from"])
+        reference.eval()
+        for p in reference.parameters():
+            p.requires_grad_(False)
     suppress = tok.convert_tokens_to_ids("<|endoftext|>")
+    hidden_size = policy.get_base_model().config.get_text_config().hidden_size
     head = _value_head(hidden_size, cfg["value_init_bias"]).to(device)
+    actor_params = [p for p in policy.parameters() if p.requires_grad]
+    opt = torch.optim.AdamW(actor_params, lr=cfg["lr"], weight_decay=0.0, eps=cfg["adam_eps"])
     critic_opt = torch.optim.AdamW(head.parameters(), lr=cfg["value_lr"], weight_decay=0.0)
     window: deque = deque(maxlen=cfg["critic_window"])
     # 08: the separate critic (``critic`` a CRITICS key; cmd_ppo has resolved its layer and penalties): the frozen
@@ -3747,8 +3732,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     separate = cfg.get("critic", "policy") != "policy"
     critic = heads = prefix = None
     if separate:
-        critic = (MLXSeparateCritic(cfg["critic"], (cfg["critic_layer"],)) if mlx_trainer
-                  else SeparateCritic(cfg["critic"], (cfg["critic_layer"],), device, truncate=True))
+        critic = SeparateCritic(cfg["critic"], (cfg["critic_layer"],), device, truncate=True)
         heads = CriticHeads(cfg["critic_ridge"], cfg["critic_l2"], init_v=cfg["value_init_bias"])
         prefix = generation_prefix(tok)
     metrics_path, eval_path = run_dir / "metrics.jsonl", run_dir / "eval.jsonl"
@@ -3763,10 +3747,9 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
         # matter), so the run picks up exactly where it was.
         state = torch.load(run_dir / "last" / "state.pt", map_location="cpu", weights_only=False)
         head.load_state_dict(state["head"])
-        if mlx_trainer:  # 08.5: MLX's optimizer state (step, learning rate, each LoRA tensor's moments)
-            opt.state = tree_unflatten(list(mx.load(str(run_dir / "last" / "opt_mlx.safetensors")).items()))
-        else:
-            opt.load_state_dict(state["opt"])
+        opt.load_state_dict(state["opt"])
+        for g in opt.param_groups:  # 08: the configured eps, not the saved one (a run continued with other settings)
+            g["eps"] = cfg["adam_eps"]
         critic_opt.load_state_dict(state["critic_opt"])
         window.extend(state["window"])
         if separate:
@@ -3845,10 +3828,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
         last = run_dir / "last"
         last.mkdir(exist_ok=True)
         policy.save_pretrained(last / "adapter")
-        if mlx_trainer:  # 08.5: MLX's optimizer state beside state.pt
-            mx.save_safetensors(str(last / "opt_mlx.safetensors"), dict(tree_flatten(opt.state)))
-        torch.save({"head": head.state_dict(), "opt": None if mlx_trainer else opt.state_dict(),
-                    "critic_opt": critic_opt.state_dict(),
+        torch.save({"head": head.state_dict(), "opt": opt.state_dict(), "critic_opt": critic_opt.state_dict(),
                     "window": list(window), "python_rng": rng.getstate(), "torch_rng": torch.get_rng_state(),
                     "device_rng": device_rng_state(device), "gate": dict(gate), "step": step,
                     "heads": heads.state if separate else None}, last / "state.pt")
@@ -3861,7 +3841,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             return rollout(policy, tok, batch, pool, temperature=temperature, max_new_tokens=cfg["max_new_tokens"],
                            stop_at_json=bool(cfg["stop_at_json"]))
         import mlx.core as mx
-        gen.sync_mlx(policy) if mlx_trainer else gen.sync(policy)  # 08.5: the MLX policy's LoRA folded in directly
+        gen.sync(policy)
         mx.random.seed(int(torch.randint(2 ** 31 - 1, ()).item()))  # MLX's sampling drawn from the run's torch rng
         return rollout_mlx(gen, tok, batch, pool, temperature=temperature, max_new_tokens=cfg["max_new_tokens"],
                            stop_at_json=bool(cfg["stop_at_json"]))
@@ -3964,28 +3944,18 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             B = build_batch(episodes, tok, device)
             seqs, attn, span, index, mask, rewards = B["seqs"], B["attn"], B["span"], B["index"], B["mask"], B["rewards"]
             with torch.no_grad():
-                if mlx_trainer:  # 08.5: the rollout policy's and the reference's log-probs on MLX
-                    n_pol = index.shape[1]
-                    old_lp, mass = mlx_batch_logprobs(policy, episodes, n_pol, suppress, mass=True)
-                    hidden = None
-                    kl = torch.zeros_like(old_lp)
-                    if reference is not None:
-                        ref_lp = mlx_batch_logprobs(reference, episodes, n_pol, suppress)[0]
-                        kl = (old_lp - ref_lp) * mask
-                        rewards = rewards - cfg["kl_coef"] * kl
-                else:
-                    old_lp, hid, mass = [], [], []
-                    for i in range(len(seqs)):
-                        lp, h, m = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1],
-                                                  suppress=suppress, hidden_layer=cfg["value_layer"])
-                        old_lp.append(lp), hid.append(h), mass.append(m)
-                    old_lp, hidden, mass = torch.cat(old_lp), torch.cat(hid), torch.cat(mass)
-                    kl = torch.zeros_like(old_lp)
-                    if reference is not None:
-                        ref_lp = torch.cat([forward_policy(reference, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1],
-                                                           suppress=suppress)[0] for i in range(len(seqs))])
-                        kl = (old_lp - ref_lp) * mask
-                        rewards = rewards - cfg["kl_coef"] * kl
+                old_lp, hid, mass = [], [], []
+                for i in range(len(seqs)):
+                    lp, h, m = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1],
+                                              suppress=suppress, hidden_layer=cfg["value_layer"])
+                    old_lp.append(lp), hid.append(h), mass.append(m)
+                old_lp, hidden, mass = torch.cat(old_lp), torch.cat(hid), torch.cat(mass)
+                kl = torch.zeros_like(old_lp)
+                if reference is not None:
+                    ref_lp = torch.cat([forward_policy(reference, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1],
+                                                       suppress=suppress)[0] for i in range(len(seqs))])
+                    kl = (old_lp - ref_lp) * mask
+                    rewards = rewards - cfg["kl_coef"] * kl
                 if separate:
                     # 08: the separate critic's reads of the states before each turn, with the heads fitted on the
                     # window so far (this step's episodes are not in it: its values are out of sample).
@@ -4044,12 +4014,10 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 adv = normalized_advantages(adv, actor_mask)
             n_mb = max(1, min(int(cfg.get("minibatches", 1)), len(seqs)))
             if cfg.get("lr_anneal") and not warming:  # computed from the step: a resumed run lands on the same rate
-                frac = 1.0 - (step - cfg["critic_warmup"]) / max(1, cfg["steps"] - cfg["critic_warmup"])
-                if mlx_trainer:
-                    opt.learning_rate = cfg["lr"] * max(frac, 0.0)
-                else:
-                    for g in opt.param_groups:
-                        g["lr"] = cfg["lr"] * max(frac, 0.0)
+                a0 = max(cfg["critic_warmup"], int(cfg.get("lr_anneal_start") or 0))
+                frac = 1.0 - max(0, step - a0) / max(1, cfg["steps"] - a0)
+                for g in opt.param_groups:
+                    g["lr"] = cfg["lr"] * max(frac, 0.0)
             updates, kl_stop, approx_kls, ratio_first = 0, False, [], None
             policy.train()
             for epoch in range(0 if warming else cfg["inner_epochs"]):
@@ -4058,35 +4026,24 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                     random.Random(f"{cfg['seed']}:{step}:{epoch}").shuffle(order)
                 ep_stats = defaultdict(float)
                 for mb in (order[k::n_mb] for k in range(n_mb)):
-                    if not mlx_trainer:
-                        opt.zero_grad(set_to_none=True)
+                    opt.zero_grad(set_to_none=True)
                     adv_mb = adv
                     if cfg.get("adv_norm") == "minibatch":
                         sel = torch.zeros_like(actor_mask)
                         sel[mb] = actor_mask[mb]
                         adv_mb = normalized_advantages(adv, sel)
                     mb_kl, mb_ratio = 0.0, 0.0
-                    if mlx_trainer:  # 08.5: the minibatch's step on MLX (``mlx_actor_minibatch``)
-                        mb_stats, grad_norm = mlx_actor_minibatch(
-                            policy, opt, episodes, mb, old_lp, adv_mb, actor_mask, clip_eps=cfg["clip_eps"],
-                            max_grad_norm=float(cfg.get("max_grad_norm", 1.0)), suppress=suppress)
-                        for st_ in mb_stats:
-                            for k, v in st_.items():
-                                ep_stats[k] += v / len(seqs)
-                            mb_kl += st_["approx_kl"] / len(mb)
-                            mb_ratio += st_["ratio_mean"] / len(mb)
-                    else:
-                        for i in mb:
-                            lp, _, _ = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1], suppress=suppress)
-                            loss, st_ = ppo_actor_loss(lp, old_lp[i:i + 1], adv_mb[i:i + 1], actor_mask[i:i + 1],
-                                                       clip_eps=cfg["clip_eps"])
-                            (loss / len(mb)).backward()
-                            for k, v in st_.items():
-                                ep_stats[k] += v / len(seqs)
-                            mb_kl += st_["approx_kl"] / len(mb)
-                            mb_ratio += st_["ratio_mean"] / len(mb)
-                        grad_norm = torch.nn.utils.clip_grad_norm_(actor_params, float(cfg.get("max_grad_norm", 1.0)))
-                        opt.step()
+                    for i in mb:
+                        lp, _, _ = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1], suppress=suppress)
+                        loss, st_ = ppo_actor_loss(lp, old_lp[i:i + 1], adv_mb[i:i + 1], actor_mask[i:i + 1],
+                                                   clip_eps=cfg["clip_eps"])
+                        (loss / len(mb)).backward()
+                        for k, v in st_.items():
+                            ep_stats[k] += v / len(seqs)
+                        mb_kl += st_["approx_kl"] / len(mb)
+                        mb_ratio += st_["ratio_mean"] / len(mb)
+                    grad_norm = torch.nn.utils.clip_grad_norm_(actor_params, float(cfg.get("max_grad_norm", 1.0)))
+                    opt.step()
                     updates += 1
                     approx_kls.append(mb_kl)
                     if ratio_first is None:
@@ -4101,8 +4058,6 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 astats.update(updates=updates, kl_stop=kl_stop, approx_kl_last=approx_kls[-1],
                               approx_kl_max=max(approx_kls), ratio_first=ratio_first)
             release_device_cache()
-            if mlx_trainer:
-                mx.clear_cache()
             scs = B["scores"]
             active = mask.sum().clamp(min=1)
             mean_adv = float((adv * mask).sum() / active)
@@ -4129,8 +4084,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 **critic_fit(old_values, returns, mask),
                 **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in astats.items()},
                 **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in cstats.items()},
-                "grad_norm": float(grad_norm), "lr": float(opt.learning_rate) if mlx_trainer else opt.param_groups[0]["lr"],
-                "gen_seconds": round(gen_s, 1), "trainer": cfg.get("trainer", "torch"),
+                "grad_norm": float(grad_norm), "lr": opt.param_groups[0]["lr"], "gen_seconds": round(gen_s, 1),
                 "step_seconds": round(time.perf_counter() - t0, 1), "solves": pool.solved,
                 "generator": cfg.get("generator", "torch"),  # 08: a resumed run may switch it
                 # 07: what the step's episodes did about their erroring simulate calls (``recovery_block``)
@@ -4703,8 +4657,31 @@ def cmd_seed(args) -> None:
 
 
 
+def block_torch() -> None:
+    """08.5: make PyTorch unavailable in this process -- importlib's find_spec answers None for it (what transformers'
+    availability check reads: it then loads tokenizers only) and any actual `import torch` raises. ``train_ppo_mlx``
+    runs under it, so the MLX trainer cannot use PyTorch by accident."""
+    import importlib.abc
+    import importlib.util
+
+    def is_torch(name: str) -> bool:
+        return name == "torch" or name.startswith("torch.")
+
+    if any(is_torch(m) for m in sys.modules):
+        raise SystemExit("block_torch: PyTorch is already loaded in this process")
+
+    class NoTorch(importlib.abc.MetaPathFinder):
+        def find_spec(self, name, path=None, target=None):
+            if is_torch(name):
+                raise ModuleNotFoundError(f"PyTorch is blocked in this process (08.5's MLX trainer): {name}")
+            return None
+
+    find_spec = importlib.util.find_spec
+    importlib.util.find_spec = lambda name, package=None: None if is_torch(name) else find_spec(name, package)
+    sys.meta_path.insert(0, NoTorch())
+
+
 def cmd_ppo(args) -> None:
-    cap_device_memory(args.max_vram_mib)
     cfg = dict(PPO_DEFAULTS)
     for k, v in vars(args).items():
         if k in cfg and v is not None:
@@ -4712,6 +4689,13 @@ def cmd_ppo(args) -> None:
     if cfg["value_init_bias"] < 0 or not cfg["start_from"]:
         raise SystemExit("pass --start-from and --value-init-bias (the seed's own sampled mean reward)")
     resolve_critic(cfg)
+    if cfg.get("trainer", "torch") == "mlx":  # 08.5: the whole step on MLX, no PyTorch in the process
+        block_torch()
+        train_ppo_mlx(cfg, RUNS / args.out, progress=lambda m: print(m, flush=True), resume=bool(args.resume))
+        print("PyTorch loaded in this process:", any(m == "torch" or m.startswith("torch.") for m in sys.modules),
+              flush=True)
+        return
+    cap_device_memory(args.max_vram_mib)
     train_ppo(cfg, RUNS / args.out, progress=lambda m: print(m, flush=True), resume=bool(args.resume))
 
 
@@ -5736,30 +5720,28 @@ class MLXTrainable:
 
 
 def mlx_batch_logprobs(model: MLXTrainable, episodes: list[Episode], n: int, suppress: int, mass: bool = False):
-    """[episodes, n] float32 CPU tensors, ``build_batch``'s compacted layout (each episode's policy tokens first, zero
+    """[episodes, n] float32 MLX arrays in ``mx_batch``'s compacted layout (each episode's policy tokens first, zero
     after): an MLX model's log-probs (and the suppressed token's probability), episode by episode."""
     import mlx.core as mx
-    import numpy as np
-    import torch
-    lps, masses = torch.zeros(len(episodes), n), torch.zeros(len(episodes), n)
-    for i, ep in enumerate(episodes):
+    lps, masses = [], []
+    for ep in episodes:
         out = model.logprobs(ep, suppress, mass)
-        lp, m = out if mass else (out, None)
-        mx.eval(lp, *([m] if mass else []))
-        lps[i, : lp.shape[0]] = torch.from_numpy(np.array(lp))
-        if mass:
-            masses[i, : m.shape[0]] = torch.from_numpy(np.array(m))
-    return lps, masses
+        lp, m = out if mass else (out, mx.zeros((0,)))
+        pad = mx.zeros((n - lp.shape[0],))
+        lps.append(mx.concatenate([lp.astype(mx.float32), pad]))
+        masses.append(mx.concatenate([m.astype(mx.float32), mx.zeros((n - m.shape[0],))]))
+        mx.eval(lps[-1], masses[-1])
+    return mx.stack(lps), mx.stack(masses)
 
 
 def mlx_actor_minibatch(model: MLXTrainable, opt, episodes: list[Episode], mb: list[int], old_lp, adv, actor_mask,
                         *, clip_eps: float, max_grad_norm: float, suppress: int):
     """One optimizer step of the actor on MLX: ``ppo_actor_loss`` per episode, the gradients summed over the minibatch
-    over its size (train_ppo's), clipped by their global norm, AdamW. Returns each episode's stats and the norm."""
+    over its size (``train_ppo``'s), clipped by their global norm, AdamW. ``old_lp``, ``adv``, ``actor_mask``: [B, n]
+    MLX arrays. Returns each episode's stats and the norm."""
     import mlx.core as mx
     import mlx.nn as nn
     import mlx.optimizers as optim
-    import numpy as np
     from mlx.utils import tree_map
 
     def loss_fn(m, seq, pos, tgt, old, a, msk):
@@ -5779,19 +5761,18 @@ def mlx_actor_minibatch(model: MLXTrainable, opt, episodes: list[Episode], mb: l
         ep = episodes[i]
         where = [k for k, mine in enumerate(ep.policy) if mine]
         n = len(where)
-        take = lambda t: mx.array(t[i, :n].float().numpy())  # noqa: E731
         (loss, st), g = vg(model.model, mx.array(ep.prompt_ids + ep.ids),
                            mx.array([len(ep.prompt_ids) + k - 1 for k in where]), mx.array([ep.ids[k] for k in where]),
-                           take(old_lp), take(adv), take(actor_mask))
+                           old_lp[i, :n], adv[i, :n], actor_mask[i, :n])
         g = tree_map(lambda x: x / len(mb), g)
         total = g if total is None else tree_map(mx.add, total, g)
         mx.eval(total, loss, st)  # one episode's graph at a time
-        r, cf, kl = (float(x) for x in np.array(st))
-        stats.append({"actor_loss": float(loss), "ratio_mean": r, "clip_frac": cf, "approx_kl": kl})
+        r, cf, kl = st.tolist()
+        stats.append({"actor_loss": loss.item(), "ratio_mean": r, "clip_frac": cf, "approx_kl": kl})
     total, norm = optim.clip_grad_norm(total, max_grad_norm)
     opt.update(model.model, total)
     mx.eval(model.model.trainable_parameters(), opt.state)
-    return stats, float(norm)
+    return stats, norm.item()
 
 
 class MLXSeparateCritic:
@@ -5829,11 +5810,10 @@ class MLXSeparateCritic:
         return out
 
     def features(self, text: str, cuts: list[int]) -> dict:
+        """{layer: (turns x hidden) float32 MLX array}: the state before each turn."""
         import bisect
         import copy
         import mlx.core as mx
-        import numpy as np
-        import torch
         from mlx_lm.models.cache import make_prompt_cache
         prefix = SeparateCritic.shared_prefix(text)
         if not prefix or cuts[0] < len(prefix):
@@ -5857,7 +5837,685 @@ class MLXSeparateCritic:
         mx.eval(list(got.values()))
         self.seconds += time.perf_counter() - t0
         self.tokens += n
-        return {L: torch.from_numpy(np.array(x)) for L, x in got.items()}
+        return got
+
+
+# ---------------------------------------------------------------------------------------------
+# 08.5: the step's bookkeeping without PyTorch -- 08's build_batch, gae / gae_turn, normalized_advantages,
+# per_turn_tokens, prover_progress, separate_critic_stats, critic_fit / position_clock and CriticHeads (float64, on the
+# CPU stream: MLX's linear algebra runs there), each the same computation over MLX arrays or plain floats.
+# ---------------------------------------------------------------------------------------------
+
+
+def mx_batch(episodes: list[Episode], tokenizer) -> dict:
+    """``build_batch`` as MLX arrays, without the padded sequences (the MLX update reads each episode whole): each
+    episode's policy tokens compacted to the batch's most, the masks the actor's loss uses, score()'s credits on
+    tokens, each policy token's turn."""
+    import mlx.core as mx
+    im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    cache: dict[int, str] = {}
+    n = max(1, max(ep.policy_tokens for ep in episodes))
+    rows = {k: [] for k in ("mask", "answer", "turn_end", "content", "rewards", "turn")}
+    scores = []
+    for ep in episodes:
+        where = [k for k, mine in enumerate(ep.policy) if mine]
+        fill = n - len(where)
+        mine = [ep.ids[k] for k in where]
+        rows["mask"].append([1.0] * len(where) + [0.0] * fill)
+        starts = [sum(ep.policy[:s]) for s in ep.turn_starts] + [len(where)]
+        turns = [(starts[t], starts[t + 1]) for t in range(len(ep.turns))]
+        answer, turn_end, content, reward = ([0.0] * n for _ in range(4))
+        turn_of = [0] * n
+        for j, (a, b) in enumerate(turns):
+            for k in range(a, b):
+                turn_of[k] = j
+            if b > a and mine[b - 1] == im_end:
+                turn_end[b - 1] = 1.0
+        sc = score_episode(ep)
+        scores.append(sc)
+        answered = bool(ep.turns) and ep.final_text == ep.turns[-1] and not parse_calls(ep.final_text)
+        if answered:
+            a, b = turns[-1]
+            bounds = _bounds(tokenizer, mine[a:b], cache)
+            for k in range(a, b):
+                answer[k] = 1.0
+            starts_c = [0] + bounds[:-1]
+            for s, e in answer_content_spans(ep.final_text, ep.case):
+                for k in range(a, b):
+                    if starts_c[k - a] < e and bounds[k - a] > s:
+                        content[k] = 1.0
+            offsets = answer_anchor_offsets(ep.final_text, ep.case)
+        call_rank = Counter()
+        for (anchor, amount) in sc["credits"]:
+            if anchor[0] == "call":
+                c = ep.calls[anchor[1]]
+                t = c["turn"]
+                k = call_rank[t]
+                call_rank[t] += 1
+                a, b = turns[t]
+                ends = [m.end() for m in re.finditer(r"</tool_call>", ep.turns[t])]
+                pos = b - 1 if k >= len(ends) else a + _at(_bounds(tokenizer, mine[a:b], cache), ends[k])
+            elif answered:
+                a, b = turns[-1]
+                key = anchor[0] if anchor[0] != "value" else ("value", anchor[1])
+                off = offsets.get(key, offsets.get("close"))
+                pos = b - 1 if off is None else a + _at(_bounds(tokenizer, mine[a:b], cache), off)
+            else:
+                pos = len(where) - 1
+            reward[max(0, pos)] += amount
+        rows["answer"].append(answer)
+        rows["turn_end"].append(turn_end)
+        rows["content"].append(content)
+        rows["rewards"].append(reward)
+        rows["turn"].append(turn_of)
+    out = {k: mx.array(v, dtype=mx.int32 if k == "turn" else mx.float32) for k, v in rows.items()}
+    out.update(n=n, scores=scores)
+    return out
+
+
+def mx_gae(rewards, values, mask, *, gamma: float = 1.0, lam: float = 1.0):
+    """``gae``: per token, over plain floats."""
+    import mlx.core as mx
+    R, V, M = rewards.tolist(), values.tolist(), mask.tolist()
+    adv = [[0.0] * len(r) for r in M]
+    for i in range(len(M)):
+        running = 0.0
+        for t in range(len(M[i]) - 1, -1, -1):
+            nv = V[i][t + 1] * M[i][t + 1] if t + 1 < len(M[i]) else 0.0
+            running = (R[i][t] + gamma * nv - V[i][t] + gamma * lam * running) * M[i][t]
+            adv[i][t] = running
+    A = mx.array(adv)
+    return A * mask, (A + values) * mask
+
+
+def mx_gae_turn(rewards, values, mask, turn, *, gamma: float = 1.0, lam: float = 1.0):
+    """``gae_turn``: per episode, a turn's reward the sum over its tokens, its value the critic's at its first token,
+    the recursion over the turns that have tokens (renumbered in order), every token given its turn's advantage."""
+    import mlx.core as mx
+    R, V, M, Tn = rewards.tolist(), values.tolist(), mask.tolist(), turn.tolist()
+    adv = [[0.0] * len(r) for r in M]
+    ret = [[0.0] * len(r) for r in M]
+    for i in range(len(M)):
+        on = [k for k, m in enumerate(M[i]) if m > 0]
+        if not on:
+            continue
+        idx = {t: j for j, t in enumerate(sorted({Tn[i][k] for k in on}))}
+        T = len(idx)
+        Rt, first = [0.0] * T, {}
+        for k in on:
+            j = idx[Tn[i][k]]
+            Rt[j] += R[i][k]
+            first.setdefault(j, k)
+        Vt = [V[i][first[j]] for j in range(T)]
+        A, running = [0.0] * T, 0.0
+        for j in range(T - 1, -1, -1):
+            running = Rt[j] + gamma * (Vt[j + 1] if j + 1 < T else 0.0) - Vt[j] + gamma * lam * running
+            A[j] = running
+        for k in on:
+            j = idx[Tn[i][k]]
+            adv[i][k], ret[i][k] = A[j], A[j] + Vt[j]
+    return mx.array(adv) * mask, mx.array(ret) * mask
+
+
+def mx_normalized_advantages(adv, mask):
+    """``normalized_advantages``: minus the mean, over the standard deviation (Bessel's, as torch.std), over the tokens
+    ``mask`` marks; zero elsewhere."""
+    import mlx.core as mx
+    n = int((mask > 0).sum().item())
+    if n < 2:
+        return adv
+    mean = (adv * mask).sum() / n
+    std = mx.sqrt((((adv - mean) * mask) ** 2).sum() / (n - 1))
+    return (adv - mean) / (std + 1e-8) * mask
+
+
+def mx_per_turn_tokens(per_turn: list, turn, mask):
+    """``per_turn_tokens``: one value per turn (a list per episode) spread over that turn's policy tokens."""
+    import mlx.core as mx
+    rows = []
+    for v, t in zip(per_turn, turn.tolist()):
+        v = list(v)
+        rows.append([v[min(x, len(v) - 1)] for x in t])
+    return mx.array(rows) * mask
+
+
+def mx_prover_progress(q: list, y: float, k: int) -> list:
+    """``prover_progress`` over plain floats: f_K(q after each turn) - f_K(q before it), the last "after" the outcome."""
+    after = list(q[1:]) + [float(y)]
+    return [bok_value(a, k) - bok_value(b, k) for a, b in zip(after, q)]
+
+
+def _pmean(xs: list) -> float:
+    return sum(xs) / len(xs)
+
+
+def _pvar(xs: list) -> float:
+    m = _pmean(xs)
+    return sum((x - m) ** 2 for x in xs) / len(xs)
+
+
+def mx_separate_critic_stats(v_turn, q_turn, G_turn, ys, prog_turn, alpha: float) -> dict:
+    """``separate_critic_stats`` over plain floats."""
+    v = [x for t in v_turn for x in t]
+    G = [x for t in G_turn for x in t]
+    q = [min(max(x, 1e-6), 1 - 1e-6) for t in q_turn for x in t]
+    y = [y_ for t, y_ in zip(q_turn, ys) for _ in t]
+    p = [x for t in prog_turn for x in t]
+    g_var = _pvar(G)
+    return {"value_mean": _pmean(v), "return_mean": _pmean(G),
+            "critic_ev_turn": None if g_var < 1e-6 else 1.0 - _pvar([a - b for a, b in zip(G, v)]) / g_var,
+            "success_rate": sum(ys) / len(ys), "q_mean": _pmean(q), "q0_mean": _pmean([t[0] for t in q_turn]),
+            "q_brier": _pmean([(a - b) ** 2 for a, b in zip(q, y)]),
+            "q_logloss": _pmean([-(b * math.log(a) + (1 - b) * math.log(1 - a)) for a, b in zip(q, y)]),
+            "prog_mean": _pmean(p), "prog_std": _pvar(p) ** 0.5, "prog_abs": _pmean([abs(x) for x in p]),
+            "prog_alpha_std": alpha * _pvar(p) ** 0.5}
+
+
+def mx_critic_fit(values, returns, mask, bins: int = 20) -> dict:
+    """``critic_fit`` with ``position_clock``: the value's explained variance of the returns, and the clock's (each
+    position's mean return by its share of its episode's policy tokens, ``bins`` bins)."""
+    V, G, M = values.tolist(), returns.tolist(), mask.tolist()
+    sel = [(i, k) for i in range(len(M)) for k in range(len(M[i])) if M[i][k] > 0]
+    g = [G[i][k] for i, k in sel]
+    g_var = _pvar(g) if len(g) > 1 else 0.0
+    if g_var < 1e-6:
+        return {"value_ev": None, "value_ev_position": None}
+    lengths = [max(sum(row), 1.0) for row in M]
+    binned = {(i, k): min(int(math.floor(k / lengths[i] * bins)), bins - 1) for i, k in sel}
+    by = defaultdict(list)
+    for (i, k), b in binned.items():
+        by[b].append(G[i][k])
+    clock = [_pmean(by[binned[(i, k)]]) for i, k in sel]
+    return {"value_ev": round(1.0 - _pvar([a - V[i][k] for a, (i, k) in zip(g, sel)]) / g_var, 6),
+            "value_ev_position": round(1.0 - _pvar([a - c for a, c in zip(g, clock)]) / g_var, 6)}
+
+
+def mx_fit_ridge(Z, y, lam: float):
+    """``fit_ridge`` (float64, the CPU stream): mean (y - Zw - b)^2 + lam |w|^2, the intercept unpenalised."""
+    import mlx.core as mx
+    n, d = Z.shape
+    zm, ym = Z.mean(0), y.mean()
+    Zc, yc = Z - zm, y - ym
+    if n < d:  # the dual
+        w = Zc.T @ mx.linalg.solve(Zc @ Zc.T + n * lam * mx.eye(n, dtype=Z.dtype), yc)
+    else:
+        w = mx.linalg.solve(Zc.T @ Zc + n * lam * mx.eye(d, dtype=Z.dtype), Zc.T @ yc)
+    return w, ym - zm @ w
+
+
+def mx_fit_logistic(Z, y, lam: float, iters: int = 50):
+    """``fit_logistic`` (float64, the CPU stream): L2 logistic regression by Newton's method."""
+    import mlx.core as mx
+    n, d = Z.shape
+    X = mx.concatenate([Z, mx.ones((n, 1), dtype=Z.dtype)], axis=1)
+    pen = mx.concatenate([mx.full((d,), n * lam, dtype=Z.dtype), mx.array([n * 1e-6], dtype=Z.dtype)])
+    p0 = min(max(y.mean().item(), 1e-3), 1 - 1e-3)
+    w = mx.concatenate([mx.zeros((d,), dtype=Z.dtype), mx.array([math.log(p0 / (1 - p0))], dtype=Z.dtype)])
+    for _ in range(iters):
+        p = mx.sigmoid(X @ w)
+        g = X.T @ (p - y) + pen * w
+        H = (X * (p * (1 - p))[:, None]).T @ X + mx.diag(pen)
+        step = mx.linalg.solve(H, g)
+        w = w - step
+        if mx.abs(step).max().item() < 1e-7:
+            break
+    return w[:-1], w[-1]
+
+
+class MXCriticHeads:
+    """``CriticHeads`` on MLX: v (ridge) and q (L2 logistic) refitted from scratch on the window, features standardised
+    by the window's statistics (Bessel's sd, as torch.std), float64 on the CPU stream. Values as plain floats."""
+
+    def __init__(self, ridge: float, l2: float, init_v: float, init_q: float = 0.5):
+        self.ridge, self.l2, self.init_v, self.init_q = ridge, l2, init_v, init_q
+        self.state: dict | None = None
+
+    def fit(self, X, G, y) -> None:
+        import mlx.core as mx
+        if X.shape[0] < 2:
+            return
+        with mx.stream(mx.cpu):
+            Xd = X.astype(mx.float64)
+            mu, sd = Xd.mean(0), mx.maximum(mx.std(Xd, axis=0, ddof=1), 1e-6)
+            Z = (Xd - mu) / sd
+            wv, bv = mx_fit_ridge(Z, G.astype(mx.float64), self.ridge)
+            wq, bq = mx_fit_logistic(Z, y.astype(mx.float64), self.l2)
+            self.state = {"mu": mu, "sd": sd, "wv": wv, "bv": bv, "wq": wq, "bq": bq}
+            mx.eval(list(self.state.values()))
+
+    def _lin(self, X, w, b):
+        import mlx.core as mx
+        with mx.stream(mx.cpu):
+            out = ((X.astype(mx.float64) - self.state["mu"]) / self.state["sd"]) @ self.state[w] + self.state[b]
+            mx.eval(out)
+        return out
+
+    def value(self, X) -> list:
+        if self.state is None:
+            return [float(self.init_v)] * X.shape[0]
+        return self._lin(X, "wv", "bv").tolist()
+
+    def success(self, X) -> list:
+        import mlx.core as mx
+        if self.state is None:
+            return [float(self.init_q)] * X.shape[0]
+        with mx.stream(mx.cpu):
+            out = mx.sigmoid(self._lin(X, "wq", "bq"))
+            mx.eval(out)
+        return out.tolist()
+
+
+def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False) -> dict:
+    """08.5: ``train_ppo`` with the whole step on MLX and no PyTorch in the process -- the policy (MLXTrainable),
+    generation (MLXPolicy), the reference, the separate critic (MLXSeparateCritic), the update (AdamW, bias-corrected),
+    and the bookkeeping (``mx_batch``, ``mx_gae_turn``, ``MXCriticHeads``, ...). The same step as ``train_ppo``'s for a
+    separate critic: the same gates, evaluations, records and settings; its continuation state is MLX's
+    (last/state_mlx.json + .safetensors, last/opt_mlx.safetensors)."""
+    import faulthandler
+    import signal
+    from collections import deque
+    import mlx.core as mx
+    import mlx.optimizers as optim
+    import numpy as np
+    from mlx.utils import tree_flatten, tree_unflatten
+    from transformers import AutoTokenizer
+    if cfg.get("generator") != "mlx" or cfg.get("critic", "policy") == "policy":
+        raise SystemExit("--trainer mlx needs --generator mlx and a separate --critic (a Qwen3 model)")
+    if cfg.get("adv_unit", "token") not in ("token", "turn"):
+        raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
+    cases = load_split(cfg["split"])
+    eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
+    rng = random.Random(cfg["seed"])                          # the questions (07's: the same rng, the same draws)
+    sampling = random.Random(f"{cfg['seed']}:mlx-sampling")   # MLX's sampling seeds, its own stream
+    tok = AutoTokenizer.from_pretrained(MODEL, padding_side="left")
+    policy = MLXTrainable(run_dir / "last" / "adapter" if resume else HERE / cfg["start_from"])
+    reference = MLXTrainable(HERE / cfg["start_from"], trainable=False) if cfg["kl_coef"] else None
+    opt = optim.AdamW(learning_rate=cfg["lr"], betas=[0.9, 0.999], eps=cfg["adam_eps"], weight_decay=0.0,
+                      bias_correction=True)
+    suppress = tok.convert_tokens_to_ids("<|endoftext|>")
+    window: deque = deque(maxlen=cfg["critic_window"])
+    critic = MLXSeparateCritic(cfg["critic"], (cfg["critic_layer"],))
+    L = critic.layers[0]
+    heads = MXCriticHeads(cfg["critic_ridge"], cfg["critic_l2"], init_v=cfg["value_init_bias"])
+    prefix = generation_prefix(tok)
+    metrics_path, eval_path = run_dir / "metrics.jsonl", run_dir / "eval.jsonl"
+    history: list[dict] = []
+    gate = {"best": None, "best_step": None, "since_best": 0, "regress": 0, "critic_fail": 0, "step0": None,
+            "reward_low": 0}
+    start, prior0 = 0, None
+    if resume:
+        st = json.loads((run_dir / "last" / "state_mlx.json").read_text())
+        arrays = mx.load(str(run_dir / "last" / "state_mlx.safetensors"))
+        opt.state = tree_unflatten(list(mx.load(str(run_dir / "last" / "opt_mlx.safetensors")).items()))
+        cuts = [0]
+        for n_ in st["window_lengths"]:
+            cuts.append(cuts[-1] + n_)
+        for a, b in zip(cuts[:-1], cuts[1:]):
+            window.append((arrays["window_X"][a:b], arrays["window_G"][a:b], arrays["window_Y"][a:b]))
+        if (run_dir / "last" / "state_heads.npz").exists():
+            got = np.load(run_dir / "last" / "state_heads.npz")
+            heads.state = {k: mx.array(got[k]) for k in ("mu", "sd", "wv", "bv", "wq", "bq")}
+        rng.setstate((st["python_rng"][0], tuple(st["python_rng"][1]), st["python_rng"][2]))
+        if st.get("sampling_rng"):
+            sampling.setstate((st["sampling_rng"][0], tuple(st["sampling_rng"][1]), st["sampling_rng"][2]))
+        gate, start = st["gate"], st["step"]
+        history = [r for r in map(json.loads, metrics_path.read_text().splitlines()) if r["step"] < start]
+        metrics_path.write_text("".join(json.dumps(r) + "\n" for r in history))
+        evals = [r for r in map(json.loads, eval_path.read_text().splitlines()) if r["step"] <= start]
+        eval_path.write_text("".join(json.dumps(r) + "\n" for r in evals))
+        samples = run_dir / "samples.jsonl"
+        if samples.exists():
+            kept = [r for r in map(json.loads, samples.read_text().splitlines()) if r["step"] < start]
+            samples.write_text("".join(json.dumps(r) + "\n" for r in kept))
+        progress(f"resumed {run_dir.name} at step {start} (the MLX trainer, no PyTorch)")
+    else:
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / "config.json").write_text(json.dumps(cfg, indent=2) + "\n")
+        metrics_path.write_text("")
+        eval_path.write_text("")
+        (run_dir / "samples.jsonl").write_text("")
+    pool = ToolPool(6)
+    if cfg.get("warm_from") and not resume:
+        src = HERE / cfg["warm_from"]
+        old = json.loads((src / "config.json").read_text())
+        same_run = ("start_from", "seed", "split", "prompts_per_step", "max_new_tokens", "temperature", "stop_at_json",
+                    "kl_coef", "critic_warmup")
+        if any(old.get(k) != cfg.get(k) for k in same_run):
+            raise SystemExit(f"--warm-from needs a run with the same {', '.join(same_run)}")
+        n_warm = cfg["critic_warmup"]
+        rows = [r for r in read_jsonl(src / "samples.jsonl") if r["step"] < n_warm]
+        for s in range(n_warm):  # the same rng draws the same questions: checked, and the rng moved past them
+            drawn = [rng.choice(cases)["id"] for _ in range(cfg["prompts_per_step"])]
+            if [r["id"] for r in rows if r["step"] == s] != drawn:
+                raise SystemExit(f"--warm-from: {src.name}'s step {s} has other questions (it must sample every step)")
+        eps = replay(rows, {c["id"]: c for c in cases}, pool)
+        mismatch = 0
+        for s in range(n_warm):
+            X, G, Y = [], [], []
+            for r, ep in zip(rows, eps):
+                if r["step"] != s:
+                    continue
+                sc = score_episode(ep)
+                mismatch += abs(sc["total"] - r["reward"]) > 1e-9
+                X.append(critic.features(*episode_text(ep, tok, prefix))[L])
+                tr = turn_rewards(ep, sc)  # the return to go of each turn (no KL penalty: the policy is the reference)
+                G += [sum(tr[j:]) for j in range(len(tr))]
+                Y += [float(success(sc))] * len(ep.turns)
+            window.append((mx.concatenate(X), mx.array(G), mx.array(Y)))
+        heads.fit(*(mx.concatenate([w[k] for w in window]) for k in range(3)))
+        history = [dict(r, warm_from=cfg["warm_from"]) for r in read_jsonl(src / "metrics.jsonl") if r["step"] < n_warm]
+        if len(history) != n_warm:
+            raise SystemExit(f"--warm-from: {src.name} has {len(history)} of its first {n_warm} steps' metrics")
+        metrics_path.write_text("".join(json.dumps(r) + "\n" for r in history))
+        same_eval = ("start_from", "eval_split", "eval_cases", "eval_batch", "max_new_tokens", "stop_at_json", "seed")
+        prior = [r for r in read_jsonl(src / "eval.jsonl") if r["step"] == 0]
+        if prior and all(old.get(k) == cfg.get(k) for k in same_eval):
+            prior0 = prior[0]
+        start = n_warm
+        progress(f"warm start from {src.name}: its first {n_warm} steps ({len(rows)} episodes replayed, {mismatch} "
+                 f"rewards off the recorded ones), warm-up reward {sum(r['reward_mean'] for r in history) / n_warm:.3f}"
+                 f"; critic window {sum(w[0].shape[0] for w in window)} turns, {critic.seconds:.0f}s of critic reads")
+
+    def save_state(step: int) -> None:
+        last = run_dir / "last"
+        last.mkdir(exist_ok=True)
+        policy.save_pretrained(last / "adapter")
+        mx.save_safetensors(str(last / "opt_mlx.safetensors"), dict(tree_flatten(opt.state)))
+        arrays = {}
+        if window:
+            arrays.update(window_X=mx.concatenate([w[0] for w in window]), window_G=mx.concatenate([w[1] for w in window]),
+                          window_Y=mx.concatenate([w[2] for w in window]))
+        mx.save_safetensors(str(last / "state_mlx.safetensors"), arrays)
+        if heads.state is not None:  # float64: MLX's safetensors writer has no float64, numpy's npz has (CPU stream)
+            with mx.stream(mx.cpu):
+                np.savez(last / "state_heads.npz", **{k: np.array(v) for k, v in heads.state.items()})
+        (last / "state_mlx.json").write_text(json.dumps({
+            "step": step, "gate": gate, "python_rng": rng.getstate(), "sampling_rng": sampling.getstate(),
+            "window_lengths": [int(w[0].shape[0]) for w in window]}) + "\n")
+
+    gen = MLXPolicy()
+
+    def generate_episodes(batch: list[dict], temperature: float) -> list[Episode]:
+        gen.sync_mlx(policy)
+        mx.random.seed(sampling.randrange(2 ** 31 - 1))
+        return rollout_mlx(gen, tok, batch, pool, temperature=temperature, max_new_tokens=cfg["max_new_tokens"],
+                           stop_at_json=bool(cfg["stop_at_json"]))
+
+    def critic_window_stats(n=25):
+        rows = [r for r in history[-n:] if r.get("value_ev") is not None and r.get("value_ev_position") is not None
+                and not r.get("warm_from")]
+        if not rows:
+            return {"critic_residual_median": None, "critic_ahead_frac": None}
+        res = sorted(r["value_ev"] - r["value_ev_position"] for r in rows)
+        mid = len(res) // 2
+        med = res[mid] if len(res) % 2 else (res[mid - 1] + res[mid]) / 2
+        return {"critic_residual_median": round(med, 6), "critic_ahead_frac": round(sum(x > 0 for x in res) / len(res), 4)}
+
+    def run_eval(step: int) -> str | None:
+        eps, scs = [], []
+        for b in range(0, len(eval_cases), cfg["eval_batch"]):
+            got = generate_episodes(eval_cases[b: b + cfg["eval_batch"]], 0.0)
+            eps += got
+            scs += [score_episode(e) for e in got]
+        mx.clear_cache()
+        o = summarise(eps, scs)["overall"]
+        rec = {"step": step, **{k: o[k] for k in ("reward", "decision_correct", "evidence", "answer_found",
+                                                  "calls_per_episode", "calls_errored", "truncated", "policy_tokens")},
+               "components": o["components"], "recovery": o["recovery"], **critic_window_stats()}
+        reason = None
+        if step == 0:
+            gate["step0"] = rec["reward"]
+        if step and cfg["keep_eval_checkpoints"]:
+            policy.save_pretrained(run_dir / f"adapter-step{step}")
+        if gate["best"] is None or rec["reward"] > gate["best"]:
+            gate.update(best=rec["reward"], best_step=step, since_best=0)
+            policy.save_pretrained(run_dir / "adapter-best")
+            (run_dir / "best.json").write_text(json.dumps(rec, indent=2) + "\n")
+        else:
+            gate["since_best"] += 1
+            if gate["since_best"] >= cfg["patience"]:
+                reason = f"converged: {cfg['patience']} evaluations without beating {gate['best']:.4f} (step {gate['best_step']})"
+        gate["regress"] = gate["regress"] + 1 if rec["reward"] < gate["step0"] - cfg["regress_margin"] else 0
+        if gate["regress"] >= 2:
+            reason = f"no-regression gate: held-out reward {rec['reward']:.4f} below step 0 twice"
+        if step >= cfg["critic_gate_from"] and rec["critic_residual_median"] is not None:
+            gate["critic_fail"] = gate["critic_fail"] + 1 if rec["critic_residual_median"] <= 0 else 0
+            if gate["critic_fail"] >= 2:
+                reason = "critic gate: value_ev not above the position clock at two evaluations"
+        rec["gate"] = dict(gate)
+        with eval_path.open("a") as fh:
+            fh.write(json.dumps(rec) + "\n")
+        if step:
+            save_state(step)
+        crit = rec["critic_residual_median"]
+        rg = rec["recovery"]["recovered_given_error"]
+        progress(f"    eval @{step:<5} reward {rec['reward']:.4f} decision {rec['decision_correct']:.3f} "
+                 f"evidence {rec['evidence']:.3f} answer {rec['answer_found']:.3f} calls {rec['calls_per_episode']:.2f} "
+                 f"erred {rec['recovery']['sim_erred']:.3f} recovered {'-' if rg is None else f'{rg:.3f}'} "
+                 f"critic {'-' if crit is None else f'{crit:+.4f}'} | best {gate['best']:.4f}@{gate['best_step']}")
+        return reason
+
+    def reuse_eval(rec: dict) -> None:
+        gate.update(step0=rec["reward"], best=rec["reward"], best_step=0, since_best=0)
+        policy.save_pretrained(run_dir / "adapter-best")
+        rec = {k: v for k, v in rec.items() if k != "gate"} | {"reused": True, "gate": dict(gate)}
+        (run_dir / "best.json").write_text(json.dumps(rec, indent=2) + "\n")
+        with eval_path.open("a") as fh:
+            fh.write(json.dumps(rec) + "\n")
+        progress(f"    eval @0     reward {rec['reward']:.4f} decision {rec['decision_correct']:.3f} (taken from "
+                 f"{cfg.get('warm_from')}'s step-0 evaluation: same start, same greedy evaluation)")
+
+    faulthandler.register(signal.SIGUSR1, all_threads=True)
+    progress(f"{MODEL} from {cfg['start_from']} | the MLX trainer (no PyTorch) | kl {cfg['kl_coef']} | warm-up "
+             f"{cfg['critic_warmup']} | lambda {cfg['lam']} per {cfg.get('adv_unit', 'token')}")
+    progress(f"critic {cfg['critic']} ({CRITICS[cfg['critic']]}) layer {L} of {critic.depth}, ridge {cfg['critic_ridge']:g} "
+             f"l2 {cfg['critic_l2']:g}, window {cfg['critic_window']} steps | prover Bo{cfg['prover_k']}(pi), alpha "
+             f"{cfg['prover_alpha']:g}")
+    stop = None
+    if cfg["eval_every"] and not resume:
+        if prior0 is not None:
+            reuse_eval(prior0)
+        else:
+            stop = run_eval(0)
+    step = start
+    grad_norm = 0.0
+    try:
+        while stop is None and step < cfg["steps"]:
+            faulthandler.dump_traceback_later(cfg.get("step_watchdog", 1800), exit=True)
+            t0 = time.perf_counter()
+            batch_cases = [rng.choice(cases) for _ in range(cfg["prompts_per_step"])]
+            episodes = generate_episodes(batch_cases, cfg["temperature"])
+            gen_s = time.perf_counter() - t0
+            B = mx_batch(episodes, tok)
+            n, mask, rewards, turn = B["n"], B["mask"], B["rewards"], B["turn"]
+            old_lp, mass = mlx_batch_logprobs(policy, episodes, n, suppress, mass=True)
+            kl = mx.zeros_like(old_lp)
+            if reference is not None:
+                ref_lp = mlx_batch_logprobs(reference, episodes, n, suppress)[0]
+                kl = (old_lp - ref_lp) * mask
+                rewards = rewards - cfg["kl_coef"] * kl
+            # the separate critic's reads of the states before each turn, the heads fitted on the window so far
+            feats = [critic.features(*episode_text(ep, tok, prefix))[L] for ep in episodes]
+            v_turn = [heads.value(f) for f in feats]
+            q_turn = [heads.success(f) for f in feats]
+            old_values = mx_per_turn_tokens(v_turn, turn, mask)
+            if cfg["adv_unit"] == "turn":
+                adv, returns = mx_gae_turn(rewards, old_values, mask, turn, gamma=cfg["gamma"], lam=cfg["lam"])
+            else:
+                adv, returns = mx_gae(rewards, old_values, mask, gamma=cfg["gamma"], lam=cfg["lam"])
+            ys = [float(success(s)) for s in B["scores"]]
+            prog_turn = [mx_prover_progress(q, y_, cfg["prover_k"]) for q, y_ in zip(q_turn, ys)]
+            if cfg["prover_alpha"]:
+                adv = adv + cfg["prover_alpha"] * mx_per_turn_tokens(prog_turn, turn, mask)
+            # this step's turns join the window -- (features, return to go incl. the KL penalties, success) -- and both
+            # heads are refitted on it from scratch
+            Rw, Tw, Mw = rewards.tolist(), turn.tolist(), mask.tolist()
+            G_turn = []
+            for i, ep in enumerate(episodes):
+                R = [0.0] * len(ep.turns)
+                for k, m in enumerate(Mw[i]):
+                    if m > 0:
+                        R[Tw[i][k]] += Rw[i][k]
+                G_turn.append([sum(R[j:]) for j in range(len(R))])
+            window.append((mx.concatenate(feats), mx.array([x for g in G_turn for x in g]),
+                           mx.array([y_ for g, y_ in zip(G_turn, ys) for _ in g])))
+            cstats = mx_separate_critic_stats(v_turn, q_turn, G_turn, ys, prog_turn, cfg["prover_alpha"])
+            heads.fit(*(mx.concatenate([w[k] for w in window]) for k in range(3)))
+            actor_mask = mask * (1 - B["turn_end"]) if cfg["freeze_turn_ends"] else mask
+            if cfg["freeze_answer_structure"]:
+                actor_mask = actor_mask * (1 - B["answer"] + B["content"])
+            warming = step < cfg["critic_warmup"]
+            astats = {}
+            if cfg.get("adv_norm") == "batch":
+                adv = mx_normalized_advantages(adv, actor_mask)
+            n_mb = max(1, min(int(cfg.get("minibatches", 1)), len(episodes)))
+            if cfg.get("lr_anneal") and not warming:  # computed from the step: a resumed run lands on the same rate
+                a0 = max(cfg["critic_warmup"], int(cfg.get("lr_anneal_start") or 0))
+                frac = 1.0 - max(0, step - a0) / max(1, cfg["steps"] - a0)
+                opt.learning_rate = cfg["lr"] * max(frac, 0.0)
+            updates, kl_stop, approx_kls, ratio_first = 0, False, [], None
+            for epoch in range(0 if warming else cfg["inner_epochs"]):
+                order = list(range(len(episodes)))
+                if n_mb > 1:  # its own rng: the run's rng draws the questions
+                    random.Random(f"{cfg['seed']}:{step}:{epoch}").shuffle(order)
+                ep_stats = defaultdict(float)
+                for mb in (order[k::n_mb] for k in range(n_mb)):
+                    adv_mb = adv
+                    if cfg.get("adv_norm") == "minibatch":
+                        rows_on = mx.array([1.0 if i in mb else 0.0 for i in range(len(episodes))])[:, None]
+                        adv_mb = mx_normalized_advantages(adv, actor_mask * rows_on)
+                    mb_stats, grad_norm = mlx_actor_minibatch(
+                        policy, opt, episodes, mb, old_lp, adv_mb, actor_mask, clip_eps=cfg["clip_eps"],
+                        max_grad_norm=float(cfg.get("max_grad_norm", 1.0)), suppress=suppress)
+                    mb_kl = sum(s_["approx_kl"] for s_ in mb_stats) / len(mb)
+                    mb_ratio = sum(s_["ratio_mean"] for s_ in mb_stats) / len(mb)
+                    for s_ in mb_stats:
+                        for k, v in s_.items():
+                            ep_stats[k] += v / len(episodes)
+                    updates += 1
+                    approx_kls.append(mb_kl)
+                    if ratio_first is None:
+                        ratio_first = mb_ratio  # the policy not yet moved this step: 1 up to numerics
+                    if cfg.get("target_kl") and mb_kl > cfg["target_kl"]:
+                        kl_stop = True
+                        break
+                astats = dict(ep_stats)
+                if kl_stop:
+                    break
+            if updates:
+                astats.update(updates=updates, kl_stop=kl_stop, approx_kl_last=approx_kls[-1],
+                              approx_kl_max=max(approx_kls), ratio_first=ratio_first)
+            mx.clear_cache()
+            scs = B["scores"]
+            active = max(mask.sum().item(), 1.0)
+            mean_adv = ((adv * mask).sum() / active).item()
+            ans = B["answer"] * mask
+            am = max(actor_mask.sum().item(), 1.0)
+            rec = {
+                "step": step, "critic_warmup": warming,
+                "reward_mean": sum(s["total"] for s in scs) / len(scs),
+                "calls_fidelity": sum(s["components"]["calls"] for s in scs) / len(scs),
+                "decision_correct": sum(s["decision_correct"] for s in scs) / len(scs),
+                "evidence": sum(s["evidence"] for s in scs) / len(scs),
+                "answered": (ans.sum(axis=-1) > 0).astype(mx.float32).mean().item(),
+                "calls_mean": sum(len(e.calls) for e in episodes) / len(episodes),
+                "truncated": sum(e.truncated for e in episodes) / len(episodes),
+                "policy_tokens_mean": mask.sum(axis=-1).mean().item(),
+                "episode_tokens_mean": sum(len(e.prompt_ids) + len(e.ids) for e in episodes) / len(episodes),
+                "kl_mean": round(kl.sum().item() / active, 6),
+                "kl_answer": round((kl * ans).sum().item() / max(ans.sum().item(), 1.0), 6),
+                "entropy_sampled": round((-old_lp * actor_mask).sum().item() / am, 6),
+                "suppressed_mass_max": (mass * mask).max().item(),
+                "adv_mean": round(mean_adv, 6),
+                "adv_std": round(math.sqrt((((adv - mean_adv) * mask) ** 2).sum().item() / active), 6),
+                **mx_critic_fit(old_values, returns, mask),
+                **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in astats.items()},
+                **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in cstats.items()},
+                "grad_norm": float(grad_norm), "lr": float(opt.learning_rate.item() if hasattr(opt.learning_rate, "item") else opt.learning_rate),
+                "gen_seconds": round(gen_s, 1), "step_seconds": round(time.perf_counter() - t0, 1), "solves": pool.solved,
+                "generator": "mlx", "trainer": "mlx",
+                **{f"rec_{k}": (round(v, 6) if isinstance(v, float) else v)
+                   for k, v in recovery_block([recovery_stats(e.calls) for e in episodes], scs).items()},
+            }
+            history.append(rec)
+            with metrics_path.open("a") as fh:
+                fh.write(json.dumps(rec) + "\n")
+            if step % cfg["sample_every"] == 0:
+                with (run_dir / "samples.jsonl").open("a") as fh:
+                    for ep, sc in zip(episodes, scs):
+                        fh.write(json.dumps({"step": step, **ep.to_json(), "reward": sc["total"]}) + "\n")
+            ev, clock = rec["value_ev"], rec["value_ev_position"]
+            rg = rec["rec_recovered_given_error"]
+            progress(f"  step {step:>5} reward {rec['reward_mean']:.4f} calls {rec['calls_fidelity']:.3f} "
+                     f"dec {rec['decision_correct']:.2f} evid {rec['evidence']:.2f} V {rec.get('value_mean', 0):.3f} "
+                     f"ev {'undef' if ev is None else f'{ev:+.3f}'} clock {'undef' if clock is None else f'{clock:+.3f}'} "
+                     f"adv {rec['adv_mean']:+.4f} kl {rec['kl_mean']:.4f} tok {rec['policy_tokens_mean']:.0f}/"
+                     f"{rec['episode_tokens_mean']:.0f} err {rec['rec_sim_erred']:.2f} "
+                     f"recov {'-' if rg is None else f'{rg:.2f}'} {rec['step_seconds']:.0f}s")
+            cev = rec["critic_ev_turn"]
+            progress(f"         critic ev(turn) {'undef' if cev is None else f'{cev:+.3f}'} q {rec['q_mean']:.2f} "
+                     f"(q0 {rec['q0_mean']:.2f}, success {rec['success_rate']:.2f}, brier {rec['q_brier']:.3f}) "
+                     f"A^mu {rec['prog_mean']:+.3f} sd {rec['prog_std']:.3f}")
+            if rec.get("updates"):
+                progress(f"         update: {rec['updates']} optimizer steps{' (stopped: target_kl)' if rec['kl_stop'] else ''}, "
+                         f"approx_kl last {rec['approx_kl_last']:.4f} max {rec['approx_kl_max']:.4f}, first ratio "
+                         f"{rec['ratio_first']:.4f}, clip frac {rec.get('clip_frac', 0):.3f}, entropy {rec['entropy_sampled']:.3f}, "
+                         f"lr {rec['lr']:.2e}")
+            step += 1
+            if cfg["eval_every"] and step % cfg["eval_every"] == 0:
+                faulthandler.cancel_dump_traceback_later()
+                faulthandler.dump_traceback_later(cfg["eval_watchdog"], exit=True)
+                stop = run_eval(step)
+                faulthandler.cancel_dump_traceback_later()
+            if stop is None and cfg["tool_stop"] and len(history) >= 10:
+                recent = sum(r["calls_fidelity"] for r in history[-10:]) / 10
+                if recent < cfg["tool_stop"]:
+                    stop = f"tool gate: sampled call fidelity over the last 10 steps {recent:.3f} < {cfg['tool_stop']}"
+            if stop is None and (cfg["tool_stop_rel"] or cfg["answer_stop_rel"]) and len(history) >= 10:
+                base = [r for r in history if r.get("critic_warmup")] or history[:10]
+                start_fid = sum(r["calls_fidelity"] for r in base) / len(base)
+                start_ans = sum(r["answered"] for r in base) / len(base)
+                recent_fid = sum(r["calls_fidelity"] for r in history[-10:]) / 10
+                recent_ans = sum(r["answered"] for r in history[-10:]) / 10
+                if cfg["tool_stop_rel"] and recent_fid < start_fid - (1 - cfg["tool_stop_rel"]):
+                    stop = (f"tool gate (relative): sampled call fidelity over the last 10 steps {recent_fid:.3f} < "
+                            f"the warm-up mean {start_fid:.3f} - {1 - cfg['tool_stop_rel']:.2f}")
+                elif cfg["answer_stop_rel"] and start_ans >= 0.2 and recent_ans < cfg["answer_stop_rel"] * start_ans:
+                    stop = (f"answer collapse: sampled answered rate over the last 10 steps {recent_ans:.3f} < "
+                            f"{cfg['answer_stop_rel']} x the warm-up mean {start_ans:.3f}")
+            actor = [r for r in history if not r.get("critic_warmup")]
+            base = [r["reward_mean"] for r in history if r.get("critic_warmup")]
+            w = cfg["reward_window"]
+            if stop is None and base and w and len(actor) >= w:
+                recent = sum(r["reward_mean"] for r in actor[-w:]) / w
+                base_mean = sum(base) / len(base)
+                if cfg["reward_stop_drop"] and len(actor) >= cfg["reward_stop_from"]:
+                    low = recent < base_mean - cfg["reward_stop_drop"]
+                    gate["reward_low"] = gate.get("reward_low", 0) + 1 if low else 0
+                    if gate["reward_low"] >= cfg["reward_stop_patience"]:
+                        stop = (f"reward gate: the last {w} steps' sampled reward {recent:.3f} below the warm-up's "
+                                f"{base_mean:.3f} - {cfg['reward_stop_drop']} at {gate['reward_low']} steps in a row")
+                stalls = {int(x) for x in str(cfg["stall_at"]).split(",") if x.strip()}
+                if stop is None and len(actor) in stalls and recent <= base_mean + cfg["stall_margin"]:
+                    stop = (f"stall gate: after {len(actor)} actor steps the last {w} steps' sampled reward {recent:.3f} "
+                            f"is not above the warm-up's {base_mean:.3f} + {cfg['stall_margin']}")
+                if len(actor) in stalls or len(actor) % 10 == 0:
+                    progress(f"    reward gates @ actor step {len(actor)}: last {w} steps {recent:.3f} against the warm-up's "
+                             f"{base_mean:.3f} (degradation count {gate.get('reward_low', 0)})")
+            if stop is None and cfg.get("save_every") and step % cfg["save_every"] == 0:
+                save_state(step)
+    finally:
+        faulthandler.cancel_dump_traceback_later()
+        pool.close()
+    policy.save_pretrained(run_dir / "adapter")
+    if heads.state is not None:
+        with mx.stream(mx.cpu):
+            np.savez(run_dir / "critic_heads.npz", **{k: np.array(v) for k, v in heads.state.items()})
+    ending = {"stopped_at": step, "reason": stop or f"step budget {cfg['steps']} reached",
+              "best_step": gate["best_step"], "best_reward": gate["best"]}
+    (run_dir / "ending.json").write_text(json.dumps(ending, indent=2) + "\n")
+    progress(f"END {ending}")
+    return ending
 
 
 def _json_numbers(obj, path=""):
@@ -6162,12 +6820,92 @@ def cmd_trainer_check(args) -> None:
     del tc
     torch.mps.empty_cache()
     mc = MLXSeparateCritic(args.critic, (args.critic_layer,))
-    fm = [mc.features(*episode_text(ep, tok, prefix))[args.critic_layer].numpy() for ep in eps]
+    fm = [np.array(mc.features(*episode_text(ep, tok, prefix))[args.critic_layer]) for ep in eps]
     out["critic"] = [{"turns": int(a.shape[0]), "cosine_min": float(min(cos(x, y) for x, y in zip(a, b))),
                       "cosine_mean": float(np.mean([cos(x, y) for x, y in zip(a, b)])),
                       "norm_ratio": float(np.linalg.norm(b) / np.linalg.norm(a))} for a, b in zip(ft, fm)]
     print("critic:", json.dumps(out["critic"]), flush=True)
     (HERE / f"{PREFIX}_trainer_checks.json").write_text(json.dumps(out, indent=1) + "\n")
+
+
+def cmd_bookkeeping_check(args) -> None:
+    """08.5: ``train_ppo_mlx``'s bookkeeping (mx_*, MXCriticHeads) against 08's PyTorch functions -- on recorded episodes
+    of 08's first run (two batches of 8) with random values and rewards, and the critic's heads on a synthetic window
+    of PPO's size (1,000 turns x 2,560 features) -- written to 08.5_mlx_stack_bookkeeping_checks.json (largest
+    absolute difference per function)."""
+    import mlx.core as mx
+    import numpy as np
+    import torch
+    from transformers import AutoTokenizer
+    tok = AutoTokenizer.from_pretrained(MODEL, padding_side="left")
+    prefix = generation_prefix(tok)
+    rows = [r for r in read_jsonl(HERE / args.episodes) if r["step"] in (60, 100)]
+    pool = ToolPool(2)
+    try:
+        eps = [_rebuild_ids(ep, tok, prefix) for ep in replay(rows, {c["id"]: c for c in load_split("train")}, pool)]
+    finally:
+        pool.close()
+    worst: dict[str, float] = defaultdict(float)
+
+    def note(name, a, b):
+        a, b = np.asarray(a, dtype=np.float64), np.asarray(b, dtype=np.float64)
+        worst[name] = max(worst[name], float(np.abs(a - b).max()) if a.size else 0.0)
+
+    rs = np.random.default_rng(0)
+    for batch in (eps[:8], eps[8:16]):
+        Bt, Bm = build_batch(batch, tok, "cpu"), mx_batch(batch, tok)
+        n = Bm["n"]
+        for k in ("mask", "answer", "turn_end", "content", "rewards", "turn"):
+            note(f"batch_{k}", Bt[k][:, :n].numpy(), np.array(Bm[k]))
+        mask_t, turn_t = Bt["mask"].float(), Bt["turn"]
+        vals = rs.standard_normal(mask_t.shape).astype(np.float32)
+        rew = Bt["rewards"].float() + torch.tensor(rs.standard_normal(mask_t.shape).astype(np.float32) * 0.01) * mask_t
+        a_t, r_t = gae_turn(rew, torch.tensor(vals) * mask_t, mask_t, turn_t, gamma=1.0, lam=0.95)
+        a_m, r_m = mx_gae_turn(mx.array(rew.numpy()), mx.array(vals) * Bm["mask"], Bm["mask"], Bm["turn"], gamma=1.0, lam=0.95)
+        note("gae_turn_advantages", a_t.numpy(), np.array(a_m))
+        note("gae_turn_returns", r_t.numpy(), np.array(r_m))
+        g_t, _ = gae(rew, torch.tensor(vals) * mask_t, mask_t, gamma=1.0, lam=0.95)
+        g_m, _ = mx_gae(mx.array(rew.numpy()), mx.array(vals) * Bm["mask"], Bm["mask"], gamma=1.0, lam=0.95)
+        note("gae_advantages", g_t.numpy(), np.array(g_m))
+        am_t = mask_t * (1 - Bt["turn_end"]) * (1 - Bt["answer"] + Bt["content"])
+        am_m = Bm["mask"] * (1 - Bm["turn_end"]) * (1 - Bm["answer"] + Bm["content"])
+        note("normalized_advantages_batch", normalized_advantages(torch.tensor(vals) * am_t, am_t).numpy(),
+             np.array(mx_normalized_advantages(mx.array(vals) * am_m, am_m)))
+        mb = [1, 4, 6]
+        sel = torch.zeros_like(am_t)
+        sel[mb] = am_t[mb]
+        rows_on = mx.array([1.0 if i in mb else 0.0 for i in range(len(batch))])[:, None]
+        note("normalized_advantages_minibatch", normalized_advantages(torch.tensor(vals) * am_t, sel).numpy(),
+             np.array(mx_normalized_advantages(mx.array(vals) * am_m, am_m * rows_on)))
+        per_turn = [rs.standard_normal(len(ep.turns)).tolist() for ep in batch]
+        note("per_turn_tokens", per_turn_tokens([torch.tensor(v) for v in per_turn], turn_t, mask_t).numpy(),
+             np.array(mx_per_turn_tokens(per_turn, Bm["turn"], Bm["mask"])))
+        q = [list(rs.uniform(0.05, 0.95, len(ep.turns))) for ep in batch]
+        ys = [float(i % 2) for i in range(len(batch))]
+        pt = [prover_progress(torch.tensor(qq, dtype=torch.float64), y, 4).numpy() for qq, y in zip(q, ys)]
+        pm = [mx_prover_progress(qq, y, 4) for qq, y in zip(q, ys)]
+        note("prover_progress", np.concatenate(pt), np.concatenate(pm))
+        G = [list(rs.standard_normal(len(ep.turns))) for ep in batch]
+        st_t = separate_critic_stats([torch.tensor(v) for v in per_turn], [torch.tensor(x) for x in q],
+                                     [torch.tensor(g) for g in G], ys, [torch.tensor(x) for x in pt], 0.8)
+        st_m = mx_separate_critic_stats(per_turn, q, G, ys, [list(x) for x in pm], 0.8)
+        note("separate_critic_stats", [st_t[k] for k in sorted(st_t)], [st_m[k] for k in sorted(st_t)])
+        cf_t = critic_fit(torch.tensor(vals) * mask_t, r_t, mask_t)
+        cf_m = mx_critic_fit(mx.array(vals) * Bm["mask"], mx.array(r_t.numpy()), Bm["mask"])
+        note("critic_fit", [cf_t["value_ev"], cf_t["value_ev_position"]], [cf_m["value_ev"], cf_m["value_ev_position"]])
+    rs = np.random.default_rng(1)
+    N, D = 1000, 2560
+    X = (rs.standard_normal((N, 64)) @ rs.standard_normal((64, D)) + 0.5 * rs.standard_normal((N, D))).astype(np.float32)
+    G = (X @ (rs.standard_normal(D) / np.sqrt(D)) + 0.3 * rs.standard_normal(N)).astype(np.float32)
+    Y = (G + 0.5 * rs.standard_normal(N) > 0).astype(np.float32)
+    ht, hm = CriticHeads(1.0, 0.1, init_v=0.43), MXCriticHeads(1.0, 0.1, init_v=0.43)
+    ht.fit(torch.tensor(X), torch.tensor(G), torch.tensor(Y))
+    hm.fit(mx.array(X), mx.array(G), mx.array(Y))
+    note("critic_heads_value", ht.value(torch.tensor(X[:200])).numpy(), hm.value(mx.array(X[:200])))
+    note("critic_heads_success", ht.success(torch.tensor(X[:200])).numpy(), hm.success(mx.array(X[:200])))
+    out = {"episodes": len(eps), "max_abs_diff": dict(worst)}
+    (HERE / f"{PREFIX}_bookkeeping_checks.json").write_text(json.dumps(out, indent=1) + "\n")
+    print(json.dumps(out, indent=1))
 
 
 def main() -> None:
@@ -6295,6 +7033,9 @@ def main() -> None:
     p.add_argument("--critic", default="qwen3-4b")
     p.add_argument("--critic-layer", type=int, default=27)
     p.set_defaults(fn=cmd_trainer_check)
+    p = sub.add_parser("bookkeeping-check", help="08.5: train_ppo_mlx's bookkeeping against 08's PyTorch functions")
+    p.add_argument("--episodes", default="08_prover_critic_runs/ppo-qwen3-4b-bo4-a0.8-s0/samples.jsonl")
+    p.set_defaults(fn=cmd_bookkeeping_check)
     p = sub.add_parser("mlx-probe")
     p.add_argument("--model", required=True, help="HF id or a local MLX model directory")
     p.add_argument("--split", default="dev")
