@@ -16,8 +16,9 @@ a step. This notebook is 08, copied, with all of it on MLX (``--trainer mlx``; P
   * unchanged: the harness, the reward, the batch's masks, GAE by the turn, the prover's progress, the critic's
     closed-form heads (PyTorch, on the CPU), the gates, the evaluations.
 
-The run takes 08's D37 configuration (three of the 37 PPO implementation details; 200 steps) with another seed: 08's
-runs start from 07's first 25 steps, which needs 07's seed, so this one takes its own warm-up and step-0 evaluation.
+The run takes the configuration of 08's first run (ppo-qwen3-4b-bo4-a0.8-s0, continued from 120 to 200 steps) with
+another seed: 08's runs start from 07's first 25 steps, which needs 07's seed, so this one takes its own warm-up and
+step-0 evaluation.
 The checks against 08's PyTorch pieces and the run are in 08.5_mlx_stack.ipynb.
 
 What follows is 08's header, as 08 wrote it.

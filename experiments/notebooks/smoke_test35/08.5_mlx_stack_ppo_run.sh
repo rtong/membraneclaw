@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # 08.5: 08's PPO on the MLX stack -- generation, the update, the reference's log-probs and the separate critic's reads
-# all on mlx-lm (TRAINER=mlx; 08 generated on MLX and trained in PyTorch on MPS). The configuration is 08's D37 run's
-# (ppo-qwen3-4b-bo4-a0.8-d37-s0: three of the 37 PPO details, 200 steps, Qwen3-4B critic L27, prover Bo4, alpha 0.8,
-# turn credit, 07's diagnosis-line seed, evaluations of 60 dev questions every 40 steps), with another seed (SEED=1):
-# 08's runs warm-start from 07's first 25 steps, which needs 07's seed, so this one takes its own 25-step warm-up and
-# step-0 evaluation (WARM_FROM empty). Everything else unchanged.
+# all on mlx-lm (TRAINER=mlx; 08 generated on MLX and trained in PyTorch on MPS). The configuration is 08's first run's
+# (ppo-qwen3-4b-bo4-a0.8-s0, continued to 200 steps: 07's update, Qwen3-4B critic L27, prover Bo4, alpha 0.8, turn
+# credit, lr 2e-6, KL 0.01, 07's diagnosis-line seed, evaluations of 60 dev questions every 40 steps), with another
+# seed (SEED=1): 08's runs warm-start from 07's first 25 steps, which needs 07's seed, so this one takes its own 25-step
+# warm-up and step-0 evaluation (WARM_FROM empty). Everything else unchanged. D37=1: the three 37-details settings.
 #   ./08.5_mlx_stack_ppo_run.sh
 #   RESUME=1 ./...                                continue from last/
 set -uo pipefail
@@ -17,7 +17,7 @@ CRITIC=${CRITIC:-$(choice critic)}
 PROVER_K=${PROVER_K:-$(choice prover_k)}
 ALPHA=${ALPHA:-$(choice alpha)}
 SEED=${SEED:-1}
-RUN=${RUN:-ppo-mlx-$CRITIC-bo$PROVER_K-a$ALPHA-d37-s$SEED}  # the run directory under 08.5_mlx_stack_runs/
+RUN=${RUN:-ppo-mlx-$CRITIC-bo$PROVER_K-a$ALPHA-s$SEED}  # the run directory under 08.5_mlx_stack_runs/
 SEED_RUN=${SEED_RUN:-seed-n200-r100}            # 07's seed
 SEED_PATH=${SEED_PATH:-$R07/$SEED_RUN/epoch1}   # or 08's own seed, e.g. 08_prover_critic_runs/seed-rt-n300-e4/epoch1
 WARM_FROM=${WARM_FROM-}                         # empty: its own warm-up (07's run is seed 0)
@@ -30,7 +30,7 @@ EVAL_EVERY=${EVAL_EVERY:-40}
 EVAL_CASES=${EVAL_CASES:-60}
 STEP_WATCHDOG=${STEP_WATCHDOG:-3600}    # 07: 1800 and 7200; doubled, for steps and evaluations slowed by another GPU job
 EVAL_WATCHDOG=${EVAL_WATCHDOG:-14400}
-D37=${D37:-1}
+D37=${D37:-0}
 if [ "$D37" = 1 ]; then D_ADV=minibatch; D_MB=4; D_CLIP=0.5; D_EPS=1e-5; D_ANNEAL=1; else D_ADV=none; D_MB=1; D_CLIP=1.0; D_EPS=1e-6; D_ANNEAL=0; fi
 ADV_NORM=${ADV_NORM:-$D_ADV}             # none: 03-07's update; batch / minibatch
 MINIBATCHES=${MINIBATCHES:-$D_MB}
