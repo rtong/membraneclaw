@@ -6,6 +6,7 @@
 # 08_prover_critic_runs/ (mlx-probes/, ppo-qwen3-4b-bo4-a0.8-s0/probes-step*/): the same questions, paired.
 #   ./08.5_mlx_stack_eval_heldout.sh                     waits for the run's ending.json
 #   PPO_RUN=ppo-mlx-... ./08.5_mlx_stack_eval_heldout.sh
+#   CKPTS="adapter-step120:120" ./08.5_mlx_stack_eval_heldout.sh   a saved checkpoint, now (07's and v1's step)
 set -euo pipefail
 cd "$(dirname "$0")"
 export PYTHONDONTWRITEBYTECODE=1
@@ -19,11 +20,13 @@ probe() {  # adapter, out, split, temperature, forced, limit
     [ -f $R/$2/$tag.json ] || $PY 08.5_mlx_stack.py probe --split $3 --stop-at-json 1 --temperature $4 --forced $5 \
         --limit $6 --generator mlx --adapter $1 --out $2
 }
-while [ ! -f $R/$PPO_RUN/ending.json ]; do sleep 60; done
-while pgrep -f "08.5_mlx_stack.py ppo --out $PPO_RUN" > /dev/null; do sleep 30; done
-read BEST STOP < <(python3 -c "import json; e = json.load(open('$R/$PPO_RUN/ending.json')); print(e['best_step'], e['stopped_at'])")
-CKPTS="adapter:$STOP"
-if [ "$BEST" != 0 ] && [ "$BEST" != "$STOP" ]; then CKPTS="adapter-best:$BEST $CKPTS"; fi
+if [ -z "${CKPTS:-}" ]; then  # CKPTS="adapter-step120:120" probes a saved checkpoint instead (no waiting)
+    while [ ! -f $R/$PPO_RUN/ending.json ]; do sleep 60; done
+    while pgrep -f "08.5_mlx_stack.py ppo --out $PPO_RUN" > /dev/null; do sleep 30; done
+    read BEST STOP < <(python3 -c "import json; e = json.load(open('$R/$PPO_RUN/ending.json')); print(e['best_step'], e['stopped_at'])")
+    CKPTS="adapter:$STOP"
+    if [ "$BEST" != 0 ] && [ "$BEST" != "$STOP" ]; then CKPTS="adapter-best:$BEST $CKPTS"; fi
+fi
 for pair in $CKPTS; do
     ck=${pair%%:*}
     out=$PPO_RUN/probes-step${pair##*:}
