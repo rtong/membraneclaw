@@ -6183,6 +6183,11 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
         if st.get("sampling_rng"):
             sampling.setstate((st["sampling_rng"][0], tuple(st["sampling_rng"][1]), st["sampling_rng"][2]))
         gate, start = st["gate"], st["step"]
+        saved_cfg = json.loads((run_dir / "config.json").read_text())
+        changed = {k: [saved_cfg.get(k), v] for k, v in cfg.items() if saved_cfg.get(k) != v}
+        if changed:  # continued with other settings (a longer budget, the lr annealed again from here, ...)
+            (run_dir / f"config-resume-step{start}.json").write_text(json.dumps(cfg, indent=2) + "\n")
+            progress(f"resumed with changed settings (was, now): {changed}")
         history = [r for r in map(json.loads, metrics_path.read_text().splitlines()) if r["step"] < start]
         metrics_path.write_text("".join(json.dumps(r) + "\n" for r in history))
         evals = [r for r in map(json.loads, eval_path.read_text().splitlines()) if r["step"] <= start]

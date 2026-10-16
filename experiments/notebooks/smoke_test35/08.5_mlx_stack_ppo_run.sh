@@ -7,6 +7,9 @@
 # dev questions every 40; seed 0 and 07's first 25 steps (WARM_FROM), so it pairs step by step with 07 and 08's v1.
 #   ./08.5_mlx_stack_ppo_run.sh
 #   RESUME=1 ./...                                continue from last/
+#   RESUME=1 STEPS=400 LR_ANNEAL_START=200 EVAL_EVERY=20 PATIENCE=6 ./...
+#                                                 D37 continued from step 200 to convergence: the lr 2e-6 annealed
+#                                                 again, to 0 at 400; stop after 6 evaluations without a new best
 set -uo pipefail
 cd "$(dirname "$0")"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONDONTWRITEBYTECODE=1 PYTORCH_ENABLE_MPS_FALLBACK=0
@@ -28,6 +31,8 @@ REGRESS_MARGIN=${REGRESS_MARGIN:-0.05}
 STEPS=${STEPS:-200}
 EVAL_EVERY=${EVAL_EVERY:-40}
 EVAL_CASES=${EVAL_CASES:-60}
+PATIENCE=${PATIENCE:-8}                 # evaluations without a new best before "converged"
+LR_ANNEAL_START=${LR_ANNEAL_START:-0}   # 0: anneal from the first actor step; N: from step N to 0 at STEPS
 STEP_WATCHDOG=${STEP_WATCHDOG:-3600}    # 07: 1800 and 7200; doubled, for steps and evaluations slowed by another GPU job
 EVAL_WATCHDOG=${EVAL_WATCHDOG:-14400}
 D37=${D37:-1}
@@ -44,7 +49,7 @@ SAVE_EVERY=${SAVE_EVERY:-5}
 RESUME=${RESUME:-0}
 R=08.5_mlx_stack_runs
 BIAS=$(python3 -c "import json; print(round(json.load(open('$SEED_PATH/dev-T1-n120-stop.json'))['overall']['reward'], 4))")
-ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS --eval-every $EVAL_EVERY --eval-cases $EVAL_CASES --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin $REGRESS_MARGIN --reward-stop-drop $REWARD_STOP_DROP --stall-at $STALL_AT --lam 0.95 --adv-unit turn --sample-every 1 --lr $LR --critic $CRITIC --prover-k $PROVER_K --prover-alpha $ALPHA --step-watchdog $STEP_WATCHDOG --eval-watchdog $EVAL_WATCHDOG --adv-norm $ADV_NORM --minibatches $MINIBATCHES --target-kl $TARGET_KL --max-grad-norm $MAX_GRAD_NORM --adam-eps $ADAM_EPS --lr-anneal $LR_ANNEAL --generator $GENERATOR --trainer $TRAINER --save-every $SAVE_EVERY --seed $SEED"
+ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS --eval-every $EVAL_EVERY --eval-cases $EVAL_CASES --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin $REGRESS_MARGIN --reward-stop-drop $REWARD_STOP_DROP --stall-at $STALL_AT --lam 0.95 --adv-unit turn --sample-every 1 --lr $LR --critic $CRITIC --prover-k $PROVER_K --prover-alpha $ALPHA --step-watchdog $STEP_WATCHDOG --eval-watchdog $EVAL_WATCHDOG --adv-norm $ADV_NORM --minibatches $MINIBATCHES --target-kl $TARGET_KL --max-grad-norm $MAX_GRAD_NORM --adam-eps $ADAM_EPS --lr-anneal $LR_ANNEAL --lr-anneal-start $LR_ANNEAL_START --patience $PATIENCE --generator $GENERATOR --trainer $TRAINER --save-every $SAVE_EVERY --seed $SEED"
 [ -n "$WARM_FROM" ] && ARGS="$ARGS --warm-from $WARM_FROM"
 mkdir -p $R/$RUN
 if [ "$RESUME" = 1 ] && { [ -f $R/$RUN/last/state.pt ] || [ -f $R/$RUN/last/state_mlx.json ]; }; then
