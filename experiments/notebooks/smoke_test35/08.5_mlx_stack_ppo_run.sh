@@ -10,6 +10,9 @@
 #   RESUME=1 STEPS=400 LR_ANNEAL_START=200 EVAL_EVERY=20 PATIENCE=6 ./...
 #                                                 D37 continued from step 200 to convergence: the lr 2e-6 annealed
 #                                                 again, to 0 at 400; stop after 6 evaluations without a new best
+#   CRITIC=policy ./...                           07's critic instead (the policy's own value head, train_ppo_mlx's
+#                                                 critic "policy": 07's hyper-parameters, PPO_DEFAULTS' value_*, critic_*),
+#                                                 no prover (ALPHA 0); its 25 warm-up steps replayed from WARM_FROM
 set -uo pipefail
 cd "$(dirname "$0")"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONDONTWRITEBYTECODE=1 PYTORCH_ENABLE_MPS_FALLBACK=0
@@ -17,10 +20,19 @@ PY=../../membrane_grpo/.venv/bin/python
 R07=07_recover_from_errors_runs
 choice() { python3 -c "import json; print(json.load(open('08_prover_critic_critic_fit.json'))['choice']['$1'])"; }  # 08's critic-fit
 CRITIC=${CRITIC:-$(choice critic)}
-PROVER_K=${PROVER_K:-$(choice prover_k)}
-ALPHA=${ALPHA:-$(choice alpha)}
+if [ "$CRITIC" = policy ]; then  # 07's critic: nothing of critic-fit's (its layer, ridge and l2 are a separate critic's)
+    PROVER_K=${PROVER_K:-4}
+    ALPHA=${ALPHA:-0}
+else
+    PROVER_K=${PROVER_K:-$(choice prover_k)}
+    ALPHA=${ALPHA:-$(choice alpha)}
+fi
 SEED=${SEED:-0}
-RUN=${RUN:-ppo-mlx-$CRITIC-bo$PROVER_K-a$ALPHA-d37-s$SEED}  # the run directory under 08.5_mlx_stack_runs/
+if [ "$CRITIC" = policy ]; then
+    RUN=${RUN:-ppo-mlx-policy-d37-s$SEED}
+else
+    RUN=${RUN:-ppo-mlx-$CRITIC-bo$PROVER_K-a$ALPHA-d37-s$SEED}  # the run directory under 08.5_mlx_stack_runs/
+fi
 SEED_RUN=${SEED_RUN:-seed-n200-r100}            # 07's seed
 SEED_PATH=${SEED_PATH:-$R07/$SEED_RUN/epoch1}   # or 08's own seed, e.g. 08_prover_critic_runs/seed-rt-n300-e4/epoch1
 WARM_FROM=${WARM_FROM-$R07/ppo-n200-r100-turn-s0}  # empty: its own warm-up (needed with another seed)
