@@ -43,7 +43,8 @@ TARGET_KL=${TARGET_KL:-0}
 MAX_GRAD_NORM=${MAX_GRAD_NORM:-$D_CLIP}
 ADAM_EPS=${ADAM_EPS:-$D_EPS}
 LR_ANNEAL=${LR_ANNEAL:-$D_ANNEAL}
-GENERATOR=${GENERATOR:-mlx}
+GENERATOR=${GENERATOR:-mlx}             # mlx-batch: each round's episodes decoded together (rollout_mlx_batched)
+EVAL_GENERATOR=${EVAL_GENERATOR:-}      # empty: GENERATOR's; mlx keeps evaluations comparable after a switch
 TRAINER=${TRAINER:-mlx}                 # 08.5: mlx -- the update, the reference and the critic on MLX
 SAVE_EVERY=${SAVE_EVERY:-5}
 RESUME=${RESUME:-0}
@@ -51,6 +52,7 @@ R=08.5_mlx_stack_runs
 BIAS=$(python3 -c "import json; print(round(json.load(open('$SEED_PATH/dev-T1-n120-stop.json'))['overall']['reward'], 4))")
 ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS --eval-every $EVAL_EVERY --eval-cases $EVAL_CASES --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin $REGRESS_MARGIN --reward-stop-drop $REWARD_STOP_DROP --stall-at $STALL_AT --lam 0.95 --adv-unit turn --sample-every 1 --lr $LR --critic $CRITIC --prover-k $PROVER_K --prover-alpha $ALPHA --step-watchdog $STEP_WATCHDOG --eval-watchdog $EVAL_WATCHDOG --adv-norm $ADV_NORM --minibatches $MINIBATCHES --target-kl $TARGET_KL --max-grad-norm $MAX_GRAD_NORM --adam-eps $ADAM_EPS --lr-anneal $LR_ANNEAL --lr-anneal-start $LR_ANNEAL_START --patience $PATIENCE --generator $GENERATOR --trainer $TRAINER --save-every $SAVE_EVERY --seed $SEED"
 [ -n "$WARM_FROM" ] && ARGS="$ARGS --warm-from $WARM_FROM"
+[ -n "$EVAL_GENERATOR" ] && ARGS="$ARGS --eval-generator $EVAL_GENERATOR"
 mkdir -p $R/$RUN
 if [ "$RESUME" = 1 ] && { [ -f $R/$RUN/last/state.pt ] || [ -f $R/$RUN/last/state_mlx.json ]; }; then
     rm -f $R/$RUN/ending.json

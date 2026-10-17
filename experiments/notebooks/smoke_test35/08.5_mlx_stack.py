@@ -3694,6 +3694,9 @@ PPO_DEFAULTS = {
     # no PyTorch in the process: generation, the update, the reference's and the critic's reads, and the bookkeeping
     # (masks, GAE, the prover, the critic's closed-form heads) as MLX arrays. Needs the MLX generator and a Qwen3 critic.
     "trainer": "torch",
+    # 08.5: the evaluations' generator, when not the rollouts' (empty: ``generator``'s) -- e.g. rollouts "mlx-batch" and
+    # evaluations "mlx", so that a run switched mid-way keeps its greedy evaluations comparable with the earlier ones
+    "eval_generator": "",
     # 08: also save the continuation state (last/) every this many steps, not only at the evaluations (0: only
     # there) -- a run on a laptop's battery loses at most this many steps to a shutdown.
     "save_every": 0,
@@ -3834,7 +3837,8 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                     "heads": heads.state if separate else None}, last / "state.pt")
 
     # 08: the generator (PPO_DEFAULTS "generator"): transformers' generate, or mlx-lm with the policy's LoRA folded in
-    gen = MLXPolicy() if cfg.get("generator", "torch") == "mlx" else None
+    # (08.5: "mlx-batch" -- each round's episodes decoded together, rollout_mlx_batched)
+    gen = MLXPolicy() if cfg.get("generator", "torch") in ("mlx", "mlx-batch") else None
 
     def generate_episodes(batch: list[dict], temperature: float) -> list[Episode]:
         if gen is None:
@@ -3843,8 +3847,9 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
         import mlx.core as mx
         gen.sync(policy)
         mx.random.seed(int(torch.randint(2 ** 31 - 1, ()).item()))  # MLX's sampling drawn from the run's torch rng
-        return rollout_mlx(gen, tok, batch, pool, temperature=temperature, max_new_tokens=cfg["max_new_tokens"],
-                           stop_at_json=bool(cfg["stop_at_json"]))
+        roll = rollout_mlx_batched if cfg.get("generator") == "mlx-batch" else rollout_mlx
+        return roll(gen, tok, batch, pool, temperature=temperature, max_new_tokens=cfg["max_new_tokens"],
+                    stop_at_json=bool(cfg["stop_at_json"]))
 
     def critic_window_stats(n=25):
         # 08: not the warm start's steps (``warm_from``): their value_ev is the other run's critic's
@@ -4552,7 +4557,7 @@ def cmd_probe(args) -> None:
         global _DECLS
         _DECLS = json.loads(Path(args.tools_json).read_text())
     gen = policy = None
-    if args.generator == "mlx":
+    if args.generator in ("mlx", "mlx-batch"):
         block_torch()  # before transformers is imported: it would load PyTorch while it is available
         import mlx.core as mx
         from transformers import AutoTokenizer
@@ -4588,9 +4593,10 @@ def cmd_probe(args) -> None:
         with (out_dir / f"{tag}.episodes.jsonl").open("w") as fh:
             for b in range(0, len(cases), args.batch):
                 if gen is not None:
-                    eps = rollout_mlx(gen, tok, cases[b: b + args.batch], pool, temperature=args.temperature,
-                                      max_new_tokens=args.max_new_tokens, stop_at_json=bool(args.stop_at_json),
-                                      prefill=prefill)
+                    roll = rollout_mlx_batched if args.generator == "mlx-batch" else rollout_mlx
+                    eps = roll(gen, tok, cases[b: b + args.batch], pool, temperature=args.temperature,
+                               max_new_tokens=args.max_new_tokens, stop_at_json=bool(args.stop_at_json),
+                               prefill=prefill)
                 else:
                     eps = rollout(policy, tok, cases[b: b + args.batch], pool, temperature=args.temperature,
                                   max_new_tokens=args.max_new_tokens, stop_at_json=bool(args.stop_at_json),
@@ -5520,6 +5526,297 @@ def rollout_mlx(gen: MLXPolicy, tokenizer, cases: list[dict], pool: ToolPool, *,
     return eps
 
 
+# 08.5: the generator "mlx-batch" -- rollout_mlx with each round's live episodes decoded together
+# (mlx-lm's BatchGenerator); validated against rollout_mlx in the scratch module this was copied from.
+#: Where the batched rollout's seconds go. rounds / turns / steps (decode steps: one ``next()`` each) / rows (episodes
+#: decoded, summed over steps: rows / steps = mean batch width) / prefill (each turn's new tokens but the last, read
+#: into the episodes' caches) / decode (the rest of the round's generation) / extract (removing finished episodes,
+#: extracting and evaluating the caches that go on) / copy (the shared prefix copied per episode) / tool (the pool) /
+#: peak_gb (MLX's peak memory, as of the end of each turn).
+MLX_BATCH_CLOCK = {"rounds": 0, "turns": 0, "steps": 0, "rows": 0, "prefill_tokens": 0, "prefill_s": 0.0,
+                   "new_tokens": 0, "decode_s": 0.0, "extract_s": 0.0, "copy_s": 0.0, "tool_s": 0.0,
+                   "peak_gb": 0.0}
+
+
+def _kv_offset(prompt_cache) -> int | None:
+    """Tokens a per-episode cache holds: its first KVCache layer's offset (ArraysCache layers have none)."""
+    from mlx_lm.models.cache import KVCache
+    return next((c.offset for c in prompt_cache if isinstance(c, KVCache)), None)
+
+
+def _batched_turn(gen, items: list, *, im_end: int, eot: int, eos: set, stop_at_json: int, cache: dict,
+                  temperature: float, max_batch: int | None = None, fuse_eot: bool = False,
+                  row_prefill: bool = True, prefill_step_size: int = 2048) -> dict:
+    """One policy turn for several episodes at once: ``mlx_turn``'s rules per episode, decoded together.
+
+    ``items``: [(key, new_ids, budget, prompt_cache)] -- ``new_ids`` what the cache has not seen (non-empty). The
+    list is emptied once the caches are handed to the generator (so that they are freed once merged into the batch).
+    Returns {key: (take, ended, closed, cache_or_None)}; the cache (holding new_ids + take) only for turns ended by
+    <|im_end|> -- the only ones whose episode can go on. ``row_prefill``: each episode's new tokens (but the last)
+    are read into its own cache one episode at a time, in generate_step's 2048-token chunks -- rollout_mlx's
+    prefill exactly, no padding, B=1 attention scores -- and only the last token enters the batch; False: the
+    BatchGenerator reads them, the rows right-padded together (more memory: B x L x S scores). ``max_batch`` caps the
+    rows decoded together (the rest join as rows finish: continuous batching); ``fuse_eot`` applies ``no_eot`` inside
+    the batch's sampler (the same distribution: the sampler's input differs from the processor's by a constant per
+    row) instead of as a per-row logits processor. MLX_BATCH_DEBUG=1 prints a line per turn (and resets the peak
+    memory counter at each)."""
+    import mlx.core as mx
+    from mlx_lm.generate import BatchGenerator
+    from mlx_lm.sample_utils import make_sampler
+    sampler = make_sampler(temp=temperature)
+    procs = None
+    if temperature > 0:
+        def no_eot(_tokens, logits):  # mlx_turn's, exactly
+            return logits + mx.where(mx.arange(logits.shape[-1]) == eot, -mx.inf, 0.0).astype(logits.dtype)
+        if fuse_eot:
+            plain = sampler
+            sampler = lambda logprobs: plain(no_eot(None, logprobs))  # noqa: E731
+        else:
+            procs = [no_eot]
+    width = len(items) if not max_batch else max(1, min(max_batch, len(items)))
+    debug = bool(os.environ.get("MLX_BATCH_DEBUG"))
+    if debug:
+        mx.reset_peak_memory()
+    for _, ids, budget, _ in items:
+        assert ids and budget > 0
+    t0 = time.time()
+    if row_prefill:  # each episode's new tokens but the last, read into its own cache as generate_step reads them
+        from mlx_lm.generate import generation_stream
+        with mx.stream(generation_stream):
+            for _, ids, _, pc in items:
+                rest = mx.array(ids[:-1])
+                while rest.size:
+                    n = min(prefill_step_size, rest.size)
+                    gen.model(rest[:n][None], cache=pc)
+                    mx.eval([c.state for c in pc])
+                    rest = rest[n:]
+                    mx.clear_cache()
+        prompts = [[x[1][-1]] for x in items]
+    else:  # the BatchGenerator's own prefill: the rows right-padded and read together
+        prompts = [list(x[1]) for x in items]
+    prefill_s, prefill_tokens = time.time() - t0, sum(len(x[1]) - 1 for x in items) if row_prefill else 0
+    peak_prefill = mx.get_peak_memory() / 1e9
+    bg = BatchGenerator(gen.model, sampler=sampler, completion_batch_size=width, prefill_batch_size=width,
+                        prefill_step_size=prefill_step_size)
+    res: dict = {}
+    steps = rows = 0
+    extract_s = 0.0
+    try:
+        uids = bg.insert(prompts, max_tokens=[x[2] for x in items], caches=[x[3] for x in items],
+                         logits_processors=[procs] * len(items) if procs else None)
+        keys = [x[0] for x in items]
+        items.clear()  # the caller's caches now live in the generator only (freed once merged into the batch)
+        owner = dict(zip(uids, keys))
+        out = {k: [] for k in keys}
+        text = {k: "" for k in keys}
+        while len(res) < len(keys):
+            responses = bg.next_generated()
+            if not responses:
+                raise RuntimeError(f"BatchGenerator ran dry with {len(keys) - len(res)} turns unfinished")
+            steps += 1
+            rows += len(responses)
+            stop, go_on = [], []
+            for r in responses:
+                k, t = owner[r.uid], r.token
+                fin = None  # (ended, closed)
+                if t == eot:  # ends the turn, not taken
+                    fin = (False, False)
+                else:
+                    out[k].append(t)
+                    if t == im_end:
+                        fin = (True, False)
+                    elif stop_at_json:
+                        piece = _tok_text(gen.tok, t, cache)
+                        text[k] += piece
+                        if "}" in piece and mlx_answer_closed(text[k], stop_at_json):
+                            fin = (False, True)
+                    if fin is None and t in eos:  # stream_generate stops at every EOS id
+                        fin = (False, False)
+                if fin is None and r.finish_reason is not None:  # the budget: this was the turn's last token
+                    fin = (False, False)
+                if fin is None:
+                    continue
+                pc = None
+                if r.finish_reason is not None:  # already out of the batch, its cache extracted by mlx-lm
+                    if fin[0]:
+                        pc = r.prompt_cache
+                        mx.eval([c.state for c in pc])
+                else:
+                    stop.append(r.uid)
+                    if fin[0]:
+                        go_on.append(r.uid)
+                res[k] = [out[k], fin[0], fin[1], pc]
+            if stop:
+                t1 = time.time()
+                if go_on:
+                    got = bg.extract_cache(go_on)
+                    for u in go_on:
+                        pc = got[u][0]
+                        mx.eval([c.state for c in pc])  # now: the lazy slices would keep the old batch alive
+                        res[owner[u]][3] = pc
+                bg.remove(stop)
+                extract_s += time.time() - t1
+        if not row_prefill:
+            prefill_s, prefill_tokens = bg._prompt_time_counter, bg._prompt_tokens_counter
+    finally:
+        bg.close()
+    total = time.time() - t0
+    new = sum(len(v[0]) for v in res.values())
+    MLX_CLOCK["turns"] += len(keys)
+    MLX_CLOCK["prefill_tokens"] += prefill_tokens + len(keys)
+    MLX_CLOCK["prefill_s"] += prefill_s
+    MLX_CLOCK["new_tokens"] += new
+    MLX_CLOCK["generate_s"] += total - prefill_s
+    MLX_BATCH_CLOCK["rounds"] += 1
+    MLX_BATCH_CLOCK["turns"] += len(keys)
+    MLX_BATCH_CLOCK["steps"] += steps
+    MLX_BATCH_CLOCK["rows"] += rows
+    MLX_BATCH_CLOCK["prefill_tokens"] += prefill_tokens
+    MLX_BATCH_CLOCK["prefill_s"] += prefill_s
+    MLX_BATCH_CLOCK["new_tokens"] += new
+    MLX_BATCH_CLOCK["decode_s"] += total - prefill_s - extract_s
+    MLX_BATCH_CLOCK["extract_s"] += extract_s
+    MLX_BATCH_CLOCK["peak_gb"] = max(MLX_BATCH_CLOCK["peak_gb"], mx.get_peak_memory() / 1e9)
+    if debug:
+        print(f"  batched turn: {len(keys)} rows, read {prefill_tokens} tok in {prefill_s:.1f}s (peak "
+              f"{peak_prefill:.2f} GB), wrote {new} tok in {steps} steps, {total - prefill_s:.1f}s "
+              f"({new / max(1e-9, total - prefill_s):.0f} tok/s, width {rows / max(1, steps):.2f}), extract "
+              f"{extract_s:.2f}s, peak {mx.get_peak_memory() / 1e9:.2f} GB", flush=True)
+    return {k: tuple(v) for k, v in res.items()}
+
+
+def rollout_mlx_batched(gen: "MLXPolicy", tokenizer, cases: list[dict], pool: "ToolPool", *, temperature: float,
+                        max_new_tokens: int, stop_at_json: bool = False,
+                        prefill: dict[str, list[dict]] | None = None, max_batch: int | None = None,
+                        fuse_eot: bool = False, row_prefill: bool = True) -> list["Episode"]:
+    """``rollout_mlx`` with each round's live episodes decoded together (mlx-lm's BatchGenerator): the same rounds,
+    budgets, tool calls, Episode records and ``prefill``; every episode keeps its own prompt cache across its turns
+    (the system turn read once a call and copied), merged into the batch for a round and extracted after it.
+    ``max_batch`` caps the rows decoded at once (None: every live episode); ``fuse_eot``, ``row_prefill``: see
+    ``_batched_turn``. At T=0 the tokens are rollout_mlx's up to bf16 batch numerics (a near-tie may flip)."""
+    import copy
+    import mlx.core as mx
+    im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    eot = tokenizer.convert_tokens_to_ids("<|endoftext|>")
+    eos = set(getattr(gen.tok, "eos_token_ids", ()) or ())
+    prefix = generation_prefix(tokenizer)
+    cache: dict[int, str] = {}
+    eps = [Episode(c, tokenizer(render_prompt(tokenizer, c), add_special_tokens=False).input_ids) for c in cases]
+    used = [0] * len(eps)  # tool rounds already taken by prefilled turns (``rollout``'s)
+    for i, ep in enumerate(eps):
+        for turn in (prefill or {}).get(ep.case["id"], []):
+            text = turn_text(turn)
+            ep.turn_starts.append(len(ep.ids))
+            ep.turns.append(text)
+            for c, r in zip(turn["calls"], turn["results"]):
+                ep.calls.append({"name": c["name"], "arguments": c["arguments"], "result": r, "turn": len(ep.turns) - 1})
+            written = tokenizer(text, add_special_tokens=False).input_ids + [im_end]
+            env = tokenizer(tool_response_text(turn["results"], prefix), add_special_tokens=False).input_ids
+            ep.ids += written + env
+            ep.policy += [False] * (len(written) + len(env))
+            used[i] += 1
+    if not eps:
+        return eps
+    base = mlx_shared_prefix(gen.model, [ep.prompt_ids for ep in eps])
+    t0 = time.time()
+    caches = [copy.deepcopy(base[0]) for _ in eps]
+    MLX_BATCH_CLOCK["copy_s"] += time.time() - t0
+    fed = [len(base[1])] * len(eps)
+    live = list(range(len(eps)))
+    for rnd in range(MAX_ROUNDS + 1):
+        budgets = {i: max_new_tokens - eps[i].policy_tokens for i in live}
+        for i in live:
+            if budgets[i] <= 0:
+                eps[i].truncated = True
+        live = [i for i in live if budgets[i] > 0]
+        if not live:
+            break
+        items = []
+        for i in live:  # each live episode's cache is handed over (the batch's copy comes back for those that go on)
+            items.append((i, (eps[i].prompt_ids + eps[i].ids)[fed[i]:], budgets[i], caches[i]))
+            caches[i] = None
+        got = _batched_turn(gen, items, im_end=im_end, eot=eot, eos=eos, stop_at_json=int(stop_at_json), cache=cache,
+                            temperature=temperature, max_batch=max_batch, fuse_eot=fuse_eot, row_prefill=row_prefill)
+        pending = []
+        for i in live:
+            ep = eps[i]
+            take, ended, closed, pc = got[i]
+            fed[i] = len(ep.prompt_ids) + len(ep.ids) + len(take)
+            caches[i] = pc  # None unless the turn ended at <|im_end|>; the batch's copy is gone either way
+            if pc is not None and _kv_offset(pc) is not None and _kv_offset(pc) != fed[i]:
+                raise RuntimeError(f"episode {i}: its cache holds {_kv_offset(pc)} tokens, {fed[i]} were fed")
+            ep.turn_starts.append(len(ep.ids))
+            ep.ids += take
+            ep.policy += [True] * len(take)
+            text = tokenizer.decode(take, skip_special_tokens=True)
+            ep.turns.append(text)
+            if closed:
+                ep.final_text, ep.answer_closed = text, True
+                continue
+            if not ended:
+                ep.truncated, ep.final_text = True, text
+                continue
+            calls = parse_calls(text)
+            if not calls:
+                ep.final_text = text
+                continue
+            if rnd + used[i] >= MAX_ROUNDS:
+                ep.unanswered = len(calls)
+                continue
+            pending.append((i, calls))
+        jobs, where = [], []
+        for i, calls in pending:
+            n_sims = sum(x.get("name") not in LOCAL_TOOLS for x in eps[i].calls)
+            n_conv = sum(x.get("name") == CONVERT for x in eps[i].calls)
+            n_comp = sum(x.get("name") == COMPARE for x in eps[i].calls)
+            for c in calls:
+                if c.get("malformed"):
+                    c["result"] = MALFORMED_CALL_ERROR
+                elif c.get("name") == CONVERT:
+                    n_conv += 1
+                    if n_conv > MAX_CONVERTS:
+                        c["result"] = CONVERT_BUDGET_ERROR
+                    else:
+                        jobs.append((c["name"], c["arguments"]))
+                        where.append(c)
+                elif c.get("name") == COMPARE:
+                    n_comp += 1
+                    if n_comp > MAX_COMPARES:
+                        c["result"] = COMPARE_BUDGET_ERROR
+                    else:
+                        jobs.append((c["name"], c["arguments"]))
+                        where.append(c)
+                else:
+                    n_sims += 1
+                    if n_sims > MAX_CALLS:
+                        c["result"] = CALL_BUDGET_ERROR
+                    else:
+                        jobs.append((c["name"], c["arguments"]))
+                        where.append(c)
+        t0 = time.time()
+        for c, result in zip(where, pool.call_many(jobs)):
+            c["result"] = result
+        MLX_BATCH_CLOCK["tool_s"] += time.time() - t0
+        going = {i for i, _ in pending}
+        for i in live:
+            if i not in going:
+                caches[i] = None  # the episode is over: its cache goes now, not at the end of the call
+        live = []
+        for i, calls in pending:
+            ep = eps[i]
+            for c in calls:
+                c["turn"] = len(ep.turns) - 1
+                ep.calls.append(c)
+            env = tokenizer(tool_response_text([c["result"] for c in calls], prefix), add_special_tokens=False).input_ids
+            ep.ids += env
+            ep.policy += [False] * len(env)
+            live.append(i)
+    del caches, base
+    mx.clear_cache()
+    return eps
+
+
+
 def mlx_episode_row(ep, sc: dict) -> dict:
     """The probe's row, with each call's result text beside its error flag."""
     row = ep.to_json() | {"score": {k: sc[k] for k in ("total", "components", "evidence", "decision_correct")}}
@@ -6143,8 +6440,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
     import numpy as np
     from mlx.utils import tree_flatten, tree_unflatten
     from transformers import AutoTokenizer
-    if cfg.get("generator") != "mlx" or cfg.get("critic", "policy") == "policy":
-        raise SystemExit("--trainer mlx needs --generator mlx and a separate --critic (a Qwen3 model)")
+    if cfg.get("generator") not in ("mlx", "mlx-batch") or cfg.get("critic", "policy") == "policy":
+        raise SystemExit("--trainer mlx needs --generator mlx (or mlx-batch) and a separate --critic (a Qwen3 model)")
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
     cases = load_split(cfg["split"])
@@ -6264,11 +6561,21 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
 
     gen = MLXPolicy()
 
+    def rollout_batched(*args, **kw):  # 08.5: mlx-batch, opt-in; fuse_eot only acts at T > 0
+        return rollout_mlx_batched(*args, fuse_eot=True, **kw)
+
+    rolls = {"mlx": rollout_mlx, "mlx-batch": rollout_batched}
+    roll = rolls[cfg["generator"]]
+    # the evaluations' generator (``eval_generator``, empty: the rollouts'): mlx keeps a run's greedy evaluations
+    # token for token comparable with its earlier ones (batched, a bf16 near-tie may flip) after a switch mid-run
+    eval_roll = rolls[cfg.get("eval_generator") or cfg["generator"]]
+
     def generate_episodes(batch: list[dict], temperature: float) -> list[Episode]:
         gen.sync_mlx(policy)
         mx.random.seed(sampling.randrange(2 ** 31 - 1))
-        return rollout_mlx(gen, tok, batch, pool, temperature=temperature, max_new_tokens=cfg["max_new_tokens"],
-                           stop_at_json=bool(cfg["stop_at_json"]))
+        return (roll if temperature > 0 else eval_roll)(
+            gen, tok, batch, pool, temperature=temperature, max_new_tokens=cfg["max_new_tokens"],
+            stop_at_json=bool(cfg["stop_at_json"]))
 
     def critic_window_stats(n=25):
         rows = [r for r in history[-n:] if r.get("value_ev") is not None and r.get("value_ev_position") is not None
@@ -6462,7 +6769,7 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                 **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in cstats.items()},
                 "grad_norm": float(grad_norm), "lr": float(opt.learning_rate.item() if hasattr(opt.learning_rate, "item") else opt.learning_rate),
                 "gen_seconds": round(gen_s, 1), "step_seconds": round(time.perf_counter() - t0, 1), "solves": pool.solved,
-                "generator": "mlx", "trainer": "mlx",
+                "generator": cfg["generator"], "trainer": "mlx",
                 **{f"rec_{k}": (round(v, 6) if isinstance(v, float) else v)
                    for k, v in recovery_block([recovery_stats(e.calls) for e in episodes], scs).items()},
             }
@@ -6979,8 +7286,9 @@ def main() -> None:
     p.add_argument("--forced", type=int, default=0,
                    help="1: only the questions with a recovery episode, each started from its slipped turns (a diagnostic)")
     p.add_argument("--merge", type=int, default=0, help="1: fold the adapter into the weights for generation (07's probes)")
-    p.add_argument("--generator", choices=["torch", "mlx"], default="torch",
-                   help="08: mlx -- generated by mlx-lm with the adapter folded in (PPO_DEFAULTS 'generator')")
+    p.add_argument("--generator", choices=["torch", "mlx", "mlx-batch"], default="torch",
+                   help="08: mlx -- generated by mlx-lm with the adapter folded in (PPO_DEFAULTS 'generator'); 08.5: "
+                        "mlx-batch -- the same, each round's episodes decoded together (rollout_mlx_batched)")
     p.set_defaults(fn=cmd_probe)
     p = sub.add_parser("reference")
     p.add_argument("--compare", type=int, default=1, help="0: the direction-sentences-only ablation (no check_limits)")
