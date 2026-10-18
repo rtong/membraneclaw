@@ -1,31 +1,31 @@
 {
-  "step": 140,
-  "reward": 0.7563596203913664,
+  "step": 200,
+  "reward": 0.7697184219366758,
   "decision_correct": 0.8,
-  "evidence": 0.7,
-  "answer_found": 0.9333333333333333,
-  "calls_per_episode": 2.95,
-  "calls_errored": 0.1977401129943503,
-  "truncated": 0.03333333333333333,
-  "policy_tokens": 890.2666666666667,
+  "evidence": 0.7333333333333333,
+  "answer_found": 0.9166666666666666,
+  "calls_per_episode": 3.066666666666667,
+  "calls_errored": 0.1793478260869565,
+  "truncated": 0.016666666666666666,
+  "policy_tokens": 886.4166666666666,
   "components": {
-    "calls": 0.8842989417989419,
-    "decision": 0.7066666666666667,
-    "violations": 0.5673913043478261,
+    "calls": 0.9177169312169312,
+    "decision": 0.7183333333333334,
+    "violations": 0.6427536231884058,
     "values": 0.7307692307692307,
-    "format": 0.9333333333333333,
-    "efficiency": 0.4353174603174603
+    "format": 0.9166666666666666,
+    "efficiency": 0.4796031746031746
   },
   "recovery": {
-    "sim_erred": 0.23333333333333334,
-    "recovered_given_error": 0.8571428571428571,
-    "repeats_per_episode": 0.06666666666666667,
-    "streak3_share": 0.08333333333333333,
+    "sim_erred": 0.16666666666666666,
+    "recovered_given_error": 0.6,
+    "repeats_per_episode": 0.15,
+    "streak3_share": 0.11666666666666667,
     "streak_max": 9,
-    "evidence_given_error": 0.35714285714285715,
-    "decision_given_error": 0.5714285714285714,
-    "decision_given_no_error": 0.8695652173913043
+    "evidence_given_error": 0.3,
+    "decision_given_error": 0.6,
+    "decision_given_no_error": 0.84
   },
-  "critic_residual_median": 0.298006,
-  "critic_ahead_frac": 0.96
+  "critic_residual_median": 0.196828,
+  "critic_ahead_frac": 0.92
 }
