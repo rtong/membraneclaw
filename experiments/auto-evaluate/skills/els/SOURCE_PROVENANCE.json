@@ -1,0 +1,36 @@
+{
+  "purpose": "Review packaging of the current ELS implementation; no new experiment.",
+  "protocol": "evidence-linked-skills@0.9.0",
+  "upstream_base_commit": "38084160d1642bb26c516d49369fdcaa0173cd9d",
+  "byte_identical_local_sources_sha256": {
+    "skills/els/runtime.py": "f725237b2073b5c6b59bbeef29265f8b61b62d1938dfb7e4a64b4a6b007a2354",
+    "skills/els/_arithmetic.py": "261d5fafce9f769f572f803e5b5657d8af40f4b5c3f9a36197b5f6337f2c913d",
+    "skills/els/_core.py": "5109bfa2e8e8603228eca97c6ee79526b6c8b8596f9c1355212d8c5733278118",
+    "skills/els/SKILL.md": "772ace7d7d49c300b9c0d7d4626eeedbd326bfed0a7d7d62787e5b5e7797b7ce",
+    "tests/test_els09.py": "1e843f5b25e70701ec90b1f34eedfdc6ced7435460ee89da174d578fc364c78f"
+  },
+  "primitives": {
+    "source_sha256": "3143e2f70ba767856bfd673c785a951faf2ee51e747dd078bb0b232920f49451",
+    "extraction": "Unchanged SkillError, number, field_at, convert and selected ReviewSession methods only.",
+    "review_session_methods": [
+      "__init__",
+      "_candidate",
+      "check_inputs",
+      "call_tool",
+      "_get_metric",
+      "_store",
+      "record_metric",
+      "export_trace"
+    ],
+    "packaged_sha256": "a7fcd831e8d3ac4f43df0cfb1bbae0dc68f717944968db16562ac32a8d3630f0"
+  },
+  "adapter": "SWRO public schema and output metadata extracted without cases, answers, rubric or credentials.",
+  "excluded": [
+    "run-specific configurations and entrypoints",
+    "raw runs and ratings",
+    "credentials and provider logs",
+    "legacy PES and prior AES implementations"
+  ],
+  "frozen_experimental_evidence_modified": false,
+  "new_model_physics_or_judge_experiments": 0
+}
