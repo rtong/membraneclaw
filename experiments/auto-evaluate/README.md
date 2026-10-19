@@ -5,6 +5,12 @@ JSON 是执行输入；待测模型只收到题目，参考答案和两套 rubri
 覆盖 benchmark 导入、Router、OpenWebUI 系统执行、双 Teacher、Judge、reward analysis、HTML
 报告和论文图导出。
 
+## ELS代码审阅入口
+
+当前新增的 **ELS（Evidence-linked Skills，证据关联技能）** 是一个可选技能运行时：模型推进任务，程序引用工具记录进行换算、比较和门槛检查。
+方法、接口、适配范围与离线运行方式见 [skills/els/README.md](skills/els/README.md)；详细分工见 [docs/els/DESIGN_CN.md](docs/els/DESIGN_CN.md)。
+该模块尚未接入下述既有评测命令，不改变现有实验条件；本PR仅提供代码审阅和合成检查，不包含全量效果结论。下文保留原流水线说明。
+
 ## 当前研究边界
 
 本项目没有更新 9B 或 GPT-5.6 的模型参数，也没有 epoch、training loss、validation loss 或

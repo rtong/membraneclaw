@@ -1,0 +1,207 @@
+{
+  "description": "Public SWRO function schema and output-unit map; no task answers or limits.",
+  "adapter": {
+    "simulate_swro_system": {
+      "required": [],
+      "properties": {
+        "erd_type": {
+          "type": "string",
+          "enum": [
+            "pressure_exchanger",
+            "pump_as_turbine"
+          ],
+          "description": "Energy-recovery device type. Defaults to pressure_exchanger. For pressure_exchanger, use pxr_efficiency and p2_efficiency and omit erd_efficiency. For pump_as_turbine, use erd_efficiency and omit pxr_efficiency and p2_efficiency.",
+          "default": "pressure_exchanger"
+        },
+        "feed_flow_m3_s": {
+          "type": "number",
+          "description": "Plant feed volumetric flow [m3/s].",
+          "default": 0.3092,
+          "unit": "m3/s"
+        },
+        "feed_tds_g_L": {
+          "type": "number",
+          "description": "Feed total dissolved solids [g/L].",
+          "default": 35.0,
+          "unit": "g/L"
+        },
+        "feed_tss_g_L": {
+          "type": "number",
+          "description": "Feed total suspended solids [g/L].",
+          "default": 0.03,
+          "unit": "g/L"
+        },
+        "feed_temperature_c": {
+          "type": "number",
+          "description": "Feed temperature [degC].",
+          "default": 24.85,
+          "unit": "degC"
+        },
+        "ro_area_m2": {
+          "type": "number",
+          "description": "Total RO membrane area [m2].",
+          "unit": "m2"
+        },
+        "A_comp": {
+          "type": "number",
+          "description": "Water permeability coefficient [m/s/Pa].",
+          "default": 4.2e-12,
+          "unit": "m/s/Pa"
+        },
+        "B_comp": {
+          "type": "number",
+          "description": "Salt permeability coefficient [m/s].",
+          "default": 3.5e-08,
+          "unit": "m/s"
+        },
+        "p1_pressure_bar": {
+          "type": "number",
+          "description": "High-pressure pump outlet pressure [bar].",
+          "default": 70.0,
+          "unit": "bar"
+        },
+        "p1_efficiency": {
+          "type": "number",
+          "description": "High-pressure pump efficiency [-].",
+          "default": 0.8,
+          "unit": "fraction"
+        },
+        "pxr_efficiency": {
+          "type": "number",
+          "description": "Pressure-exchanger efficiency [-]; use only with erd_type=pressure_exchanger.",
+          "unit": "fraction"
+        },
+        "p2_efficiency": {
+          "type": "number",
+          "description": "Booster-pump efficiency [-]; use only with erd_type=pressure_exchanger.",
+          "unit": "fraction"
+        },
+        "erd_efficiency": {
+          "type": "number",
+          "description": "Energy-recovery turbine efficiency [-]; use only with erd_type=pump_as_turbine.",
+          "unit": "fraction"
+        }
+      },
+      "conditional_rules": [
+        {
+          "when": {
+            "erd_type": "pressure_exchanger"
+          },
+          "forbid": [
+            "erd_efficiency"
+          ]
+        },
+        {
+          "when": {
+            "erd_type": "pump_as_turbine"
+          },
+          "forbid": [
+            "pxr_efficiency",
+            "p2_efficiency"
+          ]
+        }
+      ],
+      "output_fields": {
+        "performance.product_flow_m3_s": {
+          "metric": "raw_product",
+          "unit": "m3/s"
+        },
+        "costing.total_capital_cost_usd": {
+          "metric": "raw_capex",
+          "unit": "USD",
+          "basis": "USD_2018"
+        },
+        "costing.specific_energy_kWh_m3": {
+          "metric": "sec",
+          "unit": "kWh/m3"
+        },
+        "costing.LCOW_usd_m3": {
+          "metric": "lcow",
+          "unit": "USD/m3",
+          "basis": "USD_2018"
+        }
+      }
+    }
+  },
+  "native_schemas": [
+    {
+      "type": "function",
+      "function": {
+        "name": "simulate_swro_system",
+        "description": "Solve and cost a full seawater-RO plant. All parameters are optional and omitted values use the documented defaults. Use for LCOW, specific energy, pumps or energy recovery. For pressure_exchanger (the default), omit erd_efficiency. For pump_as_turbine, omit pxr_efficiency and p2_efficiency.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "erd_type": {
+              "type": "string",
+              "enum": [
+                "pressure_exchanger",
+                "pump_as_turbine"
+              ],
+              "description": "Energy-recovery device type. Defaults to pressure_exchanger. For pressure_exchanger, use pxr_efficiency and p2_efficiency and omit erd_efficiency. For pump_as_turbine, use erd_efficiency and omit pxr_efficiency and p2_efficiency.",
+              "default": "pressure_exchanger"
+            },
+            "feed_flow_m3_s": {
+              "type": "number",
+              "description": "Plant feed volumetric flow [m3/s].",
+              "default": 0.3092
+            },
+            "feed_tds_g_L": {
+              "type": "number",
+              "description": "Feed total dissolved solids [g/L].",
+              "default": 35.0
+            },
+            "feed_tss_g_L": {
+              "type": "number",
+              "description": "Feed total suspended solids [g/L].",
+              "default": 0.03
+            },
+            "feed_temperature_c": {
+              "type": "number",
+              "description": "Feed temperature [degC].",
+              "default": 24.85
+            },
+            "ro_area_m2": {
+              "type": "number",
+              "description": "Total RO membrane area [m2]."
+            },
+            "A_comp": {
+              "type": "number",
+              "description": "Water permeability coefficient [m/s/Pa].",
+              "default": 4.2e-12
+            },
+            "B_comp": {
+              "type": "number",
+              "description": "Salt permeability coefficient [m/s].",
+              "default": 3.5e-08
+            },
+            "p1_pressure_bar": {
+              "type": "number",
+              "description": "High-pressure pump outlet pressure [bar].",
+              "default": 70.0
+            },
+            "p1_efficiency": {
+              "type": "number",
+              "description": "High-pressure pump efficiency [-].",
+              "default": 0.8
+            },
+            "pxr_efficiency": {
+              "type": "number",
+              "description": "Pressure-exchanger efficiency [-]; use only with erd_type=pressure_exchanger."
+            },
+            "p2_efficiency": {
+              "type": "number",
+              "description": "Booster-pump efficiency [-]; use only with erd_type=pressure_exchanger."
+            },
+            "erd_efficiency": {
+              "type": "number",
+              "description": "Energy-recovery turbine efficiency [-]; use only with erd_type=pump_as_turbine."
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}
