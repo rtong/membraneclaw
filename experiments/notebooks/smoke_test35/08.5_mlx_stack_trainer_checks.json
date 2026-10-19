@@ -1,0 +1,123 @@
+{
+ "mlx": "0.32.3",
+ "torch": "2.14.1",
+ "chunk": 64,
+ "delta_rule_float32": {
+  "tokens": 5400,
+  "output": {
+   "cosine": 1.0000207424163818,
+   "max_abs_diff": 2.868473529815674e-07
+  },
+  "grad_q": {
+   "cosine": 1.000019907951355,
+   "max_abs_diff": 1.6391277313232422e-06,
+   "scale": 1.0420174598693848
+  },
+  "grad_k": {
+   "cosine": 1.0000249147415161,
+   "max_abs_diff": 1.7285346984863281e-06,
+   "scale": 1.1053316593170166
+  },
+  "grad_v": {
+   "cosine": 1.0000250339508057,
+   "max_abs_diff": 2.5704503059387207e-07,
+   "scale": 0.10162582993507385
+  },
+  "grad_g": {
+   "cosine": 1.0,
+   "max_abs_diff": 8.642673492431641e-07,
+   "scale": 0.6728166341781616
+  },
+  "grad_beta": {
+   "cosine": 0.9999998807907104,
+   "max_abs_diff": 1.1324882507324219e-06,
+   "scale": 0.8596014976501465
+  },
+  "seconds_forward_backward": {
+   "torch_mps": [
+    0.20943483302835375,
+    0.07193208392709494,
+    0.07258212508168072
+   ],
+   "mlx": [
+    0.3079139580950141,
+    0.2865424999035895,
+    0.28348941705189645
+   ]
+  }
+ },
+ "inverse_grad_vs_float64": {
+  "cosine": 1.0000000047141813,
+  "max_abs_diff": 1.4675911167216782e-05
+ },
+ "policy": [
+  {
+   "tokens": 3891,
+   "policy_tokens": 756,
+   "logprob_sum_torch": -55.49919891357422,
+   "logprob_sum_mlx": -55.135589599609375,
+   "logprob_mean_abs_diff": 0.00215713819488883,
+   "logprob_max_abs_diff": 0.3095896244049072,
+   "grad_cosine_median": 0.9857901334762573,
+   "grad_cosine_min": 0.9463942050933838,
+   "grad_norm_ratio_median": 0.962130606174469,
+   "lora_tensors": 228,
+   "seconds_forward_backward": {
+    "torch_mps": 4.861248290981166,
+    "mlx": 5.334750166977756
+   }
+  },
+  {
+   "tokens": 4341,
+   "policy_tokens": 1136,
+   "logprob_sum_torch": -38.145179748535156,
+   "logprob_sum_mlx": -38.218841552734375,
+   "logprob_mean_abs_diff": 0.001155888312496245,
+   "logprob_max_abs_diff": 0.12491035461425781,
+   "grad_cosine_median": 0.9865429699420929,
+   "grad_cosine_min": 0.9475645422935486,
+   "grad_norm_ratio_median": 1.0195741057395935,
+   "lora_tensors": 228,
+   "seconds_forward_backward": {
+    "torch_mps": 4.814352459041402,
+    "mlx": 6.257177999941632
+   }
+  },
+  {
+   "tokens": 7919,
+   "policy_tokens": 1283,
+   "logprob_sum_torch": -14.997234344482422,
+   "logprob_sum_mlx": -14.786327362060547,
+   "logprob_mean_abs_diff": 0.00047746318159624934,
+   "logprob_max_abs_diff": 0.13547325134277344,
+   "grad_cosine_median": 0.9860905408859253,
+   "grad_cosine_min": 0.8936076760292053,
+   "grad_norm_ratio_median": 0.9667368829250336,
+   "lora_tensors": 228,
+   "seconds_forward_backward": {
+    "torch_mps": 11.241261833929457,
+    "mlx": 20.935121749993414
+   }
+  }
+ ],
+ "critic": [
+  {
+   "turns": 7,
+   "cosine_min": 0.9997118711471558,
+   "cosine_mean": 0.9998281853539603,
+   "norm_ratio": 1.0015418529510498
+  },
+  {
+   "turns": 7,
+   "cosine_min": 0.9998089671134949,
+   "cosine_mean": 0.9998621344566345,
+   "norm_ratio": 0.9997946619987488
+  },
+  {
+   "turns": 3,
+   "cosine_min": 0.9998020529747009,
+   "cosine_mean": 0.9998141328493754,
+   "norm_ratio": 1.0000628232955933
+  }
+ ]
+}
