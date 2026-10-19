@@ -3698,6 +3698,12 @@ PPO_DEFAULTS = {
     # 08.5: the evaluations' generator, when not the rollouts' (empty: ``generator``'s) -- e.g. rollouts "mlx-batch" and
     # evaluations "mlx", so that a run switched mid-way keeps its greedy evaluations comparable with the earlier ones
     "eval_generator": "",
+    # 08.5: early termination on a plateau of the evaluations' running mean (train_ppo_mlx): stop once the mean of the
+    # last `plateau_window` evaluations (step 0's left out) has not beaten its best by more than `plateau_delta` at
+    # `plateau_patience` evaluations in a row, and not before step `plateau_min_step` (window 0: off). The evaluations
+    # read the same questions every time, so the running mean moves with the policy, not with a draw of questions;
+    # one 60-question reading moves by ~0.05 on noise alone, and a run's best single reading picks that noise (D37).
+    "plateau_window": 0, "plateau_patience": 0, "plateau_delta": 0.0, "plateau_min_step": 0,
     # 08: also save the continuation state (last/) every this many steps, not only at the evaluations (0: only
     # there) -- a run on a laptop's battery loses at most this many steps to a shutdown.
     "save_every": 0,
@@ -3891,6 +3897,14 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             gate["since_best"] += 1
             if gate["since_best"] >= cfg["patience"]:
                 reason = f"converged: {cfg['patience']} evaluations without beating {gate['best']:.4f} (step {gate['best_step']})"
+        if step and cfg.get("plateau_window"):  # 08.5: the running mean's plateau (plateau_update)
+            hist = [r["reward"] for r in map(json.loads, eval_path.read_text().splitlines()) if r["step"] > 0]
+            smooth, new_best, why = plateau_update(gate, hist + [rec["reward"]], step, cfg)
+            if smooth is not None:
+                rec["smooth"] = smooth
+            if new_best:
+                policy.save_pretrained(run_dir / "adapter-smooth-best")
+            reason = why or reason
         gate["regress"] = gate["regress"] + 1 if rec["reward"] < gate["step0"] - cfg["regress_margin"] else 0
         if gate["regress"] >= 2:
             reason = f"no-regression gate: held-out reward {rec['reward']:.4f} below step 0 twice"
@@ -3905,10 +3919,13 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             save_state(step)
         crit = rec["critic_residual_median"]
         rg = rec["recovery"]["recovered_given_error"]
+        sm = rec.get("smooth")
         progress(f"    eval @{step:<5} reward {rec['reward']:.4f} decision {rec['decision_correct']:.3f} "
                  f"evidence {rec['evidence']:.3f} answer {rec['answer_found']:.3f} calls {rec['calls_per_episode']:.2f} "
                  f"erred {rec['recovery']['sim_erred']:.3f} recovered {'-' if rg is None else f'{rg:.3f}'} "
-                 f"critic {'-' if crit is None else f'{crit:+.4f}'} | best {gate['best']:.4f}@{gate['best_step']}")
+                 f"critic {'-' if crit is None else f'{crit:+.4f}'} | best {gate['best']:.4f}@{gate['best_step']}"
+                 + ("" if sm is None else f" | running mean {sm:.4f}, best {gate['smooth_best']:.4f}@"
+                    f"{gate['smooth_best_step']}, {gate.get('smooth_since', 0)} since"))
         return reason
 
     faulthandler.register(signal.SIGUSR1, all_threads=True)
@@ -6551,6 +6568,25 @@ class MXCriticHeads:
         return out.tolist()
 
 
+def plateau_update(gate: dict, history: list, step: int, cfg: dict):
+    """08.5: the evaluations' running-mean plateau (PPO_DEFAULTS ``plateau_*``). ``history``: the evaluations' rewards
+    after step 0, this one last. Updates ``gate`` (smooth_best, smooth_best_step, smooth_since) in place and returns
+    (the running mean or None, whether it is a new best, the stop reason or None)."""
+    w = int(cfg.get("plateau_window") or 0)
+    if not w or len(history) < w:
+        return None, False, None
+    smooth = sum(history[-w:]) / w
+    if gate.get("smooth_best") is None or smooth > gate["smooth_best"] + float(cfg.get("plateau_delta") or 0.0):
+        gate.update(smooth_best=smooth, smooth_best_step=step, smooth_since=0)
+        return smooth, True, None
+    gate["smooth_since"] = int(gate.get("smooth_since") or 0) + 1
+    if step >= int(cfg.get("plateau_min_step") or 0) and gate["smooth_since"] >= int(cfg.get("plateau_patience") or 1):
+        return smooth, False, (f"plateau: the mean of the last {w} evaluations has not beaten {gate['smooth_best']:.4f} "
+                               f"(step {gate['smooth_best_step']}) by {cfg.get('plateau_delta')} at "
+                               f"{gate['smooth_since']} evaluations in a row")
+    return smooth, False, None
+
+
 def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False) -> dict:
     """08.5: ``train_ppo`` with the whole step on MLX and no PyTorch in the process -- the policy (MLXTrainable),
     generation (MLXPolicy), the reference, the separate critic (MLXSeparateCritic), the update (AdamW, bias-corrected),
@@ -6830,6 +6866,14 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
             gate["since_best"] += 1
             if gate["since_best"] >= cfg["patience"]:
                 reason = f"converged: {cfg['patience']} evaluations without beating {gate['best']:.4f} (step {gate['best_step']})"
+        if step and cfg.get("plateau_window"):  # 08.5: the running mean's plateau (plateau_update)
+            hist = [r["reward"] for r in map(json.loads, eval_path.read_text().splitlines()) if r["step"] > 0]
+            smooth, new_best, why = plateau_update(gate, hist + [rec["reward"]], step, cfg)
+            if smooth is not None:
+                rec["smooth"] = smooth
+            if new_best:
+                policy.save_pretrained(run_dir / "adapter-smooth-best")
+            reason = why or reason
         gate["regress"] = gate["regress"] + 1 if rec["reward"] < gate["step0"] - cfg["regress_margin"] else 0
         if gate["regress"] >= 2:
             reason = f"no-regression gate: held-out reward {rec['reward']:.4f} below step 0 twice"
@@ -6844,10 +6888,13 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
             save_state(step)
         crit = rec["critic_residual_median"]
         rg = rec["recovery"]["recovered_given_error"]
+        sm = rec.get("smooth")
         progress(f"    eval @{step:<5} reward {rec['reward']:.4f} decision {rec['decision_correct']:.3f} "
                  f"evidence {rec['evidence']:.3f} answer {rec['answer_found']:.3f} calls {rec['calls_per_episode']:.2f} "
                  f"erred {rec['recovery']['sim_erred']:.3f} recovered {'-' if rg is None else f'{rg:.3f}'} "
-                 f"critic {'-' if crit is None else f'{crit:+.4f}'} | best {gate['best']:.4f}@{gate['best_step']}")
+                 f"critic {'-' if crit is None else f'{crit:+.4f}'} | best {gate['best']:.4f}@{gate['best_step']}"
+                 + ("" if sm is None else f" | running mean {sm:.4f}, best {gate['smooth_best']:.4f}@"
+                    f"{gate['smooth_best_step']}, {gate.get('smooth_since', 0)} since"))
         return reason
 
     def reuse_eval(rec: dict) -> None:

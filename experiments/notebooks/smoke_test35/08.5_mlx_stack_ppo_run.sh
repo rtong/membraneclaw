@@ -44,6 +44,10 @@ STEPS=${STEPS:-200}
 EVAL_EVERY=${EVAL_EVERY:-40}
 EVAL_CASES=${EVAL_CASES:-60}
 PATIENCE=${PATIENCE:-8}                 # evaluations without a new best before "converged"
+PLATEAU_WINDOW=${PLATEAU_WINDOW:-0}     # >0: stop on a plateau of the last N evaluations' mean (plateau_update)
+PLATEAU_PATIENCE=${PLATEAU_PATIENCE:-0}
+PLATEAU_DELTA=${PLATEAU_DELTA:-0}
+PLATEAU_MIN_STEP=${PLATEAU_MIN_STEP:-0}
 LR_ANNEAL_START=${LR_ANNEAL_START:-0}   # 0: anneal from the first actor step; N: from step N to 0 at STEPS
 STEP_WATCHDOG=${STEP_WATCHDOG:-3600}    # 07: 1800 and 7200; doubled, for steps and evaluations slowed by another GPU job
 EVAL_WATCHDOG=${EVAL_WATCHDOG:-14400}
@@ -65,6 +69,7 @@ BIAS=$(python3 -c "import json; print(round(json.load(open('$SEED_PATH/dev-T1-n1
 ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS --eval-every $EVAL_EVERY --eval-cases $EVAL_CASES --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin $REGRESS_MARGIN --reward-stop-drop $REWARD_STOP_DROP --stall-at $STALL_AT --lam 0.95 --adv-unit turn --sample-every 1 --lr $LR --critic $CRITIC --prover-k $PROVER_K --prover-alpha $ALPHA --step-watchdog $STEP_WATCHDOG --eval-watchdog $EVAL_WATCHDOG --adv-norm $ADV_NORM --minibatches $MINIBATCHES --target-kl $TARGET_KL --max-grad-norm $MAX_GRAD_NORM --adam-eps $ADAM_EPS --lr-anneal $LR_ANNEAL --lr-anneal-start $LR_ANNEAL_START --patience $PATIENCE --generator $GENERATOR --trainer $TRAINER --save-every $SAVE_EVERY --seed $SEED"
 [ -n "$WARM_FROM" ] && ARGS="$ARGS --warm-from $WARM_FROM"
 [ -n "$EVAL_GENERATOR" ] && ARGS="$ARGS --eval-generator $EVAL_GENERATOR"
+[ "$PLATEAU_WINDOW" != 0 ] && ARGS="$ARGS --plateau-window $PLATEAU_WINDOW --plateau-patience $PLATEAU_PATIENCE --plateau-delta $PLATEAU_DELTA --plateau-min-step $PLATEAU_MIN_STEP"
 mkdir -p $R/$RUN
 if [ "$RESUME" = 1 ] && { [ -f $R/$RUN/last/state.pt ] || [ -f $R/$RUN/last/state_mlx.json ]; }; then
     rm -f $R/$RUN/ending.json
