@@ -18,7 +18,10 @@ PPO at 06's stable configuration (the turn as the unit, actor lr 2e-6).
     inside the simulation budget: a slip the simulator runs silently has no error to read.
   * ``seed --recovery-every 4``: the first N clean reference episodes of 06's shuffle, every fourth
     replaced by its question's recovery episode. The slipped turn is context, not a label: the seed
-    reads it and the error, and is trained on the fix and what follows.
+    reads it and the error, and is trained on the fix and what follows. An unconverted slip is made one
+    turn earlier, in the conversions with one left out; ``--recovery-mask-omission 1`` makes that turn
+    context too, ``2`` only its closing <|im_end|> (without either the seed is trained on the omission).
+  * ``--err-call-credit 0`` (ppo, probe): a simulate call the tool rejected earns no call credit.
   * ``alive`` judges one behaviour more: after an erroring simulate call, the same candidate
     simulated cleanly.
 
@@ -1301,6 +1304,14 @@ WEIGHTS = {"calls": 0.25, "decision": 0.35, "violations": 0.10, "values": 0.20, 
 ARG_TOL = 0.005      # relative tolerance on each tool argument
 VALUE_TOL = 0.015    # relative tolerance on each reported number (arguments off by ARG_TOL move outputs <= 1.43%)
 UNGATED = 0.3        # share of the decision/violations credit paid without the simulations that prove it
+# 07: does a simulate call the tool rejected earn call credit? True (03-07's reward): it scores the share of its
+# arguments that are right, as a call that ran does. False (PPO --err-call-credit 0, probe --err-call-credit 0): it
+# scores nothing, and still counts in the mean over the episode's simulate calls. Why: from the unit-only seed PPO
+# dropped converting before the first simulate call (L1 0.36 -> 0.00, L2 0.62 -> 0.10 in 50 steps) -- a slip
+# then its fix cost about 0.05 of reward, and the convert-first episodes earned no more than simulate-first ones
+# (L2 0.246 vs 0.205). With no credit for an erroring call a recovered slip costs ~0.12, and not calling at all
+# still scores below trying (no call credit, decision at UNGATED), so the fix after an error keeps paying.
+ERR_CALL_CREDIT = True
 NONE_WORDS = {"none", "null", "n/a", "no option", "not feasible", "infeasible", "nothing", "no"}
 
 
@@ -1434,7 +1445,8 @@ def score(case: dict, calls: list[dict], final_text: str) -> dict:
     comps: dict[str, float] = {}
     is_sim = [c.get("name") not in LOCAL_TOOLS for c in calls]
     n = sum(is_sim)  # simulations; convert_units and check_limits calls earn and cost nothing
-    fid = [call_fidelity(case, c) if sim else (0.0, None) for c, sim in zip(calls, is_sim)]
+    fid = [call_fidelity(case, c) if sim and (ERR_CALL_CREDIT or not result_is_error(c.get("result"))) else (0.0, None)
+           for c, sim in zip(calls, is_sim)]
     covered = {cov for _, cov in fid if cov}
     evidence = set(case["proof"]) <= covered
     comps["calls"] = sum(f for (f, _), sim in zip(fid, is_sim) if sim) / n if n else 0.0
@@ -1743,6 +1755,22 @@ def call_block(name: str, arguments: dict) -> str:
     return f"<tool_call>\n<function={name}>\n{params}</function>\n</tool_call>"
 
 
+def turn_text(turn: dict) -> str:
+    """An assistant turn of calls as the chat template writes it (with its own line first, when it has one).
+    07: renders a forced probe's prefilled turns (PR #33's ``turn_text``)."""
+    calls = "\n".join(call_block(c["name"], c["arguments"]) for c in turn["calls"])
+    return f"{turn['text']}\n\n{calls}" if turn.get("text") else calls
+
+
+def forced_prefill(path: Path) -> dict[str, list[dict]]:
+    """07: the slipped turns of a file of recovery episodes (its unlabelled turns), keyed by question -- what
+    ``probe --forced`` starts each episode from. The file used is PR #33's 144 dev unit slips
+    (``07_error_recovery_data/dev_recovery_pr33.jsonl``, copied unchanged from experiment/smoke-test35-07-recover-from-errors)
+    so the two branches' forced probes are the same test."""
+    return {r["id"]: [t for t in r["turns"] if not t.get("label", True)]
+            for r in map(json.loads, Path(path).read_text().splitlines())}
+
+
 def render_prompt(tokenizer, case: dict) -> str:
     msgs = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": case["prompt"]}]
     return tokenizer.apply_chat_template(msgs, tools=_tool_decls(), tokenize=False, add_generation_prompt=True,
@@ -1874,13 +1902,18 @@ class _StopAtAnswer:
 
 
 def rollout(policy, tokenizer, cases: list[dict], pool: ToolPool, *, temperature: float, max_new_tokens: int,
-            stop_at_json: bool = False) -> list[Episode]:
+            stop_at_json: bool = False, prefill: dict[str, list[dict]] | None = None) -> list[Episode]:
     """Run a batch of episodes with the simulators in the loop.
 
     ``max_new_tokens`` caps the policy's own tokens summed over its turns. Each round, every live
     episode writes one turn; its calls (up to MAX_CALLS per episode) run on the pool and come back as
     one user turn. A turn without calls is the answer. With ``stop_at_json`` that turn ends where its
     first JSON object closes.
+
+    07: ``prefill`` (case id -> turns, each {"calls", "results"} and an optional leading "text") starts an
+    episode from turns the harness writes -- a recovery episode's slipped turns with the simulator's errors
+    (``probe --forced``). They are context, not the policy's tokens; their calls are the episode's calls
+    (scored, and counted against the budgets), and their rounds count against MAX_ROUNDS (PR #33's rule).
     """
     import torch
     im_end = tokenizer.convert_tokens_to_ids("<|im_end|>")
@@ -1888,6 +1921,19 @@ def rollout(policy, tokenizer, cases: list[dict], pool: ToolPool, *, temperature
     prefix = generation_prefix(tokenizer)
     cache: dict[int, str] = {}
     eps = [Episode(c, tokenizer(render_prompt(tokenizer, c), add_special_tokens=False).input_ids) for c in cases]
+    used = [0] * len(eps)  # tool rounds already taken by prefilled turns
+    for i, ep in enumerate(eps):
+        for turn in (prefill or {}).get(ep.case["id"], []):
+            text = turn_text(turn)
+            ep.turn_starts.append(len(ep.ids))
+            ep.turns.append(text)
+            for c, r in zip(turn["calls"], turn["results"]):
+                ep.calls.append({"name": c["name"], "arguments": c["arguments"], "result": r, "turn": len(ep.turns) - 1})
+            written = tokenizer(text, add_special_tokens=False).input_ids + [im_end]
+            env = tokenizer(tool_response_text(turn["results"], prefix), add_special_tokens=False).input_ids
+            ep.ids += written + env
+            ep.policy += [False] * (len(written) + len(env))
+            used[i] += 1
     live = list(range(len(eps)))
     with torch.no_grad():
         for rnd in range(MAX_ROUNDS + 1):
@@ -1926,7 +1972,7 @@ def rollout(policy, tokenizer, cases: list[dict], pool: ToolPool, *, temperature
                 if not calls:
                     ep.final_text = text
                     continue
-                if rnd == MAX_ROUNDS:
+                if rnd + used[i] >= MAX_ROUNDS:
                     ep.unanswered = len(calls)
                     continue
                 pending.append((i, calls))
@@ -2478,7 +2524,9 @@ def seed_example(case: dict, ref: dict, tokenizer, *, label: str, reasoning: boo
         call_ids = tokenizer(calls_text, add_special_tokens=False).input_ids + [im_end]
         env = tokenizer(tool_response_text(turn["results"], prefix), add_special_tokens=False).input_ids
         ids += call_ids + env
-        lab += [not turn.get("context")] * len(call_ids) + [False] * len(env)  # 07: a slipped turn is context
+        # 07: a slipped turn is context; an "end_context" turn's calls are labels, its closing <|im_end|> is not
+        trained = not turn.get("context")
+        lab += [trained] * (len(call_ids) - 1) + [trained and not turn.get("end_context")] + [False] * len(env)
     enc = tokenizer(answer, add_special_tokens=False, return_offsets_mapping=True)
     ans_ids = enc.input_ids + [im_end]
     if label == "full":
@@ -2510,8 +2558,57 @@ def sft_loss(policy, ids, labels):
     return torch.nn.functional.cross_entropy(model.lm_head(hidden[where]).float(), targets[where])
 
 
+def recovery_positions(ids: list[str], rec: dict[str, dict], every: int, kinds: str = "") -> list[int]:
+    """07: where a seed's recovery episodes go -- every k-th of its reference episodes. With ``kinds`` (e.g.
+    "unconverted") a k-th position whose question's slip is another kind keeps its clean reference, and the nearest
+    position (not itself a k-th one) whose question's slip is allowed takes the recovery instead, so the seed keeps
+    as many recovery episodes, in nearly the same places. Why: from the n300 seed the x10 / x0.1 factor slips (39 of
+    75, 36 on questions that need no conversion, where the policy errs on 8% of dev episodes) came with a habit of
+    editing a number by a power of ten after an error; the unit-only seed tests whether they are where it came from."""
+    slots = [i for i in range(every - 1, len(ids), every) if ids[i] in rec]
+    if not kinds:
+        return slots
+    allowed = set(kinds.split(","))
+    ok = lambda i: ids[i] in rec and rec[ids[i]]["slip"]["kind"] in allowed  # noqa: E731
+    chosen = [i for i in slots if ok(i)]
+    for i in slots:
+        if ok(i):
+            continue
+        j = next((i + d for d in sorted(range(-len(ids), len(ids)), key=abs)
+                  if 0 <= i + d < len(ids) and i + d not in slots and i + d not in chosen and ok(i + d)), None)
+        if j is not None:
+            chosen.append(j)
+    return sorted(chosen)
+
+
+def seed_refs(seed: int, limit: int, recovery_every: int = 0, recovery_kinds: str = "",
+              recovery_mask_omission: int = 0) -> tuple[list[dict], list[str], int]:
+    """The seed's episodes: (references, the ids swapped for their recovery episode, omission turns masked)."""
+    refs = [json.loads(line) for line in reference_path("train").read_text().splitlines()]
+    random.Random(seed).shuffle(refs)
+    refs = refs[:limit] if limit else refs
+    swapped, masked = [], 0
+    if recovery_every:  # 07: every k-th of the first N replaced by its question's recovery episode
+        rec = {r["id"]: r for r in map(json.loads, recovery_path().read_text().splitlines())}
+        for i in recovery_positions([r["id"] for r in refs], rec, recovery_every, recovery_kinds):
+            refs[i] = rec[refs[i]["id"]]
+            swapped.append(refs[i]["id"])
+            # An unconverted slip is made in the turn before the slipped call: the conversions with one left
+            # out. Unmasked, that turn is a label, so the seed learns the omission (57 of the unit-only seed's
+            # 75). 1: every turn up to the slipped call is context. 2: only those turns' closing <|im_end|> --
+            # the one wrong token, the turn ended with a conversion still to make -- so the conversions it
+            # did make stay labels, and the seed keeps the convert-first opening.
+            if recovery_mask_omission and refs[i]["slip"]["kind"] == "unconverted":
+                k = next(j for j, t in enumerate(refs[i]["turns"]) if t.get("context"))
+                masked += k > 0
+                key = "context" if recovery_mask_omission == 1 else "end_context"
+                refs[i] = dict(refs[i], turns=[dict(t, **{key: True}) if j < k else t for j, t in enumerate(refs[i]["turns"])])
+    return refs, swapped, masked
+
+
 def train_seed(out_dir: Path, *, label: str, reasoning: bool, epochs: int, lr: float, accum: int, lora_r: int,
-               seed: int, limit: int, label_per_class: int = 0, recovery_every: int = 0, progress=print) -> None:
+               seed: int, limit: int, label_per_class: int = 0, recovery_every: int = 0, recovery_kinds: str = "",
+               recovery_mask_omission: int = 0, progress=print) -> None:
     import torch
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -2523,16 +2620,7 @@ def train_seed(out_dir: Path, *, label: str, reasoning: bool, epochs: int, lr: f
     policy = get_peft_model(base, LoraConfig(r=lora_r, lora_alpha=2 * lora_r, target_modules=list(LORA_TARGETS),
                                              task_type="CAUSAL_LM")).to("cuda")
     cases = {c["id"]: c for c in load_split("train")}
-    refs = [json.loads(line) for line in reference_path("train").read_text().splitlines()]
-    random.Random(seed).shuffle(refs)
-    refs = refs[:limit] if limit else refs
-    swapped = []
-    if recovery_every:  # 07: every k-th of the first N replaced by its question's recovery episode
-        rec = {r["id"]: r for r in map(json.loads, recovery_path().read_text().splitlines())}
-        for i in range(recovery_every - 1, len(refs), recovery_every):
-            if refs[i]["id"] in rec:
-                refs[i] = rec[refs[i]["id"]]
-                swapped.append(refs[i]["id"])
+    refs, swapped, masked = seed_refs(seed, limit, recovery_every, recovery_kinds, recovery_mask_omission)
     label_ids = set(pick_label_cases(label_per_class, seed)) if label_per_class else set()
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "config.json").write_text(json.dumps(
@@ -2541,7 +2629,8 @@ def train_seed(out_dir: Path, *, label: str, reasoning: bool, epochs: int, lr: f
          "strategy": "blind: convert what needs converting, simulate every candidate, then the answer",
          "compare_tool": COMPARE_ON,
          "label_per_class": label_per_class, "label_case_ids": sorted(label_ids),
-         "recovery_every": recovery_every, "recovery_ids": swapped,
+         "recovery_every": recovery_every, "recovery_kinds": recovery_kinds, "recovery_ids": swapped,
+         "recovery_mask_omission": recovery_mask_omission, "recovery_omission_turns_masked": masked,
          "recovery_slips": dict(Counter(r["slip"]["kind"] for r in refs if "slip" in r)),
          "label_class_counts": dict(Counter(f"{cases[i]['family']}:{decision_class(cases[i])}" for i in label_ids))},
         indent=2) + "\n")
@@ -2726,9 +2815,11 @@ def _take(x, index):
     return torch.gather(x, 1, index)
 
 
-def forward_policy(model, seqs, attn, span: int, index, *, suppress: int, hidden_layer: int | None = None):
+def forward_policy(model, seqs, attn, span: int, index, *, suppress: int, hidden_layer: int | None = None,
+                   entropy: bool = False):
     """Log-probs at the policy's tokens (``suppress`` removed from the vocabulary), the critic's
-    features at the same positions, and the probability the model puts on ``suppress`` there."""
+    features at the same positions, and the probability the model puts on ``suppress`` there; with
+    ``entropy`` also the entropy of the policy's next-token distribution at each of them (07, logged only)."""
     import torch
     base = model.get_base_model()
     out = base.model(input_ids=seqs, attention_mask=attn, position_ids=padded_position_ids(attn),
@@ -2745,7 +2836,13 @@ def forward_policy(model, seqs, attn, span: int, index, *, suppress: int, hidden
     targets = _take(seqs[:, offset:], index)
     logprobs = torch.log_softmax(logits, dim=-1).gather(-1, targets.unsqueeze(-1)).squeeze(-1)
     hidden = _take(out.hidden_states[hidden_layer], pos).detach() if hidden_layer is not None else None
-    return logprobs, hidden, mass
+    if not entropy:
+        return logprobs, hidden, mass
+    with torch.no_grad():
+        # In blocks of 256 positions: a whole episode's (n x 248k) log-softmax is ~3 GB more.
+        ent = torch.cat([-(torch.exp(b) * b).sum(-1) for b in map(lambda x: torch.log_softmax(x, dim=-1),
+                                                                   logits.split(256, dim=-2))], dim=-1)
+    return logprobs, hidden, mass, ent
 
 
 def gae(rewards, values, mask, *, gamma: float = 1.0, lam: float = 1.0):
@@ -2822,7 +2919,10 @@ def ppo_actor_loss(logprobs, old_logprobs, advantages, mask, *, clip_eps: float)
     clipped = torch.clamp(ratio, 1.0 - clip_eps, 1.0 + clip_eps) * advantages
     loss = -(torch.min(unclipped, clipped) * mask).sum() / active
     with torch.no_grad():
+        log_ratio = logprobs - old_logprobs
         stats = {"actor_loss": float(loss), "ratio_mean": float((ratio * mask).sum() / active),
+                 # 07: KL(old || new) over the trainable tokens, the low-variance estimator (ratio - 1) - log ratio
+                 "approx_kl": float((((ratio - 1) - log_ratio) * mask).sum() / active),
                  "clip_frac": float(((unclipped > clipped) & (mask > 0)).float().sum() / active)}
     return loss, stats
 
@@ -2900,6 +3000,18 @@ PPO_DEFAULTS = {
     # own limit: 120 dev questions take half an hour with a seed that barely works (05's took minutes), and a
     # step plus the evaluation under one 30-minute timer ended every attempt at the first evaluation.
     "eval_watchdog": 7200,
+    # 07: 1 centres the actor's advantages on each batch (flag --adv-center): one number is subtracted from every
+    # token's advantage before the actor's loss -- the mean under the loss's own weights (each episode with a
+    # trainable token counts equally, its trainable tokens equally within it), so the batch's update carries no net
+    # push up or down on what it sampled. The critic's targets stay the uncentred returns: centring is a baseline
+    # for the policy gradient, and the value the critic estimates does not change with it. No division by the
+    # standard deviation (~0.25 here): it would scale every step four-fold, a second change. Why: from the n300
+    # seed, PPO continued past step 200 drew one-signed advantages (token mean / std +0.02 at steps 200-224, -0.36
+    # at 225-249, -0.76 at 250-274) -- the critic, fit on a 25-step window, lagging a policy that got worse -- and
+    # the answer turn's frozen line break drifted under them (P after the aggregation line 0.95 -> 0.21).
+    "adv_center": 0,
+    # 07: 0 gives a simulate call the tool rejected no call credit (see ERR_CALL_CREDIT); the evaluations score the same way.
+    "err_call_credit": 1,
 }
 
 
@@ -2909,8 +3021,10 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     from collections import deque
     import torch
     device = "cuda"
+    global ERR_CALL_CREDIT
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
+    ERR_CALL_CREDIT = bool(cfg.get("err_call_credit", 1))
     cases = load_split(cfg["split"])
     eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
     torch.manual_seed(cfg["seed"])
@@ -3043,12 +3157,12 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             B = build_batch(episodes, tok, device)
             seqs, attn, span, index, mask, rewards = B["seqs"], B["attn"], B["span"], B["index"], B["mask"], B["rewards"]
             with torch.no_grad():
-                old_lp, hid, mass = [], [], []
+                old_lp, hid, mass, ent = [], [], [], []
                 for i in range(len(seqs)):
-                    lp, h, m = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1],
-                                              suppress=suppress, hidden_layer=cfg["value_layer"])
-                    old_lp.append(lp), hid.append(h), mass.append(m)
-                old_lp, hidden, mass = torch.cat(old_lp), torch.cat(hid), torch.cat(mass)
+                    lp, h, m, e = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1],
+                                                 suppress=suppress, hidden_layer=cfg["value_layer"], entropy=True)
+                    old_lp.append(lp), hid.append(h), mass.append(m), ent.append(e)
+                old_lp, hidden, mass, ent = torch.cat(old_lp), torch.cat(hid), torch.cat(mass), torch.cat(ent)
                 kl = torch.zeros_like(old_lp)
                 if reference is not None:
                     ref_lp = torch.cat([forward_policy(reference, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1],
@@ -3074,6 +3188,11 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             actor_mask = mask * (1 - B["turn_end"]) if cfg["freeze_turn_ends"] else mask
             if cfg["freeze_answer_structure"]:
                 actor_mask = actor_mask * (1 - B["answer"] + B["content"])
+            # The advantage's mean under the actor loss's weights (see "adv_center"), logged in every run.
+            trainable = actor_mask.sum(dim=-1)
+            has = trainable > 0
+            loss_mean = float(((adv * actor_mask).sum(dim=-1)[has] / trainable[has]).mean()) if bool(has.any()) else 0.0
+            adv_actor = (adv - loss_mean) * mask if cfg.get("adv_center", 0) else adv
             warming = step < cfg["critic_warmup"]
             astats, grad_norm = {}, torch.zeros(())
             policy.train()
@@ -3082,7 +3201,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 ep_stats = defaultdict(float)
                 for i in range(len(seqs)):
                     lp, _, _ = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1], suppress=suppress)
-                    loss, st_ = ppo_actor_loss(lp, old_lp[i:i + 1], adv[i:i + 1], actor_mask[i:i + 1],
+                    loss, st_ = ppo_actor_loss(lp, old_lp[i:i + 1], adv_actor[i:i + 1], actor_mask[i:i + 1],
                                                clip_eps=cfg["clip_eps"])
                     (loss / len(seqs)).backward()
                     for k, v in st_.items():
@@ -3110,6 +3229,12 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 "suppressed_mass_max": float((mass * mask).max()),
                 "adv_mean": round(mean_adv, 6),
                 "adv_std": round(float((((adv - mean_adv) * mask) ** 2).sum().div(active).sqrt()), 6),
+                # 07: the mean the actor's loss sees (subtracted when adv_center is on), and the policy's entropy
+                # over its tokens, over the answer turn, and over the tokens left out of the actor's loss
+                "adv_loss_mean": round(loss_mean, 6), "adv_centered": int(bool(cfg.get("adv_center", 0))),
+                "entropy_mean": round(float((ent * mask).sum() / active), 6),
+                "entropy_answer": round(float((ent * ans).sum() / ans.sum().clamp(min=1)), 6),
+                "entropy_frozen": round(float((ent * (mask - actor_mask)).sum() / (mask - actor_mask).sum().clamp(min=1)), 6),
                 **critic_fit(old_values, returns, mask),
                 **{k: round(v, 6) for k, v in astats.items()}, **{k: round(v, 6) for k, v in cstats.items()},
                 "grad_norm": float(grad_norm), "gen_seconds": round(gen_s, 1),
@@ -3126,7 +3251,8 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             progress(f"  step {step:>5} reward {rec['reward_mean']:.4f} calls {rec['calls_fidelity']:.3f} "
                      f"dec {rec['decision_correct']:.2f} evid {rec['evidence']:.2f} V {rec.get('value_mean', 0):.3f} "
                      f"ev {'undef' if ev is None else f'{ev:+.3f}'} clock {'undef' if clock is None else f'{clock:+.3f}'} "
-                     f"adv {rec['adv_mean']:+.4f} kl {rec['kl_mean']:.4f} tok {rec['policy_tokens_mean']:.0f}/"
+                     f"adv {rec['adv_mean']:+.4f}/{rec['adv_loss_mean']:+.4f} kl {rec['kl_mean']:.4f} "
+                     f"H {rec['entropy_mean']:.3f} tok {rec['policy_tokens_mean']:.0f}/"
                      f"{rec['episode_tokens_mean']:.0f} {rec['step_seconds']:.0f}s")
             step += 1
             if cfg["eval_every"] and step % cfg["eval_every"] == 0:
@@ -3512,11 +3638,17 @@ def cmd_probe(args) -> None:
         total = torch.cuda.get_device_properties(0).total_memory
         torch.cuda.set_per_process_memory_fraction(min(1.0, args.max_vram_mib * 2**20 / total))
     torch.manual_seed(args.seed)
+    global ERR_CALL_CREDIT
     if args.tools_json:  # another notebook's declarations, e.g. 05's to probe its seed under its own prompt
         global _DECLS
         _DECLS = json.loads(Path(args.tools_json).read_text())
+    ERR_CALL_CREDIT = bool(args.err_call_credit)
     policy, tok = load_policy(args.adapter)
     cases = load_split(args.split)
+    prefill = None
+    if args.forced:  # 07: only the questions with a slipped prefix, each started from it
+        prefill = forced_prefill(HERE / args.forced)
+        cases = [c for c in cases if c["id"] in prefill]
     if args.swap:
         cases = [swap_sentences(c, args.swap) for c in cases]
     if args.limit:
@@ -3526,14 +3658,15 @@ def cmd_probe(args) -> None:
     out_dir = RUNS / args.out
     out_dir.mkdir(parents=True, exist_ok=True)
     tag = (f"{args.split}-T{args.temperature:g}" + (f"-x{args.samples}" if args.samples > 1 else "")
-           + ("-stop" if args.stop_at_json else "") + (f"-swap-{args.swap}" if args.swap else ""))
+           + ("-stop" if args.stop_at_json else "") + (f"-swap-{args.swap}" if args.swap else "")
+           + ("-forced" if args.forced else "") + ("" if args.err_call_credit else "-err0"))
     pool = ToolPool(args.workers)
     episodes, scores, t0 = [], [], time.time()
     try:
         with (out_dir / f"{tag}.episodes.jsonl").open("w") as fh:
             for b in range(0, len(cases), args.batch):
                 eps = rollout(policy, tok, cases[b: b + args.batch], pool, temperature=args.temperature,
-                              max_new_tokens=args.max_new_tokens, stop_at_json=bool(args.stop_at_json))
+                              max_new_tokens=args.max_new_tokens, stop_at_json=bool(args.stop_at_json), prefill=prefill)
                 for ep in eps:
                     sc = score_episode(ep)
                     episodes.append(ep)
@@ -3546,7 +3679,8 @@ def cmd_probe(args) -> None:
         pool.close()
     summary = summarise(episodes, scores)
     summary["meta"] = {"adapter": args.adapter, "split": args.split, "temperature": args.temperature,
-                       "samples": args.samples, "max_new_tokens": args.max_new_tokens,
+                       "samples": args.samples, "max_new_tokens": args.max_new_tokens, "forced": args.forced,
+                       "err_call_credit": bool(args.err_call_credit),
                        "stop_at_json": bool(args.stop_at_json), "seconds": time.time() - t0, "solves": pool.solved,
                        "peak_vram_mib": torch.cuda.max_memory_allocated() / 2**20 if torch.cuda.is_available() else None}
     (out_dir / f"{tag}.json").write_text(json.dumps(summary, indent=1) + "\n")
@@ -3651,7 +3785,8 @@ def cmd_seed(args) -> None:
         torch.cuda.set_per_process_memory_fraction(min(1.0, args.max_vram_mib * 2**20 / total))
     train_seed(RUNS / args.out, label=args.label, reasoning=bool(args.reasoning), epochs=args.epochs, lr=args.lr,
                accum=args.accum, lora_r=args.lora_r, seed=args.seed, limit=args.limit,
-               label_per_class=args.label_per_class, recovery_every=args.recovery_every)
+               label_per_class=args.label_per_class, recovery_every=args.recovery_every,
+               recovery_kinds=args.recovery_kinds, recovery_mask_omission=args.recovery_mask_omission)
 
 
 
@@ -4063,6 +4198,11 @@ def main() -> None:
                    help="restate every limit with 05's first sentence or holdout_shift's unseen one (a diagnostic)")
     p.add_argument("--tools-json", default=None,
                    help="declare the tools from this file instead (e.g. 05's, to probe its seed under its own prompt)")
+    p.add_argument("--forced", default=None,
+                   help="07: recovery episodes (e.g. 07_error_recovery_data/dev_recovery_pr33.jsonl); only their questions, "
+                        "each started from its slipped turns")
+    p.add_argument("--err-call-credit", type=int, default=1,
+                   help="07: 0 scores a simulate call the tool rejected at nothing (see ERR_CALL_CREDIT); tag suffix -err0")
     p.set_defaults(fn=cmd_probe)
     p = sub.add_parser("bench-probe", help="07: a policy on the benchmark's normalized questions (eval only, no score)")
     p.add_argument("--adapter", default=None)
@@ -4095,6 +4235,11 @@ def main() -> None:
                    help="label the decision on this many train records per (family, answer class)")
     p.add_argument("--recovery-every", type=int, default=0,
                    help="07: replace every k-th of the first N reference episodes by its recovery episode")
+    p.add_argument("--recovery-kinds", default="",
+                   help="07: only these slip kinds (e.g. unconverted); see recovery_positions")
+    p.add_argument("--recovery-mask-omission", type=int, default=0,
+                   help="07: an unconverted slip's turns before the slipped call: 1 all context, 2 only their closing "
+                        "<|im_end|> (see seed_refs)")
     p.add_argument("--max-vram-mib", type=int, default=13000)
     p.set_defaults(fn=cmd_seed)
     p = sub.add_parser("recovery", help="07: a recovery reference episode for every train question")

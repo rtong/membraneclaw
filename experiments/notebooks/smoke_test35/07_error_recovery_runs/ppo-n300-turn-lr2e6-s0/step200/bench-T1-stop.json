@@ -1,0 +1,10 @@
+{
+ "adapter": "07_error_recovery_runs/ppo-n300-turn-lr2e6-s0/adapter-step200",
+ "cases": 19,
+ "source": "experiments/auto-evaluate/benchmarks/normalized_skill_dev",
+ "temperature": 1.0,
+ "max_new_tokens": 3072,
+ "stop_at_json": true,
+ "seconds": 457.2162878513336,
+ "solves": 111
+}

@@ -9,6 +9,10 @@
 # or STEPS (200). Greedy evals on 120 dev questions every 25 steps; every evaluation checkpoints `last/`, and a
 # run the watchdog ends is resumed from it (up to 8 times). Each (re)start waits until the card has room.
 #   SEED_RUN=recovery-seed-n<dose> ./07_error_recovery_ppo_run.sh     the run: ppo-n<dose>-turn-lr2e6-s0
+# ADV_CENTER=1 centres the actor's advantages on each batch (see "adv_center" in the .py); the run is then
+# ppo-n<dose>-turn-lr2e6-center-s0. ERR_CREDIT=0 trains on the reward in which a simulate call the tool rejects
+# earns no call credit (see "err_call_credit" in the .py); the run gets "-err0" and the critic starts at the seed's
+# dev reward re-scored that way (dev-T1-x2-stop-err0.json, which must exist).
 set -uo pipefail
 cd "$(dirname "$0")"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONDONTWRITEBYTECODE=1
@@ -16,13 +20,17 @@ PY=../../membrane_grpo/.venv/bin/python
 R=07_error_recovery_runs
 SEED_RUN=${SEED_RUN:?set SEED_RUN=recovery-seed-n<the alive dose>}
 SEED_CKPT=${SEED_CKPT:-epoch1}
-RUN=${RUN:-ppo-${SEED_RUN#recovery-seed-}-turn-lr2e6-s0}
+ADV_CENTER=${ADV_CENTER:-0}
+ERR_CREDIT=${ERR_CREDIT:-1}
+RUN=${RUN:-ppo-${SEED_RUN#recovery-seed-}-turn-lr2e6$([ "$ADV_CENTER" = 1 ] && echo -center)$([ "$ERR_CREDIT" = 0 ] && echo -err0)-s0}
 ADV_UNIT=${ADV_UNIT:-turn}
 LAM=${LAM:-0.95}
 LR=${LR:-2e-6}
 STEPS=${STEPS:-200}
-BIAS=$(python3 -c "import json; print(round(json.load(open('$R/$SEED_RUN/$SEED_CKPT/dev-T1-x2-stop.json'))['overall']['reward'], 4))")
-ARGS="--out $RUN --start-from $R/$SEED_RUN/$SEED_CKPT --value-init-bias $BIAS --steps $STEPS --eval-every 25 --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin 1 --lam $LAM --adv-unit $ADV_UNIT --sample-every 1 --lr $LR"
+BIAS_PROBE=$R/$SEED_RUN/$SEED_CKPT/dev-T1-x2-stop$([ "$ERR_CREDIT" = 0 ] && echo -err0).json
+[ -f "$BIAS_PROBE" ] || { echo "missing $BIAS_PROBE"; exit 1; }
+BIAS=$(python3 -c "import json; print(round(json.load(open('$BIAS_PROBE'))['overall']['reward'], 4))")
+ARGS="--out $RUN --start-from $R/$SEED_RUN/$SEED_CKPT --value-init-bias $BIAS --steps $STEPS --eval-every 25 --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin 1 --lam $LAM --adv-unit $ADV_UNIT --sample-every 1 --lr $LR --adv-center $ADV_CENTER --err-call-credit $ERR_CREDIT"
 wait_card() { while [ "$(/usr/lib/wsl/lib/nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits | head -1)" -gt 2500 ]; do sleep 60; done; }
 wait_card
 echo "$(date +%H:%M) ppo $RUN from $SEED_RUN (value bias $BIAS)"

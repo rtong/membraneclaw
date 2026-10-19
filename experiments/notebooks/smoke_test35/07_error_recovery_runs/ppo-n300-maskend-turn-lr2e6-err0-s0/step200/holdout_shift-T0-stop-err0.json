@@ -1,0 +1,44 @@
+{
+ "overall": {
+  "n": 120,
+  "reward": 0.7103017879753991,
+  "components": {
+   "calls": 0.9394668071532107,
+   "decision": 0.6533333333333334,
+   "violations": 0.7866666666666666,
+   "values": 0.6605504587155964,
+   "format": 0.875,
+   "efficiency": 0.4825
+  },
+  "called_any": 0.9916666666666667,
+  "first_call_right_tool": 0.9916666666666667,
+  "calls_per_episode": 3.3,
+  "converts_per_episode": 4.575,
+  "converts_errored": 0.04007285974499089,
+  "compares_per_episode": 0.875,
+  "compares_errored": 0.0,
+  "calls_malformed": 0.0,
+  "calls_errored": 0.4116161616161616,
+  "evidence": 0.6916666666666667,
+  "answer_found": 0.875,
+  "decision_correct": 0.7,
+  "truncated": 0.041666666666666664,
+  "unanswered": 0.08333333333333333,
+  "policy_tokens": 1062.5,
+  "total_tokens": 5711.075
+ },
+ "meta": {
+  "adapter": "07_error_recovery_runs/ppo-n300-maskend-turn-lr2e6-err0-s0/adapter-step200",
+  "split": "holdout_shift",
+  "temperature": 0.0,
+  "samples": 1,
+  "max_new_tokens": 3072,
+  "forced": null,
+  "err_call_credit": false,
+  "stop_at_json": true,
+  "seconds": 1384.8250901699066,
+  "solves": 814,
+  "peak_vram_mib": 5095.9287109375,
+  "rescored_from": "holdout_shift-T0-stop.episodes.jsonl"
+ }
+}

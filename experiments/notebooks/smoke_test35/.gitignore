@@ -11,3 +11,4 @@ __pycache__/
 *_cache.pt
 *_runs/**/*.safetensors
 *_runs/**/README.md
+*_diag/tool_cache.jsonl
