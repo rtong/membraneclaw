@@ -1512,6 +1512,25 @@ WEIGHTS = {"calls": 0.25, "decision": 0.35, "violations": 0.10, "values": 0.20, 
 ARG_TOL = 0.005      # relative tolerance on each tool argument
 VALUE_TOL = 0.015    # relative tolerance on each reported number (arguments off by ARG_TOL move outputs <= 1.43%)
 UNGATED = 0.3        # share of the decision/violations credit paid without the simulations that prove it
+# 08.5: the other 07's two reward settings (07_error_recovery.py, PRs #37/#39), ported as they are there, with their
+# defaults (03-08's reward, unchanged). PPO --err-call-credit / --call-credit; probe --err-call-credit.
+# 07: does a simulate call the tool rejected earn call credit? True (03-07's reward): it scores the share of its
+# arguments that are right, as a call that ran does. False (PPO --err-call-credit 0, probe --err-call-credit 0): it
+# scores nothing, and still counts in the mean over the episode's simulate calls. Why: from the unit-only seed PPO
+# dropped converting before the first simulate call (L1 0.36 -> 0.00, L2 0.62 -> 0.10 in 50 steps) -- a slip
+# then its fix cost about 0.05 of reward, and the convert-first episodes earned no more than simulate-first ones
+# (L2 0.246 vs 0.205). With no credit for an erroring call a recovered slip costs ~0.12, and not calling at all
+# still scores below trying (no call credit, decision at UNGATED), so the fix after an error keeps paying.
+# 08.5: the credit audit of 07/08/08.5's runs found the same: an episode that never ran a simulation clean scores
+# 0.166, 94% of it the rejected calls' credit, and calls past the simulation budget earn it too.
+ERR_CALL_CREDIT = True
+# 07: where the calls component's credit lands (PPO --call-credit; the total is the same either way). "call" (03-07's):
+# each simulate call earns WEIGHTS["calls"] x its fidelity / n / z at its own end, n the episode's simulate calls, the
+# later ones included -- a right call followed by a failed retry earns [0.5, 0] x WEIGHTS["calls"] / z: the failure is
+# charged to the call that was right, and the turn that failed is charged nothing. "delta": C[j], the component as it
+# stands after turn j (WEIGHTS["calls"] x the mean fidelity of the simulate calls through turn j / z; C = 0 before
+# any), and turn j earns C[j] - C[j-1] at its last simulate call, negative when it lowers the mean -- [+1, -0.5] there.
+CALL_CREDIT = "call"
 NONE_WORDS = {"none", "null", "n/a", "no option", "not feasible", "infeasible", "nothing", "no"}
 
 
@@ -1645,7 +1664,8 @@ def score(case: dict, calls: list[dict], final_text: str) -> dict:
     comps: dict[str, float] = {}
     is_sim = [c.get("name") not in LOCAL_TOOLS for c in calls]
     n = sum(is_sim)  # simulations; convert_units and check_limits calls earn and cost nothing
-    fid = [call_fidelity(case, c) if sim else (0.0, None) for c, sim in zip(calls, is_sim)]
+    fid = [call_fidelity(case, c) if sim and (ERR_CALL_CREDIT or not result_is_error(c.get("result"))) else (0.0, None)
+           for c, sim in zip(calls, is_sim)]
     covered = {cov for _, cov in fid if cov}
     evidence = set(case["proof"]) <= covered
     comps["calls"] = sum(f for (f, _), sim in zip(fid, is_sim) if sim) / n if n else 0.0
@@ -1678,7 +1698,18 @@ def score(case: dict, calls: list[dict], final_text: str) -> dict:
     comps["efficiency"] = min(1.0, case["optimal_calls"] / n) if (correct and evidence and n) else 0.0
     z = sum(WEIGHTS[k] for k in comps)
     total = sum(WEIGHTS[k] * v for k, v in comps.items()) / z
-    credits = [(("call", i), WEIGHTS["calls"] * f / n / z if sim else 0.0) for i, ((f, _), sim) in enumerate(zip(fid, is_sim))]
+    if CALL_CREDIT == "delta":
+        turn = [i if c.get("turn") is None else c["turn"] for i, c in enumerate(calls)]   # untagged: a turn each
+        amounts, prev, s, k, last = [0.0] * len(calls), 0.0, 0.0, 0, None
+        for i, ((f, _), sim) in enumerate(zip(fid, is_sim)):
+            if sim:
+                s, k, last = s + f, k + 1, i
+            if last is not None and (i + 1 == len(calls) or turn[i + 1] != turn[i]):   # the turn's calls are done
+                cj = WEIGHTS["calls"] * s / k / z
+                amounts[last], prev, last = cj - prev, cj, None
+        credits = [(("call", i), a) for i, a in enumerate(amounts)]   # every call keeps its anchor (build_batch)
+    else:
+        credits = [(("call", i), WEIGHTS["calls"] * f / n / z if sim else 0.0) for i, ((f, _), sim) in enumerate(zip(fid, is_sim))]
     credits.append((("decision",), WEIGHTS["decision"] * comps["decision"] / z))
     if "violations" in comps:
         credits.append((("violations",), WEIGHTS["violations"] * comps["violations"] / z))
@@ -3600,6 +3631,16 @@ def auc(scores: list[float], labels: list[int]) -> float | None:
     return (sum(r for r, l in zip(ranks, labels) if l) - pos * (pos + 1) / 2) / (pos * neg)
 
 
+def set_reward_settings(cfg: dict) -> None:
+    """08.5: the other 07's reward settings (ERR_CALL_CREDIT, CALL_CREDIT) from a PPO config, for every score() in the
+    process -- the rollouts', a replayed warm-up's and the evaluations' (as 07_error_recovery.py's train_ppo sets them)."""
+    global ERR_CALL_CREDIT, CALL_CREDIT
+    if cfg.get("call_credit", "call") not in ("call", "delta"):
+        raise SystemExit(f"--call-credit must be call or delta, not {cfg['call_credit']!r}")
+    ERR_CALL_CREDIT = bool(cfg.get("err_call_credit", 1))
+    CALL_CREDIT = cfg.get("call_credit", "call")
+
+
 PPO_DEFAULTS = {
     # 06: the policy's token budget is 3,072 (05: 2,048). The check call restates every limit and every
     # limited value once (dev mean 182 tokens, up to 337 on a five-point scan with three limits): 06's
@@ -3707,6 +3748,14 @@ PPO_DEFAULTS = {
     # 08: also save the continuation state (last/) every this many steps, not only at the evaluations (0: only
     # there) -- a run on a laptop's battery loses at most this many steps to a shutdown.
     "save_every": 0,
+    # 08.5: the other 07's reward settings (07_error_recovery.py): 0 gives a simulate call the tool rejected no call
+    # credit (see ERR_CALL_CREDIT); the evaluations score the same way. call_credit: where the calls component's
+    # credit lands, "call" or "delta" (see CALL_CREDIT).
+    "err_call_credit": 1, "call_credit": "call",
+    # 08.5: end the run after this step (0: at `steps`) while the learning rate keeps the schedule that runs to `steps`
+    # runs to `steps` -- e.g. lr 1e-6 annealed to 0 at step 400 (half of 07c+D37's at every step) but stopped at 200,
+    # the other 07's experiment 2's pre-registered gate (07_error_recovery_diag/EXP2_PROMPT.md)
+    "stop_at": 0,
 }
 
 
@@ -3718,6 +3767,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     device = pick_device()  # 07: CUDA, MPS or CPU (06: CUDA only)
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
+    set_reward_settings(cfg)
     cases = load_split(cfg["split"])
     eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
     torch.manual_seed(cfg["seed"])
@@ -4182,6 +4232,10 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                     progress(f"    reward gates @ actor step {len(actor)}: last {w} steps {recent:.3f} against the warm-up's "
                              f"{base_mean:.3f} (degradation count {gate.get('reward_low', 0)})")
             # 08: the continuation state between evaluations too (PPO_DEFAULTS "save_every"), after the step's gates
+            if stop is None and cfg.get("stop_at") and step >= cfg["stop_at"]:
+                stop = f"stop_at: step {cfg['stop_at']} (the learning rate's schedule runs to step {cfg['steps']})"
+                if not (cfg["eval_every"] and step % cfg["eval_every"] == 0):
+                    save_state(step)  # an evaluation's step has saved it already
             if stop is None and cfg.get("save_every") and step % cfg["save_every"] == 0:
                 save_state(step)
     finally:
@@ -4574,6 +4628,8 @@ def cmd_probe(args) -> None:
     if args.tools_json:  # another notebook's declarations, e.g. 05's to probe its seed under its own prompt
         global _DECLS
         _DECLS = json.loads(Path(args.tools_json).read_text())
+    global ERR_CALL_CREDIT
+    ERR_CALL_CREDIT = bool(args.err_call_credit)  # 08.5: the other 07's --err-call-credit (tag suffix -err0)
     gen = policy = None
     if args.generator in ("mlx", "mlx-batch"):
         block_torch()  # before transformers is imported: it would load PyTorch while it is available
@@ -4604,7 +4660,8 @@ def cmd_probe(args) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     tag = (f"{args.split}-T{args.temperature:g}" + (f"-x{args.samples}" if args.samples > 1 else "")
            + (f"-n{args.limit}" if args.limit else "") + ("-stop" if args.stop_at_json else "")
-           + (f"-swap-{args.swap}" if args.swap else "") + ("-forced" if args.forced else ""))
+           + (f"-swap-{args.swap}" if args.swap else "") + ("-forced" if args.forced else "")
+           + ("" if args.err_call_credit else "-err0"))
     pool = ToolPool(args.workers)
     episodes, scores, t0 = [], [], time.time()
     try:
@@ -4635,6 +4692,7 @@ def cmd_probe(args) -> None:
     summary["meta"] = {"adapter": args.adapter, "split": args.split, "temperature": args.temperature,
                        "samples": args.samples, "max_new_tokens": args.max_new_tokens, "limit": args.limit,
                        "stop_at_json": bool(args.stop_at_json), "forced": bool(args.forced),
+                       "err_call_credit": bool(args.err_call_credit),
                        "device": "mlx" if gen is not None else pick_device(),
                        "merged_adapter": bool(args.adapter), "generator": args.generator,
                        "seconds": time.time() - t0, "solves": pool.solved,
@@ -6614,6 +6672,7 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
         raise SystemExit("--trainer mlx needs --generator mlx (or mlx-batch)")
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
+    set_reward_settings(cfg)
     separate = cfg.get("critic", "policy") != "policy"  # a Qwen3 model (MLXSeparateCritic), or 07's critic
     cases = load_split(cfg["split"])
     eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
@@ -7124,6 +7183,10 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                 if len(actor) in stalls or len(actor) % 10 == 0:
                     progress(f"    reward gates @ actor step {len(actor)}: last {w} steps {recent:.3f} against the warm-up's "
                              f"{base_mean:.3f} (degradation count {gate.get('reward_low', 0)})")
+            if stop is None and cfg.get("stop_at") and step >= cfg["stop_at"]:
+                stop = f"stop_at: step {cfg['stop_at']} (the learning rate's schedule runs to step {cfg['steps']})"
+                if not (cfg["eval_every"] and step % cfg["eval_every"] == 0):
+                    save_state(step)  # an evaluation's step has saved it already
             if stop is None and cfg.get("save_every") and step % cfg["save_every"] == 0:
                 save_state(step)
     finally:
@@ -7849,6 +7912,9 @@ def main() -> None:
     p.add_argument("--generator", choices=["torch", "mlx", "mlx-batch"], default="torch",
                    help="08: mlx -- generated by mlx-lm with the adapter folded in (PPO_DEFAULTS 'generator'); 08.5: "
                         "mlx-batch -- the same, each round's episodes decoded together (rollout_mlx_batched)")
+    p.add_argument("--err-call-credit", type=int, default=1,
+                   help="08.5 (the other 07's): 0 scores a simulate call the tool rejected at nothing (see "
+                        "ERR_CALL_CREDIT); tag suffix -err0")
     p.set_defaults(fn=cmd_probe)
     p = sub.add_parser("reference")
     p.add_argument("--compare", type=int, default=1, help="0: the direction-sentences-only ablation (no check_limits)")

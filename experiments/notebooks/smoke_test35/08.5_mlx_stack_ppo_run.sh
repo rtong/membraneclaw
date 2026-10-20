@@ -13,6 +13,11 @@
 #   CRITIC=policy ./...                           07's critic instead (the policy's own value head, train_ppo_mlx's
 #                                                 critic "policy": 07's hyper-parameters, PPO_DEFAULTS' value_*, critic_*),
 #                                                 no prover (ALPHA 0); its 25 warm-up steps replayed from WARM_FROM
+#   CRITIC=policy WARM_FROM= PROMPTS=32 LR=1e-6 ERR_CALL_CREDIT=0 CALL_CREDIT=delta STEPS=400 STOP_AT=200 ./...
+#                                                 the other 07's experiment 2 (07_error_recovery_diag/EXP2_PROMPT.md)
+#                                                 on 07c+D37: 4x the questions per step at half the lr (annealed to 0
+#                                                 at 400 as 07c+D37's, stopped at 200), no call credit for a rejected
+#                                                 call, delta call credit; its own 25 warm-up steps (32 questions each)
 set -uo pipefail
 cd "$(dirname "$0")"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True PYTHONDONTWRITEBYTECODE=1 PYTORCH_ENABLE_MPS_FALLBACK=0
@@ -63,10 +68,15 @@ GENERATOR=${GENERATOR:-mlx}             # mlx-batch: each round's episodes decod
 EVAL_GENERATOR=${EVAL_GENERATOR:-}      # empty: GENERATOR's; mlx keeps evaluations comparable after a switch
 TRAINER=${TRAINER:-mlx}                 # 08.5: mlx -- the update, the reference and the critic on MLX
 SAVE_EVERY=${SAVE_EVERY:-5}
+PROMPTS=${PROMPTS:-8}                   # questions (episodes) per step
+ERR_CALL_CREDIT=${ERR_CALL_CREDIT:-1}   # 0: a simulate call the tool rejected earns no call credit (the other 07's)
+CALL_CREDIT=${CALL_CREDIT:-call}        # delta: turn j earns C[j] - C[j-1] of the calls component (the other 07's)
+STOP_AT=${STOP_AT:-0}                   # >0: end after this step, the lr annealed on the schedule to STEPS
 RESUME=${RESUME:-0}
 R=08.5_mlx_stack_runs
 BIAS=$(python3 -c "import json; print(round(json.load(open('$SEED_PATH/dev-T1-n120-stop.json'))['overall']['reward'], 4))")
-ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS --eval-every $EVAL_EVERY --eval-cases $EVAL_CASES --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin $REGRESS_MARGIN --reward-stop-drop $REWARD_STOP_DROP --stall-at $STALL_AT --lam 0.95 --adv-unit turn --sample-every 1 --lr $LR --critic $CRITIC --prover-k $PROVER_K --prover-alpha $ALPHA --step-watchdog $STEP_WATCHDOG --eval-watchdog $EVAL_WATCHDOG --adv-norm $ADV_NORM --minibatches $MINIBATCHES --target-kl $TARGET_KL --max-grad-norm $MAX_GRAD_NORM --adam-eps $ADAM_EPS --lr-anneal $LR_ANNEAL --lr-anneal-start $LR_ANNEAL_START --patience $PATIENCE --generator $GENERATOR --trainer $TRAINER --save-every $SAVE_EVERY --seed $SEED"
+ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS --eval-every $EVAL_EVERY --eval-cases $EVAL_CASES --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin $REGRESS_MARGIN --reward-stop-drop $REWARD_STOP_DROP --stall-at $STALL_AT --lam 0.95 --adv-unit turn --sample-every 1 --lr $LR --critic $CRITIC --prover-k $PROVER_K --prover-alpha $ALPHA --step-watchdog $STEP_WATCHDOG --eval-watchdog $EVAL_WATCHDOG --adv-norm $ADV_NORM --minibatches $MINIBATCHES --target-kl $TARGET_KL --max-grad-norm $MAX_GRAD_NORM --adam-eps $ADAM_EPS --lr-anneal $LR_ANNEAL --lr-anneal-start $LR_ANNEAL_START --patience $PATIENCE --generator $GENERATOR --trainer $TRAINER --save-every $SAVE_EVERY --seed $SEED --prompts-per-step $PROMPTS --err-call-credit $ERR_CALL_CREDIT --call-credit $CALL_CREDIT"
+[ "$STOP_AT" != 0 ] && ARGS="$ARGS --stop-at $STOP_AT"
 [ -n "$WARM_FROM" ] && ARGS="$ARGS --warm-from $WARM_FROM"
 [ -n "$EVAL_GENERATOR" ] && ARGS="$ARGS --eval-generator $EVAL_GENERATOR"
 [ "$PLATEAU_WINDOW" != 0 ] && ARGS="$ARGS --plateau-window $PLATEAU_WINDOW --plateau-patience $PLATEAU_PATIENCE --plateau-delta $PLATEAU_DELTA --plateau-min-step $PLATEAU_MIN_STEP"
