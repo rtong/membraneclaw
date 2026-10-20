@@ -1,0 +1,6 @@
+# Pure Python: no simulation stack, so any interpreter works (the agent's own, by default).
+#
+# Pinned to the same release as mcp_watertap/requirements.txt, for the same reason: mcp 2.0 is a major release,
+# and upgrading is its own piece of work with its own validation.
+mcp==1.28.1
+uvicorn

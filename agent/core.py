@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Iterable, List, Optional
 
@@ -50,6 +51,25 @@ else:
 # chemistry that limits it — rather than either library, so it doesn't need to
 # change if either backing library changes again.
 RO_MCP_CONFIG = {"mcpServers": {"ro-chem": _ro_server}}
+
+# Unit conversion and limit checks (mcp_rocalc/): pure Python, no simulation stack, so the local server runs on
+# the agent's own interpreter over stdio — kept out of ro-chem's conda environment and per-tool rate limit.
+# RO_CALC_MCP_URL points at a remote streamable-http server instead (bearer: RO_CALC_MCP_TOKEN, else
+# MCP_BEARER_TOKEN); RO_CALC_MCP=off skips it.
+_CALC_SERVER = config.ROOT / "mcp_rocalc/server.py"
+RO_CALC_MCP_URL = os.environ.get("RO_CALC_MCP_URL", "").strip()
+RO_CALC_MCP_TOKEN = os.environ.get("RO_CALC_MCP_TOKEN", "").strip() or RO_MCP_TOKEN
+RO_CALC_MCP_ENABLED = os.environ.get("RO_CALC_MCP", "on").lower() not in ("off", "false", "0") and (
+    bool(RO_CALC_MCP_URL) or _CALC_SERVER.exists()
+)
+if RO_CALC_MCP_URL:
+    _calc_server: dict = {"type": "streamable-http", "url": RO_CALC_MCP_URL}
+    if RO_CALC_MCP_TOKEN:
+        _calc_server["headers"] = {"Authorization": f"Bearer {RO_CALC_MCP_TOKEN}"}
+else:
+    _calc_server = {"command": sys.executable, "args": [str(_CALC_SERVER)]}
+# Tools appear to the model as ro-calc-convert_units and ro-calc-check_limits, beside ro-chem-*.
+RO_CALC_MCP_CONFIG = {"mcpServers": {"ro-calc": _calc_server}}
 
 # Google's official Workspace MCP servers are remote streamable-http endpoints
 # behind OAuth (developers.google.com/workspace/guides/configure-mcp-servers). The
@@ -150,6 +170,16 @@ def _google_mcp_tools() -> List:
     return tools
 
 
+def _ro_calc_tools() -> List:
+    """mcp_rocalc's tools as BaseTools, connected on their own so that the calculator being unreachable costs
+    only these two tools (and ro-chem failing to start does not cost them)."""
+    try:
+        return MCPManager().initConfig(RO_CALC_MCP_CONFIG)
+    except Exception as exc:
+        logger.warning("ro-calc MCP unavailable, continuing without it: %s", exc)
+        return []
+
+
 def build_agent(
     tools: Optional[List[str]] = None,
     files: Optional[List[str]] = None,
@@ -181,6 +211,9 @@ def build_agent(
     # is how someone in a chat window finds out they need to connect at all.
     if google_token_path is not None:
         base += google_tools(google_token_path, google_login_url, allow=GOOGLE_TOOL_ALLOW_REST)
+
+    if RO_CALC_MCP_ENABLED:
+        base += _ro_calc_tools()
 
     declared = len(base) + (RO_CHEM_TOOL_COUNT if RO_MCP_ENABLED else 0)
     if declared > TOOL_COUNT_WARN:
