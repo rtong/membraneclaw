@@ -1,0 +1,6 @@
+{
+  "stopped_at": 140,
+  "reason": "stopped by hand (user) at step 140: held out at step 120 only +0.02-0.03 over the seed and -0.044 against 07@120 on test / holdout_shift / forced; evaluations 0.562 @0 ... 0.583 @120, 0.613 @140 (running mean 0.585, its best)",
+  "best_step": 140,
+  "best_reward": 0.6127
+}
