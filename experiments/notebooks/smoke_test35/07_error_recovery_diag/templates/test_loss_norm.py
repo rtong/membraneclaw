@@ -1,6 +1,6 @@
 """CPU check of --loss-norm: the actor loop's two branches, as train_ppo runs them, on random batches.
   episode: the per-episode token mean averaged over episodes (the statement is unchanged; checked against the
-           closed form, and bit-for-bit against the same loop run from the committed HEAD source).
+           closed form, and bit-for-bit against the same loop run from 86d8cce, the commit before these flags).
   batch:   equals one PPO loss averaged over all the batch's trainable tokens (closed form)."""
 import importlib.util, subprocess, sys, types
 import torch
@@ -8,7 +8,7 @@ import torch
 HERE = "/home/bayan/MembraneClaw/experiments/notebooks/smoke_test35"
 spec = importlib.util.spec_from_file_location("nb07", f"{HERE}/07_error_recovery.py")
 nb = importlib.util.module_from_spec(spec); sys.modules["nb07"] = nb; spec.loader.exec_module(nb)
-head_src = subprocess.run(["git", "-C", HERE, "show", "HEAD:experiments/notebooks/smoke_test35/07_error_recovery.py"],
+head_src = subprocess.run(["git", "-C", HERE, "show", "86d8cce:experiments/notebooks/smoke_test35/07_error_recovery.py"],
                           capture_output=True, text=True, check=True).stdout
 old = types.ModuleType("nb07_head"); old.__file__ = f"{HERE}/07_error_recovery.py"; exec(compile(head_src, "nb07_head", "exec"), old.__dict__)
 
@@ -57,7 +57,7 @@ for trial in range(200):
         got = loop(pb, theta, old_lp, adv, m, nb.ppo_actor_loss)
         ref = closed(theta, old_lp, adv, m, pb)
         worst[name] = max(worst[name], float((got - ref).abs().max() / ref.abs().max().clamp(min=1e-12)))
-    # the episode branch bit-for-bit against the HEAD file's own ppo_actor_loss and statement
+    # the episode branch bit-for-bit against 86d8cce's own ppo_actor_loss and statement
     assert torch.equal(loop(False, theta, old_lp, adv, m, nb.ppo_actor_loss), loop(False, theta, old_lp, adv, m, old.ppo_actor_loss))
     # equal trainable counts: the two norms are the same up to rounding
     m2 = torch.ones(N, L)

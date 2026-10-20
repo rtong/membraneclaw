@@ -1,5 +1,5 @@
 """CPU check of --first-turn-lam (gae_turn's first_lam) and --critic-chunk-tokens (critic_fit_chunked).
-  1. gae_turn without first_lam is bit-identical to the committed HEAD's; first_lam=0 gives the first turn
+  1. gae_turn without first_lam is bit-identical to 86d8cce's (the commit before these flags); first_lam=0 gives the first turn
      r_0 + V(s_1) - V(s_0) and leaves the other turns and every return unchanged; first_lam=lam equals the default;
      a hand-computed three-turn episode.
   2. critic_fit_chunked: the same head after 8 epochs as the whole-window fit (value_loss), any chunk size."""
@@ -9,7 +9,7 @@ import torch
 HERE = "/home/bayan/MembraneClaw/experiments/notebooks/smoke_test35"
 spec = importlib.util.spec_from_file_location("nb07", f"{HERE}/07_error_recovery.py")
 nb = importlib.util.module_from_spec(spec); sys.modules["nb07"] = nb; spec.loader.exec_module(nb)
-head_src = subprocess.run(["git", "-C", HERE, "show", "HEAD:experiments/notebooks/smoke_test35/07_error_recovery.py"],
+head_src = subprocess.run(["git", "-C", HERE, "show", "86d8cce:experiments/notebooks/smoke_test35/07_error_recovery.py"],
                           capture_output=True, text=True, check=True).stdout
 old = types.ModuleType("nb07_head"); old.__file__ = f"{HERE}/07_error_recovery.py"
 exec(compile(head_src, "nb07_head", "exec"), old.__dict__)
@@ -29,13 +29,13 @@ def batch(seed, N=8, L=40):
     return rewards, values, mask, turn
 
 
-worst = {"default vs HEAD (must be 0)": 0.0, "first_lam=lam vs default": 0.0, "first_lam=0: returns vs default (must be 0)": 0.0,
+worst = {"default vs 86d8cce (must be 0)": 0.0, "first_lam=lam vs default": 0.0, "first_lam=0: returns vs default (must be 0)": 0.0,
          "first_lam=0: other turns vs default (must be 0)": 0.0, "first_lam=0: first turn vs r0+V1-V0": 0.0}
 for s in range(300):
     r, v, m, t = batch(s)
     a_new, R_new = nb.gae_turn(r, v, m, t, gamma=1.0, lam=0.95)
     a_old, R_old = old.gae_turn(r, v, m, t, gamma=1.0, lam=0.95)
-    worst["default vs HEAD (must be 0)"] = max(worst["default vs HEAD (must be 0)"], float((a_new - a_old).abs().max()), float((R_new - R_old).abs().max()))
+    worst["default vs 86d8cce (must be 0)"] = max(worst["default vs 86d8cce (must be 0)"], float((a_new - a_old).abs().max()), float((R_new - R_old).abs().max()))
     a_l, _ = nb.gae_turn(r, v, m, t, gamma=1.0, lam=0.95, first_lam=0.95)
     worst["first_lam=lam vs default"] = max(worst["first_lam=lam vs default"], float((a_l - a_new).abs().max()))
     a0, R0 = nb.gae_turn(r, v, m, t, gamma=1.0, lam=0.95, first_lam=0.0)
@@ -52,7 +52,7 @@ for s in range(300):
             worst["first_lam=0: first turn vs r0+V1-V0"] = max(worst["first_lam=0: first turn vs r0+V1-V0"], float((a0[i, :n][first] - want).abs().max()))
 for k, x in worst.items():
     print(f"  {k:48} {x:.2e}")
-assert worst["default vs HEAD (must be 0)"] == 0 and worst["first_lam=0: returns vs default (must be 0)"] == 0
+assert worst["default vs 86d8cce (must be 0)"] == 0 and worst["first_lam=0: returns vs default (must be 0)"] == 0
 assert worst["first_lam=0: other turns vs default (must be 0)"] == 0 and worst["first_lam=0: first turn vs r0+V1-V0"] < 1e-6
 
 # hand-computed: three turns, rewards per turn [0.0, 0.25, 0.5], values at turn starts [0.4, 0.3, 0.6]
