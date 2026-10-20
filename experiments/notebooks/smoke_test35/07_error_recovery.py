@@ -1312,6 +1312,13 @@ UNGATED = 0.3        # share of the decision/violations credit paid without the 
 # (L2 0.246 vs 0.205). With no credit for an erroring call a recovered slip costs ~0.12, and not calling at all
 # still scores below trying (no call credit, decision at UNGATED), so the fix after an error keeps paying.
 ERR_CALL_CREDIT = True
+# 07: where the calls component's credit lands (PPO --call-credit; the total is the same either way). "call" (03-07's):
+# each simulate call earns WEIGHTS["calls"] x its fidelity / n / z at its own end, n the episode's simulate calls, the
+# later ones included -- a right call followed by a failed retry earns [0.5, 0] x WEIGHTS["calls"] / z: the failure is
+# charged to the call that was right, and the turn that failed is charged nothing. "delta": C[j], the component as it
+# stands after turn j (WEIGHTS["calls"] x the mean fidelity of the simulate calls through turn j / z; C = 0 before
+# any), and turn j earns C[j] - C[j-1] at its last simulate call, negative when it lowers the mean -- [+1, -0.5] there.
+CALL_CREDIT = "call"
 NONE_WORDS = {"none", "null", "n/a", "no option", "not feasible", "infeasible", "nothing", "no"}
 
 
@@ -1479,7 +1486,18 @@ def score(case: dict, calls: list[dict], final_text: str) -> dict:
     comps["efficiency"] = min(1.0, case["optimal_calls"] / n) if (correct and evidence and n) else 0.0
     z = sum(WEIGHTS[k] for k in comps)
     total = sum(WEIGHTS[k] * v for k, v in comps.items()) / z
-    credits = [(("call", i), WEIGHTS["calls"] * f / n / z if sim else 0.0) for i, ((f, _), sim) in enumerate(zip(fid, is_sim))]
+    if CALL_CREDIT == "delta":
+        turn = [i if c.get("turn") is None else c["turn"] for i, c in enumerate(calls)]   # untagged: a turn each
+        amounts, prev, s, k, last = [0.0] * len(calls), 0.0, 0.0, 0, None
+        for i, ((f, _), sim) in enumerate(zip(fid, is_sim)):
+            if sim:
+                s, k, last = s + f, k + 1, i
+            if last is not None and (i + 1 == len(calls) or turn[i + 1] != turn[i]):   # the turn's calls are done
+                cj = WEIGHTS["calls"] * s / k / z
+                amounts[last], prev, last = cj - prev, cj, None
+        credits = [(("call", i), a) for i, a in enumerate(amounts)]   # every call keeps its anchor (build_batch)
+    else:
+        credits = [(("call", i), WEIGHTS["calls"] * f / n / z if sim else 0.0) for i, ((f, _), sim) in enumerate(zip(fid, is_sim))]
     credits.append((("decision",), WEIGHTS["decision"] * comps["decision"] / z))
     if "violations" in comps:
         credits.append((("violations",), WEIGHTS["violations"] * comps["violations"] / z))
@@ -2022,7 +2040,7 @@ def rollout(policy, tokenizer, cases: list[dict], pool: ToolPool, *, temperature
 
 
 def score_episode(ep: Episode) -> dict:
-    calls = [{"name": c["name"], "arguments": c["arguments"], "result": c["result"]} for c in ep.calls]
+    calls = [{"name": c["name"], "arguments": c["arguments"], "result": c["result"], "turn": c.get("turn")} for c in ep.calls]
     return score(ep.case, calls, ep.final_text)
 
 
@@ -2858,11 +2876,14 @@ def gae(rewards, values, mask, *, gamma: float = 1.0, lam: float = 1.0):
     return advantages * mask, (advantages + values) * mask
 
 
-def gae_turn(rewards, values, mask, turn, *, gamma: float = 1.0, lam: float = 1.0):
+def gae_turn(rewards, values, mask, turn, *, gamma: float = 1.0, lam: float = 1.0, first_lam: float | None = None):
     """GAE with the turn as the unit (``adv_unit`` "turn"). Per episode: a turn's reward is the sum of the
     rewards on its tokens (the credits that land in it, less its KL penalties), its value the critic's estimate
     at its first token -- the hidden state before the turn -- and the recursion runs over the turns; every token
-    of a turn is given its turn's advantage and return."""
+    of a turn is given its turn's advantage and return.
+
+    07: ``first_lam`` (``first_turn_lam``) gives the first turn its own lambda: its advantage becomes
+    delta_0 + gamma * first_lam * A_1 (A_1 the second turn's advantage as usual), the returns unchanged."""
     import torch
     advantages, returns = torch.zeros_like(values), torch.zeros_like(values)
     for i in range(mask.shape[0]):
@@ -2881,8 +2902,11 @@ def gae_turn(rewards, values, mask, turn, *, gamma: float = 1.0, lam: float = 1.
             next_value = V[j + 1] if j + 1 < T else torch.zeros((), dtype=values.dtype, device=values.device)
             running = R[j] + gamma * next_value - V[j] + gamma * lam * running
             A[j] = running
-        advantages[i][on] = A[ids]
         returns[i][on] = (A + V)[ids]
+        if first_lam is not None and T > 1:   # the first turn's own lambda; the critic's targets stay as above
+            A = A.clone()
+            A[0] = R[0] + gamma * V[1] - V[0] + gamma * first_lam * A[1]
+        advantages[i][on] = A[ids]
     return advantages * mask, returns * mask
 
 
@@ -2934,6 +2958,29 @@ def value_loss(values, old_values, returns, *, clip_eps: float | None):
     loss = torch.max(plain, (moved - returns) ** 2).mean()
     return loss, {"value_loss": float(loss.detach()), "value_mean": float(values.mean().detach()),
                   "return_mean": float(returns.mean())}
+
+
+def critic_fit_chunked(head, critic_opt, window, *, epochs: int, clip_eps: float | None, chunk: int, device) -> dict:
+    """07 (``critic_chunk_tokens``): the critic's fit on its window, value_loss's full-window mean accumulated over
+    chunks of at most ``chunk`` tokens moved to the GPU one at a time; one clipped optimizer step per epoch."""
+    import torch
+    fh, fv, fr = (torch.cat([w[k] for w in window]) for k in range(3))
+    n = fh.shape[0]
+    stats = {}
+    for _ in range(epochs):
+        critic_opt.zero_grad(set_to_none=True)
+        total, vsum = 0.0, 0.0
+        for a in range(0, n, chunk):
+            h, ov, r = (x[a:a + chunk].to(device) for x in (fh, fv, fr))
+            v = _values(head, h)
+            moved = ov + torch.clamp(v - ov, -clip_eps, clip_eps) if clip_eps else v
+            part = torch.max((v - r) ** 2, (moved - r) ** 2).sum() / n
+            part.backward()
+            total, vsum = total + float(part.detach()), vsum + float(v.detach().sum())
+        torch.nn.utils.clip_grad_norm_(head.parameters(), 1.0)
+        critic_opt.step()
+        stats = {"value_loss": total, "value_mean": vsum / n, "return_mean": float(fr.mean())}
+    return stats
 
 
 def _value_head(hidden_size: int, init_bias: float):
@@ -3012,6 +3059,39 @@ PPO_DEFAULTS = {
     "adv_center": 0,
     # 07: 0 gives a simulate call the tool rejected no call credit (see ERR_CALL_CREDIT); the evaluations score the same way.
     "err_call_credit": 1,
+    # 07: how the actor's loss averages a batch's trainable tokens (flag --loss-norm). "episode" (03-06's): each
+    # episode's token mean, the episodes averaged -- a token weighs 1 / (8 x its episode's trainable tokens). "batch":
+    # one mean over the batch's trainable tokens, every token weighing the same (Dr. GRPO's and DAPO's length fix).
+    # Why: after step 200 the convert-or-simulate decision follows a few episodes; a failed episode has about twice
+    # a good one's trainable tokens, so per episode its every token, the route token alike, weighs half. On the real
+    # batches of steps 200-224 the route token's first-order push on the convert-first log-odds (L1 2+ units and L2)
+    # is -0.24, -0.06, -0.73 per step in A, the original and the new run; the same gradients weighted per batch
+    # token give -0.03, -0.03, +0.74.
+    "loss_norm": "episode",
+    # 07: where the calls component's credit lands (flag --call-credit): "call" or "delta" (see CALL_CREDIT).
+    "call_credit": "call",
+    # 07: a branch from a saved state that changes the reward (flag --rewarm-until, with --resume): resumed below this
+    # step, the critic's window is emptied and every step before it trains the critic only -- on fresh rollouts of the
+    # unchanged policy, the targets computed under the branch's own reward -- while the actor, its Adam moments and
+    # the KL reference stay as saved. Both arms of an A/B get the same budget, so neither critic starts fit to its
+    # reward. The answer-collapse rule's warm-up baseline stays the run's first critic_warmup steps. 0: off.
+    "rewarm_until": 0,
+    # 07: the first turn's own lambda (flag --first-turn-lam; adv_unit "turn" only; -1: lam, as every turn). Its
+    # advantage becomes r_0 + V(s_1) - V(s_0) + first_turn_lam x the second turn's advantage: at 0 the first turn --
+    # the convert-or-simulate decision -- is judged by the critic's value of the state it led to (the first tool
+    # response) instead of by everything that followed. The critic's targets stay the lam returns. Why: at lam 0.95
+    # the first turn's advantage is about G - V(s_0), and in the n300-maskend run the same question with the same first
+    # call scored with sd 0.22-0.33 against a route effect of -0.19 (L0) to +0.30 (L1 2+ units); the route's push per
+    # step had signal/noise ~0.2, and its log-odds swung 2-5 per 25 steps all run long. The wrong route mostly shows at
+    # once (the first response errs for 87% of L1 2+ and all L2 simulate-first episodes), but the critic is weak
+    # (explained variance ~0.35): the price is the critic's bias. Pair with --call-credit delta, so that r_0 does not
+    # depend on how many calls come later.
+    "first_turn_lam": -1.0,
+    # 07: more episodes per step on a 16 GB card. rollout_chunk: the step's prompts rolled out in consecutive chunks of
+    # this many (0: all at once). critic_chunk_tokens: the critic's fit on its window by gradient accumulation over
+    # chunks of at most this many tokens, each moved to the GPU in turn -- the same full-window loss, epochs, clip and
+    # step (0: the whole window at once on the GPU; 25 steps x 32 episodes is ~3.6 GB of hidden states).
+    "rollout_chunk": 0, "critic_chunk_tokens": 0,
 }
 
 
@@ -3021,10 +3101,20 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     from collections import deque
     import torch
     device = "cuda"
-    global ERR_CALL_CREDIT
+    global ERR_CALL_CREDIT, CALL_CREDIT
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
+    if cfg.get("loss_norm", "episode") not in ("episode", "batch"):
+        raise SystemExit(f"--loss-norm must be episode or batch, not {cfg['loss_norm']!r}")
+    per_batch = cfg.get("loss_norm", "episode") == "batch"
+    if cfg.get("call_credit", "call") not in ("call", "delta"):
+        raise SystemExit(f"--call-credit must be call or delta, not {cfg['call_credit']!r}")
+    first_lam = cfg.get("first_turn_lam", -1.0)
+    first_lam = None if first_lam < 0 else first_lam
+    if first_lam is not None and (cfg.get("adv_unit", "token") != "turn" or first_lam > 1):
+        raise SystemExit("--first-turn-lam needs --adv-unit turn and a value in [0, 1] (-1: off)")
     ERR_CALL_CREDIT = bool(cfg.get("err_call_credit", 1))
+    CALL_CREDIT = cfg.get("call_credit", "call")
     cases = load_split(cfg["split"])
     eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
     torch.manual_seed(cfg["seed"])
@@ -3060,6 +3150,8 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
         torch.set_rng_state(state["torch_rng"])
         torch.cuda.set_rng_state_all(state["cuda_rng"])
         gate, start = state["gate"], state["step"]
+        if start < cfg.get("rewarm_until", 0):
+            window.clear()   # its targets are the saved reward's (see "rewarm_until")
         history = [r for r in map(json.loads, metrics_path.read_text().splitlines()) if r["step"] < start]
         metrics_path.write_text("".join(json.dumps(r) + "\n" for r in history))
         evals = [r for r in map(json.loads, eval_path.read_text().splitlines()) if r["step"] <= start]
@@ -3151,8 +3243,11 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             t0 = time.perf_counter()
             batch_cases = [rng.choice(cases) for _ in range(cfg["prompts_per_step"])]
             policy.eval()
-            episodes = rollout(policy, tok, batch_cases, pool, temperature=cfg["temperature"],
-                               max_new_tokens=cfg["max_new_tokens"], stop_at_json=bool(cfg["stop_at_json"]))
+            chunk = cfg.get("rollout_chunk", 0) or len(batch_cases)
+            episodes = []
+            for c0 in range(0, len(batch_cases), chunk):
+                episodes += rollout(policy, tok, batch_cases[c0:c0 + chunk], pool, temperature=cfg["temperature"],
+                                    max_new_tokens=cfg["max_new_tokens"], stop_at_json=bool(cfg["stop_at_json"]))
             gen_s = time.perf_counter() - t0
             B = build_batch(episodes, tok, device)
             seqs, attn, span, index, mask, rewards = B["seqs"], B["attn"], B["span"], B["index"], B["mask"], B["rewards"]
@@ -3171,39 +3266,52 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                     rewards = rewards - cfg["kl_coef"] * kl
                 old_values = _values(head, hidden) * mask
                 if cfg["adv_unit"] == "turn":
-                    adv, returns = gae_turn(rewards, old_values, mask, B["turn"], gamma=cfg["gamma"], lam=cfg["lam"])
+                    adv, returns = gae_turn(rewards, old_values, mask, B["turn"], gamma=cfg["gamma"], lam=cfg["lam"],
+                                            first_lam=first_lam)
                 else:
                     adv, returns = gae(rewards, old_values, mask, gamma=cfg["gamma"], lam=cfg["lam"])
             sel = mask > 0
             window.append((hidden[sel].cpu(), old_values[sel].cpu(), returns[sel].cpu()))
-            fh_, fv_, fr_ = (torch.cat([w[k] for w in window]).to(device) for k in range(3))
             cstats = {}
-            for _ in range(cfg["critic_epochs"]):
-                critic_opt.zero_grad(set_to_none=True)
-                vl, cstats = value_loss(_values(head, fh_), fv_, fr_, clip_eps=cfg["value_clip_eps"])
-                vl.backward()
-                torch.nn.utils.clip_grad_norm_(head.parameters(), 1.0)
-                critic_opt.step()
-            del fh_, fv_, fr_
+            if cfg.get("critic_chunk_tokens", 0):
+                cstats = critic_fit_chunked(head, critic_opt, window, epochs=cfg["critic_epochs"],
+                                            clip_eps=cfg["value_clip_eps"], chunk=cfg["critic_chunk_tokens"], device=device)
+            else:
+                fh_, fv_, fr_ = (torch.cat([w[k] for w in window]).to(device) for k in range(3))
+                for _ in range(cfg["critic_epochs"]):
+                    critic_opt.zero_grad(set_to_none=True)
+                    vl, cstats = value_loss(_values(head, fh_), fv_, fr_, clip_eps=cfg["value_clip_eps"])
+                    vl.backward()
+                    torch.nn.utils.clip_grad_norm_(head.parameters(), 1.0)
+                    critic_opt.step()
+                del fh_, fv_, fr_
             actor_mask = mask * (1 - B["turn_end"]) if cfg["freeze_turn_ends"] else mask
             if cfg["freeze_answer_structure"]:
                 actor_mask = actor_mask * (1 - B["answer"] + B["content"])
             # The advantage's mean under the actor loss's weights (see "adv_center"), logged in every run.
             trainable = actor_mask.sum(dim=-1)
             has = trainable > 0
-            loss_mean = float(((adv * actor_mask).sum(dim=-1)[has] / trainable[has]).mean()) if bool(has.any()) else 0.0
+            batch_tokens = trainable.sum().clamp(min=1.0)
+            if per_batch:
+                loss_mean = float((adv * actor_mask).sum() / batch_tokens) if bool(has.any()) else 0.0
+            else:
+                loss_mean = float(((adv * actor_mask).sum(dim=-1)[has] / trainable[has]).mean()) if bool(has.any()) else 0.0
             adv_actor = (adv - loss_mean) * mask if cfg.get("adv_center", 0) else adv
             warming = step < cfg["critic_warmup"]
+            rewarming = step < cfg.get("rewarm_until", 0)
             astats, grad_norm = {}, torch.zeros(())
             policy.train()
-            for _ in range(0 if warming else cfg["inner_epochs"]):
+            for _ in range(0 if (warming or rewarming) else cfg["inner_epochs"]):
                 opt.zero_grad(set_to_none=True)
                 ep_stats = defaultdict(float)
                 for i in range(len(seqs)):
                     lp, _, _ = forward_policy(policy, seqs[i:i + 1], attn[i:i + 1], span, index[i:i + 1], suppress=suppress)
                     loss, st_ = ppo_actor_loss(lp, old_lp[i:i + 1], adv_actor[i:i + 1], actor_mask[i:i + 1],
                                                clip_eps=cfg["clip_eps"])
-                    (loss / len(seqs)).backward()
+                    if per_batch:  # the episode's token mean x its share of the batch's trainable tokens
+                        (loss * (trainable[i] / batch_tokens)).backward()
+                    else:
+                        (loss / len(seqs)).backward()
                     for k, v in st_.items():
                         ep_stats[k] += v / len(seqs)
                 grad_norm = torch.nn.utils.clip_grad_norm_(actor_params, 1.0)
@@ -3214,7 +3322,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
             mean_adv = float((adv * mask).sum() / active)
             ans = B["answer"] * mask
             rec = {
-                "step": step, "critic_warmup": warming,
+                "step": step, "critic_warmup": warming, **({"critic_rewarm": True} if rewarming else {}),
                 "reward_mean": sum(s["total"] for s in scs) / len(scs),
                 "calls_fidelity": sum(s["components"]["calls"] for s in scs) / len(scs),
                 "decision_correct": sum(s["decision_correct"] for s in scs) / len(scs),
@@ -3232,6 +3340,9 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 # 07: the mean the actor's loss sees (subtracted when adv_center is on), and the policy's entropy
                 # over its tokens, over the answer turn, and over the tokens left out of the actor's loss
                 "adv_loss_mean": round(loss_mean, 6), "adv_centered": int(bool(cfg.get("adv_center", 0))),
+                # 07: the actor's advantage at each episode's first policy token (adv_unit "turn": the first turn's)
+                **{f"adv_turn0_{k}": round(float(f(adv_actor[:, 0][mask[:, 0] > 0])), 6)
+                   for k, f in (("mean", torch.mean), ("std", lambda x: x.std(unbiased=False)))},
                 "entropy_mean": round(float((ent * mask).sum() / active), 6),
                 "entropy_answer": round(float((ent * ans).sum() / ans.sum().clamp(min=1)), 6),
                 "entropy_frozen": round(float((ent * (mask - actor_mask)).sum() / (mask - actor_mask).sum().clamp(min=1)), 6),
