@@ -12,6 +12,8 @@ RAG over local documents, and multi-turn chat.
 | `agent/config.py` | Endpoint, model, and generation settings |
 | `agent/tools/builtin.py` | Tool definitions — add your own here |
 | `agent/core.py` | Builds the `Assistant` |
+| `mcp_watertap/` | `ro-chem` MCP server: WaterTAP RO and Reaktoro chemistry (one process) |
+| `mcp_rocalc/` | `ro-calc` MCP server: `convert_units` and `check_limits` (pure Python) |
 | `agent/compat.py` | Shims for qwen-agent 0.0.34 vs. vLLM 0.25.1 |
 | `cli.py` | Interactive / one-shot CLI |
 | `server.py` | OpenAI-compatible HTTP front end for chat UIs |
@@ -291,6 +293,40 @@ error recurs, so nothing configured here affects it. The stale record lives in
 the Claude *account*, not the desktop app: check claude.ai → Settings →
 Connectors in a browser (desktop and web share account-level connectors), and
 check org-scoped connectors, which personal settings cannot remove.
+
+## RO calculator tools (MCP)
+
+`mcp_rocalc/` is a second, light MCP server (`ro-calc`) beside `ro-chem`, with two
+tools that do arithmetic rather than simulation:
+
+| Tool | Answers |
+| --- | --- |
+| `convert_units` | One number between the units a question states and the units the simulators take — mass and volume flow, salinity, concentration, temperature, area, pressure, water/salt permeability, flux, cost, efficiency |
+| `check_limits` | Every candidate's simulated values against the question's limits (`"<= 500 mg/L"`, converted to the field's own unit), one written-out line per candidate ending `pass`, `fail` or `unchecked` |
+
+They are the tools the `experiments/notebooks/smoke_test35` notebooks train the
+policy with (`convert_units` since 05, `check_limits` since 06), moved here
+verbatim — a 20,000-case comparison against the notebook code found no
+difference — and declared exactly as the notebooks declare them, descriptions
+and argument schemas both, so a model trained there sees the same tools here.
+
+A separate server rather than two more tools on `ro-chem`: they are pure Python,
+so they need neither the conda environment nor temur, and they should not share
+`ro-chem`'s per-tool rate limit or go down when a solve hangs. `ro-chem` itself
+stays one server because its two engines must share a process (see above).
+
+The agent starts it over stdio on its own interpreter (`RO_CALC_MCP=off` to
+disable; `RO_CALC_MCP_URL` for a remote one, with `RO_CALC_MCP_TOKEN` or else
+`MCP_BEARER_TOKEN`). Tools appear to the model as `ro-calc-convert_units` and
+`ro-calc-check_limits`. To serve it over HTTP:
+
+```bash
+MCP_TRANSPORT=streamable-http MCP_PORT=8004 MCP_BEARER_TOKEN=… python mcp_rocalc/server.py
+```
+
+Test (any interpreter with `mcp`): `.venv-watertap/bin/python mcp_rocalc/test_rocalc.py` —
+the conversions and limit checks against hand-checked values, then the server
+over stdio: its declared schemas and descriptions, and a call of each tool.
 
 ## Per-user identity
 
