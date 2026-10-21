@@ -3766,6 +3766,9 @@ PPO_DEFAULTS = {
     # step (the forward passes, ``forward_batch`` suffixes at a time) and once per minibatch (the update, ``update_micro``
     # episodes per suffix micro-batch). 0: every episode whole (03-08.5's route).
     "prefix_share": 0, "forward_batch": 8, "update_micro": 2,
+    # 08.5: the delta rule's custom-VJP scan in training mode (train_ppo_mlx; mlx_chunk_gated_delta_rule_fast): the
+    # update ~1.4x faster, the same gradients within float32 noise. 0: the autograd loop.
+    "fast_rule": 0,
 }
 
 
@@ -6419,15 +6422,123 @@ def mlx_chunk_gated_delta_rule_state(q, k, v, g_log, beta, initial_state=None, c
     return mx.swapaxes(out, 1, 2).astype(dtype), state
 
 
-def install_mlx_delta_rule_state() -> None:
+# 08.5: the same rule with a custom-VJP scan (PPO_DEFAULTS ``fast_rule``; scratch/update_speed/fast_rule.py). Profile of an
+# update pass (one 5.5k-token episode, shared prefix): the delta-rule layers took 84% of it, the sequential chunk scan
+# alone 44% at ~1% of the GPU's matmul rate -- latency-bound, ~16 dependent tiny kernels per 64-token chunk in the
+# autograd backward. Here only the state recurrence is sequential, 2 matmuls per chunk each way:
+#     forward   U_i = nv_i - kc_i S_i ;  S_{i+1} = cd_i S_i + ks_i^T U_i ;  then, batched: O = qs S + ia U
+#     backward  dU_i = ia_i^T dO_i + ks_i dS_{i+1} ;  dS_i = cd_i dS_{i+1} + qs_i^T dO_i - kc_i^T dU_i ;  then, batched:
+#               d nv = dU, d kc = -dU S^T, d qs = dO S^T, d ia = dO U^T, d ks = U dS_{+1}^T, d cd = sum(dS_{+1} * S)
+# and the forward hands its chunk-start states S and the U's to the backward. Checks: out, final state and dq bitwise
+# the rule's; the other gradients within float32 noise (rel <= 1.1e-6; bf16 sub-ulp); the update's gradient vs the
+# float32 truth as the rule's (cosine 0.95141 vs 0.95146 at micro 1, 0.99335 both at micro 2). Speed: the rule's
+# forward + backward 2.4-3.5x, a checkpointed delta layer 1.63x, the update end to end 1.37-1.41x (mx.compile added
+# nothing: of the whole rule 1.07x, of a decoder layer 0.97-1.02x).
+
+def _fast_scan_fwd(nv, kc, qs, ia, ks, cd, S0):
+    import mlx.core as mx
+    chunks = lambda x: [y.squeeze(2) for y in mx.split(x, x.shape[2], axis=2)]  # noqa: E731
+    nvs, kcs, kss, cds = chunks(nv), chunks(kc), chunks(ks), chunks(cd)
+    S, Ss, Us = S0, [], []
+    for i in range(len(nvs)):
+        Ss.append(S)
+        U = mx.addmm(nvs[i], kcs[i], S, alpha=-1.0, beta=1.0)
+        S = mx.addmm(S * cds[i], mx.swapaxes(kss[i], -1, -2), U)
+        Us.append(U)
+    Sst, Ust = mx.stack(Ss, axis=2), mx.stack(Us, axis=2)
+    return qs @ Sst + ia @ Ust, S, Sst, Ust
+
+
+def _fast_scan_bwd(kc, qs, ia, ks, cd, Sst, Ust, dO, dS):
+    import mlx.core as mx
+    chunks = lambda x: [y.squeeze(2) for y in mx.split(x, x.shape[2], axis=2)]  # noqa: E731
+    A = mx.swapaxes(ia, -1, -2) @ dO        # ia^T dO   [B, H, n, C, Dv]
+    Bq = mx.swapaxes(qs, -1, -2) @ dO       # qs^T dO   [B, H, n, Dk, Dv]
+    As, Bqs, kss, kcs, cds = chunks(A), chunks(Bq), chunks(ks), chunks(kc), chunks(cd)
+    n = len(As)
+    dUs, dSn = [None] * n, [None] * n
+    for i in reversed(range(n)):
+        dSn[i] = dS
+        dU = mx.addmm(As[i], kss[i], dS)
+        dS = mx.addmm(dS * cds[i] + Bqs[i], mx.swapaxes(kcs[i], -1, -2), dU, alpha=-1.0, beta=1.0)
+        dUs[i] = dU
+    dU, dSnext = mx.stack(dUs, axis=2), mx.stack(dSn, axis=2)
+    St = mx.swapaxes(Sst, -1, -2)
+    return (dU, -(dU @ St), dO @ St, dO @ mx.swapaxes(Ust, -1, -2), Ust @ mx.swapaxes(dSnext, -1, -2),
+            (dSnext * Sst).sum(axis=(-2, -1), keepdims=True), dS)
+
+
+_FAST_SCAN = None
+
+
+def _fast_scan():
+    """The custom-VJP scan (built once: mx.custom_function needs MLX at definition time)."""
+    global _FAST_SCAN
+    if _FAST_SCAN is None:
+        import mlx.core as mx
+
+        @mx.custom_function
+        def scan(nv, kc, qs, ia, ks, cd, S0):
+            return _fast_scan_fwd(nv, kc, qs, ia, ks, cd, S0)
+
+        @scan.vjp
+        def scan_vjp(primals, cotangents, outputs):
+            nv, kc, qs, ia, ks, cd, S0 = primals
+            dO, dS = cotangents[0], cotangents[1]
+            _, S, Sst, Ust = outputs
+            dO = mx.zeros_like(outputs[0]) if dO is None else dO
+            dS = mx.zeros_like(S) if dS is None else dS
+            return _fast_scan_bwd(kc, qs, ia, ks, cd, Sst, Ust, dO, dS)
+        _FAST_SCAN = scan
+    return _FAST_SCAN
+
+
+def mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, initial_state=None, chunk_size: int = 0):
+    """``mlx_chunk_gated_delta_rule_state`` (same signature and returns: (out, final state)) with the custom-VJP scan
+    above; the chunk-parallel part is the rule's, op for op (the sequence padded to the chunk with beta 0, decay 0)."""
+    import mlx.core as mx
+    C = MLX_CHUNK
+    if chunk_size and chunk_size != C:
+        raise ValueError("the fast rule runs the module's chunk")
+    dtype = q.dtype
+    B, T, H, Dk = k.shape
+    Dv = v.shape[-1]
+    Tb = -(-T // C) * C
+    if Tb != T:
+        q, k, v = (mx.pad(x, [(0, 0), (0, Tb - T), (0, 0), (0, 0)]) for x in (q, k, v))
+        g_log, beta = (mx.pad(x, [(0, 0), (0, Tb - T), (0, 0)]) for x in (g_log, beta))
+    S0 = mx.zeros((B, H, Dk, Dv), dtype=mx.float32) if initial_state is None else initial_state.astype(mx.float32)
+    q, k, v, beta, decay = (mx.contiguous(mx.swapaxes(x, 1, 2).astype(mx.float32)) for x in (q, k, v, beta, g_log))
+    v_beta, k_beta = v * beta[..., None], k * beta[..., None]
+    n = Tb // C
+    q, k, k_beta, v_beta = (x.reshape(B, H, n, C, x.shape[-1]) for x in (q, k, k_beta, v_beta))
+    decay = decay.reshape(B, H, n, C)
+    upper = mx.triu(mx.ones((C, C), dtype=mx.bool_), k=1)
+    cum = mx.cumsum(decay, axis=-1)
+    pairwise = mx.exp(mx.where(upper, -mx.inf, cum[..., :, None] - cum[..., None, :]))
+    kt = mx.swapaxes(k, -1, -2)
+    inv = mlx_inverse_unit_lower((k_beta @ kt) * pairwise)
+    intra = (q @ kt) * pairwise
+    new_values = inv @ v_beta
+    k_cumdecay = inv @ (k_beta * mx.exp(cum)[..., None])
+    qd = q * mx.exp(cum)[..., None]
+    kd = k * mx.exp(cum[..., -1:] - cum)[..., None]
+    chunk_decay = mx.exp(cum[..., -1])[..., None, None]
+    O, S, _, _ = _fast_scan()(new_values, k_cumdecay, qd, intra, kd, chunk_decay, S0)
+    out = O.reshape(B, H, Tb, Dv)[:, :, :T]
+    return mx.swapaxes(out, 1, 2).astype(dtype), S
+
+
+def install_mlx_delta_rule_state(fast: bool = False) -> None:
     """``install_mlx_delta_rule`` with the state: in training mode the chunked rule runs from the cache's recurrent
     state (None: zero) and hands back the final one (mlx-lm's GatedDeltaNet stores it when it has a cache; without one
     it drops it -- the output is then the original rule's). Inference (the generator, a separate critic) keeps the
-    Metal kernel."""
+    Metal kernel. ``fast``: the custom-VJP scan (``mlx_chunk_gated_delta_rule_fast``)."""
     import mlx.core as mx
     import mlx.nn as nn
     import mlx_lm.models.qwen3_5 as q35
     from mlx_lm.models import gated_delta as gd
+    rule = mlx_chunk_gated_delta_rule_fast if fast else mlx_chunk_gated_delta_rule_state
 
     def update(q, k, v, a, b, A_log, dt_bias, state=None, mask=None, use_kernel=True):
         if use_kernel:
@@ -6438,7 +6549,7 @@ def install_mlx_delta_rule_state() -> None:
         g_log = -mx.exp(A_log.astype(mx.float32)) * nn.softplus(a + dt_bias)
         if (rep := v.shape[-2] // k.shape[-2]) > 1:
             q, k = mx.repeat(q, rep, -2), mx.repeat(k, rep, -2)
-        return mlx_chunk_gated_delta_rule_state(q, k, v, g_log, beta, state)
+        return rule(q, k, v, g_log, beta, state)
 
     q35.gated_delta_update = update
     q35._chunked_rule = True
@@ -7191,8 +7302,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                                  bias_correction=True)
         mx.eval(head.parameters())
     prefix = generation_prefix(tok)
-    if share:  # after every model is built: the chunked rule with states in training mode (inference keeps the kernel)
-        install_mlx_delta_rule_state()
+    if share or cfg.get("fast_rule"):  # after every model is built: the chunked rule with states in training mode
+        install_mlx_delta_rule_state(fast=bool(cfg.get("fast_rule")))  # (inference keeps the kernel)
 
     def fit_value_head(hid: list, old_values, returns) -> dict:
         """07's critic's update (train_ppo's): this step's policy tokens join the window -- (hidden state, value,
@@ -7489,6 +7600,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
             batch_cases = [rng.choice(cases) for _ in range(cfg["prompts_per_step"])]
             episodes = generate_episodes(batch_cases, cfg["temperature"])
             gen_s = time.perf_counter() - t0
+            mem_ph = {"gen": mx.get_peak_memory() / 2**30}  # each phase's own peak (mem_<phase>_gb)
+            mx.reset_peak_memory()
             B = mx_batch(episodes, tok)
             n, mask, rewards, turn = B["n"], B["mask"], B["rewards"], B["turn"]
             P = step_prefix_len(episodes) if share else 0  # one prefix cut for the step's passes (prefix_share)
@@ -7507,6 +7620,9 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                 ref_lp = logprobs(reference)[0]
                 kl = (old_lp - ref_lp) * mask
                 rewards = rewards - cfg["kl_coef"] * kl
+            mx.eval(old_lp, rewards)
+            mem_ph["fwd"] = mx.get_peak_memory() / 2**30
+            mx.reset_peak_memory()
             if separate:
                 # the separate critic's reads of the states before each turn, the heads fitted on the window so far
                 feats = [critic.features(*episode_text(ep, tok, prefix))[L] for ep in episodes]
@@ -7543,6 +7659,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                 # KL penalties) -- and the head takes its critic_epochs steps on the window
                 cstats = fit_value_head(hid, old_values, returns)
                 del hid
+            mem_ph["critic"] = mx.get_peak_memory() / 2**30
+            mx.reset_peak_memory()
             actor_mask = mask * (1 - B["turn_end"]) if cfg["freeze_turn_ends"] else mask
             if cfg["freeze_answer_structure"]:
                 actor_mask = actor_mask * (1 - B["answer"] + B["content"])
@@ -7599,6 +7717,7 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
             mean_adv = ((adv * mask).sum() / active).item()
             ans = B["answer"] * mask
             am = max(actor_mask.sum().item(), 1.0)
+            mem_ph["update"] = mx.get_peak_memory() / 2**30
             rec = {
                 "step": step, "critic_warmup": warming,
                 "reward_mean": sum(s["total"] for s in scs) / len(scs),
@@ -7621,7 +7740,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                 **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in cstats.items()},
                 "grad_norm": float(grad_norm), "lr": float(opt.learning_rate.item() if hasattr(opt.learning_rate, "item") else opt.learning_rate),
                 "gen_seconds": round(gen_s, 1), "step_seconds": round(time.perf_counter() - t0, 1), "solves": pool.solved,
-                "mem_peak_gb": round(mx.get_peak_memory() / 2**30, 2), "mem_active_gb": round(mx.get_active_memory() / 2**30, 2),
+                "mem_peak_gb": round(max(mem_ph.values()), 2), "mem_active_gb": round(mx.get_active_memory() / 2**30, 2),
+                **{f"mem_{k}_gb": round(v, 2) for k, v in mem_ph.items()},
                 "mem_cache_gb": round(mx.get_cache_memory() / 2**30, 2),
                 "generator": cfg["generator"], "trainer": "mlx",
                 **{f"rec_{k}": (round(v, 6) if isinstance(v, float) else v)

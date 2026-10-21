@@ -78,6 +78,7 @@ CRITIC_L2=${CRITIC_L2:-0}
 PREFIX_SHARE=${PREFIX_SHARE:-0}         # 1: the shared system prefix once per step / minibatch (mlx_actor_grads_p)
 UPDATE_MICRO=${UPDATE_MICRO:-2}         # with PREFIX_SHARE: episodes per suffix micro-batch in the update
 FORWARD_BATCH=${FORWARD_BATCH:-8}       # with PREFIX_SHARE: suffixes per forward pass (old / reference log-probs)
+FAST_RULE=${FAST_RULE:-0}               # 1: the delta rule's custom-VJP scan in training mode (~1.4x faster update)
 RESUME=${RESUME:-0}
 R=08.5_mlx_stack_runs
 BIAS=$(python3 -c "import json; print(round(json.load(open('$SEED_PATH/dev-T1-n120-stop.json'))['overall']['reward'], 4))")
@@ -85,6 +86,7 @@ ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS 
 [ "$STOP_AT" != 0 ] && ARGS="$ARGS --stop-at $STOP_AT"
 [ "$CRITIC_LAYER" != 0 ] && ARGS="$ARGS --critic-layer $CRITIC_LAYER --critic-ridge $CRITIC_RIDGE --critic-l2 $CRITIC_L2"
 [ "$PREFIX_SHARE" != 0 ] && ARGS="$ARGS --prefix-share $PREFIX_SHARE --update-micro $UPDATE_MICRO --forward-batch $FORWARD_BATCH"
+[ "$FAST_RULE" != 0 ] && ARGS="$ARGS --fast-rule $FAST_RULE"
 [ -n "$WARM_FROM" ] && ARGS="$ARGS --warm-from $WARM_FROM"
 [ -n "$EVAL_GENERATOR" ] && ARGS="$ARGS --eval-generator $EVAL_GENERATOR"
 [ "$PLATEAU_WINDOW" != 0 ] && ARGS="$ARGS --plateau-window $PLATEAU_WINDOW --plateau-patience $PLATEAU_PATIENCE --plateau-delta $PLATEAU_DELTA --plateau-min-step $PLATEAU_MIN_STEP"

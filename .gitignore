@@ -13,3 +13,4 @@ logs/
 .oauth_state.json
 .google_token.json
 .google_tokens/
+experiments/notebooks/smoke_test35/08.5_mlx_stack_ppo_run.live.sh
