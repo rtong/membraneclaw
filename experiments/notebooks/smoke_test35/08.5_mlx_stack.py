@@ -3769,6 +3769,11 @@ PPO_DEFAULTS = {
     # 08.5: the delta rule's custom-VJP scan in training mode (train_ppo_mlx; mlx_chunk_gated_delta_rule_fast): the
     # update ~1.4x faster, the same gradients within float32 noise. 0: the autograd loop.
     "fast_rule": 0,
+    # 08.5: with fast_rule, the unit-lower inverse's closed-form VJP (_fast_inv). update_micro_tokens: a micro-batch of the
+    # shared-prefix update holds at most this many padded suffix tokens (rows x the longest; 0: no cap) -- the update's
+    # peak is ~12.5 GB + 2.55 GB per 1k such tokens (its backward is one graph; fit over 55 steps of the 9B-critic run,
+    # R^2 1.00), so long pairs go one at a time.
+    "fast_rule_inv": 0, "update_micro_tokens": 0,
 }
 
 
@@ -6469,6 +6474,30 @@ def _fast_scan_bwd(kc, qs, ia, ks, cd, Sst, Ust, dO, dS):
 
 
 _FAST_SCAN = None
+_FAST_INV = None
+
+
+def _fast_inv():
+    """``mlx_inverse_unit_lower`` (the same forward, op for op) with its VJP in closed form (PPO_DEFAULTS
+    ``fast_rule_inv``): M = (I + N)^-1, N the strictly lower triangle of ``a`` -> d a = tril(-M^T dM M^T, -1), two
+    matmuls instead of autograd through the recursive doubling. The rule's backward 10% (suffix) to 29% (prefix)
+    faster; gradients vs autograd rel 1.1-1.6e-7 in float32, cosine 1.0 (scratch/update_speed). In the trainer: the
+    update's gradient vs fast_rule alone cosine 0.99985 (bf16 rounding paths), stats identical; end to end ~2% faster
+    (ABBA, 4 short episodes at micro 2: median 7.08 vs 7.25 s)."""
+    global _FAST_INV
+    if _FAST_INV is None:
+        import mlx.core as mx
+
+        @mx.custom_function
+        def inverse_unit_lower(a):
+            return mlx_inverse_unit_lower(a)
+
+        @inverse_unit_lower.vjp
+        def inverse_unit_lower_vjp(primals, cotangent, output):
+            Mt = mx.swapaxes(output, -1, -2)
+            return (mx.tril(-(Mt @ cotangent @ Mt), k=-1),)
+        _FAST_INV = inverse_unit_lower
+    return _FAST_INV
 
 
 def _fast_scan():
@@ -6493,9 +6522,11 @@ def _fast_scan():
     return _FAST_SCAN
 
 
-def mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, initial_state=None, chunk_size: int = 0):
+def mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, initial_state=None, chunk_size: int = 0,
+                                    fast_inv: bool = False):
     """``mlx_chunk_gated_delta_rule_state`` (same signature and returns: (out, final state)) with the custom-VJP scan
-    above; the chunk-parallel part is the rule's, op for op (the sequence padded to the chunk with beta 0, decay 0)."""
+    above; the chunk-parallel part is the rule's, op for op (the sequence padded to the chunk with beta 0, decay 0).
+    ``fast_inv``: the unit-lower inverse's closed-form VJP (``_fast_inv``; the forward unchanged)."""
     import mlx.core as mx
     C = MLX_CHUNK
     if chunk_size and chunk_size != C:
@@ -6517,7 +6548,7 @@ def mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, initial_state=None, ch
     cum = mx.cumsum(decay, axis=-1)
     pairwise = mx.exp(mx.where(upper, -mx.inf, cum[..., :, None] - cum[..., None, :]))
     kt = mx.swapaxes(k, -1, -2)
-    inv = mlx_inverse_unit_lower((k_beta @ kt) * pairwise)
+    inv = (_fast_inv() if fast_inv else mlx_inverse_unit_lower)((k_beta @ kt) * pairwise)
     intra = (q @ kt) * pairwise
     new_values = inv @ v_beta
     k_cumdecay = inv @ (k_beta * mx.exp(cum)[..., None])
@@ -6529,16 +6560,21 @@ def mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, initial_state=None, ch
     return mx.swapaxes(out, 1, 2).astype(dtype), S
 
 
-def install_mlx_delta_rule_state(fast: bool = False) -> None:
+def install_mlx_delta_rule_state(fast: bool = False, fast_inv: bool = False) -> None:
     """``install_mlx_delta_rule`` with the state: in training mode the chunked rule runs from the cache's recurrent
     state (None: zero) and hands back the final one (mlx-lm's GatedDeltaNet stores it when it has a cache; without one
     it drops it -- the output is then the original rule's). Inference (the generator, a separate critic) keeps the
-    Metal kernel. ``fast``: the custom-VJP scan (``mlx_chunk_gated_delta_rule_fast``)."""
+    Metal kernel. ``fast``: the custom-VJP scan (``mlx_chunk_gated_delta_rule_fast``), with ``fast_inv`` the inverse's
+    closed-form VJP too."""
     import mlx.core as mx
     import mlx.nn as nn
     import mlx_lm.models.qwen3_5 as q35
     from mlx_lm.models import gated_delta as gd
-    rule = mlx_chunk_gated_delta_rule_fast if fast else mlx_chunk_gated_delta_rule_state
+    if fast:
+        def rule(q, k, v, g_log, beta, state):
+            return mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, state, fast_inv=fast_inv)
+    else:
+        rule = mlx_chunk_gated_delta_rule_state
 
     def update(q, k, v, a, b, A_log, dt_bias, state=None, mask=None, use_kernel=True):
         if use_kernel:
@@ -7303,7 +7339,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
         mx.eval(head.parameters())
     prefix = generation_prefix(tok)
     if share or cfg.get("fast_rule"):  # after every model is built: the chunked rule with states in training mode
-        install_mlx_delta_rule_state(fast=bool(cfg.get("fast_rule")))  # (inference keeps the kernel)
+        install_mlx_delta_rule_state(fast=bool(cfg.get("fast_rule")),
+                                     fast_inv=bool(cfg.get("fast_rule_inv")))  # (inference keeps the kernel)
 
     def fit_value_head(hid: list, old_values, returns) -> dict:
         """07's critic's update (train_ppo's): this step's policy tokens join the window -- (hidden state, value,
@@ -7688,7 +7725,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                         mb_stats, grad_norm = mlx_actor_minibatch_p(
                             policy, opt, episodes, mb, old_lp, adv_mb, actor_mask, clip_eps=cfg["clip_eps"],
                             max_grad_norm=float(cfg.get("max_grad_norm", 1.0)), suppress=suppress,
-                            micro=int(cfg.get("update_micro", 2)), prefix_len=P)
+                            micro=int(cfg.get("update_micro", 2)), micro_tokens=int(cfg.get("update_micro_tokens") or 0) or None,
+                            prefix_len=P)
                     else:
                         mb_stats, grad_norm = mlx_actor_minibatch(
                             policy, opt, episodes, mb, old_lp, adv_mb, actor_mask, clip_eps=cfg["clip_eps"],
