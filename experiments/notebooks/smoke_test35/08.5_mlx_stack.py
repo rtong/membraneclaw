@@ -3315,6 +3315,9 @@ def load_trainable(adapter: Path, device: str | None = None):
 #: the policy; Qwen3.5-2B is the policy's own family one size up (the paper's best prover across models was one size up:
 #: 2B -> 9B, 9B -> 27B); Qwen3-4B is the paper's verifier-to-policy ratio (Gemma 9B for its 2B policy: 4.5x).
 CRITICS = {"qwen3-1.7b": "Qwen/Qwen3-1.7B", "qwen3.5-2b": "Qwen/Qwen3.5-2B", "qwen3-4b": "Qwen/Qwen3-4B"}
+#: 08.5: Qwen3.5's 4B and 9B (released with its 2B, 2026-02-27) -- the policy's own family at 5x and 11x its size,
+#: frozen, read by MLXSeparateCritic (train_ppo_mlx). 08's candidates left them out by mistake.
+CRITICS.update({"qwen3.5-4b": "Qwen/Qwen3.5-4B", "qwen3.5-9b": "Qwen/Qwen3.5-9B"})
 #: The decoder layers ``critic-fit`` reads from each (1-based outputs: the middle, three quarters, the last). "policy"
 #: is 07's critic, for comparison: the policy's own residual stream (07's seed adapter), 07's layer 23 among them.
 CRITIC_FIT_LAYERS = {"policy": (12, 18, 23), "qwen3-1.7b": (14, 21, 28), "qwen3.5-2b": (12, 18, 24),
@@ -6300,30 +6303,58 @@ class MLXSeparateCritic:
     """08.5: ``SeparateCritic`` on MLX for a Qwen3 critic (mlx-lm): the residual stream after decoder layer L
     (1-based), at the last token before each turn; the system turn read once and its cache copied for each episode
     (exact for Qwen3: attention in every layer, as ``SeparateCritic``'s prefix cache), the layers after the deepest
-    one read dropped. Features as float32 CPU tensors, for ``CriticHeads``."""
+    one read dropped. Features as float32 CPU tensors, for ``CriticHeads``.
+
+    08.5: also a Qwen3.5 critic (e.g. Qwen3.5-9B: the policy's own family, its tokenizer and its hybrid of gated
+    delta-rule and attention layers), read the same way -- the system turn's cache (the attention layers' keys and
+    values, the delta-rule layers' convolution and recurrent states) copied for each episode, the delta rule's Metal
+    kernel (inference mode), and the layers after the deepest one read never materialised (a lazy load)."""
 
     def __init__(self, name: str, layers):
+        import mlx.core as mx
         from mlx_lm import load
         from transformers import AutoTokenizer
-        if not CRITICS.get(name, "").startswith("Qwen/Qwen3-"):
-            raise SystemExit(f"MLXSeparateCritic: a Qwen3 critic ({', '.join(k for k, v in CRITICS.items() if v.startswith('Qwen/Qwen3-'))}), not {name!r}")
+        repo = CRITICS.get(name, "")
+        if not repo.startswith(("Qwen/Qwen3-", "Qwen/Qwen3.5-")):
+            raise SystemExit(f"MLXSeparateCritic: a Qwen3 or Qwen3.5 critic ({', '.join(CRITICS)}), not {name!r}")
         self.name, self.layers = name, tuple(int(x) for x in layers)
-        self.model, _ = load(CRITICS[name])
-        self.tok = AutoTokenizer.from_pretrained(CRITICS[name])
-        body = self.model.model
+        self.hybrid = repo.startswith("Qwen/Qwen3.5-")
+        self.tok = AutoTokenizer.from_pretrained(repo)
+        if self.hybrid:
+            install_mlx_delta_rule()  # the patched update keeps the Metal kernel in inference mode
+            self.model, _ = load(repo, lazy=True)
+            self.model.eval()
+            body = self.model.language_model.model
+            self.hidden_size = self.model.language_model.args.hidden_size
+        else:
+            self.model, _ = load(repo)
+            body = self.model.model
+            self.hidden_size = self.model.args.hidden_size
         self.depth = len(body.layers)
-        self.hidden_size = self.model.args.hidden_size
         body.layers = body.layers[: max(self.layers)]
+        if self.hybrid:
+            mx.eval(body.parameters())  # the embeddings and the layers read; the rest (and the LM head) stay unread
         self.seconds, self.tokens = 0.0, 0
         self._prefix = None
 
     def _run(self, ids: list[int], cache=None) -> dict:
         import mlx.core as mx
-        from mlx_lm.models.base import create_attention_mask
+        from mlx_lm.models.base import create_attention_mask, create_ssm_mask
+        out = {}
+        if self.hybrid:  # Qwen3_5TextModel.__call__ (mlx-lm 0.31.3), keeping the states read
+            body = self.model.language_model.model
+            h = body.embed_tokens(mx.array(ids)[None])
+            c = cache if cache else [None] * len(body.layers)
+            fa_mask = create_attention_mask(h, c[body.fa_idx])
+            ssm_mask = create_ssm_mask(h, c[body.ssm_idx])
+            for i, layer in enumerate(body.layers):
+                h = layer(h, mask=ssm_mask if layer.is_linear else fa_mask, cache=c[i])
+                if i + 1 in self.layers:
+                    out[i + 1] = h[0]
+            return out
         body = self.model.model
         h = body.embed_tokens(mx.array(ids)[None])
         mask = create_attention_mask(h, cache[0] if cache else None)
-        out = {}
         for i, layer in enumerate(body.layers):
             h = layer(h, mask, cache[i] if cache else None)
             if i + 1 in self.layers:

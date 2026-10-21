@@ -1,0 +1,6 @@
+{
+  "stopped_at": 85,
+  "reason": "stopped by hand (user): abandoned for its successor -- the same settings with the update batched over episodes and a Qwen3.5-9B critic; evaluations 0.4693 @0, 0.4693 @20, 0.5006 @40, 0.5140 @60, 0.5266 @80",
+  "best_step": 80,
+  "best_reward": 0.5266211892164273
+}

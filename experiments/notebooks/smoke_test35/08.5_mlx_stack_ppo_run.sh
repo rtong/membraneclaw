@@ -72,11 +72,15 @@ PROMPTS=${PROMPTS:-8}                   # questions (episodes) per step
 ERR_CALL_CREDIT=${ERR_CALL_CREDIT:-1}   # 0: a simulate call the tool rejected earns no call credit (the other 07's)
 CALL_CREDIT=${CALL_CREDIT:-call}        # delta: turn j earns C[j] - C[j-1] of the calls component (the other 07's)
 STOP_AT=${STOP_AT:-0}                   # >0: end after this step, the lr annealed on the schedule to STEPS
+CRITIC_LAYER=${CRITIC_LAYER:-0}         # a separate critic's layer, ridge and l2 (0: critic-fit's choice for the model;
+CRITIC_RIDGE=${CRITIC_RIDGE:-0}         # a model critic-fit never read, e.g. qwen3.5-9b, needs all three)
+CRITIC_L2=${CRITIC_L2:-0}
 RESUME=${RESUME:-0}
 R=08.5_mlx_stack_runs
 BIAS=$(python3 -c "import json; print(round(json.load(open('$SEED_PATH/dev-T1-n120-stop.json'))['overall']['reward'], 4))")
 ARGS="--out $RUN --start-from $SEED_PATH --value-init-bias $BIAS --steps $STEPS --eval-every $EVAL_EVERY --eval-cases $EVAL_CASES --tool-stop 0 --tool-stop-rel 0 --answer-stop-rel 0.5 --regress-margin $REGRESS_MARGIN --reward-stop-drop $REWARD_STOP_DROP --stall-at $STALL_AT --lam 0.95 --adv-unit turn --sample-every 1 --lr $LR --critic $CRITIC --prover-k $PROVER_K --prover-alpha $ALPHA --step-watchdog $STEP_WATCHDOG --eval-watchdog $EVAL_WATCHDOG --adv-norm $ADV_NORM --minibatches $MINIBATCHES --target-kl $TARGET_KL --max-grad-norm $MAX_GRAD_NORM --adam-eps $ADAM_EPS --lr-anneal $LR_ANNEAL --lr-anneal-start $LR_ANNEAL_START --patience $PATIENCE --generator $GENERATOR --trainer $TRAINER --save-every $SAVE_EVERY --seed $SEED --prompts-per-step $PROMPTS --err-call-credit $ERR_CALL_CREDIT --call-credit $CALL_CREDIT"
 [ "$STOP_AT" != 0 ] && ARGS="$ARGS --stop-at $STOP_AT"
+[ "$CRITIC_LAYER" != 0 ] && ARGS="$ARGS --critic-layer $CRITIC_LAYER --critic-ridge $CRITIC_RIDGE --critic-l2 $CRITIC_L2"
 [ -n "$WARM_FROM" ] && ARGS="$ARGS --warm-from $WARM_FROM"
 [ -n "$EVAL_GENERATOR" ] && ARGS="$ARGS --eval-generator $EVAL_GENERATOR"
 [ "$PLATEAU_WINDOW" != 0 ] && ARGS="$ARGS --plateau-window $PLATEAU_WINDOW --plateau-patience $PLATEAU_PATIENCE --plateau-delta $PLATEAU_DELTA --plateau-min-step $PLATEAU_MIN_STEP"
