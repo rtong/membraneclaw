@@ -85,6 +85,11 @@ ADV_UNIT=token LAM=0.95 SAMPLE_EVERY=5 RUN=ppo-n1200-open-s0 SEED_RUN=label-seed
 ./07_recover_from_errors_ppo_run.sh                # PPO from the seed with 06's last configuration (turn credit, lambda 0.95 per turn, lr 2e-6, tool gate off)
 SEED_RUN=seed-n300-r0 RUN=ppo-n300-r0-turn-s0 ./07_recover_from_errors_ppo_run.sh   # the same from the control
 ./07_recover_from_errors_eval_heldout.sh           # seed, control and the run's checkpoints on test / holdout_shift; the forced probe on the run's checkpoints
+
+# 08.5 (08's PPO with no PyTorch: everything on mlx-lm, Apple silicon; setup, versions, memory and the infra switches: 08.5_mlx_stack_RECIPE.md)
+08.5_mlx_stack_tools/launch_9b.sh                  # PPO with the Qwen3.5-9B critic (layer 24), shared prefix, the delta rule's custom-VJP scan, the update's token cap
+CKPTS="adapter-step200:200" PPO_RUN=ppo-mlx-qwen3.5-9b-l24-n32-lr1e6-err0-delta-s0 ./08.5_mlx_stack_eval_heldout.sh   # a checkpoint's held-out probes
+../../membrane_grpo/.venv/bin/python 08.5_mlx_stack_tools/rescore_probes.py <probe dir> ...                           # both scorings (default / err0), offline
 ```
 
 The notebooks read finished runs and cached measurements; they retrain nothing.
