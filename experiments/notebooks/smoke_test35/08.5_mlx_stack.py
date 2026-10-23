@@ -3756,9 +3756,24 @@ PPO_DEFAULTS = {
     # credit lands, "call" or "delta" (see CALL_CREDIT).
     "err_call_credit": 1, "call_credit": "call",
     # 08.5: end the run after this step (0: at `steps`) while the learning rate keeps the schedule that runs to `steps`
-    # runs to `steps` -- e.g. lr 1e-6 annealed to 0 at step 400 (half of 07c+D37's at every step) but stopped at 200,
-    # the other 07's experiment 2's pre-registered gate (07_error_recovery_diag/EXP2_PROMPT.md)
+    # -- e.g. lr 1e-6 annealed to 0 at step 400 (half of 07c+D37's at every step) but stopped at 300 (the other 07's
+    # experiment 2, 07_error_recovery_diag/EXP2_PROMPT.md, stops at 200)
     "stop_at": 0,
+    # 08.5: MLX's buffer cache cap in GB (train_ppo_mlx). MLX's default is its memory limit, 1.5x the GPU's working
+    # set: two MLX processes hung this 64 GB machine with ~50 GB each (2026-10-20).
+    "mlx_cache_gb": 4.0,
+    # 08.5: the shared system prefix in the update's passes (train_ppo_mlx; see mlx_actor_grads_p): 1 runs it once per
+    # step (the forward passes, ``forward_batch`` suffixes at a time) and once per minibatch (the update, ``update_micro``
+    # episodes per suffix micro-batch). 0: every episode whole (03-08.5's route).
+    "prefix_share": 0, "forward_batch": 8, "update_micro": 2,
+    # 08.5: the delta rule's custom-VJP scan in training mode (train_ppo_mlx; mlx_chunk_gated_delta_rule_fast): the
+    # update ~1.4x faster, the same gradients within float32 noise. 0: the autograd loop.
+    "fast_rule": 0,
+    # 08.5: with fast_rule, the unit-lower inverse's closed-form VJP (_fast_inv). update_micro_tokens: a micro-batch of the
+    # shared-prefix update holds at most this many padded suffix tokens (rows x the longest; 0: no cap) -- the update's
+    # peak is ~12.5 GB + 2.55 GB per 1k such tokens (its backward is one graph; fit over 55 steps of the 9B-critic run,
+    # R^2 1.00), so long pairs go one at a time.
+    "fast_rule_inv": 0, "update_micro_tokens": 0,
 }
 
 
@@ -6299,6 +6314,594 @@ def mlx_actor_minibatch(model: MLXTrainable, opt, episodes: list[Episode], mb: l
     return stats, norm.item()
 
 
+# ---------------------------------------------------------------------------------------------
+# 08.5: the shared system prefix in the update's model passes (PPO_DEFAULTS ``prefix_share``). Every episode starts with
+# the same system turn (the tool declarations and instructions: 2,576 of an n32 step's ~5,460 tokens per episode). It
+# runs once per step (the forward passes: old log-probs with the critic's features, the reference's log-probs) or once
+# per minibatch (the update), and every episode continues from its states -- the delta-rule layers' conv and recurrent
+# states, the attention layers' keys and values (RoPE continued from the offset; sdpa's "causal" mask is bottom-right
+# aligned with fewer queries than keys). In the update each micro-batch's loss is differentiated with respect to the
+# LoRA parameters and to the prefix's states; the states' summed cotangents (float32) then go back through the prefix
+# once. The prefix is cut at a multiple of the delta rule's chunk (64), so the continuation's chunks fall where the
+# whole sequence's do. Checks (scratch/batched_update, 8 episodes of the n32 run's step 84, one minibatch):
+#   float32: the gradient equals the per-episode route's (cosine 1.0000000) -- the bookkeeping is exact;
+#   bf16 against the float32 truth: the per-episode route's minibatch PPO gradient cosine 0.754, norm ratio 0.65 (each
+#     episode's backward through the long shared prefix carries bf16 error, and the minibatch's mean-centred advantages
+#     cancel most of the episodes' gradients, so the errors dominate the small sum); the shared prefix's 0.990 / 0.97
+#     (micro 2) -- its backward through the prefix runs once, on the summed cotangents;
+#   speed (beside another GPU job): the forward passes 1.6-2.8x, the update ~1.8x.
+# ---------------------------------------------------------------------------------------------
+
+def episode_tokens(ep) -> tuple[list[int], list[int], list[int]]:
+    """(sequence, positions, targets) of one episode as ``MLXTrainable.logprobs`` reads it: the log-prob of each policy
+    token ``ep.ids[k]`` is read at position len(prompt) + k - 1 of prompt + ids."""
+    where = [k for k, mine in enumerate(ep.policy) if mine]
+    return (list(ep.prompt_ids) + list(ep.ids), [len(ep.prompt_ids) + k - 1 for k in where], [ep.ids[k] for k in where])
+
+
+def length_groups(order: list[int], lengths, size: int, max_tokens: int | None = None) -> list[list[int]]:
+    """``order`` cut into consecutive groups of at most ``size`` items and, with ``max_tokens``, at most that many
+    padded tokens (rows x the group's longest length). Sorted by length, a group pads to its own longest."""
+    groups, cur, longest = [], [], 0
+    for i in order:
+        top = max(longest, lengths[i])
+        if cur and (len(cur) >= size or (max_tokens and (len(cur) + 1) * top > max_tokens)):
+            groups.append(cur)
+            cur, top = [], lengths[i]
+        cur.append(i)
+        longest = top
+    if cur:
+        groups.append(cur)
+    return groups
+
+
+def pack_episodes(seqs, poss, tgts, pad_id: int = 0):
+    """Right-padded inputs [B, T] (int32), each row's positions as flat indices into [B * T] (row by row), the targets
+    in the same order, and each row's count. Right padding leaves a causal model's real positions unchanged."""
+    import mlx.core as mx
+    T = max(len(s) for s in seqs)
+    inputs = mx.array([list(s) + [pad_id] * (T - len(s)) for s in seqs], dtype=mx.int32)
+    flat = mx.array([i * T + p for i, ps in enumerate(poss) for p in ps], dtype=mx.int32)
+    tgt = mx.array([t for ts in tgts for t in ts], dtype=mx.int32)
+    return inputs, flat, tgt, [len(p) for p in poss]
+
+
+def _head_fn(lm, tgt, suppress: int, mass: bool):
+    """``mlx_policy_logprobs``'s head on hidden states [N, D] (the targets ``tgt`` closed over: they take no gradient):
+    the log-prob of each target with ``suppress`` out of the vocabulary and, with ``mass``, the probability the model
+    put on ``suppress``."""
+    import mlx.core as mx
+    linear = lm.model.embed_tokens.as_linear if lm.args.tie_word_embeddings else lm.lm_head
+
+    def head(h):
+        raw = linear(h).astype(mx.float32)
+        logits = mx.where(mx.arange(raw.shape[-1]) == suppress, SUPPRESSED, raw)
+        lp = mx.take_along_axis(logits, tgt[:, None], axis=-1)[:, 0] - mx.logsumexp(logits, axis=-1)
+        if mass:
+            return lp, mx.exp(raw[:, suppress] - mx.logsumexp(raw, axis=-1))
+        return lp
+    return head
+
+
+def mlx_chunk_gated_delta_rule_state(q, k, v, g_log, beta, initial_state=None, chunk_size: int = 0):
+    """``mlx_chunk_gated_delta_rule`` continued from ``initial_state`` ([B, H, Dk, Dv] float32; None: zero), also
+    returning the final state. Without an initial state its output is the original's, op for op (the no-padding case
+    copies to the padded case's layout, as the original's padded path). The final state is the one after the last real
+    token: the chunk padding has beta 0 (no write) and decay 0 (exp 0 = 1, no decay)."""
+    import mlx.core as mx
+    chunk_size = chunk_size or MLX_CHUNK
+    dtype = q.dtype
+    B, T, H, Dk = k.shape
+    Dv = v.shape[-1]
+    q, k, v, beta, decay = [mx.swapaxes(x, 1, 2).astype(mx.float32) for x in (q, k, v, beta, g_log)]
+    pad = (chunk_size - T % chunk_size) % chunk_size
+    if pad:
+        q, k, v = (mx.pad(x, [(0, 0), (0, 0), (0, pad), (0, 0)]) for x in (q, k, v))
+        beta, decay = (mx.pad(x, [(0, 0), (0, 0), (0, pad)]) for x in (beta, decay))
+    else:  # the padded path's layout (row-contiguous copies): its rounding, whatever the length
+        q, k, v, beta, decay = (mx.contiguous(x) for x in (q, k, v, beta, decay))
+    v_beta, k_beta = v * beta[..., None], k * beta[..., None]
+    n = (T + pad) // chunk_size
+    q, k, k_beta, v_beta = (x.reshape(B, H, n, chunk_size, x.shape[-1]) for x in (q, k, k_beta, v_beta))
+    decay = decay.reshape(B, H, n, chunk_size)
+    upper = mx.triu(mx.ones((chunk_size, chunk_size), dtype=mx.bool_), k=1)
+    cum = mx.cumsum(decay, axis=-1)
+    pairwise = mx.exp(mx.where(upper, -mx.inf, cum[..., :, None] - cum[..., None, :]))
+    kt = mx.swapaxes(k, -1, -2)
+    inv = mlx_inverse_unit_lower((k_beta @ kt) * pairwise)
+    intra = (q @ kt) * pairwise
+    new_values = inv @ v_beta
+    k_cumdecay = inv @ (k_beta * mx.exp(cum)[..., None])
+    qd = q * mx.exp(cum)[..., None]
+    kd = k * mx.exp(cum[..., -1:] - cum)[..., None]
+    chunk_decay = mx.exp(cum[..., -1])[..., None, None]
+    nv, kc, qs, ia, ks, cd = ([y.squeeze(2) for y in mx.split(x, n, axis=2)]
+                              for x in (new_values, k_cumdecay, qd, intra, kd, chunk_decay))
+    state = mx.zeros((B, H, Dk, Dv), dtype=mx.float32) if initial_state is None else initial_state.astype(mx.float32)
+    outs = []
+    for i in range(n):
+        v_new = nv[i] - kc[i] @ state
+        outs.append(qs[i] @ state + ia[i] @ v_new)
+        state = state * cd[i] + mx.swapaxes(ks[i], -1, -2) @ v_new
+    out = mx.stack(outs, axis=2).reshape(B, H, -1, Dv)[:, :, :T]
+    return mx.swapaxes(out, 1, 2).astype(dtype), state
+
+
+# 08.5: the same rule with a custom-VJP scan (PPO_DEFAULTS ``fast_rule``; scratch/update_speed/fast_rule.py). Profile of an
+# update pass (one 5.5k-token episode, shared prefix): the delta-rule layers took 84% of it, the sequential chunk scan
+# alone 44% at ~1% of the GPU's matmul rate -- latency-bound, ~16 dependent tiny kernels per 64-token chunk in the
+# autograd backward. Here only the state recurrence is sequential, 2 matmuls per chunk each way:
+#     forward   U_i = nv_i - kc_i S_i ;  S_{i+1} = cd_i S_i + ks_i^T U_i ;  then, batched: O = qs S + ia U
+#     backward  dU_i = ia_i^T dO_i + ks_i dS_{i+1} ;  dS_i = cd_i dS_{i+1} + qs_i^T dO_i - kc_i^T dU_i ;  then, batched:
+#               d nv = dU, d kc = -dU S^T, d qs = dO S^T, d ia = dO U^T, d ks = U dS_{+1}^T, d cd = sum(dS_{+1} * S)
+# and the forward hands its chunk-start states S and the U's to the backward. Checks: out, final state and dq bitwise
+# the rule's; the other gradients within float32 noise (rel <= 1.1e-6; bf16 sub-ulp); the update's gradient vs the
+# float32 truth as the rule's (cosine 0.95141 vs 0.95146 at micro 1, 0.99335 both at micro 2). Speed: the rule's
+# forward + backward 2.4-3.5x, a checkpointed delta layer 1.63x, the update end to end 1.37-1.41x (mx.compile added
+# nothing: of the whole rule 1.07x, of a decoder layer 0.97-1.02x).
+
+def _fast_scan_fwd(nv, kc, qs, ia, ks, cd, S0):
+    import mlx.core as mx
+    chunks = lambda x: [y.squeeze(2) for y in mx.split(x, x.shape[2], axis=2)]  # noqa: E731
+    nvs, kcs, kss, cds = chunks(nv), chunks(kc), chunks(ks), chunks(cd)
+    S, Ss, Us = S0, [], []
+    for i in range(len(nvs)):
+        Ss.append(S)
+        U = mx.addmm(nvs[i], kcs[i], S, alpha=-1.0, beta=1.0)
+        S = mx.addmm(S * cds[i], mx.swapaxes(kss[i], -1, -2), U)
+        Us.append(U)
+    Sst, Ust = mx.stack(Ss, axis=2), mx.stack(Us, axis=2)
+    return qs @ Sst + ia @ Ust, S, Sst, Ust
+
+
+def _fast_scan_bwd(kc, qs, ia, ks, cd, Sst, Ust, dO, dS):
+    import mlx.core as mx
+    chunks = lambda x: [y.squeeze(2) for y in mx.split(x, x.shape[2], axis=2)]  # noqa: E731
+    A = mx.swapaxes(ia, -1, -2) @ dO        # ia^T dO   [B, H, n, C, Dv]
+    Bq = mx.swapaxes(qs, -1, -2) @ dO       # qs^T dO   [B, H, n, Dk, Dv]
+    As, Bqs, kss, kcs, cds = chunks(A), chunks(Bq), chunks(ks), chunks(kc), chunks(cd)
+    n = len(As)
+    dUs, dSn = [None] * n, [None] * n
+    for i in reversed(range(n)):
+        dSn[i] = dS
+        dU = mx.addmm(As[i], kss[i], dS)
+        dS = mx.addmm(dS * cds[i] + Bqs[i], mx.swapaxes(kcs[i], -1, -2), dU, alpha=-1.0, beta=1.0)
+        dUs[i] = dU
+    dU, dSnext = mx.stack(dUs, axis=2), mx.stack(dSn, axis=2)
+    St = mx.swapaxes(Sst, -1, -2)
+    return (dU, -(dU @ St), dO @ St, dO @ mx.swapaxes(Ust, -1, -2), Ust @ mx.swapaxes(dSnext, -1, -2),
+            (dSnext * Sst).sum(axis=(-2, -1), keepdims=True), dS)
+
+
+_FAST_SCAN = None
+_FAST_INV = None
+
+
+def _fast_inv():
+    """``mlx_inverse_unit_lower`` (the same forward, op for op) with its VJP in closed form (PPO_DEFAULTS
+    ``fast_rule_inv``): M = (I + N)^-1, N the strictly lower triangle of ``a`` -> d a = tril(-M^T dM M^T, -1), two
+    matmuls instead of autograd through the recursive doubling. The rule's backward 10% (suffix) to 29% (prefix)
+    faster; gradients vs autograd rel 1.1-1.6e-7 in float32, cosine 1.0 (scratch/update_speed). In the trainer: the
+    update's gradient vs fast_rule alone cosine 0.99985 (bf16 rounding paths), stats identical; end to end ~2% faster
+    (ABBA, 4 short episodes at micro 2: median 7.08 vs 7.25 s)."""
+    global _FAST_INV
+    if _FAST_INV is None:
+        import mlx.core as mx
+
+        @mx.custom_function
+        def inverse_unit_lower(a):
+            return mlx_inverse_unit_lower(a)
+
+        @inverse_unit_lower.vjp
+        def inverse_unit_lower_vjp(primals, cotangent, output):
+            Mt = mx.swapaxes(output, -1, -2)
+            return (mx.tril(-(Mt @ cotangent @ Mt), k=-1),)
+        _FAST_INV = inverse_unit_lower
+    return _FAST_INV
+
+
+def _fast_scan():
+    """The custom-VJP scan (built once: mx.custom_function needs MLX at definition time)."""
+    global _FAST_SCAN
+    if _FAST_SCAN is None:
+        import mlx.core as mx
+
+        @mx.custom_function
+        def scan(nv, kc, qs, ia, ks, cd, S0):
+            return _fast_scan_fwd(nv, kc, qs, ia, ks, cd, S0)
+
+        @scan.vjp
+        def scan_vjp(primals, cotangents, outputs):
+            nv, kc, qs, ia, ks, cd, S0 = primals
+            dO, dS = cotangents[0], cotangents[1]
+            _, S, Sst, Ust = outputs
+            dO = mx.zeros_like(outputs[0]) if dO is None else dO
+            dS = mx.zeros_like(S) if dS is None else dS
+            return _fast_scan_bwd(kc, qs, ia, ks, cd, Sst, Ust, dO, dS)
+        _FAST_SCAN = scan
+    return _FAST_SCAN
+
+
+def mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, initial_state=None, chunk_size: int = 0,
+                                    fast_inv: bool = False):
+    """``mlx_chunk_gated_delta_rule_state`` (same signature and returns: (out, final state)) with the custom-VJP scan
+    above; the chunk-parallel part is the rule's, op for op (the sequence padded to the chunk with beta 0, decay 0).
+    ``fast_inv``: the unit-lower inverse's closed-form VJP (``_fast_inv``; the forward unchanged)."""
+    import mlx.core as mx
+    C = MLX_CHUNK
+    if chunk_size and chunk_size != C:
+        raise ValueError("the fast rule runs the module's chunk")
+    dtype = q.dtype
+    B, T, H, Dk = k.shape
+    Dv = v.shape[-1]
+    Tb = -(-T // C) * C
+    if Tb != T:
+        q, k, v = (mx.pad(x, [(0, 0), (0, Tb - T), (0, 0), (0, 0)]) for x in (q, k, v))
+        g_log, beta = (mx.pad(x, [(0, 0), (0, Tb - T), (0, 0)]) for x in (g_log, beta))
+    S0 = mx.zeros((B, H, Dk, Dv), dtype=mx.float32) if initial_state is None else initial_state.astype(mx.float32)
+    q, k, v, beta, decay = (mx.contiguous(mx.swapaxes(x, 1, 2).astype(mx.float32)) for x in (q, k, v, beta, g_log))
+    v_beta, k_beta = v * beta[..., None], k * beta[..., None]
+    n = Tb // C
+    q, k, k_beta, v_beta = (x.reshape(B, H, n, C, x.shape[-1]) for x in (q, k, k_beta, v_beta))
+    decay = decay.reshape(B, H, n, C)
+    upper = mx.triu(mx.ones((C, C), dtype=mx.bool_), k=1)
+    cum = mx.cumsum(decay, axis=-1)
+    pairwise = mx.exp(mx.where(upper, -mx.inf, cum[..., :, None] - cum[..., None, :]))
+    kt = mx.swapaxes(k, -1, -2)
+    inv = (_fast_inv() if fast_inv else mlx_inverse_unit_lower)((k_beta @ kt) * pairwise)
+    intra = (q @ kt) * pairwise
+    new_values = inv @ v_beta
+    k_cumdecay = inv @ (k_beta * mx.exp(cum)[..., None])
+    qd = q * mx.exp(cum)[..., None]
+    kd = k * mx.exp(cum[..., -1:] - cum)[..., None]
+    chunk_decay = mx.exp(cum[..., -1])[..., None, None]
+    O, S, _, _ = _fast_scan()(new_values, k_cumdecay, qd, intra, kd, chunk_decay, S0)
+    out = O.reshape(B, H, Tb, Dv)[:, :, :T]
+    return mx.swapaxes(out, 1, 2).astype(dtype), S
+
+
+def install_mlx_delta_rule_state(fast: bool = False, fast_inv: bool = False) -> None:
+    """``install_mlx_delta_rule`` with the state: in training mode the chunked rule runs from the cache's recurrent
+    state (None: zero) and hands back the final one (mlx-lm's GatedDeltaNet stores it when it has a cache; without one
+    it drops it -- the output is then the original rule's). Inference (the generator, a separate critic) keeps the
+    Metal kernel. ``fast``: the custom-VJP scan (``mlx_chunk_gated_delta_rule_fast``), with ``fast_inv`` the inverse's
+    closed-form VJP too."""
+    import mlx.core as mx
+    import mlx.nn as nn
+    import mlx_lm.models.qwen3_5 as q35
+    from mlx_lm.models import gated_delta as gd
+    if fast:
+        def rule(q, k, v, g_log, beta, state):
+            return mlx_chunk_gated_delta_rule_fast(q, k, v, g_log, beta, state, fast_inv=fast_inv)
+    else:
+        rule = mlx_chunk_gated_delta_rule_state
+
+    def update(q, k, v, a, b, A_log, dt_bias, state=None, mask=None, use_kernel=True):
+        if use_kernel:
+            return gd.gated_delta_update(q, k, v, a, b, A_log, dt_bias, state, mask, use_kernel=True)
+        if mask is not None:
+            raise ValueError("the chunked rule reads whole rows: no padding mask")
+        beta = mx.sigmoid(b)
+        g_log = -mx.exp(A_log.astype(mx.float32)) * nn.softplus(a + dt_bias)
+        if (rep := v.shape[-2] // k.shape[-2]) > 1:
+            q, k = mx.repeat(q, rep, -2), mx.repeat(k, rep, -2)
+        return rule(q, k, v, g_log, beta, state)
+
+    q35.gated_delta_update = update
+    q35._chunked_rule = True
+    q35._chunked_rule_state = True
+
+
+class _DeltaState:
+    """What mlx-lm's GatedDeltaNet reads and writes in its cache: [0] the conv state (the last kernel - 1 rows of the
+    qkv projection), [1] the recurrent state. Built fresh for each call (the states go in and out as arrays)."""
+    lengths = None
+
+    def __init__(self, conv=None, rec=None):
+        self.s = [conv, rec]
+
+    def __getitem__(self, i):
+        return self.s[i]
+
+    def __setitem__(self, i, v):
+        self.s[i] = v
+
+    def advance(self, n):
+        pass
+
+
+class _KVState:
+    """What mlx-lm's attention reads and writes in its cache: the RoPE offset and update_and_fetch (the prefix's keys
+    and values, after RoPE, before the row's own)."""
+
+    def __init__(self, keys=None, values=None, offset: int = 0):
+        self.keys, self.values, self.offset = keys, values, offset
+
+    def update_and_fetch(self, k, v):
+        import mlx.core as mx
+        if self.keys is not None:
+            k, v = mx.concatenate([self.keys, k], axis=2), mx.concatenate([self.values, v], axis=2)
+        self.keys, self.values = k, v
+        return k, v
+
+
+def _raw_call(layer, h, mask, cache):
+    """The decoder layer's own __call__ (not mlx_checkpoint_layers' wrapper: the states go through our checkpoint as
+    explicit inputs and outputs, never inside a cache object)."""
+    flag = getattr(layer, "_ckpt", False)
+    layer._ckpt = False
+    try:
+        return layer(h, mask=mask, cache=cache)
+    finally:
+        layer._ckpt = flag
+
+
+def _prefix_step(layer, h, grad: bool, checkpoint: bool = True):
+    """One decoder layer over the prefix (batch 1, from nothing): (h, its states)."""
+    import mlx.core as mx
+    mask = None if layer.is_linear else "causal"
+
+    def inner(params, h):
+        if params is not None:
+            layer.update(params)
+        c = _DeltaState() if layer.is_linear else _KVState()
+        out = _raw_call(layer, h, mask, c)
+        return (out, c[0], c[1]) if layer.is_linear else (out, c.keys, c.values)
+
+    if grad and checkpoint:
+        return mx.checkpoint(inner)(layer.trainable_parameters(), h)
+    return inner(None, h)
+
+
+def _suffix_step(layer, h, states, offset: int, grad: bool, checkpoint: bool = True):
+    """One decoder layer over the rows' suffixes [B, S] from the prefix's states (already broadcast to B rows)."""
+    import mlx.core as mx
+    mask = None if layer.is_linear else "causal"  # bottom-right aligned: S queries over P + S keys
+
+    def inner(params, h, *st):
+        if params is not None:
+            layer.update(params)
+        c = _DeltaState(*st) if layer.is_linear else _KVState(*st, offset=offset)
+        return _raw_call(layer, h, mask, c)
+
+    if grad and checkpoint:
+        return mx.checkpoint(inner)(layer.trainable_parameters(), h, *states)
+    return inner(None, h, *states)
+
+
+def mlx_prefix_states(model, prefix: list[int], grad: bool = False, checkpoint: bool = True) -> list:
+    """The states after ``prefix`` (token ids), per decoder layer: (conv, recurrent) for a delta-rule layer, (keys,
+    values) for an attention layer, batch 1. ``model``: mlx-lm's Qwen3.5 (``MLXTrainable.model``)."""
+    import mlx.core as mx
+    body = model.language_model.model
+    h = body.embed_tokens(mx.array(prefix, dtype=mx.int32)[None])
+    states = []
+    for layer in body.layers:
+        h, *st = _prefix_step(layer, h, grad, checkpoint)
+        states.append(tuple(st))
+    return states
+
+
+def mlx_suffix_forward(model, states, inputs, offset: int, hidden_layer: int | None = None, grad: bool = False,
+                       checkpoint: bool = True):
+    """``mlx_text_forward`` for right-padded suffixes [B, S] continuing ``states`` (the prefix's, batch 1, broadcast to
+    the rows) at position ``offset``: (the final norm's output, the residual stream at ``hidden_layer`` or None),
+    [B, S, D]; with ``states`` None, whole rows from position 0."""
+    import mlx.core as mx
+    body = model.language_model.model
+    B = inputs.shape[0]
+    depth = len(body.layers)
+    if hidden_layer is not None and not 0 <= hidden_layer <= depth:
+        raise ValueError(f"hidden_layer {hidden_layer}: the model has {depth} decoder layers")
+    h = body.embed_tokens(inputs)
+    hidden = h if hidden_layer == 0 else None
+    for i, layer in enumerate(body.layers):
+        if states is None:
+            mask = None if layer.is_linear else "causal"
+            h = layer(h, mask=mask, cache=None) if (grad and checkpoint) else _raw_call(layer, h, mask, None)
+        else:
+            st = tuple(mx.broadcast_to(s, (B, *s.shape[1:])) for s in states[i])
+            h = _suffix_step(layer, h, st, offset, grad, checkpoint)
+        if hidden_layer is not None and i + 1 == hidden_layer and hidden_layer < depth:
+            hidden = h
+    out = body.norm(h)
+    return out, (out if hidden_layer == depth else hidden)
+
+
+def _gather_head(model, out, hid, flat, tgt, counts, suppress: int, mass: bool, head_chunk: int, grad: bool):
+    """Each row's policy positions gathered from [B, S, D], the head applied in chunks of ``head_chunk`` positions
+    (checkpointed with a gradient: the float32 logits over 248k tokens are ~1 GB per 1,000 positions): per row (lp, mass
+    or None, hidden or None)."""
+    import mlx.core as mx
+    lm = model.language_model
+    B, S, D = out.shape
+    h = out.reshape(B * S, D)[flat]
+    hs = None if hid is None else hid.reshape(B * S, D)[flat]
+    if not grad:
+        mx.eval(h) if hs is None else mx.eval(h, hs)
+    N = h.shape[0]
+    lp_parts, m_parts = [], []
+    for a in range(0, N, head_chunk):
+        fn = _head_fn(lm, tgt[a: a + head_chunk], suppress, mass)
+        res = mx.checkpoint(fn)(h[a: a + head_chunk]) if grad else fn(h[a: a + head_chunk])
+        lp_c, m_c = (res[0], res[1]) if mass else (res, None)
+        if not grad:
+            mx.eval(lp_c) if m_c is None else mx.eval(lp_c, m_c)
+        lp_parts.append(lp_c)
+        m_parts.append(m_c)
+    lp_all = mx.concatenate(lp_parts) if lp_parts else mx.zeros((0,), dtype=mx.float32)
+    m_all = (mx.concatenate(m_parts) if m_parts else mx.zeros((0,), dtype=mx.float32)) if mass else None
+    rows, o = [], 0
+    for c in counts:
+        rows.append((lp_all[o: o + c], None if m_all is None else m_all[o: o + c], None if hs is None else hs[o: o + c]))
+        o += c
+    return rows
+
+
+def shared_prefix_len(seqs: list, firsts: list[int], align: int = 64) -> int:
+    """The longest prefix all ``seqs`` share, at most each row's first read position (the prefix pass reads no hidden
+    states) and leaving each row a token, cut to a multiple of ``align`` (the delta rule's chunk)."""
+    n = min(min(firsts), min(len(s) for s in seqs) - 1)
+    s0 = seqs[0]
+    for s in seqs[1:]:
+        n = next((i for i in range(n) if s[i] != s0[i]), n)
+    return max(0, n) // align * align
+
+
+def step_prefix_len(episodes: list) -> int:
+    """``shared_prefix_len`` over a step's episodes: one cut for all of the step's passes, so that the old log-probs and
+    the first minibatch's log-probs are the same computation (its ratios exactly 1, as the per-episode route's)."""
+    toks = [episode_tokens(ep) for ep in episodes]
+    return shared_prefix_len([t[0] for t in toks], [min(t[1]) if t[1] else len(t[0]) for t in toks], MLX_CHUNK)
+
+
+def _suffix_pack(toks: list, P: int):
+    return pack_episodes([t[0][P:] for t in toks], [[p - P for p in t[1]] for t in toks], [t[2] for t in toks])
+
+
+def mlx_batch_logprobs_p(model, episodes: list, n: int, suppress: int, mass: bool = False,
+                         hidden_layer: int | None = None, batch: int = 8, max_tokens: int | None = None,
+                         head_chunk: int = 1024, prefix_len: int | None = None):
+    """``mlx_batch_logprobs`` with the shared prefix (``prefix_len``; None: the one all of ``episodes`` share) run once
+    and the suffixes ``batch`` at a time (sorted by length; ``max_tokens`` caps rows x longest suffix): the same return
+    layout."""
+    import mlx.core as mx
+    E = len(episodes)
+    toks = [episode_tokens(ep) for ep in episodes]
+    P = step_prefix_len(episodes) if prefix_len is None else prefix_len
+    states = None
+    if P:
+        states = mlx_prefix_states(model.model, toks[0][0][:P])
+        mx.eval(states)
+    lengths = [len(t[0]) - P for t in toks]
+    lps, masses, hids = [None] * E, [None] * E, [None] * E
+    for group in length_groups(sorted(range(E), key=lambda i: lengths[i]), lengths, batch, max_tokens):
+        inputs, flat, tgt, counts = _suffix_pack([toks[i] for i in group], P)
+        out, hid = mlx_suffix_forward(model.model, states, inputs, P, hidden_layer)
+        for i, (lp, m, h) in zip(group, _gather_head(model.model, out, hid, flat, tgt, counts, suppress, mass,
+                                                     head_chunk, grad=False)):
+            m = m if mass else mx.zeros((0,))
+            lps[i] = mx.concatenate([lp.astype(mx.float32), mx.zeros((n - lp.shape[0],))])
+            masses[i] = mx.concatenate([m.astype(mx.float32), mx.zeros((n - m.shape[0],))])
+            hids[i] = h
+        mx.eval([lps[i] for i in group], [masses[i] for i in group], [hids[i] for i in group if hids[i] is not None])
+        del out, hid
+    if hidden_layer is None:
+        return mx.stack(lps), mx.stack(masses)
+    return mx.stack(lps), mx.stack(masses), hids
+
+
+def _ppo_terms(lp, old, a, msk, clip_eps: float):
+    """``mlx_actor_minibatch``'s per-episode loss and stats (actor_loss, ratio_mean, clip_frac, approx_kl)."""
+    import mlx.core as mx
+    active = mx.maximum(msk.sum(), 1.0)
+    ratio = mx.exp(lp - old)
+    unclipped, clipped = ratio * a, mx.clip(ratio, 1.0 - clip_eps, 1.0 + clip_eps) * a
+    loss = -(mx.minimum(unclipped, clipped) * msk).sum() / active
+    logratio = lp - old
+    return loss, mx.stack([loss, (ratio * msk).sum() / active, ((unclipped > clipped) * msk).sum() / active,
+                           (((ratio - 1) - logratio) * msk).sum() / active])
+
+
+def mlx_actor_grads_p(model, episodes: list, mb: list[int], old_lp, adv, actor_mask, *, clip_eps: float,
+                      suppress: int, micro: int = 2, micro_tokens: int | None = None, head_chunk: int = 1024,
+                      checkpoint: bool = True, prefix_len: int | None = None):
+    """``mlx_actor_minibatch``'s gradient before the clip (the sum over ``mb`` of each episode's ``ppo_actor_loss``,
+    over len(mb)) with the shared prefix run once per minibatch: (gradient tree, each episode's stats in ``mb``'s
+    order). The prefix: ``prefix_len`` (``step_prefix_len``), or the one all of ``episodes`` share.
+      1. the prefix's states under the current parameters (forward only);
+      2. per micro-batch of ``micro`` episodes (sorted by length): the suffixes from the states broadcast to the rows,
+         the loss, its gradient with respect to the LoRA parameters AND to the states;
+      3. one VJP through the prefix with the states' summed cotangents, added to the parameters' gradient.
+    ``checkpoint`` False: the suffixes without per-layer recomputation (more memory; the prefix's VJP stays
+    checkpointed)."""
+    import mlx.core as mx
+    from mlx.utils import tree_flatten, tree_map
+    body = model.model
+    toks = {i: episode_tokens(episodes[i]) for i in mb}
+    P = step_prefix_len(episodes) if prefix_len is None else prefix_len
+    params = body.trainable_parameters()
+    pre = toks[mb[0]][0][:P]
+    sizes, sflat = [], []
+    if P:
+        states = mlx_prefix_states(body, pre)
+        sizes = [len(st) for st in states]
+        sflat = [s for st in states for s in st]
+        mx.eval(sflat)
+
+    def regroup(flat_states):
+        out, o = [], 0
+        for k in sizes:
+            out.append(tuple(flat_states[o: o + k]))
+            o += k
+        return out
+
+    lengths = {i: len(toks[i][0]) - P for i in mb}
+    order = sorted(mb, key=lambda i: lengths[i])
+    scale = 1.0 / len(mb)
+    total, cot, stats = None, None, {}
+    for group in length_groups(order, lengths, micro, micro_tokens):
+        inputs, flat, tgt, counts = _suffix_pack([toks[i] for i in group], P)
+        old = mx.concatenate([old_lp[i, :c] for i, c in zip(group, counts)])
+        a = mx.concatenate([adv[i, :c] for i, c in zip(group, counts)])
+        msk = mx.concatenate([actor_mask[i, :c] for i, c in zip(group, counts)])
+
+        def loss_fn(params, sflat, inputs, flat, tgt, old, a, msk, counts=counts):
+            body.update(params)
+            out, _ = mlx_suffix_forward(body, regroup(sflat) if P else None, inputs, P, grad=True, checkpoint=checkpoint)
+            rows = _gather_head(body, out, None, flat, tgt, counts, suppress, False, head_chunk, grad=True)
+            loss_sum, st, o = 0.0, [], 0
+            for (lp, _, _), c in zip(rows, counts):
+                loss, s_ = _ppo_terms(lp, old[o: o + c], a[o: o + c], msk[o: o + c], clip_eps)
+                o += c
+                loss_sum = loss_sum + loss
+                st.append(s_)
+            return loss_sum * scale, mx.stack(st)
+
+        if P:
+            (_, st), (g, gs) = mx.value_and_grad(loss_fn, argnums=(0, 1))(params, sflat, inputs, flat, tgt, old, a, msk)
+            gs = [x.astype(mx.float32) for x in gs]
+            cot = gs if cot is None else [c_ + x for c_, x in zip(cot, gs)]
+        else:
+            (_, st), g = mx.value_and_grad(loss_fn)(params, sflat, inputs, flat, tgt, old, a, msk)
+        total = g if total is None else tree_map(mx.add, total, g)
+        mx.eval(total, cot, st) if P else mx.eval(total, st)  # one micro-batch's graph at a time
+        for i, (loss, r, cf, kl) in zip(group, st.tolist()):
+            stats[i] = {"actor_loss": loss, "ratio_mean": r, "clip_frac": cf, "approx_kl": kl}
+    body.update(params)
+    if P:  # through the prefix once, with its states' summed cotangents
+
+        def as_tree(arrays):  # the flat arrays back in params' structure (tree_flatten's order)
+            it = iter(arrays)
+            return tree_map(lambda _: next(it), params)
+
+        def prefix_fn(*arrays):  # checkpointed whatever ``checkpoint`` says: once per minibatch, batch 1, P tokens
+            body.update(as_tree(arrays))
+            return [s for st in mlx_prefix_states(body, pre, grad=True, checkpoint=True) for s in st]
+
+        _, g_pre = mx.vjp(prefix_fn, [v for _, v in tree_flatten(params)], [c_.astype(s.dtype) for c_, s in zip(cot, sflat)])
+        body.update(params)
+        total = tree_map(mx.add, total, as_tree(g_pre))
+        mx.eval(total)
+    return total, [stats[i] for i in mb]
+
+
+def mlx_actor_minibatch_p(model, opt, episodes: list, mb: list[int], old_lp, adv, actor_mask, *, clip_eps: float,
+                          max_grad_norm: float, suppress: int, micro: int = 2, micro_tokens: int | None = None,
+                          head_chunk: int = 1024, checkpoint: bool = True, prefix_len: int | None = None):
+    """``mlx_actor_minibatch`` with the shared prefix once per minibatch (``mlx_actor_grads_p``): the same gradient,
+    clipped by its global norm, AdamW; returns each episode's stats (``mb``'s order) and the norm."""
+    import mlx.core as mx
+    import mlx.optimizers as optim
+    total, stats = mlx_actor_grads_p(model, episodes, mb, old_lp, adv, actor_mask, clip_eps=clip_eps, suppress=suppress,
+                                     micro=micro, micro_tokens=micro_tokens, head_chunk=head_chunk,
+                                     checkpoint=checkpoint, prefix_len=prefix_len)
+    total, norm = optim.clip_grad_norm(total, max_grad_norm)
+    opt.update(model.model, total)
+    mx.eval(model.model.trainable_parameters(), opt.state)
+    return stats, norm.item()
+
+
 class MLXSeparateCritic:
     """08.5: ``SeparateCritic`` on MLX for a Qwen3 critic (mlx-lm): the residual stream after decoder layer L
     (1-based), at the last token before each turn; the system turn read once and its cache copied for each episode
@@ -6704,6 +7307,12 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
     set_reward_settings(cfg)
+    # 08.5: MLX keeps freed buffers in its cache up to its memory limit (1.5x the GPU's recommended working set by
+    # default). With the Qwen3.5-9B critic, this process and another MLX job each held ~50 GB on this 64 GB machine:
+    # the compressor ran out, jetsam killed system daemons and a watchdog panic rebooted it (2026-10-20 22:17).
+    # The cache is capped; the active memory is what the step needs (logged per step: mem_peak_gb).
+    mx.set_cache_limit(int(float(cfg.get("mlx_cache_gb", 4.0)) * 2**30))
+    share = bool(cfg.get("prefix_share", 0))  # the shared system prefix once per step / minibatch (mlx_actor_grads_p)
     separate = cfg.get("critic", "policy") != "policy"  # a Qwen3 model (MLXSeparateCritic), or 07's critic
     cases = load_split(cfg["split"])
     eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
@@ -6729,6 +7338,9 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                                  bias_correction=True)
         mx.eval(head.parameters())
     prefix = generation_prefix(tok)
+    if share or cfg.get("fast_rule"):  # after every model is built: the chunked rule with states in training mode
+        install_mlx_delta_rule_state(fast=bool(cfg.get("fast_rule")),
+                                     fast_inv=bool(cfg.get("fast_rule_inv")))  # (inference keeps the kernel)
 
     def fit_value_head(hid: list, old_values, returns) -> dict:
         """07's critic's update (train_ppo's): this step's policy tokens join the window -- (hidden state, value,
@@ -7021,21 +7633,33 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
         while stop is None and step < cfg["steps"]:
             faulthandler.dump_traceback_later(cfg.get("step_watchdog", 1800), exit=True)
             t0 = time.perf_counter()
+            mx.reset_peak_memory()  # the step's own peak (mem_peak_gb)
             batch_cases = [rng.choice(cases) for _ in range(cfg["prompts_per_step"])]
             episodes = generate_episodes(batch_cases, cfg["temperature"])
             gen_s = time.perf_counter() - t0
+            mem_ph = {"gen": mx.get_peak_memory() / 2**30}  # each phase's own peak (mem_<phase>_gb)
+            mx.reset_peak_memory()
             B = mx_batch(episodes, tok)
             n, mask, rewards, turn = B["n"], B["mask"], B["rewards"], B["turn"]
+            P = step_prefix_len(episodes) if share else 0  # one prefix cut for the step's passes (prefix_share)
+
+            def logprobs(model_, **kw):
+                if share:
+                    return mlx_batch_logprobs_p(model_, episodes, n, suppress, batch=int(cfg.get("forward_batch", 8)),
+                                                prefix_len=P, **kw)
+                return mlx_batch_logprobs(model_, episodes, n, suppress, **kw)
             if separate:
-                old_lp, mass = mlx_batch_logprobs(policy, episodes, n, suppress, mass=True)
+                old_lp, mass = logprobs(policy, mass=True)
             else:  # 07's critic's features from the same forward: the residual stream at value_layer
-                old_lp, mass, hid = mlx_batch_logprobs(policy, episodes, n, suppress, mass=True,
-                                                       hidden_layer=cfg["value_layer"])
+                old_lp, mass, hid = logprobs(policy, mass=True, hidden_layer=cfg["value_layer"])
             kl = mx.zeros_like(old_lp)
             if reference is not None:
-                ref_lp = mlx_batch_logprobs(reference, episodes, n, suppress)[0]
+                ref_lp = logprobs(reference)[0]
                 kl = (old_lp - ref_lp) * mask
                 rewards = rewards - cfg["kl_coef"] * kl
+            mx.eval(old_lp, rewards)
+            mem_ph["fwd"] = mx.get_peak_memory() / 2**30
+            mx.reset_peak_memory()
             if separate:
                 # the separate critic's reads of the states before each turn, the heads fitted on the window so far
                 feats = [critic.features(*episode_text(ep, tok, prefix))[L] for ep in episodes]
@@ -7072,6 +7696,8 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                 # KL penalties) -- and the head takes its critic_epochs steps on the window
                 cstats = fit_value_head(hid, old_values, returns)
                 del hid
+            mem_ph["critic"] = mx.get_peak_memory() / 2**30
+            mx.reset_peak_memory()
             actor_mask = mask * (1 - B["turn_end"]) if cfg["freeze_turn_ends"] else mask
             if cfg["freeze_answer_structure"]:
                 actor_mask = actor_mask * (1 - B["answer"] + B["content"])
@@ -7095,9 +7721,16 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                     if cfg.get("adv_norm") == "minibatch":
                         rows_on = mx.array([1.0 if i in mb else 0.0 for i in range(len(episodes))])[:, None]
                         adv_mb = mx_normalized_advantages(adv, actor_mask * rows_on)
-                    mb_stats, grad_norm = mlx_actor_minibatch(
-                        policy, opt, episodes, mb, old_lp, adv_mb, actor_mask, clip_eps=cfg["clip_eps"],
-                        max_grad_norm=float(cfg.get("max_grad_norm", 1.0)), suppress=suppress)
+                    if share:
+                        mb_stats, grad_norm = mlx_actor_minibatch_p(
+                            policy, opt, episodes, mb, old_lp, adv_mb, actor_mask, clip_eps=cfg["clip_eps"],
+                            max_grad_norm=float(cfg.get("max_grad_norm", 1.0)), suppress=suppress,
+                            micro=int(cfg.get("update_micro", 2)), micro_tokens=int(cfg.get("update_micro_tokens") or 0) or None,
+                            prefix_len=P)
+                    else:
+                        mb_stats, grad_norm = mlx_actor_minibatch(
+                            policy, opt, episodes, mb, old_lp, adv_mb, actor_mask, clip_eps=cfg["clip_eps"],
+                            max_grad_norm=float(cfg.get("max_grad_norm", 1.0)), suppress=suppress)
                     mb_kl = sum(s_["approx_kl"] for s_ in mb_stats) / len(mb)
                     mb_ratio = sum(s_["ratio_mean"] for s_ in mb_stats) / len(mb)
                     for s_ in mb_stats:
@@ -7122,6 +7755,7 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
             mean_adv = ((adv * mask).sum() / active).item()
             ans = B["answer"] * mask
             am = max(actor_mask.sum().item(), 1.0)
+            mem_ph["update"] = mx.get_peak_memory() / 2**30
             rec = {
                 "step": step, "critic_warmup": warming,
                 "reward_mean": sum(s["total"] for s in scs) / len(scs),
@@ -7144,6 +7778,9 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
                 **{k: (round(v, 6) if isinstance(v, float) else v) for k, v in cstats.items()},
                 "grad_norm": float(grad_norm), "lr": float(opt.learning_rate.item() if hasattr(opt.learning_rate, "item") else opt.learning_rate),
                 "gen_seconds": round(gen_s, 1), "step_seconds": round(time.perf_counter() - t0, 1), "solves": pool.solved,
+                "mem_peak_gb": round(max(mem_ph.values()), 2), "mem_active_gb": round(mx.get_active_memory() / 2**30, 2),
+                **{f"mem_{k}_gb": round(v, 2) for k, v in mem_ph.items()},
+                "mem_cache_gb": round(mx.get_cache_memory() / 2**30, 2),
                 "generator": cfg["generator"], "trainer": "mlx",
                 **{f"rec_{k}": (round(v, 6) if isinstance(v, float) else v)
                    for k, v in recovery_block([recovery_stats(e.calls) for e in episodes], scs).items()},

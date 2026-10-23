@@ -20,3 +20,6 @@ var/traces/
 *.egg-info/
 build/
 dist/
+
+# 08.5: the frozen copy a run is launched from (bash reads a running script as it goes)
+experiments/notebooks/smoke_test35/08.5_mlx_stack_ppo_run.live.sh
