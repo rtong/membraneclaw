@@ -627,6 +627,25 @@ CONSTRAINTS_TRAIN_EXTRA = {
     ("performance.product_flow_m3_s", ">="): ["Product water must not come in under {v}."],
     ("performance.system_recovery_pct", ">="): ["System recovery must not drop under {v}."],
 }
+#: 09: two more sentences per limit, drawn by train2 questions only (train keeps its bank above, so it still
+#: regenerates exactly). Other constructions than holdout_shift's unseen sentences ("no less than", "or less",
+#: "or better", "cap", "ceiling", "limited to", "fall under", "at or under"): holdout_shift still tests unseen phrasings.
+CONSTRAINTS_TRAIN2_EXTRA = {
+    ("permeate.flow_kg_s", ">="): ["Permeate below {v} is not acceptable.", "Permeate output has a floor of {v}."],
+    ("permeate.nacl_ppm", "<="): ["Permeate NaCl above {v} is not acceptable.",
+                                   "The most NaCl we can tolerate in the permeate is {v}."],
+    ("performance.water_recovery_pct", "<="): ["Recovery above {v} is not acceptable.", "The highest recovery we allow is {v}."],
+    ("flux.water_LMH", "<="): ["Flux above {v} is not acceptable.", "The highest flux we allow is {v}."],
+    ("performance.salt_rejection_pct", ">="): ["Salt rejection below {v} is not acceptable.",
+                                                "The lowest salt rejection we accept is {v}."],
+    ("costing.specific_energy_kWh_m3", "<="): ["Specific energy above {v} is not acceptable.",
+                                                "The most specific energy we can afford is {v}."],
+    ("costing.LCOW_usd_m3", "<="): ["LCOW above {v} is not acceptable.", "The highest LCOW we can accept is {v}."],
+    ("performance.product_flow_m3_s", ">="): ["Product water below {v} is not acceptable.",
+                                               "The lowest product flow we accept is {v}."],
+    ("performance.system_recovery_pct", ">="): ["Plant recovery below {v} is not acceptable.",
+                                                 "The lowest plant recovery we accept is {v}."],
+}
 QUESTIONS = {
     "ro_check": (["Does it meet all of these limits, and if not, which ones fail?",
                   "Are we within every limit? Tell me which ones we break, if any.",
@@ -693,8 +712,12 @@ RANGES = {
                        "p1_eff": (0.75, 0.88), "pxr": (0.88, 0.97), "pat": (0.75, 0.92)}},
 }
 FAMILIES = ("ro_check", "ro_scan_pressure", "ro_scan_area", "ro_membrane", "swro_check", "swro_option")
-SPLITS = {"train": (1200, 101), "dev": (240, 202), "test": (240, 303), "holdout_shift": (120, 404)}
+SPLITS = {"train": (1200, 101), "dev": (240, 202), "test": (240, 303), "holdout_shift": (120, 404),
+          "train2": (2400, 505)}  # 09: train2, new training questions (its own seed)
 LEVEL_MIX = (0.40, 0.35, 0.25)
+#: 09: train2 draws more level-2 questions (where the hard-to-convert units are): more of them as new questions,
+#: not repeats. Every other split keeps LEVEL_MIX.
+LEVEL_MIX_BY_SPLIT = {"train2": (0.25, 0.35, 0.40)}
 
 
 # ---------------------------------------------------------------------------------------------
@@ -890,6 +913,8 @@ class Gen:
         for c in cons:
             key = (c["metric"], c["op"])
             bank = CONSTRAINTS[key][0] + CONSTRAINTS_TRAIN_EXTRA[key] if self.split == "train" else None
+            if self.split == "train2":  # 09: train2 also draws the train2-only sentences
+                bank = CONSTRAINTS[key][0] + CONSTRAINTS_TRAIN_EXTRA[key] + CONSTRAINTS_TRAIN2_EXTRA[key]
             out.append((self.rng.choice(bank) if bank else self.pick(CONSTRAINTS[key])).format(v=c["text"]))
         return out
 
@@ -1273,7 +1298,7 @@ def make_case(job: tuple[str, int, int]) -> dict:
     split, seed, idx = job
     family = FAMILIES[idx % len(FAMILIES)]
     rng = random.Random(f"{seed}:{idx}")
-    level = rng.choices((0, 1, 2), LEVEL_MIX)[0]
+    level = rng.choices((0, 1, 2), LEVEL_MIX_BY_SPLIT.get(split, LEVEL_MIX))[0]
     u = random.Random(f"{seed}:{idx}:target").random()
     solves, reasons = 0, Counter()
     for attempt in range(200):
@@ -3199,6 +3224,7 @@ def sentence_bank(case: dict, con: dict) -> str:
     train, dev and test), "extra" (06's train-only ones) or "holdout" (holdout_shift's unseen one)."""
     key = (con["metric"], con["op"])
     for bank, templates in (("shared", CONSTRAINTS[key][0]), ("extra", CONSTRAINTS_TRAIN_EXTRA[key]),
+                            ("extra2", CONSTRAINTS_TRAIN2_EXTRA[key]),
                             ("holdout", CONSTRAINTS[key][1])):
         if any(t.format(v=con["text"]) in case["prompt"] for t in templates):
             return bank
@@ -3212,7 +3238,7 @@ def swap_sentences(case: dict, to: str) -> dict:
     prompt = case["prompt"]
     for con in case["constraints"]:
         key = (con["metric"], con["op"])
-        current = next(s for t in CONSTRAINTS[key][0] + CONSTRAINTS_TRAIN_EXTRA[key] + CONSTRAINTS[key][1]
+        current = next(s for t in CONSTRAINTS[key][0] + CONSTRAINTS_TRAIN_EXTRA[key] + CONSTRAINTS_TRAIN2_EXTRA[key] + CONSTRAINTS[key][1]
                        for s in [t.format(v=con["text"])] if s in prompt)
         target = (CONSTRAINTS[key][0][0] if to == "shared" else CONSTRAINTS[key][1][0]).format(v=con["text"])
         assert prompt.count(current) == 1, (case["id"], current)
@@ -3249,6 +3275,8 @@ def cmd_check(args) -> None:
     if DATA_05.exists():  # which questions are 05's, byte for byte (train is redrawn; the others must not move)
         same = {}
         for split, cases in splits.items():
+            if not (DATA_05 / f"{split}.jsonl").exists():  # 09: train2 has no 05 counterpart
+                continue
             old = {c["id"]: c for c in map(json.loads, (DATA_05 / f"{split}.jsonl").read_text().splitlines())}
             same[split] = {"identical_prompt": sum(c["prompt"] == old.get(c["id"], {}).get("prompt") for c in cases),
                            "n": len(cases)}
