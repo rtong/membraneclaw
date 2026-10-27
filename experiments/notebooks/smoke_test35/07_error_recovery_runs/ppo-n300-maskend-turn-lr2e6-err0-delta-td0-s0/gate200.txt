@@ -1,0 +1,36 @@
+== dev-T1-x2-stop-err0: seed = 07_error_recovery_runs/recovery-seed-n300-maskend/epoch1
+   ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0 = 07_error_recovery_runs/ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0/step200
+   480 vs 480 episodes
+                                                         seedppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0
+   reward                                               0.457         0.571
+   decision right                                       0.448         0.590
+   whole answer right                                   0.327         0.475
+   episodes, a simulate call erring                     0.310         0.321
+   recovered (erring candidate re-simulated)            0.060         0.113
+   convert loops (>=5 erroring converts)                0.094         0.010
+   decision right, a simulate erring               0.161 n=149    0.227 n=154
+   decision right, none erring                     0.577 n=331    0.761 n=326
+   recovered, among episodes with an erring sim         0.195         0.351
+   answers                                              0.637         0.725
+   share of converts erroring                           0.276         0.113
+   share of simulate calls erroring                     0.618         0.493
+   cut at the budget                                    0.075         0.021
+   policy tokens                                     1228.417       887.442
+
+   ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0 - seed, reward           +0.114  95% interval +0.069 to +0.160  (questions up 132, down 74, same 34)
+   ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0 - seed, decision right   +0.142  95% interval +0.084 to +0.199  (questions up 88, down 38, same 114)
+   ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0 - seed, whole answer     +0.148  95% interval +0.089 to +0.207  (questions up 91, down 37, same 112)
+   ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0 - seed, simulate erring  +0.010  95% interval -0.041 to +0.062  (questions up 49, down 47, same 144)
+   ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0 - seed, decision right among erring episodes +0.066  95% interval -0.022 to +0.155  (n 149 vs 154, unpaired)
+
+   by family: reward seed -> ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0  (decision)
+     ro_check           0.546 (0.562)  ->  0.653 (0.713)   n=80
+     ro_membrane        0.516 (0.512)  ->  0.612 (0.600)   n=80
+     ro_scan_area       0.379 (0.375)  ->  0.451 (0.400)   n=80
+     ro_scan_pressure   0.393 (0.338)  ->  0.454 (0.438)   n=80
+     swro_check         0.441 (0.400)  ->  0.740 (0.800)   n=80
+     swro_option        0.464 (0.500)  ->  0.517 (0.588)   n=80
+   by level: reward seed -> ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0  (decision)
+     0                  0.634 (0.637)  ->  0.798 (0.811)   n=190
+     1                  0.416 (0.391)  ->  0.550 (0.586)   n=174
+     2                  0.227 (0.224)  ->  0.231 (0.233)   n=116

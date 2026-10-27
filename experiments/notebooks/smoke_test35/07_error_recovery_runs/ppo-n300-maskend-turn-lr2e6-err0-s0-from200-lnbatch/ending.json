@@ -1,0 +1,6 @@
+{
+  "stopped_at": 300,
+  "reason": "step budget 300 reached",
+  "best_step": 200,
+  "best_reward": 0.8335193316383793
+}

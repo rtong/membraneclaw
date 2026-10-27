@@ -1,0 +1,36 @@
+== dev-T1-x2-stop-err0: seed = 07_error_recovery_runs/recovery-seed-n300-maskend/epoch1
+   alam05 = 07_error_recovery_runs/ppo-n300-maskend-turn-lr2e6-err0-delta-alam05-s0/step200
+   480 vs 480 episodes
+                                                         seed        alam05
+   reward                                               0.457         0.637
+   decision right                                       0.448         0.688
+   whole answer right                                   0.327         0.573
+   episodes, a simulate call erring                     0.310         0.292
+   recovered (erring candidate re-simulated)            0.060         0.096
+   convert loops (>=5 erroring converts)                0.094         0.006
+   decision right, a simulate erring               0.161 n=149    0.271 n=140
+   decision right, none erring                     0.577 n=331    0.859 n=340
+   recovered, among episodes with an erring sim         0.195         0.329
+   answers                                              0.637         0.815
+   share of converts erroring                           0.276         0.055
+   share of simulate calls erroring                     0.618         0.460
+   cut at the budget                                    0.075         0.019
+   policy tokens                                     1228.417       889.054
+
+   alam05 - seed, reward           +0.180  95% interval +0.136 to +0.224  (questions up 147, down 60, same 33)
+   alam05 - seed, decision right   +0.240  95% interval +0.185 to +0.294  (questions up 106, down 24, same 110)
+   alam05 - seed, whole answer     +0.246  95% interval +0.190 to +0.302  (questions up 109, down 25, same 106)
+   alam05 - seed, simulate erring  -0.019  95% interval -0.071 to +0.034  (questions up 43, down 53, same 144)
+   alam05 - seed, decision right among erring episodes +0.110  95% interval +0.016 to +0.205  (n 149 vs 140, unpaired)
+
+   by family: reward seed -> alam05  (decision)
+     ro_check           0.546 (0.562)  ->  0.675 (0.762)   n=80
+     ro_membrane        0.516 (0.512)  ->  0.707 (0.738)   n=80
+     ro_scan_area       0.379 (0.375)  ->  0.574 (0.600)   n=80
+     ro_scan_pressure   0.393 (0.338)  ->  0.474 (0.487)   n=80
+     swro_check         0.441 (0.400)  ->  0.768 (0.863)   n=80
+     swro_option        0.464 (0.500)  ->  0.624 (0.675)   n=80
+   by level: reward seed -> alam05  (decision)
+     0                  0.634 (0.637)  ->  0.852 (0.884)   n=190
+     1                  0.416 (0.391)  ->  0.640 (0.713)   n=174
+     2                  0.227 (0.224)  ->  0.279 (0.328)   n=116

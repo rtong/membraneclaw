@@ -25,6 +25,14 @@ PPO at 06's stable configuration (the turn as the unit, actor lr 2e-6).
   * ``alive`` judges one behaviour more: after an erroring simulate call, the same candidate
     simulated cleanly.
 
+After step 200 the runs lost the convert-first route; each flag below is one run's change, all off by
+default (their comments at PPO_DEFAULTS and the reward say why): ``--adv-center 1`` (the actor's
+advantages centred), ``--loss-norm batch`` (one token mean over the batch), ``--call-credit delta``
+(each turn earns the change it makes to the calls component), ``--first-turn-lam`` (the first turn's
+advantage from r_0 + V(s_1) - V(s_0)), ``--actor-lam`` (the actor's own lambda, the critic's returns
+unchanged), ``--provenance 1`` (an input stated in another unit proves its point only when convert_units
+returned it in an earlier turn; probe ``--provenance 1`` too).
+
 The splits and the clean reference episodes are 06's files, read in place
 (06_direction_and_compare_data/); only the recovery episodes are this notebook's data. Everything
 else -- the generator, the reward, the harness, PPO -- is 06's, copied (no code is shared between
@@ -1319,6 +1327,16 @@ ERR_CALL_CREDIT = True
 # stands after turn j (WEIGHTS["calls"] x the mean fidelity of the simulate calls through turn j / z; C = 0 before
 # any), and turn j earns C[j] - C[j-1] at its last simulate call, negative when it lowers the mean -- [+1, -0.5] there.
 CALL_CREDIT = "call"
+# 07: may a simulate call whose inputs were converted in the head prove its point? True (03-07's reward, PROVENANCE
+# False): yes, when they are right. PROVENANCE True (PPO --provenance 1, probe --provenance 1): an input the question
+# states in another unit proves the point only when a convert_units call of an earlier turn returned its value (within
+# ARG_TOL); the call's fidelity is unchanged, but it covers no point, so unless another call covers it the decision
+# and violations earn UNGATED and efficiency nothing. Why: in 07's PPO runs the L1 simulate-first episodes came to
+# pass right inputs converted in the head (L1 2+ units 0% of them at steps 0-49, 48% at 200-249, rewards 0.84-0.89),
+# and the within-question reward of converting first fell from +0.23..+0.34 to -0.01 (L1 one unit: ~0 from step
+# 100) -- the route had no signal left; held out, those conversions were right less often (simulate-first with a
+# right first call at step 200: L1 one unit dev 0.67, test 0.42, holdout_shift 0.43; L1 2+ units 0.14, 0.29, 0 of 16).
+PROVENANCE = False
 NONE_WORDS = {"none", "null", "n/a", "no option", "not feasible", "infeasible", "nothing", "no"}
 
 
@@ -1342,6 +1360,27 @@ def _same_arg(a: Any, b: Any) -> bool:
         return (str(a).strip().lower() if a is not None else None) == (b.lower() if b else None)
     x = parse_number(a)
     return x is not None and abs(x - b) <= ARG_TOL * abs(b)
+
+
+def _converted_value(call: dict) -> float | None:
+    """The number a convert_units call returned; None for another tool or an error."""
+    if call.get("name") != CONVERT:
+        return None
+    try:
+        out = json.loads(call.get("result") or "")
+    except ValueError:
+        return None
+    return parse_number(out.get("value")) if isinstance(out, dict) else None
+
+
+def tool_converted(case: dict, calls: list[dict], i: int, point: str) -> bool:
+    """Every input of ``point`` the question states in another unit, as call i passed it, is a value a convert_units
+    call of an earlier turn returned (within ARG_TOL). A call without a turn counts as a turn of its own."""
+    turn = lambda j: j if calls[j].get("turn") is None else calls[j]["turn"]  # noqa: E731
+    need = {t[1] for p in convert_plan(case, limits=False) for t in p["targets"] if t[0] == "arg" and t[2] in (None, point)}
+    got = [v for j in range(i) if turn(j) < turn(i) and (v := _converted_value(calls[j])) is not None]
+    args, defaults = calls[i]["arguments"], DEFAULTS[calls[i]["name"]]
+    return all(any(_same_arg(args.get(k, defaults[k]), v) for v in got) for k in need)
 
 
 def call_fidelity(case: dict, call: dict) -> tuple[float, str | None]:
@@ -1454,6 +1493,8 @@ def score(case: dict, calls: list[dict], final_text: str) -> dict:
     n = sum(is_sim)  # simulations; convert_units and check_limits calls earn and cost nothing
     fid = [call_fidelity(case, c) if sim and (ERR_CALL_CREDIT or not result_is_error(c.get("result"))) else (0.0, None)
            for c, sim in zip(calls, is_sim)]
+    if PROVENANCE:  # a point proved only with the tool's conversions (see PROVENANCE)
+        fid = [(f, cov if cov is None or tool_converted(case, calls, i, cov) else None) for i, (f, cov) in enumerate(fid)]
     covered = {cov for _, cov in fid if cov}
     evidence = set(case["proof"]) <= covered
     comps["calls"] = sum(f for (f, _), sim in zip(fid, is_sim) if sim) / n if n else 0.0
@@ -2876,14 +2917,17 @@ def gae(rewards, values, mask, *, gamma: float = 1.0, lam: float = 1.0):
     return advantages * mask, (advantages + values) * mask
 
 
-def gae_turn(rewards, values, mask, turn, *, gamma: float = 1.0, lam: float = 1.0, first_lam: float | None = None):
+def gae_turn(rewards, values, mask, turn, *, gamma: float = 1.0, lam: float = 1.0, first_lam: float | None = None,
+             actor_lam: float | None = None):
     """GAE with the turn as the unit (``adv_unit`` "turn"). Per episode: a turn's reward is the sum of the
     rewards on its tokens (the credits that land in it, less its KL penalties), its value the critic's estimate
     at its first token -- the hidden state before the turn -- and the recursion runs over the turns; every token
     of a turn is given its turn's advantage and return.
 
     07: ``first_lam`` (``first_turn_lam``) gives the first turn its own lambda: its advantage becomes
-    delta_0 + gamma * first_lam * A_1 (A_1 the second turn's advantage as usual), the returns unchanged."""
+    delta_0 + gamma * first_lam * A_1 (A_1 the second turn's advantage as usual), the returns unchanged.
+    07: ``actor_lam`` gives every turn's advantage its own lambda (decoupled GAE): A_j = delta_j + gamma * actor_lam
+    * A_{j+1}, the returns -- the critic's targets -- still from ``lam``; ``first_lam`` then applies on top of it."""
     import torch
     advantages, returns = torch.zeros_like(values), torch.zeros_like(values)
     for i in range(mask.shape[0]):
@@ -2903,6 +2947,13 @@ def gae_turn(rewards, values, mask, turn, *, gamma: float = 1.0, lam: float = 1.
             running = R[j] + gamma * next_value - V[j] + gamma * lam * running
             A[j] = running
         returns[i][on] = (A + V)[ids]
+        if actor_lam is not None:   # the actor's own lambda on every turn; the critic's targets stay as above
+            A = torch.zeros_like(A)
+            running = torch.zeros((), dtype=values.dtype, device=values.device)
+            for j in range(T - 1, -1, -1):
+                next_value = V[j + 1] if j + 1 < T else torch.zeros((), dtype=values.dtype, device=values.device)
+                running = R[j] + gamma * next_value - V[j] + gamma * actor_lam * running
+                A[j] = running
         if first_lam is not None and T > 1:   # the first turn's own lambda; the critic's targets stay as above
             A = A.clone()
             A[0] = R[0] + gamma * V[1] - V[0] + gamma * first_lam * A[1]
@@ -3087,6 +3138,17 @@ PPO_DEFAULTS = {
     # (explained variance ~0.35): the price is the critic's bias. Pair with --call-credit delta, so that r_0 does not
     # depend on how many calls come later.
     "first_turn_lam": -1.0,
+    # 07: the actor's lambda on every turn (flag --actor-lam; adv_unit "turn" only; -1: lam), decoupled from the
+    # critic's: the advantages are the actor_lam GAE, the critic's targets stay the lam returns. Why: with
+    # first_turn_lam alone (td0, td05) the first turn's advantage noise halved (pooled sd 0.27 -> 0.12) and the route
+    # still swung as much as at lam 0.95, all question groups moving together -- the later turns, whose convert and
+    # simulate calls (830 later-turn converts in td05's 1400 episodes of steps 25-199) kept Monte-Carlo credit, may
+    # carry the route through the shared weights. The critic keeps 0.95: it averages its targets' noise over a
+    # 25-step window, while bootstrapped targets would feed its own errors (explained variance ~0.35) back into it.
+    "actor_lam": -1.0,
+    # 07: 1 lets a simulate call prove its point only with inputs convert_units converted (see PROVENANCE); the
+    # evaluations score the same way.
+    "provenance": 0,
     # 07: more episodes per step on a 16 GB card. rollout_chunk: the step's prompts rolled out in consecutive chunks of
     # this many (0: all at once). critic_chunk_tokens: the critic's fit on its window by gradient accumulation over
     # chunks of at most this many tokens, each moved to the GPU in turn -- the same full-window loss, epochs, clip and
@@ -3101,7 +3163,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     from collections import deque
     import torch
     device = "cuda"
-    global ERR_CALL_CREDIT, CALL_CREDIT
+    global ERR_CALL_CREDIT, CALL_CREDIT, PROVENANCE
     if cfg.get("adv_unit", "token") not in ("token", "turn"):
         raise SystemExit(f"--adv-unit must be token or turn, not {cfg['adv_unit']!r}")
     if cfg.get("loss_norm", "episode") not in ("episode", "batch"):
@@ -3113,8 +3175,15 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     first_lam = None if first_lam < 0 else first_lam
     if first_lam is not None and (cfg.get("adv_unit", "token") != "turn" or first_lam > 1):
         raise SystemExit("--first-turn-lam needs --adv-unit turn and a value in [0, 1] (-1: off)")
+    actor_lam = cfg.get("actor_lam", -1.0)
+    actor_lam = None if actor_lam < 0 else actor_lam
+    if actor_lam is not None and (cfg.get("adv_unit", "token") != "turn" or actor_lam > 1):
+        raise SystemExit("--actor-lam needs --adv-unit turn and a value in [0, 1] (-1: off)")
+    if cfg.get("provenance", 0) not in (0, 1):
+        raise SystemExit(f"--provenance must be 0 or 1, not {cfg['provenance']!r}")
     ERR_CALL_CREDIT = bool(cfg.get("err_call_credit", 1))
     CALL_CREDIT = cfg.get("call_credit", "call")
+    PROVENANCE = bool(cfg.get("provenance", 0))
     cases = load_split(cfg["split"])
     eval_cases = random.Random(0).sample(load_split(cfg["eval_split"]), cfg["eval_cases"])
     torch.manual_seed(cfg["seed"])
@@ -3234,7 +3303,9 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
     faulthandler.register(signal.SIGUSR1, all_threads=True)
     progress(f"{MODEL} from {cfg['start_from']} | value layer {cfg['value_layer']} lr {cfg['value_lr']:.3g} "
              f"bias {cfg['value_init_bias']:.4f} | kl {cfg['kl_coef']} | warm-up {cfg['critic_warmup']} | "
-             f"lambda {cfg['lam']} per {cfg.get('adv_unit', 'token')}")
+             f"lambda {cfg['lam']} per {cfg.get('adv_unit', 'token')}"
+             + (f" (actor {actor_lam})" if actor_lam is not None else "") + (f" (first turn {first_lam})" if first_lam is not None else "")
+             + (" | provenance" if PROVENANCE else ""))
     stop = run_eval(0) if (cfg["eval_every"] and not resume) else None
     step = start
     try:
@@ -3267,7 +3338,7 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 old_values = _values(head, hidden) * mask
                 if cfg["adv_unit"] == "turn":
                     adv, returns = gae_turn(rewards, old_values, mask, B["turn"], gamma=cfg["gamma"], lam=cfg["lam"],
-                                            first_lam=first_lam)
+                                            first_lam=first_lam, actor_lam=actor_lam)
                 else:
                     adv, returns = gae(rewards, old_values, mask, gamma=cfg["gamma"], lam=cfg["lam"])
             sel = mask > 0
@@ -3749,11 +3820,12 @@ def cmd_probe(args) -> None:
         total = torch.cuda.get_device_properties(0).total_memory
         torch.cuda.set_per_process_memory_fraction(min(1.0, args.max_vram_mib * 2**20 / total))
     torch.manual_seed(args.seed)
-    global ERR_CALL_CREDIT
+    global ERR_CALL_CREDIT, PROVENANCE
     if args.tools_json:  # another notebook's declarations, e.g. 05's to probe its seed under its own prompt
         global _DECLS
         _DECLS = json.loads(Path(args.tools_json).read_text())
     ERR_CALL_CREDIT = bool(args.err_call_credit)
+    PROVENANCE = bool(args.provenance)
     policy, tok = load_policy(args.adapter)
     cases = load_split(args.split)
     prefill = None
@@ -3770,7 +3842,8 @@ def cmd_probe(args) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     tag = (f"{args.split}-T{args.temperature:g}" + (f"-x{args.samples}" if args.samples > 1 else "")
            + ("-stop" if args.stop_at_json else "") + (f"-swap-{args.swap}" if args.swap else "")
-           + ("-forced" if args.forced else "") + ("" if args.err_call_credit else "-err0"))
+           + ("-forced" if args.forced else "") + ("" if args.err_call_credit else "-err0")
+           + ("-prov" if args.provenance else ""))
     pool = ToolPool(args.workers)
     episodes, scores, t0 = [], [], time.time()
     try:
@@ -4314,6 +4387,9 @@ def main() -> None:
                         "each started from its slipped turns")
     p.add_argument("--err-call-credit", type=int, default=1,
                    help="07: 0 scores a simulate call the tool rejected at nothing (see ERR_CALL_CREDIT); tag suffix -err0")
+    p.add_argument("--provenance", type=int, default=0, choices=(0, 1),
+                   help="07: 1 lets a simulate call prove its point only with inputs convert_units converted (see "
+                        "PROVENANCE); tag suffix -prov")
     p.set_defaults(fn=cmd_probe)
     p = sub.add_parser("bench-probe", help="07: a policy on the benchmark's normalized questions (eval only, no score)")
     p.add_argument("--adapter", default=None)

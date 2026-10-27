@@ -1,0 +1,44 @@
+{
+ "overall": {
+  "n": 240,
+  "reward": 0.36319873044891676,
+  "components": {
+   "calls": 0.731900330989377,
+   "decision": 0.2791666666666667,
+   "violations": 0.36333333333333334,
+   "values": 0.2798165137614679,
+   "format": 0.5958333333333333,
+   "efficiency": 0.1940625
+  },
+  "called_any": 1.0,
+  "first_call_right_tool": 0.9208333333333333,
+  "calls_per_episode": 4.516666666666667,
+  "converts_per_episode": 4.216666666666667,
+  "converts_errored": 0.1976284584980237,
+  "compares_per_episode": 0.6875,
+  "compares_errored": 0.006060606060606061,
+  "calls_malformed": 0.0,
+  "calls_errored": 0.6854243542435424,
+  "evidence": 0.36666666666666664,
+  "answer_found": 0.5958333333333333,
+  "decision_correct": 0.3375,
+  "truncated": 0.0875,
+  "unanswered": 0.30833333333333335,
+  "policy_tokens": 1223.0625,
+  "total_tokens": 5563.2875
+ },
+ "meta": {
+  "adapter": "07_error_recovery_runs/recovery-seed-n300/epoch1",
+  "split": "holdout_shift",
+  "temperature": 1.0,
+  "samples": 2,
+  "max_new_tokens": 3072,
+  "forced": null,
+  "err_call_credit": false,
+  "stop_at_json": true,
+  "seconds": 3967.2222084999084,
+  "solves": 1270,
+  "peak_vram_mib": 5218.4990234375,
+  "rescored_from": "holdout_shift-T1-x2-stop.episodes.jsonl"
+ }
+}

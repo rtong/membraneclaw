@@ -1,0 +1,36 @@
+== dev-T1-x2-stop-err0-prov: seed = 07_error_recovery_runs/recovery-seed-n300-maskend/epoch1
+   prov200 = 07_error_recovery_runs/ppo-n300-maskend-turn-lr2e6-err0-prov-s0/step200
+   480 vs 480 episodes
+                                                         seed       prov200
+   reward                                               0.439         0.645
+   decision right                                       0.448         0.721
+   whole answer right                                   0.312         0.588
+   episodes, a simulate call erring                     0.310         0.308
+   recovered (erring candidate re-simulated)            0.060         0.135
+   convert loops (>=5 erroring converts)                0.094         0.002
+   decision right, a simulate erring               0.161 n=149    0.365 n=148
+   decision right, none erring                     0.577 n=331    0.880 n=332
+   recovered, among episodes with an erring sim         0.195         0.439
+   answers                                              0.637         0.819
+   share of converts erroring                           0.276         0.046
+   share of simulate calls erroring                     0.618         0.481
+   cut at the budget                                    0.075         0.046
+   policy tokens                                     1228.417      1033.419
+
+   prov200 - seed, reward           +0.207  95% interval +0.167 to +0.247  (questions up 166, down 44, same 30)
+   prov200 - seed, decision right   +0.273  95% interval +0.221 to +0.325  (questions up 119, down 18, same 103)
+   prov200 - seed, whole answer     +0.275  95% interval +0.220 to +0.330  (questions up 115, down 20, same 105)
+   prov200 - seed, simulate erring  -0.002  95% interval -0.048 to +0.044  (questions up 43, down 44, same 153)
+   prov200 - seed, decision right among erring episodes +0.204  95% interval +0.106 to +0.301  (n 149 vs 148, unpaired)
+
+   by family: reward seed -> prov200  (decision)
+     ro_check           0.538 (0.562)  ->  0.694 (0.762)   n=80
+     ro_membrane        0.495 (0.512)  ->  0.688 (0.787)   n=80
+     ro_scan_area       0.368 (0.375)  ->  0.587 (0.650)   n=80
+     ro_scan_pressure   0.374 (0.338)  ->  0.608 (0.700)   n=80
+     swro_check         0.410 (0.400)  ->  0.695 (0.775)   n=80
+     swro_option        0.446 (0.500)  ->  0.601 (0.650)   n=80
+   by level: reward seed -> prov200  (decision)
+     0                  0.634 (0.637)  ->  0.856 (0.884)   n=190
+     1                  0.382 (0.391)  ->  0.564 (0.713)   n=174
+     2                  0.204 (0.224)  ->  0.422 (0.466)   n=116

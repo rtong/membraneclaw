@@ -1,0 +1,44 @@
+{
+ "overall": {
+  "n": 144,
+  "reward": 0.6107080686160546,
+  "components": {
+   "calls": 0.898131524284798,
+   "decision": 0.7291666666666666,
+   "values": 0.7261904761904762,
+   "format": 0.7638888888888888,
+   "efficiency": 0.2743055555555556,
+   "violations": 0.8807692307692307
+  },
+  "called_any": 1.0,
+  "first_call_right_tool": 1.0,
+  "calls_per_episode": 5.854166666666667,
+  "converts_per_episode": 3.75,
+  "converts_errored": 0.025925925925925925,
+  "compares_per_episode": 0.7708333333333334,
+  "compares_errored": 0.0,
+  "calls_malformed": 0.0,
+  "calls_errored": 0.6548042704626335,
+  "evidence": 0.7986111111111112,
+  "answer_found": 0.7638888888888888,
+  "decision_correct": 0.7291666666666666,
+  "truncated": 0.006944444444444444,
+  "unanswered": 0.22916666666666666,
+  "policy_tokens": 895.2569444444445,
+  "total_tokens": 6200.041666666667
+ },
+ "meta": {
+  "adapter": "07_error_recovery_runs/ppo-n300-maskend-turn-lr2e6-err0-delta-td0-s0/adapter-step200",
+  "split": "dev",
+  "temperature": 0.0,
+  "samples": 1,
+  "max_new_tokens": 3072,
+  "forced": "07_error_recovery_data/dev_recovery_pr33.jsonl",
+  "err_call_credit": false,
+  "stop_at_json": true,
+  "seconds": 1292.9814004898071,
+  "solves": 653,
+  "peak_vram_mib": 5071.560546875,
+  "rescored_from": "dev-T0-stop-forced.episodes.jsonl"
+ }
+}
