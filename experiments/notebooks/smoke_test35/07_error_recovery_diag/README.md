@@ -15,7 +15,7 @@ first three PPO runs)
   to 300.
 - `exp1_td.sh` (with `td_precheck.py`, its gate 0): first-turn TD at lambda 0 and 0.5, with per-turn call credit.
   `exp3_actorlam.sh`: actor lambda 0.5 on every turn. `prov_ppo.sh`: provenance (with `prov_primary.py`, its primary
-  readout). `exp2_rollouts.sh`: four times the questions per step (notebook 08).
+  readout). `exp2_rollouts.sh`: four times the questions per step.
 - `EXP1_PROMPT.md`, `EXP2_PROMPT.md`, `templates/`: the hand-off prompts for experiments 1 and 2, and the CPU tests of
   the trainer flags (each checks the flag off against the trainer before it).
 
