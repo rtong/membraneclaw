@@ -1,7 +1,0 @@
-[
- {"id":"dev-mm","text":"{\"quantity\":1000,\"unit\":\"mm\",\"output_unit\":\"m\"}","split":"development","group":"development-units","source":"synthetic_v1"},
- {"id":"dev-round","text":"{\"quantity\":1.235,\"unit\":\"m\",\"digits\":2}","split":"development","group":"development-precision","source":"synthetic_v1"},
- {"id":"val-mm","text":"{\"quantity\":1250,\"unit\":\"mm\",\"output_unit\":\"m\"}","split":"validation","group":"validation-units","source":"synthetic_v1"},
- {"id":"val-exact","text":"{\"quantity\":1.235,\"unit\":\"m\",\"digits\":null}","split":"validation","group":"validation-precision","source":"synthetic_v1"},
- {"id":"test-mm","text":"{\"quantity\":2750,\"unit\":\"mm\",\"output_unit\":\"m\"}","split":"test","group":"test-units","source":"synthetic_v1"}
-]

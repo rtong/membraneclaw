@@ -45,14 +45,13 @@ membraneclaw_runtime/rsi/
   controller.py      # serial state machine; no provider-specific behavior
   report.py          # reports derived from committed evidence
   fixtures.py        # scripted proposer/solver and deterministic evaluator
-  cli.py             # demo, run, resume, inspect, report, verify
-examples/rsi/
-  offline_config.json
-  assets/prompt.txt
-  assets/skills/unit-checks.md
-  tasks_public.json
-  evaluation_private.json
-  fixture_scenarios.json
+  cli.py             # init-example, demo, run, resume, inspect, report, verify
+  data/              # packaged synthetic fixtures; init-example exports editable copies
+    offline_config.json
+    assets/prompt.txt
+    assets/skills/unit-checks.md
+    tasks_public.json
+    evaluation_private.json
 tests/rsi/
   test_contracts.py
   test_versions.py
@@ -217,7 +216,8 @@ Implemented offline commands (see `docs/rsi.md` for operational semantics):
 
 ```sh
 python -m membraneclaw_runtime.rsi.cli demo --output ./var/rsi/demo-001
-python -m membraneclaw_runtime.rsi.cli run --config examples/rsi/offline_config.json --output ./var/rsi/run-001
+python -m membraneclaw_runtime.rsi.cli init-example --output ./var/rsi/example-001
+python -m membraneclaw_runtime.rsi.cli run --config ./var/rsi/example-001/offline_config.json --output ./var/rsi/run-001
 python -m membraneclaw_runtime.rsi.cli inspect --run-dir ./var/rsi/run-001
 python -m membraneclaw_runtime.rsi.cli resume --run-dir ./var/rsi/run-001
 python -m membraneclaw_runtime.rsi.cli verify --run-dir ./var/rsi/run-001

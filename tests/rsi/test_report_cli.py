@@ -61,12 +61,37 @@ class Reports(unittest.TestCase):
             self.assertEqual(main(['inspect','--run-dir',path]),0)
             self.assertEqual(main(['demo','--output',path]),1)
 
-    def test_packaged_fixture_bytes_match_editable_examples(self):
-        examples = Path(__file__).resolve().parents[2]/'examples/rsi'
+    def test_exported_example_matches_package_and_runs_after_editing(self):
         from importlib.resources import files
-        packaged = Path(str(files('membraneclaw_runtime.rsi').joinpath('data')))
-        for path in examples.rglob('*'):
-            if path.is_file():self.assertEqual(path.read_bytes(),(packaged/path.relative_to(examples)).read_bytes())
+        with tempfile.TemporaryDirectory() as temp,contextlib.redirect_stdout(io.StringIO()):
+            examples = Path(temp)/'example'
+            self.assertEqual(main(['init-example','--output',str(examples)]),0)
+            packaged = Path(str(files('membraneclaw_runtime.rsi').joinpath('data')))
+            expected = {p.relative_to(packaged) for p in packaged.rglob('*') if p.is_file()}
+            actual = {p.relative_to(examples) for p in examples.rglob('*') if p.is_file()}
+            self.assertEqual(actual,expected)
+            self.assertFalse((examples/'trace').exists())
+            for relative in actual:
+                path = examples/relative
+                self.assertEqual(path.read_bytes(),(packaged/relative).read_bytes())
+                self.assertEqual(path.stat().st_mode & 0o777,0o600)
+            self.assertEqual(examples.stat().st_mode & 0o777,0o700)
+            config = examples/'offline_config.json'
+            value = json.loads(config.read_text());value['max_rounds'] = 1
+            config.write_text(json.dumps(value))
+            self.assertEqual(main(['run','--config',str(config),'--output',str(Path(temp)/'run')]),0)
+            self.assertEqual(main(['verify','--run-dir',str(Path(temp)/'run')]),0)
+
+    def test_export_refuses_existing_directory_and_symlink(self):
+        with tempfile.TemporaryDirectory() as temp,contextlib.redirect_stdout(io.StringIO()):
+            existing = Path(temp)/'existing';existing.mkdir()
+            self.assertEqual(main(['init-example','--output',str(existing)]),1)
+            self.assertEqual(list(existing.iterdir()),[])
+            marker = existing/'marker';marker.write_bytes(b'keep\r\n')
+            link = Path(temp)/'link';link.symlink_to(existing,target_is_directory=True)
+            self.assertEqual(main(['init-example','--output',str(link)]),1)
+            self.assertEqual(main(['init-example','--output',str(marker)]),1)
+            self.assertEqual(marker.read_bytes(),b'keep\r\n')
 
     def test_budget_stop_resume_cannot_override_the_bound(self):
         with tempfile.TemporaryDirectory() as temp:

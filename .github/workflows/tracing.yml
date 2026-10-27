@@ -1,9 +1,9 @@
 name: Runtime, tracing and provider contracts
 on:
   push:
-    paths: ['membraneclaw_runtime/**', 'tests/tracing/**', 'tests/providers/**', 'tests/runtime/**', 'tests/rsi/**', 'examples/rsi/**', 'experiments/auto-evaluate/**', 'agent/**', 'docs/**', '*README.md', 'server.py', 'cli.py', 'pyproject.toml', '.github/workflows/tracing.yml']
+    paths: ['membraneclaw_runtime/**', 'tests/tracing/**', 'tests/providers/**', 'tests/runtime/**', 'tests/rsi/**', 'experiments/auto-evaluate/**', 'agent/**', 'docs/**', '*README.md', 'server.py', 'cli.py', 'pyproject.toml', '.github/workflows/tracing.yml']
   pull_request:
-    paths: ['membraneclaw_runtime/**', 'tests/tracing/**', 'tests/providers/**', 'tests/runtime/**', 'tests/rsi/**', 'examples/rsi/**', 'experiments/auto-evaluate/**', 'agent/**', 'docs/**', '*README.md', 'server.py', 'cli.py', 'pyproject.toml', '.github/workflows/tracing.yml']
+    paths: ['membraneclaw_runtime/**', 'tests/tracing/**', 'tests/providers/**', 'tests/runtime/**', 'tests/rsi/**', 'experiments/auto-evaluate/**', 'agent/**', 'docs/**', '*README.md', 'server.py', 'cli.py', 'pyproject.toml', '.github/workflows/tracing.yml']
 jobs:
   offline:
     runs-on: ubuntu-latest

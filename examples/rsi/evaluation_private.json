@@ -1,7 +1,0 @@
-{
- "dev-mm":{"expected":1.0,"tolerance":0.0000001,"private_note":"PRIVATE_EVALUATOR_CANARY"},
- "dev-round":{"expected":1.24,"tolerance":0.0000001,"private_note":"PRIVATE_EVALUATOR_CANARY"},
- "val-mm":{"expected":1.25,"tolerance":0.0000001,"private_note":"PRIVATE_EVALUATOR_CANARY"},
- "val-exact":{"expected":1.235,"tolerance":0.0000001,"private_note":"PRIVATE_EVALUATOR_CANARY"},
- "test-mm":{"expected":2.75,"tolerance":0.0000001,"private_note":"PRIVATE_EVALUATOR_CANARY"}
-}

@@ -4,6 +4,7 @@ import asyncio
 import copy
 import json
 from importlib.resources import files
+from pathlib import Path
 from .config import load_config, check_current_source, verify_spec
 from .contracts import Invalid, hashed
 from .controller import Controller, BUDGET_STOPS
@@ -13,6 +14,28 @@ from .report import summary, verify, write_reports
 
 def demo_spec():
     return load_config(files('membraneclaw_runtime.rsi').joinpath('data/offline_config.json'))
+
+
+def init_example(output):
+    """Export packaged fixtures without dispatching components or overwriting files."""
+    destination = Path(output)
+    destination.mkdir(mode=0o700, parents=True, exist_ok=False)
+
+    def copy_directory(source, target):
+        for entry in sorted(source.iterdir(), key=lambda item: item.name):
+            path = target / entry.name
+            if entry.is_dir():
+                path.mkdir(mode=0o700)
+                copy_directory(entry, path)
+            else:
+                with path.open('xb') as stream:
+                    path.chmod(0o600)
+                    stream.write(entry.read_bytes())
+
+    copy_directory(files('membraneclaw_runtime.rsi').joinpath('data'), destination)
+    return {'output':str(destination.resolve()),
+            'configuration':str((destination / 'offline_config.json').resolve()),
+            'synthetic_only':True}
 
 
 def final_spec(parent, limits):
@@ -33,6 +56,8 @@ def final_spec(parent, limits):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     subs = parser.add_subparsers(dest='command',required=True)
+    sub = subs.add_parser('init-example',help='export editable synthetic fixtures to a new directory')
+    sub.add_argument('--output',required=True)
     for command in ('demo','run'):
         sub = subs.add_parser(command);sub.add_argument('--output',required=True)
         if command == 'run':sub.add_argument('--config',required=True)
@@ -46,6 +71,9 @@ def main(argv=None):
             sub.add_argument('--wall-seconds',type=int,required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == 'init-example':
+            print(json.dumps(init_example(args.output),indent=2))
+            return 0
         if args.command in {'demo','run'}:
             spec = demo_spec() if args.command == 'demo' else load_config(args.config)
             with Journal(args.output,spec=spec) as journal:

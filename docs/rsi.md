@@ -25,10 +25,17 @@ The default fixture executes 26 admitted component operations across two rounds.
 
 ## Configure a run
 
+Export an editable copy of the packaged synthetic fixtures to a new directory:
+
 ```sh
+python -m membraneclaw_runtime.rsi.cli init-example --output ./var/rsi/example-001
 python -m membraneclaw_runtime.rsi.cli run \
-  --config examples/rsi/offline_config.json --output ./var/rsi/custom-001
+  --config ./var/rsi/example-001/offline_config.json --output ./var/rsi/custom-001
 ```
+
+`init-example` only copies files; it does not start a run, invoke components, or require credentials. It works after package installation, including outside the source checkout. It refuses any existing output path, including an empty directory or symlink. If a copy fails partway through, choose a new directory or inspect and remove the incomplete export before retrying.
+
+The exported directory contains `offline_config.json`, `assets/prompt.txt`, `assets/skills/unit-checks.md`, `tasks_public.json`, and `evaluation_private.json`. Edit these files before running the `run` command above. The private file contains synthetic expected answers; keep real evaluation references private when replacing the toy data. Exported directories and files use private POSIX permissions. Packaged data under `membraneclaw_runtime/rsi/data/` is the single source for both `demo` and exports; there is no separate repository-level `examples/rsi/` copy.
 
 The configuration pins a seed schedule, exact asset allowlist, round limit, decision policy, and operation/unit/wall-time bounds. Text input paths must remain inside the configuration directory. Prompt/skill assets must not be executable or symlinked. Allowed mutations are `prompt.txt` and explicitly listed flat `skills/*.md` files only.
 
