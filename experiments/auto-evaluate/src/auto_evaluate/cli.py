@@ -566,13 +566,15 @@ def command_auto(args) -> int:
                 else:
                     batch = prepare_teacher_tasks(benchmarks, run_dir, teacher)
                 tasks = read_jsonl(batch)
-                validate_stage_environment("teacher", tasks)
+                if not getattr(args,"native_provider",None):
+                    validate_stage_environment("teacher", tasks)
                 concurrency = teacher_tools_concurrency if teacher.get("tools_enabled") else teacher_general_concurrency
                 print(f"[auto] Generate {teacher['display_name']} answers (concurrency={concurrency})...")
                 outputs = run_codex_tasks(
                     stage="teacher", tasks=tasks, run_dir=run_dir, project_root=root,
                     model=args.codex_model, concurrency=concurrency, retries=args.codex_retries,
                     timeout_seconds=args.codex_timeout, force=args.force_codex,
+                    **({"provider":args.native_provider,"trace_dir":str(run_dir / "traces")} if getattr(args,"native_provider",None) else {}),
                 )
                 if teacher.get("system_id") != "gpt-5.6-teacher":
                     display_by_task = {task["task_id"]: task.get("display_name") for task in tasks}
@@ -587,11 +589,13 @@ def command_auto(args) -> int:
             print(f"[auto] Score anonymous candidates (concurrency={judge_concurrency}; Judge tools forbidden)...")
             judge_batch = prepare_judge_tasks(benchmarks, run_dir, seed=args.seed)
             judge_tasks = read_jsonl(judge_batch)
-            validate_stage_environment("judge", judge_tasks)
+            if not getattr(args,"native_provider",None):
+                validate_stage_environment("judge", judge_tasks)
             ratings = run_codex_tasks(
                 stage="judge", tasks=judge_tasks, run_dir=run_dir, project_root=root,
                 model=args.codex_model, concurrency=judge_concurrency, retries=args.codex_retries,
                 timeout_seconds=args.codex_timeout, force=args.force_codex,
+                    **({"provider":args.native_provider,"trace_dir":str(run_dir / "traces")} if getattr(args,"native_provider",None) else {}),
             )
             write_jsonl(run_dir / "ratings.jsonl", ratings)
 
@@ -872,6 +876,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_auto.add_argument("--force-codex", action="store_true", help="rerun successful Codex tasks")
     p_auto.add_argument("--seed", type=int, default=20260806)
     p_auto.add_argument("--output", default=None)
+    p_auto.add_argument("--native-provider",choices=("gemini","openai","anthropic"),help="Use traced API teacher/judge calls")
     p_auto.add_argument("--codex-model", default="gpt-5.6-sol")
     p_auto.add_argument("--codex-concurrency", type=int, default=None, help="legacy override for all Codex stages")
     p_auto.add_argument("--system-concurrency", type=int, default=2, help="parallel independent OpenWebUI requests (1-8)")

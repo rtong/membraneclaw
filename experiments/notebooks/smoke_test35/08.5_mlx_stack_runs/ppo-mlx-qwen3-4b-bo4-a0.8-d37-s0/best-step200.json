@@ -1,0 +1,31 @@
+{
+  "step": 200,
+  "reward": 0.770899218946838,
+  "decision_correct": 0.8166666666666667,
+  "evidence": 0.7166666666666667,
+  "answer_found": 0.85,
+  "calls_per_episode": 3.2333333333333334,
+  "calls_errored": 0.28865979381443296,
+  "truncated": 0.016666666666666666,
+  "policy_tokens": 875.55,
+  "components": {
+    "calls": 0.8962830687830687,
+    "decision": 0.735,
+    "violations": 0.5869565217391305,
+    "values": 0.7403846153846154,
+    "format": 0.85,
+    "efficiency": 0.4436507936507937
+  },
+  "recovery": {
+    "sim_erred": 0.3333333333333333,
+    "recovered_given_error": 0.6,
+    "repeats_per_episode": 0.15,
+    "streak3_share": 0.18333333333333332,
+    "streak_max": 9,
+    "evidence_given_error": 0.45,
+    "decision_given_error": 0.45,
+    "decision_given_no_error": 1.0
+  },
+  "critic_residual_median": 0.335087,
+  "critic_ahead_frac": 0.92
+}

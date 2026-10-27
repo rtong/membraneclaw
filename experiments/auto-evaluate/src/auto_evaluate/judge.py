@@ -34,6 +34,8 @@ def _limit_trajectory(trajectory: dict[str, Any] | None) -> dict[str, Any] | Non
     return {
         **trajectory,
         "events": kept,
+        "omitted_event_ids": [e["event_id"] for e in events[_MAX_TRAJECTORY_EVENTS:]],
+        "view_transform": {"method":"first_n_events", "limit":_MAX_TRAJECTORY_EVENTS},
         "summary": summary,
         "truncation_note": (
             f"trajectory truncated from {len(events)} to {_MAX_TRAJECTORY_EVENTS} events "

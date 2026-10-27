@@ -344,7 +344,45 @@ def _best_effort_archive(codex: Any, thread_id: str | None) -> None:
         pass
 
 
+def _evidence_ids(value):
+    if isinstance(value,dict):
+        own=[value["event_id"]] if isinstance(value.get("event_id"),str) else []
+        return own+[x for child in value.values() for x in _evidence_ids(child)]
+    if isinstance(value,list):return [x for child in value for x in _evidence_ids(child)]
+    return []
+
+
+def _run_native(request):
+    from .traced import TracedEvaluationClient
+    from membraneclaw_runtime.tracing.schema import digest
+    stage,task=request["stage"],request["task"]
+    if stage not in {"teacher","judge"}:raise CodexWorkerError("unsupported native role")
+    policy=task.get("tool_policy") or {}
+    enabled=stage=="teacher" and not policy.get("forbid_observable_calls",True)
+    client=TracedEvaluationClient({"provider":request["provider"],"trace_dir":request.get("trace_dir","./var/traces/evaluation")})
+    prompt=request["prompt"];parent=None;trace=None
+    for attempt in range(1,int(request.get("retries",2))+2):
+        result=client.chat(model=request["model"],messages=[{"role":"user","content":prompt}],generation={
+            "trace_role":stage,"tools_enabled":enabled,"no_mcp":not enabled,
+            "trace_context":{"task_id":task.get("task_id"),"parent_episode_id":parent,
+                             "evaluator_prompt_hash":digest(prompt.encode()),"attempt":attempt},
+            "dataset_split":task.get("dataset_split","unspecified")})
+        trace=result.raw["trace"];parent=trace["episode_id"]
+        output=parse_json_object(result.content)
+        if stage=="teacher":output["trajectory"]=result.raw["canonical_trajectory"]
+        errors=validate_task_output(stage,task,output)
+        if not errors:
+            output["evaluator_provenance"]={"provider":request["provider"],"model":request["model"],
+                "prompt_hash":digest(prompt.encode()),"version":"native_evaluator_v1","episode_id":trace["episode_id"],
+                "evidence_event_ids":sorted(set(_evidence_ids(task)))}
+            return {"ok":True,"output":output,"trace":trace,"attempts":attempt,"latency_ms":result.latency_ms}
+        prompt=build_repair_prompt(stage,task,output,errors)
+    raise CodexWorkerError("native output validation failed",{"trace":trace,"validation_errors":errors})
+
+
 def run(request: dict[str, Any]) -> dict[str, Any]:
+    if request.get("provider") is not None:
+        return _run_native(request)
     tool_policy = (request.get("task") or {}).get("tool_policy") or {}
     tool_teacher_executor = os.environ.get(
         "AE_CODEX_TOOL_TEACHER_EXECUTOR", "cli_auto_approve"

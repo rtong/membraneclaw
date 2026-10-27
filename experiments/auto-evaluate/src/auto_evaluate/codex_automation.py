@@ -580,8 +580,11 @@ def run_codex_tasks(
     timeout_seconds: int = 3600,
     force: bool = False,
     invoker: Invoker = invoke_codex_worker,
+    provider: str | None = None,
+    trace_dir: str | None = None,
 ) -> list[dict[str, Any]]:
-    require_chatgpt_auth_environment()
+    if provider is None:
+        require_chatgpt_auth_environment()
     if concurrency < 1 or concurrency > 8:
         raise ValueError("codex concurrency must be between 1 and 8")
     if retries < 0:
@@ -591,7 +594,7 @@ def run_codex_tasks(
     for task in tasks:
         prompt = build_task_prompt(stage, task)
         input_hash = stable_hash(
-            {"schema": "2.1", "stage": stage, "model": model, "task": task, "prompt": prompt}
+            {"schema":"2.1", "stage":stage, "model":model, "provider":provider, "task":task, "prompt":prompt}
         )
         record_path = _record_path(run_dir, stage, task)
         if not force and record_path.exists():
@@ -608,7 +611,8 @@ def run_codex_tasks(
                 continue
         pending.append((task, record_path, input_hash, prompt))
 
-    validate_stage_environment(stage, [item[0] for item in pending])
+    if provider is None:
+        validate_stage_environment(stage, [item[0] for item in pending])
 
     def execute(item: tuple[dict[str, Any], Path, str, str]) -> tuple[str, dict[str, Any]]:
         task, record_path, input_hash, prompt = item
@@ -622,6 +626,8 @@ def run_codex_tasks(
             "prompt": prompt,
             "retries": retries,
         }
+        if provider is not None:
+            request.update(provider=provider,trace_dir=trace_dir or str(run_dir / "traces"))
         try:
             worker_result = invoker(request, project_root, timeout_seconds)
             output = worker_result.get("output")
@@ -637,6 +643,7 @@ def run_codex_tasks(
                 "status": "success",
                 "model": model,
                 "thread_id": worker_result.get("thread_id"),
+                "trace":worker_result.get("trace"),
                 "input_hash": input_hash,
                 "attempts": worker_result.get("attempts"),
                 "latency_ms": worker_result.get("latency_ms"),

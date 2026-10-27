@@ -117,6 +117,11 @@ def extract_observable_trajectory(
     rag_enabled: bool | None = None,
 ) -> dict[str, Any]:
     """Extract only observable actions/results; never expose hidden chain-of-thought."""
+    canonical = (raw_response or {}).get("canonical_trajectory")
+    if canonical is not None:
+        if canonical.get("source") != "canonical_recorder":
+            raise ValueError("invalid canonical provenance")
+        return canonical
     interactions = _transcript_interactions(response_text)
 
     interactions.append(
@@ -178,6 +183,7 @@ def extract_observable_trajectory(
         completeness = "insufficient_for_tool_trajectory" if tools_enabled else "not_applicable_no_tools"
     return {
         "schema_version": "1.0",
+        "provenance": "legacy/inferred",
         "source": source,
         "completeness": completeness,
         "tools_enabled": tools_enabled,

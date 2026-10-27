@@ -9,6 +9,7 @@ description = "Reproducible step-level evaluation for SWRO WaterTAP agents"
 requires-python = ">=3.11"
 dependencies = [
   "openpyxl>=3.1,<4",
+  "membraneclaw-runtime>=0.3.0",
   "openai-codex==0.147.0",
 ]
 

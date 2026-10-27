@@ -613,3 +613,10 @@ Things that were needed to make this stack work together:
 vLLM 0.25.1 returns reasoning text in a field named `reasoning`, while qwen-agent
 reads `reasoning_content` — so reasoning text is dropped rather than displayed.
 That is harmless while thinking is off.
+
+
+## Provider-neutral tracing
+
+Start with [trace recording user guide](TRACING_README.md): installation, a no-key storage demo, explicit Gemini/OpenAI/Claude selection, inspection, validation, private export, offline replay, HTTP client tools and private Git archive operations.
+
+Qwen remains the default. The new provider paths require a writable recorder and preserve full native responses/tool payloads. Local persistence and verified remote archival have separate statuses. See the guide for current limitations and live smoke-test requirements.

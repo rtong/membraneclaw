@@ -1,0 +1,22 @@
+{
+  "candidates": [
+    {
+      "index": 0,
+      "content": {
+        "role": "model",
+        "parts": [
+          {"text": "Synthetic thought summary", "thought": true, "thoughtSignature": "AQID+/=="},
+          {"functionCall": {"id": "provider-one", "name": "read_value", "args": {"value": 2}}, "thoughtSignature": "BAUG+/==", "futurePart": {"keep": true}},
+          {"functionCall": {"id": "provider-two", "name": "read_value", "args": {"value": 7}}}
+        ]
+      },
+      "finishReason": "STOP",
+      "safetyRatings": [],
+      "futureCandidate": "preserved"
+    },
+    {"index": 1, "content": {"role": "model", "parts": [{"text": "Unselected synthetic alternative"}]}, "finishReason": "STOP"}
+  ],
+  "usageMetadata": {"promptTokenCount": 20, "cachedContentTokenCount": 5, "candidatesTokenCount": 9, "thoughtsTokenCount": 4, "totalTokenCount": 33, "futureUsage": 99},
+  "modelVersion": "synthetic-model-version",
+  "futureResponse": {"nested": [1, 2, 3]}
+}

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "membraneclaw-runtime"
+version = "0.3.0"
+description = "Provider-neutral runtime and trace contracts for MembraneClaw"
+requires-python = ">=3.11"
+dependencies = ["jsonschema==4.25.1"]
+
+[project.optional-dependencies]
+tools = ["mcp==1.20.0", "pydantic==2.12.3", "pydantic-settings==2.11.0", "httpx==0.28.1", "json5==0.12.1"]
+http = ["fastapi==0.140.0", "uvicorn==0.51.0", "PyJWT==2.10.1"]
+legacy-test = ["qwen-agent==0.0.34", "soundfile==0.14.0", "PyJWT==2.10.1", "tqdm==4.67.1", "python-dateutil==2.9.0.post0"]
+
+[project.scripts]
+membraneclaw = "membraneclaw_runtime.cli:main"
+
+[tool.setuptools]
+py-modules = ["server"]
+
+[tool.setuptools.packages.find]
+include = ["membraneclaw_runtime*", "agent*", "mcp_rocalc*"]

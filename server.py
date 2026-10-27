@@ -19,8 +19,12 @@ from starlette.concurrency import run_in_threadpool
 
 from fastapi.responses import HTMLResponse
 
-from agent import bridge, config, google_login, google_oauth, identity
-from agent.core import build_agent
+from agent import config, google_login, google_oauth, identity
+
+TRACED_PROVIDER = os.environ.get("AGENT_PROVIDER", "qwen")
+if TRACED_PROVIDER == "qwen":
+    from agent import bridge
+    from agent.core import build_agent
 
 AGENT_MODEL_ID = os.environ.get("AGENT_MODEL_ID", "qwen3.5-9b-agent")
 # Optional shared secret. Unset means no auth, which is fine while bound to loopback.
@@ -328,7 +332,7 @@ async def list_models():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "upstream": config.BASE_URL, "model": config.MODEL}
+    return {"status": "ok", "provider": TRACED_PROVIDER}
 
 
 @app.post("/v1/chat/completions")
@@ -341,6 +345,12 @@ async def chat_completions(request: Request):
     model = body.get("model") or AGENT_MODEL_ID
 
     user = identity.from_headers(request.headers)
+    if TRACED_PROVIDER != "qwen":
+        from membraneclaw_runtime.http import HTTPService, dispatch
+        service = HTTPService(trace_dir=os.environ.get("TRACE_DIR", "./var/traces"),
+            provider=TRACED_PROVIDER, model=os.environ.get("AGENT_MODEL") or os.environ.get("GEMINI_MODEL_ID", ""),
+            no_mcp=os.environ.get("AGENT_HTTP_NO_MCP", "off").lower() in {"on", "true", "1"}, allow=CLIENT_TOOL_ALLOW)
+        return await dispatch(service, body, user=user)
 
     tools = body.get("tools")
     bridged = [t.name for t in bridge.client_tools(tools, CLIENT_TOOL_ALLOW)]

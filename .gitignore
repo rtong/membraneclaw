@@ -13,3 +13,16 @@ logs/
 .oauth_state.json
 .google_token.json
 .google_tokens/
+
+
+# Private runtime traces and derived exports (archive separately).
+var/traces/
+*.egg-info/
+build/
+dist/
+
+# Archive worker checkouts and receipts may contain private snapshots.
+var/trace-archive/
+
+# Frozen launch copy for upstream MLX runs.
+experiments/notebooks/smoke_test35/08.5_mlx_stack_ppo_run.live.sh

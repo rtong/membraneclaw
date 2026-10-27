@@ -1,0 +1,22 @@
+{
+ "episodes": 16,
+ "max_abs_diff": {
+  "batch_mask": 0.0,
+  "batch_answer": 0.0,
+  "batch_turn_end": 0.0,
+  "batch_content": 0.0,
+  "batch_rewards": 0.0,
+  "batch_turn": 0.0,
+  "gae_turn_advantages": 4.76837158203125e-07,
+  "gae_turn_returns": 5.960464477539062e-07,
+  "gae_advantages": 9.5367431640625e-07,
+  "normalized_advantages_batch": 2.384185791015625e-07,
+  "normalized_advantages_minibatch": 1.4901161193847656e-08,
+  "per_turn_tokens": 0.0,
+  "prover_progress": 0.0,
+  "separate_critic_stats": 1.2898236256830842e-08,
+  "critic_fit": 0.0,
+  "critic_heads_value": 8.063935119650978e-07,
+  "critic_heads_success": 3.4250011826664206e-08
+ }
+}

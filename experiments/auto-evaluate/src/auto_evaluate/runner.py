@@ -264,6 +264,7 @@ def _run_rag_router(
     router_generation = {
         **generation,
         "stream": True,
+        "trace_role":"router", "tools_enabled":False,
         "max_tokens": 128,
         "temperature": 0.0,
         "enable_thinking": False,
@@ -280,7 +281,7 @@ def _run_rag_router(
                 {"role": "system", "content": adaptive["router_prompt"]},
                 {"role": "user", "content": benchmark["question_prompt"]},
             ],
-            generation=router_generation,
+            generation=({k:v for k,v in router_generation.items() if k not in {"top_p","enable_thinking"}} if getattr(client,"native_tracing",False) else router_generation),
         )
         raw_content = result.content
         route = parse_rag_route(result.content)
@@ -309,6 +310,9 @@ def _run_rag_router(
 
 
 def make_client(generation: dict[str, Any]) -> OpenWebUIClient:
+    if generation.get("provider") or generation.get("routes"):
+        from .traced import TracedEvaluationClient
+        return TracedEvaluationClient(generation)
     base_url = os.environ.get("OPENWEBUI_BASE_URL", "").strip()
     api_key = os.environ.get("OPENWEBUI_API_KEY", "").strip()
     if not base_url:
@@ -406,7 +410,8 @@ def _run_context_recovery(
     partial_response: str,
     shared_system_prompt: str,
 ) -> dict[str, Any]:
-    recovery_generation = dict(recovery["generation"])
+    recovery_generation = {**recovery["generation"], "trace_role":"recovery", "tools_enabled":False,
+        "trace_context":{**recovery.get("trace_context",{}),"case_id":benchmark["case_id"]}}
     user_prefix = (
         "ORIGINAL QUESTION\n"
         "-----------------\n"
@@ -433,6 +438,9 @@ def _run_context_recovery(
             "Context recovery fixed prompt exceeds configured max_prompt_chars"
         )
     excerpt, truncated = _context_recovery_excerpt(partial_response, excerpt_budget)
+    import hashlib
+    recovery_generation["trace_context"]["input_transform"] = {"method":"bounded_excerpt", "budget_chars":excerpt_budget,
+        "truncated":truncated,"excerpt_sha256":hashlib.sha256(excerpt.encode()).hexdigest()}
     messages = [
         {"role": "system", "content": recovery["system_prompt"]},
         {
@@ -484,7 +492,9 @@ def _execute_work_item(
 ) -> str:
     benchmark = item["benchmark"]
     system = item["system"]
-    system_generation = item["generation"]
+    system_generation = {**item["generation"], "trace_role":"solver",
+        "tools_enabled":bool(item["system"].get("tools_enabled",False)),
+        "trace_context":{"run_id":run_dir.name,"case_id":item["benchmark"]["case_id"],"system_id":item["system"]["id"]}}
     context_recovery = item.get("context_recovery")
     messages = item["messages"]
     path = item["path"]
@@ -580,6 +590,7 @@ def _execute_work_item(
                     "usage": result.raw.get("usage"),
                     "generation": system_generation,
                     "raw_response": result.raw,
+                    "trace":result.raw.get("trace"),
                     "trajectory": trajectory,
                 },
             )
@@ -631,7 +642,7 @@ def _execute_work_item(
             recovered = _run_context_recovery(
                 client=client,
                 benchmark=benchmark,
-                recovery=context_recovery,
+                recovery={**context_recovery,"trace_context":{"parent_episode_id":(partial_raw_response or {}).get("trace",{}).get("episode_id")}},
                 partial_response=partial_response,
                 shared_system_prompt=shared_system_prompt,
             )
@@ -833,6 +844,7 @@ def _execute_policy_replay_item(
             "usage": source.get("usage"),
             "generation": source.get("generation"),
             "raw_response": source.get("raw_response"),
+            "trace_provenance":{"mode":"policy_reuse","source_episode_id":(source.get("raw_response") or {}).get("trace",{}).get("episode_id"),"new_model_requests":0},
             "trajectory": source.get("trajectory"),
         },
     )
@@ -856,6 +868,7 @@ def summarize_run_completeness(
     native_success = 0
     recovered_success = 0
     policy_replay_success = 0
+    recording_incomplete = legacy_untraced = 0
     for case_id in cases:
         for system_id in system_ids:
             path = _record_path(run_dir, case_id, system_id)
@@ -865,6 +878,11 @@ def summarize_run_completeness(
                 )
                 continue
             record = read_json(path)
+            trace = record.get("trace") or (record.get("raw_response") or {}).get("trace")
+            if trace is None:
+                legacy_untraced += 1
+            elif trace.get("completeness",{}).get("capture") != "complete":
+                recording_incomplete += 1
             if record.get("status") == "success":
                 success += 1
                 if record.get("completion_mode") == "context_reset_finalizer":
@@ -889,6 +907,7 @@ def summarize_run_completeness(
         "native_success": native_success,
         "recovered_success": recovered_success,
         "policy_replay_success": policy_replay_success,
+        "recording_incomplete":recording_incomplete, "legacy_untraced":legacy_untraced,
         "incomplete": len(incomplete),
         "items": incomplete,
     }
