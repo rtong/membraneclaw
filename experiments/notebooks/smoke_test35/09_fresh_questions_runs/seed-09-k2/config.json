@@ -23,7 +23,7 @@
   "compare_tool": true,
   "device": "mps",
   "ref_split": "train",
-  "extra": "/Users/fenggeliu/Public/membraneclaw/.scratch/dose_k2.jsonl",
+  "extra": "09_fresh_questions_data/dose_k2.jsonl",
   "extra_episodes": 16,
   "reference_episodes": 210,
   "recovery_episodes": 106,

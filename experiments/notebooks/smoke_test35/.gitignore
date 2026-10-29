@@ -12,3 +12,4 @@ __pycache__/
 *_runs/**/*.safetensors
 *_runs/**/README.md
 *_diag/tool_cache.jsonl
+*_runs/**/*.npz

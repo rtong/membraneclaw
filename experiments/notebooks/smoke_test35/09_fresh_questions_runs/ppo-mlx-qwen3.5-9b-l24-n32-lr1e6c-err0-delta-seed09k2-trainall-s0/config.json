@@ -1,5 +1,5 @@
 {
-  "start_from": "08.5_mlx_stack_runs/seed-09-k2/epoch1",
+  "start_from": "09_fresh_questions_runs/seed-09-k2/epoch1",
   "steps": 400,
   "prompts_per_step": 32,
   "max_new_tokens": 3072,

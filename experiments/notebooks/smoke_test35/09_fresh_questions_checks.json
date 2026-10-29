@@ -1,0 +1,1056 @@
+{
+ "system_message_matches_agent": true,
+ "questions": {
+  "06": "06_direction_and_compare_data",
+  "09": "09_fresh_questions_data"
+ },
+ "duplicate_prompts": 0,
+ "cross_split_scenarios": {
+  "train&train2": 0,
+  "dev&train": 0,
+  "dev&test": 0,
+  "dev&holdout_shift": 0,
+  "dev&train2": 0,
+  "test&train": 0,
+  "test&train2": 0,
+  "holdout_shift&train": 0,
+  "holdout_shift&test": 0,
+  "holdout_shift&train2": 0
+ },
+ "train": {
+  "ro_check": {
+   "n": 200,
+   "levels": {
+    "2": 62,
+    "0": 76,
+    "1": 62
+   },
+   "optimal_calls": {
+    "1": 200
+   },
+   "decisions": {
+    "fail": 103,
+    "pass": 97
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1155,
+    "no_calls_say_fail": 0.1186
+   }
+  },
+  "ro_membrane": {
+   "n": 200,
+   "levels": {
+    "2": 46,
+    "0": 84,
+    "1": 70
+   },
+   "optimal_calls": {
+    "1": 61,
+    "2": 71,
+    "3": 56,
+    "4": 12
+   },
+   "decisions": {
+    "A": 61,
+    "B": 60,
+    "C": 42,
+    "none": 30,
+    "D": 7
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9705,
+    "gold_answer_no_calls": 0.3685,
+    "proof_calls_wrong_decision": 0.5365,
+    "no_calls_first_option": 0.0935,
+    "no_calls_last_option": 0.0935,
+    "no_calls_none": 0.0804
+   }
+  },
+  "ro_scan_area": {
+   "n": 200,
+   "levels": {
+    "1": 60,
+    "0": 98,
+    "2": 42
+   },
+   "optimal_calls": {
+    "2": 117,
+    "1": 83
+   },
+   "decisions": {
+    "none": 38,
+    "4/4": 21,
+    "1/4": 20,
+    "3/4": 17,
+    "2/4": 17,
+    "1/5": 14,
+    "3/3": 14,
+    "1/3": 14,
+    "2/3": 12,
+    "5/5": 10,
+    "4/5": 9,
+    "3/5": 8,
+    "2/5": 6
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9664,
+    "gold_answer_no_calls": 0.3616,
+    "proof_calls_wrong_decision": 0.5314,
+    "no_calls_first_option": 0.0866,
+    "no_calls_last_option": 0.0848,
+    "no_calls_none": 0.0871
+   }
+  },
+  "ro_scan_pressure": {
+   "n": 200,
+   "levels": {
+    "1": 74,
+    "2": 51,
+    "0": 75
+   },
+   "optimal_calls": {
+    "1": 93,
+    "2": 107
+   },
+   "decisions": {
+    "none": 52,
+    "1/4": 22,
+    "3/4": 21,
+    "3/3": 18,
+    "4/4": 16,
+    "2/3": 15,
+    "2/4": 10,
+    "1/5": 10,
+    "2/5": 9,
+    "3/5": 8,
+    "1/3": 7,
+    "5/5": 6,
+    "4/5": 6
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9652,
+    "gold_answer_no_calls": 0.3495,
+    "proof_calls_wrong_decision": 0.5225,
+    "no_calls_first_option": 0.0824,
+    "no_calls_last_option": 0.083,
+    "no_calls_none": 0.0987
+   }
+  },
+  "swro_check": {
+   "n": 200,
+   "levels": {
+    "1": 72,
+    "2": 51,
+    "0": 77
+   },
+   "optimal_calls": {
+    "1": 200
+   },
+   "decisions": {
+    "fail": 118,
+    "pass": 82
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1053,
+    "no_calls_say_fail": 0.1243
+   }
+  },
+  "swro_option": {
+   "n": 200,
+   "levels": {
+    "0": 83,
+    "1": 79,
+    "2": 38
+   },
+   "optimal_calls": {
+    "3": 122,
+    "2": 78
+   },
+   "decisions": {
+    "B": 76,
+    "A": 56,
+    "C": 42,
+    "none": 26
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9747,
+    "gold_answer_no_calls": 0.372,
+    "proof_calls_wrong_decision": 0.539,
+    "no_calls_first_option": 0.0903,
+    "no_calls_last_option": 0.1049,
+    "no_calls_none": 0.0771
+   }
+  }
+ },
+ "dev": {
+  "ro_check": {
+   "n": 40,
+   "levels": {
+    "0": 16,
+    "1": 14,
+    "2": 10
+   },
+   "optimal_calls": {
+    "1": 40
+   },
+   "decisions": {
+    "fail": 22,
+    "pass": 18
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1107,
+    "no_calls_say_fail": 0.1212
+   }
+  },
+  "ro_membrane": {
+   "n": 40,
+   "levels": {
+    "1": 14,
+    "0": 17,
+    "2": 9
+   },
+   "optimal_calls": {
+    "3": 9,
+    "4": 2,
+    "2": 18,
+    "1": 11
+   },
+   "decisions": {
+    "B": 13,
+    "none": 11,
+    "A": 11,
+    "C": 5
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9695,
+    "gold_answer_no_calls": 0.3469,
+    "proof_calls_wrong_decision": 0.5206,
+    "no_calls_first_option": 0.092,
+    "no_calls_last_option": 0.0949,
+    "no_calls_none": 0.1012
+   }
+  },
+  "ro_scan_area": {
+   "n": 40,
+   "levels": {
+    "2": 9,
+    "1": 17,
+    "0": 14
+   },
+   "optimal_calls": {
+    "2": 22,
+    "1": 18
+   },
+   "decisions": {
+    "1/4": 9,
+    "2/4": 6,
+    "none": 6,
+    "3/4": 3,
+    "1/3": 3,
+    "5/5": 3,
+    "4/4": 3,
+    "4/5": 2,
+    "2/5": 2,
+    "1/5": 2,
+    "2/3": 1
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9665,
+    "gold_answer_no_calls": 0.3685,
+    "proof_calls_wrong_decision": 0.5365,
+    "no_calls_first_option": 0.0988,
+    "no_calls_last_option": 0.0754,
+    "no_calls_none": 0.0804
+   }
+  },
+  "ro_scan_pressure": {
+   "n": 40,
+   "levels": {
+    "0": 15,
+    "2": 10,
+    "1": 15
+   },
+   "optimal_calls": {
+    "2": 18,
+    "1": 22
+   },
+   "decisions": {
+    "none": 8,
+    "1/3": 6,
+    "3/3": 4,
+    "1/4": 4,
+    "4/4": 4,
+    "5/5": 4,
+    "3/4": 3,
+    "3/5": 2,
+    "2/4": 2,
+    "4/5": 1,
+    "2/5": 1,
+    "1/5": 1
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.965,
+    "gold_answer_no_calls": 0.3598,
+    "proof_calls_wrong_decision": 0.5302,
+    "no_calls_first_option": 0.0908,
+    "no_calls_last_option": 0.0937,
+    "no_calls_none": 0.0887
+   }
+  },
+  "swro_check": {
+   "n": 40,
+   "levels": {
+    "0": 12,
+    "1": 19,
+    "2": 9
+   },
+   "optimal_calls": {
+    "1": 40
+   },
+   "decisions": {
+    "pass": 23,
+    "fail": 17
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1276,
+    "no_calls_say_fail": 0.1119
+   }
+  },
+  "swro_option": {
+   "n": 40,
+   "levels": {
+    "0": 21,
+    "1": 8,
+    "2": 11
+   },
+   "optimal_calls": {
+    "3": 21,
+    "2": 19
+   },
+   "decisions": {
+    "B": 17,
+    "A": 10,
+    "C": 9,
+    "none": 4
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9744,
+    "gold_answer_no_calls": 0.3771,
+    "proof_calls_wrong_decision": 0.5429,
+    "no_calls_first_option": 0.0863,
+    "no_calls_last_option": 0.1126,
+    "no_calls_none": 0.0721
+   }
+  }
+ },
+ "test": {
+  "ro_check": {
+   "n": 40,
+   "levels": {
+    "2": 16,
+    "0": 14,
+    "1": 10
+   },
+   "optimal_calls": {
+    "1": 40
+   },
+   "decisions": {
+    "fail": 23,
+    "pass": 17
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1074,
+    "no_calls_say_fail": 0.1231
+   }
+  },
+  "ro_membrane": {
+   "n": 40,
+   "levels": {
+    "0": 19,
+    "1": 9,
+    "2": 12
+   },
+   "optimal_calls": {
+    "3": 9,
+    "2": 16,
+    "1": 12,
+    "4": 3
+   },
+   "decisions": {
+    "B": 15,
+    "A": 12,
+    "none": 7,
+    "C": 6
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9703,
+    "gold_answer_no_calls": 0.3642,
+    "proof_calls_wrong_decision": 0.5333,
+    "no_calls_first_option": 0.0933,
+    "no_calls_last_option": 0.0992,
+    "no_calls_none": 0.0846
+   }
+  },
+  "ro_scan_area": {
+   "n": 40,
+   "levels": {
+    "2": 14,
+    "1": 14,
+    "0": 12
+   },
+   "optimal_calls": {
+    "1": 17,
+    "2": 23
+   },
+   "decisions": {
+    "1/4": 7,
+    "4/4": 6,
+    "1/3": 5,
+    "3/4": 4,
+    "none": 4,
+    "2/5": 4,
+    "1/5": 3,
+    "5/5": 2,
+    "3/3": 2,
+    "2/3": 1,
+    "2/4": 1,
+    "4/5": 1
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9672,
+    "gold_answer_no_calls": 0.3771,
+    "proof_calls_wrong_decision": 0.5429,
+    "no_calls_first_option": 0.1009,
+    "no_calls_last_option": 0.0863,
+    "no_calls_none": 0.0721
+   }
+  },
+  "ro_scan_pressure": {
+   "n": 40,
+   "levels": {
+    "0": 17,
+    "2": 10,
+    "1": 13
+   },
+   "optimal_calls": {
+    "1": 18,
+    "2": 22
+   },
+   "decisions": {
+    "none": 10,
+    "3/4": 5,
+    "1/4": 5,
+    "2/4": 4,
+    "5/5": 4,
+    "2/3": 3,
+    "4/4": 2,
+    "3/3": 2,
+    "1/3": 2,
+    "4/5": 1,
+    "3/5": 1,
+    "1/5": 1
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9654,
+    "gold_answer_no_calls": 0.3512,
+    "proof_calls_wrong_decision": 0.5238,
+    "no_calls_first_option": 0.0829,
+    "no_calls_last_option": 0.0829,
+    "no_calls_none": 0.097
+   }
+  },
+  "swro_check": {
+   "n": 40,
+   "levels": {
+    "1": 14,
+    "0": 20,
+    "2": 6
+   },
+   "optimal_calls": {
+    "1": 40
+   },
+   "decisions": {
+    "fail": 22,
+    "pass": 18
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1107,
+    "no_calls_say_fail": 0.1212
+   }
+  },
+  "swro_option": {
+   "n": 40,
+   "levels": {
+    "1": 13,
+    "0": 22,
+    "2": 5
+   },
+   "optimal_calls": {
+    "3": 25,
+    "2": 15
+   },
+   "decisions": {
+    "B": 14,
+    "A": 12,
+    "none": 9,
+    "C": 5
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9741,
+    "gold_answer_no_calls": 0.3555,
+    "proof_calls_wrong_decision": 0.527,
+    "no_calls_first_option": 0.0941,
+    "no_calls_last_option": 0.0912,
+    "no_calls_none": 0.0929
+   }
+  }
+ },
+ "holdout_shift": {
+  "ro_check": {
+   "n": 20,
+   "levels": {
+    "0": 10,
+    "2": 4,
+    "1": 6
+   },
+   "optimal_calls": {
+    "1": 20
+   },
+   "decisions": {
+    "fail": 14,
+    "pass": 6
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.0905,
+    "no_calls_say_fail": 0.1325
+   }
+  },
+  "ro_membrane": {
+   "n": 20,
+   "levels": {
+    "2": 9,
+    "1": 8,
+    "0": 3
+   },
+   "optimal_calls": {
+    "1": 7,
+    "2": 6,
+    "3": 5,
+    "4": 2
+   },
+   "decisions": {
+    "A": 7,
+    "B": 6,
+    "C": 4,
+    "D": 2,
+    "none": 1
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.971,
+    "gold_answer_no_calls": 0.3858,
+    "proof_calls_wrong_decision": 0.5492,
+    "no_calls_first_option": 0.0972,
+    "no_calls_last_option": 0.0972,
+    "no_calls_none": 0.0638
+   }
+  },
+  "ro_scan_area": {
+   "n": 20,
+   "levels": {
+    "1": 4,
+    "0": 12,
+    "2": 4
+   },
+   "optimal_calls": {
+    "2": 7,
+    "1": 13
+   },
+   "decisions": {
+    "none": 5,
+    "1/4": 5,
+    "4/4": 3,
+    "1/3": 2,
+    "2/4": 2,
+    "3/4": 1,
+    "2/3": 1,
+    "5/5": 1
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9636,
+    "gold_answer_no_calls": 0.3512,
+    "proof_calls_wrong_decision": 0.5238,
+    "no_calls_first_option": 0.1004,
+    "no_calls_last_option": 0.0829,
+    "no_calls_none": 0.097
+   }
+  },
+  "ro_scan_pressure": {
+   "n": 20,
+   "levels": {
+    "2": 10,
+    "1": 5,
+    "0": 5
+   },
+   "optimal_calls": {
+    "1": 8,
+    "2": 12
+   },
+   "decisions": {
+    "3/3": 4,
+    "2/5": 3,
+    "3/4": 2,
+    "none": 2,
+    "4/5": 2,
+    "1/4": 2,
+    "1/5": 1,
+    "5/5": 1,
+    "4/4": 1,
+    "3/5": 1,
+    "2/4": 1
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9675,
+    "gold_answer_no_calls": 0.3771,
+    "proof_calls_wrong_decision": 0.5429,
+    "no_calls_first_option": 0.0746,
+    "no_calls_last_option": 0.0921,
+    "no_calls_none": 0.0721
+   }
+  },
+  "swro_check": {
+   "n": 20,
+   "levels": {
+    "0": 9,
+    "1": 6,
+    "2": 5
+   },
+   "optimal_calls": {
+    "1": 20
+   },
+   "decisions": {
+    "pass": 12,
+    "fail": 8
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.131,
+    "no_calls_say_fail": 0.11
+   }
+  },
+  "swro_option": {
+   "n": 20,
+   "levels": {
+    "0": 10,
+    "1": 5,
+    "2": 5
+   },
+   "optimal_calls": {
+    "2": 12,
+    "3": 8
+   },
+   "decisions": {
+    "A": 9,
+    "B": 5,
+    "C": 3,
+    "none": 3
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9734,
+    "gold_answer_no_calls": 0.3685,
+    "proof_calls_wrong_decision": 0.5365,
+    "no_calls_first_option": 0.1104,
+    "no_calls_last_option": 0.0988,
+    "no_calls_none": 0.0804
+   }
+  }
+ },
+ "train2": {
+  "ro_check": {
+   "n": 400,
+   "levels": {
+    "2": 156,
+    "1": 127,
+    "0": 117
+   },
+   "optimal_calls": {
+    "1": 400
+   },
+   "decisions": {
+    "pass": 222,
+    "fail": 178
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1249,
+    "no_calls_say_fail": 0.1134
+   }
+  },
+  "ro_membrane": {
+   "n": 400,
+   "levels": {
+    "2": 147,
+    "1": 139,
+    "0": 114
+   },
+   "optimal_calls": {
+    "2": 140,
+    "4": 33,
+    "1": 114,
+    "3": 113
+   },
+   "decisions": {
+    "B": 116,
+    "A": 114,
+    "none": 81,
+    "C": 74,
+    "D": 15
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9706,
+    "gold_answer_no_calls": 0.3594,
+    "proof_calls_wrong_decision": 0.5298,
+    "no_calls_first_option": 0.092,
+    "no_calls_last_option": 0.0914,
+    "no_calls_none": 0.0891
+   }
+  },
+  "ro_scan_area": {
+   "n": 400,
+   "levels": {
+    "2": 167,
+    "0": 113,
+    "1": 120
+   },
+   "optimal_calls": {
+    "2": 231,
+    "1": 169
+   },
+   "decisions": {
+    "none": 88,
+    "1/4": 43,
+    "3/4": 36,
+    "3/3": 36,
+    "2/4": 35,
+    "2/3": 31,
+    "1/3": 28,
+    "4/4": 28,
+    "3/5": 20,
+    "2/5": 19,
+    "4/5": 13,
+    "1/5": 12,
+    "5/5": 11
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.966,
+    "gold_answer_no_calls": 0.3564,
+    "proof_calls_wrong_decision": 0.5276,
+    "no_calls_first_option": 0.0833,
+    "no_calls_last_option": 0.0809,
+    "no_calls_none": 0.092
+   }
+  },
+  "ro_scan_pressure": {
+   "n": 400,
+   "levels": {
+    "2": 163,
+    "0": 109,
+    "1": 128
+   },
+   "optimal_calls": {
+    "1": 164,
+    "2": 236
+   },
+   "decisions": {
+    "none": 72,
+    "3/4": 46,
+    "2/4": 39,
+    "4/4": 38,
+    "1/4": 33,
+    "1/3": 30,
+    "2/3": 28,
+    "3/3": 24,
+    "1/5": 23,
+    "5/5": 21,
+    "2/5": 16,
+    "3/5": 15,
+    "4/5": 15
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9665,
+    "gold_answer_no_calls": 0.3633,
+    "proof_calls_wrong_decision": 0.5327,
+    "no_calls_first_option": 0.0835,
+    "no_calls_last_option": 0.0826,
+    "no_calls_none": 0.0854
+   }
+  },
+  "swro_check": {
+   "n": 399,
+   "levels": {
+    "1": 143,
+    "2": 158,
+    "0": 98
+   },
+   "optimal_calls": {
+    "1": 399
+   },
+   "decisions": {
+    "fail": 200,
+    "pass": 199
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9667,
+    "gold_answer_no_calls": 0.385,
+    "proof_calls_wrong_decision": 0.6,
+    "no_calls_say_pass": 0.1173,
+    "no_calls_say_fail": 0.1176
+   }
+  },
+  "swro_option": {
+   "n": 400,
+   "levels": {
+    "2": 140,
+    "1": 143,
+    "0": 117
+   },
+   "optimal_calls": {
+    "3": 251,
+    "2": 149
+   },
+   "decisions": {
+    "A": 145,
+    "B": 130,
+    "none": 71,
+    "C": 54
+   },
+   "baselines": {
+    "oracle": 1.0,
+    "oracle_plus_2_calls": 0.9745,
+    "gold_answer_no_calls": 0.3637,
+    "proof_calls_wrong_decision": 0.533,
+    "no_calls_first_option": 0.1007,
+    "no_calls_last_option": 0.0934,
+    "no_calls_none": 0.085
+   }
+  }
+ },
+ "constraint_sentences": {
+  "train": {
+   "shared": 2058,
+   "extra": 784
+  },
+  "dev": {
+   "shared": 563
+  },
+  "test": {
+   "shared": 586
+  },
+  "holdout_shift": {
+   "holdout": 285
+  },
+  "train2": {
+   "shared": 2607,
+   "extra": 1028,
+   "extra2": 2045
+  }
+ },
+ "recovery": {
+  "train": {
+   "questions": 1200,
+   "with an input converted alone": 698,
+   "recovery_episodes": 697,
+   "by_family": {
+    "ro_scan_pressure": 124,
+    "ro_check": 123,
+    "swro_check": 121,
+    "ro_membrane": 116,
+    "swro_option": 113,
+    "ro_scan_area": 100
+   },
+   "slipped_input": {
+    "feed_pressure_bar [kPa]": 72,
+    "feed_pressure_bar [MPa]": 67,
+    "feed_nacl_mass_frac [g/kg]": 58,
+    "feed_nacl_mass_frac [mg/kg]": 58,
+    "feed_nacl_mass_frac [permille]": 54,
+    "feed_nacl_mass_frac [pct]": 51,
+    "p1_pressure_bar [kPa]": 42,
+    "p1_efficiency [pct]": 42,
+    "feed_flow_m3_s [L/s]": 39,
+    "feed_tds_g_L [mg/L]": 30,
+    "membrane_area_m2 [ft2]": 30,
+    "p1_pressure_bar [MPa]": 30,
+    "A_comp [LMH/bar]": 20,
+    "B_comp [LMH]": 20,
+    "feed_flow_mass_kg_s [kg/h]": 19,
+    "feed_pressure_bar [psi]": 14,
+    "pxr_efficiency [pct]": 12,
+    "p1_pressure_bar [psi]": 9,
+    "feed_flow_m3_s [m3/h]": 9,
+    "feed_flow_m3_s [MGD]": 7,
+    "feed_flow_m3_s [m3/d]": 7,
+    "erd_efficiency [pct]": 7
+   },
+   "slipped_unit_level": {
+    "1": 562,
+    "2": 135
+   },
+   "error_kind": {
+    "validation (names the input)": 282,
+    "out of bounds (names the variable)": 177,
+    "failed to initialize": 146,
+    "other": 92
+   },
+   "inputs_tried_before_one_erred": {
+    "2": 56,
+    "1": 632,
+    "3": 9
+   },
+   "reward_min": 0.8911,
+   "reward_mean": 0.9425,
+   "reference_reward_mean": 0.9859,
+   "example_errors": {
+    "failed to initialize": "{\n  \"error\": \"solve failed: Unit model fs.unit failed to initialize\"\n}",
+    "other": "{\n  \"error\": \"solve failed:  The solver at the solve flowsheet after initializing feed step failed to converge to an optimal solution.This suggests that the user provided infeasible inputs or that the model is poorly scaled, poorly initiali",
+    "out of bounds (names the variable)": "{\n  \"error\": \"solve failed: model contains a trivially infeasible variable 'fs.unit.feed_side.properties_in[0.0].pressure' (fixed value 545000000.0 outside bounds [10000.0, 50000000.0]).\"\n}",
+    "validation (names the input)": "{\n  \"error\": \"feed_nacl_mass_frac must be between 0 and 1\"\n}"
+   },
+   "example_fix_lines": [
+    "simulate_ro failed: feed_nacl_mass_frac 31.1 is in g/kg, as the question gives it, not mass fraction. Converting it first.",
+    "simulate_ro failed: feed_nacl_mass_frac 31.5 is in g/kg, as the question gives it, not mass fraction. Converting it first.",
+    "simulate_ro failed: feed_pressure_bar 5450.0 is in kPa, as the question gives it, not bar. Converting it first.",
+    "simulate_ro failed: A_comp 1.39 and 1.47 are in LMH/bar, as the question gives them, not m/s/Pa. Converting them first."
+   ]
+  },
+  "dev": {
+   "questions": 240,
+   "with an input converted alone": 144,
+   "recovery_episodes": 144,
+   "by_family": {
+    "swro_check": 28,
+    "ro_scan_area": 26,
+    "ro_scan_pressure": 25,
+    "ro_check": 24,
+    "ro_membrane": 23,
+    "swro_option": 18
+   },
+   "slipped_input": {
+    "feed_pressure_bar [kPa]": 17,
+    "feed_pressure_bar [MPa]": 16,
+    "feed_nacl_mass_frac [pct]": 11,
+    "feed_nacl_mass_frac [permille]": 10,
+    "feed_nacl_mass_frac [mg/kg]": 10,
+    "feed_nacl_mass_frac [g/kg]": 10,
+    "p1_pressure_bar [kPa]": 8,
+    "feed_flow_m3_s [L/s]": 8,
+    "p1_pressure_bar [MPa]": 7,
+    "feed_flow_mass_kg_s [kg/h]": 6,
+    "feed_tds_g_L [mg/L]": 6,
+    "A_comp [LMH/bar]": 5,
+    "B_comp [LMH]": 5,
+    "feed_flow_m3_s [m3/h]": 4,
+    "membrane_area_m2 [ft2]": 4,
+    "feed_pressure_bar [psi]": 4,
+    "erd_efficiency [pct]": 3,
+    "feed_flow_m3_s [m3/d]": 3,
+    "p1_efficiency [pct]": 3,
+    "feed_flow_m3_s [MGD]": 2,
+    "pxr_efficiency [pct]": 2
+   },
+   "slipped_unit_level": {
+    "2": 33,
+    "1": 111
+   },
+   "error_kind": {
+    "validation (names the input)": 49,
+    "out of bounds (names the variable)": 39,
+    "failed to initialize": 33,
+    "other": 23
+   },
+   "inputs_tried_before_one_erred": {
+    "1": 137,
+    "2": 6,
+    "4": 1
+   },
+   "reward_min": 0.8929,
+   "reward_mean": 0.9422,
+   "reference_reward_mean": 0.9853,
+   "example_errors": {
+    "failed to initialize": "{\n  \"error\": \"solve failed: Unit model fs.unit failed to initialize\"\n}",
+    "other": "{\n  \"error\": \"solve failed: Cannot load a SolverResults object with bad status: error. The requested operating point may be infeasible, or may have hit the 600s / 2000 iteration ceiling.\"\n}",
+    "out of bounds (names the variable)": "{\n  \"error\": \"solve failed: model contains a trivially infeasible variable 'fs.unit.feed_side.properties_in[0.0].pressure' (fixed value 505000000.0 outside bounds [10000.0, 50000000.0]).\"\n}",
+    "validation (names the input)": "{\n  \"error\": \"feed_nacl_mass_frac must be between 0 and 1\"\n}"
+   },
+   "example_fix_lines": [
+    "simulate_ro failed: feed_flow_mass_kg_s 14490.0 is in kg/h, as the question gives it, not kg/s. Converting it first.",
+    "simulate_ro failed: feed_nacl_mass_frac 35.8 is in ‰, as the question gives it, not mass fraction. Converting it first.",
+    "simulate_ro failed: feed_flow_mass_kg_s 16490.0 is in kg/h, as the question gives it, not kg/s. Converting it first.",
+    "simulate_ro failed: feed_pressure_bar 4.8 is in MPa, as the question gives it, not bar. Converting it first."
+   ]
+  }
+ },
+ "decontamination": {
+  "benchmark_files": 117,
+  "benchmark_8grams": 105943,
+  "prompts_with_any_8gram": 0,
+  "max_8gram_hits": 0,
+  "examples": [],
+  "cases_reusing_a_benchmark_scenario": 0,
+  "reuse_examples": [],
+  "numbers_per_workbook_median": 85
+ }
+}

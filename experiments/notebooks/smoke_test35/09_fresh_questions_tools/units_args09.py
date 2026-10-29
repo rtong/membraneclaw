@@ -4,11 +4,11 @@ import importlib.util, json, sys
 from collections import defaultdict
 from pathlib import Path
 
-ST = Path.home() / "Public/membraneclaw/experiments/notebooks/smoke_test35"
-sys.path.insert(0, str(ST)); argv = sys.argv[1:]; sys.argv = ["08.5_mlx_stack.py"]
-spec = importlib.util.spec_from_file_location("m85", ST / "08.5_mlx_stack.py")
-m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-cases = {c["id"]: c for c in m.load_split("dev")}
+ST = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ST)); argv = sys.argv[1:]; sys.argv = ["09_fresh_questions.py"]
+spec = importlib.util.spec_from_file_location("m09", ST / "09_fresh_questions.py")
+m = importlib.util.module_from_spec(spec); sys.modules["m09"] = m; spec.loader.exec_module(m)
+cases = {c["id"]: c for s in ("dev", "test", "holdout_shift") for c in m.load_split(s)}
 TARGETS = [("feed_flow_mass_kg_s", "t/h"), ("feed_flow_m3_s", "m3/h"), ("A_comp", "LMH/bar"), ("B_comp", "LMH"),
            ("feed_temperature_c", "F"), ("feed_flow_mass_kg_s", "kg/h"), ("membrane_area_m2", "ft2"), ("feed_tds_g_L", "mg/L")]
 for item in argv:

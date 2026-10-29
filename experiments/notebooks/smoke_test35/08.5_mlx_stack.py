@@ -116,6 +116,7 @@ os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.0")
 HERE = Path(__file__).resolve().parent
 PREFIX = "08.5_mlx_stack"
 DATA = HERE / "07_recover_from_errors_data"        # 07's recovery episodes (the forced probe's starting turns), read in place
+OWN_DATA = HERE / f"{PREFIX}_data"                 # 08.5's weighted training split (train_units.jsonl)
 QDATA = HERE / "06_direction_and_compare_data"     # the questions and the blind reference episodes: 06's, read in place
 RUNS07 = HERE / "07_recover_from_errors_runs"      # 07's seed (08's start) and its sampled PPO episodes (critic-fit's data)
 #: 08: the other notebook 07 (Rui Tong's, commit effa2e4 on experiment/smoke-test35-07-error-recovery,
@@ -839,25 +840,6 @@ CONSTRAINTS_TRAIN_EXTRA = {
     ("performance.product_flow_m3_s", ">="): ["Product water must not come in under {v}."],
     ("performance.system_recovery_pct", ">="): ["System recovery must not drop under {v}."],
 }
-#: 09: two more sentences per limit, drawn by train2 questions only (train keeps its bank above, so it still
-#: regenerates exactly). Other constructions than holdout_shift's unseen sentences ("no less than", "or less",
-#: "or better", "cap", "ceiling", "limited to", "fall under", "at or under"): holdout_shift still tests unseen phrasings.
-CONSTRAINTS_TRAIN2_EXTRA = {
-    ("permeate.flow_kg_s", ">="): ["Permeate below {v} is not acceptable.", "Permeate output has a floor of {v}."],
-    ("permeate.nacl_ppm", "<="): ["Permeate NaCl above {v} is not acceptable.",
-                                   "The most NaCl we can tolerate in the permeate is {v}."],
-    ("performance.water_recovery_pct", "<="): ["Recovery above {v} is not acceptable.", "The highest recovery we allow is {v}."],
-    ("flux.water_LMH", "<="): ["Flux above {v} is not acceptable.", "The highest flux we allow is {v}."],
-    ("performance.salt_rejection_pct", ">="): ["Salt rejection below {v} is not acceptable.",
-                                                "The lowest salt rejection we accept is {v}."],
-    ("costing.specific_energy_kWh_m3", "<="): ["Specific energy above {v} is not acceptable.",
-                                                "The most specific energy we can afford is {v}."],
-    ("costing.LCOW_usd_m3", "<="): ["LCOW above {v} is not acceptable.", "The highest LCOW we can accept is {v}."],
-    ("performance.product_flow_m3_s", ">="): ["Product water below {v} is not acceptable.",
-                                               "The lowest product flow we accept is {v}."],
-    ("performance.system_recovery_pct", ">="): ["Plant recovery below {v} is not acceptable.",
-                                                 "The lowest plant recovery we accept is {v}."],
-}
 QUESTIONS = {
     "ro_check": (["Does it meet all of these limits, and if not, which ones fail?",
                   "Are we within every limit? Tell me which ones we break, if any.",
@@ -924,8 +906,7 @@ RANGES = {
                        "p1_eff": (0.75, 0.88), "pxr": (0.88, 0.97), "pat": (0.75, 0.92)}},
 }
 FAMILIES = ("ro_check", "ro_scan_pressure", "ro_scan_area", "ro_membrane", "swro_check", "swro_option")
-SPLITS = {"train": (1200, 101), "dev": (240, 202), "test": (240, 303), "holdout_shift": (120, 404),
-          "train2": (2400, 505)}  # 09: train2, new training questions (its own seed)
+SPLITS = {"train": (1200, 101), "dev": (240, 202), "test": (240, 303), "holdout_shift": (120, 404)}
 LEVEL_MIX = (0.40, 0.35, 0.25)
 
 
@@ -2923,17 +2904,16 @@ def seed_refs_every(limit: int, every: int, seed: int, fix_lines: bool = False) 
     return refs
 
 
-def seed_refs(limit: int, recover: int, seed: int, ref_split: str = "train") -> list[dict]:
+def seed_refs(limit: int, recover: int, seed: int) -> list[dict]:
     """The seed's episodes: the first ``limit`` of 06's reference episodes in one shuffle (06's selection: the
     same N picks the same episodes) and ``recover`` recovery episodes of other questions, drawn by the same
-    seed, the two interleaved by a third shuffle. 09: ``ref_split`` is the split they come from (train_all: train +
-    train2)."""
-    refs = [json.loads(line) for line in reference_path(ref_split).read_text().splitlines()]
+    seed, the two interleaved by a third shuffle."""
+    refs = [json.loads(line) for line in reference_path("train").read_text().splitlines()]
     random.Random(seed).shuffle(refs)
     refs = refs[:limit] if limit else refs
     if recover:
         taken = {r["id"] for r in refs}
-        recs = [r for r in map(json.loads, recovery_path(ref_split).read_text().splitlines()) if r["id"] not in taken]
+        recs = [r for r in map(json.loads, recovery_path("train").read_text().splitlines()) if r["id"] not in taken]
         random.Random(f"{seed}:recover").shuffle(recs)
         if len(recs) < recover:
             raise SystemExit(f"only {len(recs)} recovery episodes outside the first {limit}; asked for {recover}")
@@ -2944,8 +2924,7 @@ def seed_refs(limit: int, recover: int, seed: int, ref_split: str = "train") -> 
 
 def train_seed(out_dir: Path, *, label: str, reasoning: bool, epochs: int, lr: float, accum: int, lora_r: int,
                seed: int, limit: int, label_per_class: int = 0, recover: int = 0, recovery_every: int = 0,
-               fix_lines: bool = False, ref_split: str = "train", extra: str = "", extra_split: str = "train2",
-               progress=print) -> None:
+               fix_lines: bool = False, progress=print) -> None:
     import torch
     from peft import LoraConfig, get_peft_model
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -2958,14 +2937,9 @@ def train_seed(out_dir: Path, *, label: str, reasoning: bool, epochs: int, lr: f
     base.enable_input_require_grads()
     policy = get_peft_model(base, LoraConfig(r=lora_r, lora_alpha=2 * lora_r, target_modules=list(LORA_TARGETS),
                                              task_type="CAUSAL_LM")).to(device)
-    cases = {c["id"]: c for c in load_split(ref_split)}
+    cases = {c["id"]: c for c in load_split("train")}
     refs = (seed_refs_every(limit, recovery_every, seed, fix_lines) if recovery_every
-            else seed_refs(limit, recover, seed, ref_split))
-    if extra:  # 09: a small dose for what the seed never does right, mixed into the recipe's episodes
-        extras = [json.loads(line) for line in Path(extra).read_text().splitlines() if line.strip()]
-        cases.update({c["id"]: c for c in load_split(extra_split)})
-        refs = refs + extras
-        random.Random(f"{seed}:extra").shuffle(refs)
+            else seed_refs(limit, recover, seed))
     slips = [r["slip"] for r in refs if "slip" in r]
     label_ids = set(pick_label_cases(label_per_class, seed)) if label_per_class else set()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -2978,8 +2952,7 @@ def train_seed(out_dir: Path, *, label: str, reasoning: bool, epochs: int, lr: f
         {"model": MODEL, "label": label, "reasoning": reasoning, "epochs": epochs, "lr": lr, "accum": accum,
          "lora_r": lora_r, "seed": seed, "examples": len(refs), "lora_targets": list(LORA_TARGETS),
          "strategy": "blind: convert what needs converting, simulate every candidate, then the answer",
-         "compare_tool": COMPARE_ON, "device": device, "ref_split": ref_split, "extra": extra,
-         "extra_episodes": sum(1 for r in refs if r.get("dose")),
+         "compare_tool": COMPARE_ON, "device": device,
          "reference_episodes": len(refs) - len(slips), "recovery_episodes": len(slips),
          "recovery_ids": sorted(r["id"] for r in refs if "slip" in r), **recovery,
          "label_per_class": label_per_class, "label_case_ids": sorted(label_ids),
@@ -3854,8 +3827,9 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
         state = torch.load(run_dir / "last" / "state.pt", map_location="cpu", weights_only=False)
         head.load_state_dict(state["head"])
         opt.load_state_dict(state["opt"])
-        for g in opt.param_groups:  # 08: the configured eps, not the saved one (a run continued with other settings)
+        for g in opt.param_groups:  # 08/08.5: the configured eps and lr, not the saved ones
             g["eps"] = cfg["adam_eps"]
+            g["lr"] = cfg["lr"]
         critic_opt.load_state_dict(state["critic_opt"])
         window.extend(state["window"])
         if separate:
@@ -4443,8 +4417,11 @@ def decision_label(case: dict) -> str:
 
 
 def load_split(split: str) -> list[dict]:
-    """06's questions of a split (07 reads them in place)."""
-    return [json.loads(line) for line in (QDATA / f"{split}.jsonl").read_text().splitlines()]
+    """06's questions of a split (07-08.5 read them in place; 08.5's weighted split is in 08.5_mlx_stack_data/)."""
+    path = OWN_DATA / f"{split}.jsonl"
+    if not path.exists():
+        path = QDATA / f"{split}.jsonl"
+    return [json.loads(line) for line in path.read_text().splitlines()]
 
 
 def sentence_bank(case: dict, con: dict) -> str:
@@ -4452,7 +4429,6 @@ def sentence_bank(case: dict, con: dict) -> str:
     train, dev and test), "extra" (06's train-only ones) or "holdout" (holdout_shift's unseen one)."""
     key = (con["metric"], con["op"])
     for bank, templates in (("shared", CONSTRAINTS[key][0]), ("extra", CONSTRAINTS_TRAIN_EXTRA[key]),
-                            ("extra2", CONSTRAINTS_TRAIN2_EXTRA[key]),
                             ("holdout", CONSTRAINTS[key][1])):
         if any(t.format(v=con["text"]) in case["prompt"] for t in templates):
             return bank
@@ -4466,7 +4442,7 @@ def swap_sentences(case: dict, to: str) -> dict:
     prompt = case["prompt"]
     for con in case["constraints"]:
         key = (con["metric"], con["op"])
-        current = next(s for t in CONSTRAINTS[key][0] + CONSTRAINTS_TRAIN_EXTRA[key] + CONSTRAINTS_TRAIN2_EXTRA[key] + CONSTRAINTS[key][1]
+        current = next(s for t in CONSTRAINTS[key][0] + CONSTRAINTS_TRAIN_EXTRA[key] + CONSTRAINTS[key][1]
                        for s in [t.format(v=con["text"])] if s in prompt)
         target = (CONSTRAINTS[key][0][0] if to == "shared" else CONSTRAINTS[key][1][0]).format(v=con["text"])
         assert prompt.count(current) == 1, (case["id"], current)
@@ -4789,8 +4765,7 @@ def cmd_seed(args) -> None:
     train_seed(RUNS / args.out, label=args.label, reasoning=bool(args.reasoning), epochs=args.epochs, lr=args.lr,
                accum=args.accum, lora_r=args.lora_r, seed=args.seed, limit=args.limit,
                label_per_class=args.label_per_class, recover=args.recover, recovery_every=args.recovery_every,
-               fix_lines=bool(args.fix_lines), ref_split=args.ref_split, extra=args.extra,
-               extra_split=args.extra_split)
+               fix_lines=bool(args.fix_lines))
 
 
 
@@ -7389,7 +7364,7 @@ def train_ppo_mlx(cfg: dict, run_dir: Path, progress=print, resume: bool = False
         st = json.loads((run_dir / "last" / "state_mlx.json").read_text())
         arrays = mx.load(str(run_dir / "last" / "state_mlx.safetensors"))
         opt.state = tree_unflatten(list(mx.load(str(run_dir / "last" / "opt_mlx.safetensors")).items()))
-        opt.learning_rate = cfg["lr"]  # the saved state carries the rate it was saved with; a resumed run takes the configured one (lr_anneal recomputes it every actor step anyway)
+        opt.learning_rate = cfg["lr"]  # the saved state carries the rate it was saved with; a resumed run takes the configured one
         cuts = [0]
         for n_ in st["window_lengths"]:
             cuts.append(cuts[-1] + n_)
@@ -8642,10 +8617,6 @@ def main() -> None:
     p.add_argument("--label-per-class", type=int, default=0,
                    help="label the decision on this many train records per (family, answer class)")
     p.add_argument("--max-vram-mib", type=int, default=13000)
-    p.add_argument("--ref-split", default="train",
-                   help="09: the split whose reference and recovery episodes the seed reads (train_all: train + train2)")
-    p.add_argument("--extra", default="", help="09: a jsonl of extra episodes (the targeted dose) added to the seed")
-    p.add_argument("--extra-split", default="train2", help="09: the split holding the extra episodes' questions")
     p.set_defaults(fn=cmd_seed)
     p = sub.add_parser("ppo")
     p.add_argument("--compare", type=int, default=1, help="0: the direction-sentences-only ablation (no check_limits)")
