@@ -1,0 +1,64 @@
+[package]
+name = "membrane-rl"
+description = "PPO training of MembraneClaw's tool-using model in Rust: Qwen3.5 on dashmag/Burn, its tokenizer and chat template, and notebook 07's task, held to transformers' and 07's numbers."
+version = "0.0.1"
+edition = "2024"
+rust-version = "1.95"
+publish = false
+
+# Its own workspace: nothing above this directory is a Rust project.
+[workspace]
+
+[features]
+default = ["flex"]
+# Flex runs on every core with SIMD; without `simd` and `rayon` it runs scalar on one core.
+flex = ["burn/flex", "burn/simd", "burn/rayon", "dash-ops/flex", "dash-lora/flex", "dash-train/flex"]
+# No Burn fusion or autotune, as dashmag builds its kernels: both change which kernels run (and
+# autotune's TMA matmul candidates can fail silently on CUDA 12/NVRTC).
+cuda = ["burn/cuda", "dash-ops/cuda", "dash-lora/cuda", "dash-train/cuda"]
+# Burn's lazy fusion of elementwise kernels, which dashmag's operators take part in: fewer
+# launches per decode step, other low bits.
+fusion = ["burn/fusion", "dash-ops/fusion", "dash-train/fusion"]
+
+[dependencies]
+# dashmag: the operators (delta rule, attention, conv1d, log-probs, sampling), the LoRA layer and
+# PEFT's adapter format, AdamW and gradient clipping. One revision for all of them.
+dash-contract = { git = "https://github.com/bayanasar/dashmag", rev = "1820d3c35023bdf9cef051d6caa7184ab4e70bec" }
+dash-ops = { git = "https://github.com/bayanasar/dashmag", rev = "1820d3c35023bdf9cef051d6caa7184ab4e70bec", default-features = false }
+dash-lora = { git = "https://github.com/bayanasar/dashmag", rev = "1820d3c35023bdf9cef051d6caa7184ab4e70bec", default-features = false }
+dash-peft = { git = "https://github.com/bayanasar/dashmag", rev = "1820d3c35023bdf9cef051d6caa7184ab4e70bec" }
+dash-train = { git = "https://github.com/bayanasar/dashmag", rev = "1820d3c35023bdf9cef051d6caa7184ab4e70bec", default-features = false }
+# Python's `re` semantics, lookahead included, for the harness's patterns.
+fancy-regex = "0.14"
+# The version dashmag pins, so its crates and these share one Burn.
+burn = { version = "=0.22.1", default-features = false, features = ["std", "safetensors", "autodiff", "optim"] }
+# Chat templates are Jinja; transformers renders them with Jinja2, whose string methods
+# (`startswith`, `split`, ...) minijinja takes from `pycompat`.
+minijinja = { version = "3.0.3", features = ["serde", "preserve_order"] }
+minijinja-contrib = { version = "3.0.3", features = ["pycompat"] }
+serde = { version = "1", features = ["derive"] }
+# Tool schemas are written into prompts in their keys' order, so maps keep it.
+serde_json = { version = "1", features = ["preserve_order"] }
+# Pure-Rust regex for the pre-tokenizer: the default Oniguruma build is C.
+tokenizers = { version = "0.22.2", default-features = false, features = ["fancy-regex"] }
+
+[dev-dependencies]
+# Reads the reference files transformers' outputs are recorded in.
+safetensors = "0.8"
+
+# dashmag's cubecl-cuda: 0.11.1 but for `CUBECL_CUDA_TF32=0`, which keeps f32 matmuls (the LoRA
+# factors' products) in IEEE f32. A [patch] reaches only the workspace that declares it.
+[patch.crates-io]
+cubecl-cuda = { git = "https://github.com/bayanasar/dashmag", rev = "1820d3c35023bdf9cef051d6caa7184ab4e70bec" }
+
+[[bin]]
+name = "nb10"
+required-features = ["cuda"]
+
+[[bin]]
+name = "gen_smoke"
+required-features = ["cuda"]
+
+[[bin]]
+name = "decode_bench"
+required-features = ["cuda"]
