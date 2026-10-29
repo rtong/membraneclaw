@@ -1,0 +1,6 @@
+{
+  "stopped_at": 400,
+  "reason": "stop_at: step 400 (the learning rate's schedule runs to step 400)",
+  "best_step": 380,
+  "best_reward": 0.835944445160219
+}

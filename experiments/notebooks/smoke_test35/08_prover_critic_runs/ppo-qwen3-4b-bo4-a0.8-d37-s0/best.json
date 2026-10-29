@@ -1,0 +1,41 @@
+{
+  "step": 0,
+  "reward": 0.5855894204389575,
+  "decision_correct": 0.55,
+  "evidence": 0.5,
+  "answer_found": 0.6333333333333333,
+  "calls_per_episode": 4.016666666666667,
+  "calls_errored": 0.5684647302904564,
+  "truncated": 0.03333333333333333,
+  "policy_tokens": 1031.4333333333334,
+  "components": {
+    "calls": 0.8297376543209877,
+    "decision": 0.49166666666666664,
+    "violations": 0.34782608695652173,
+    "values": 0.5,
+    "format": 0.6333333333333333,
+    "efficiency": 0.27323412698412697
+  },
+  "recovery": {
+    "sim_erred": 0.5833333333333334,
+    "recovered_given_error": 0.4,
+    "repeats_per_episode": 0.4666666666666667,
+    "streak3_share": 0.4166666666666667,
+    "streak_max": 15,
+    "evidence_given_error": 0.2857142857142857,
+    "decision_given_error": 0.2857142857142857,
+    "decision_given_no_error": 0.92
+  },
+  "critic_residual_median": null,
+  "critic_ahead_frac": null,
+  "reused": true,
+  "gate": {
+    "best": 0.5855894204389575,
+    "best_step": 0,
+    "since_best": 0,
+    "regress": 0,
+    "critic_fail": 0,
+    "step0": 0.5855894204389575,
+    "reward_low": 0
+  }
+}

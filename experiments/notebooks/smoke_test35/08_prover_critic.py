@@ -3657,6 +3657,9 @@ PPO_DEFAULTS = {
     # details' 0.5; 03-07: 1.0). The details' lr (2.5e-4 to 3e-4) and entropy bonus are not taken: they train small
     # networks from scratch, and here a LoRA of a pretrained 0.8B model ran away at lr 1e-5 (06).
     "lr_anneal": 0, "max_grad_norm": 1.0,
+    # 08: the step the annealing starts from (0: the actor's first step, critic_warmup) -- a run continued with the
+    # details from a later step anneals from there to 0 at its last step
+    "lr_anneal_start": 0,
     # 08: where the rollouts and evaluations are generated. "torch": transformers' generate on the device (03-07).
     # "mlx": mlx-lm on Apple silicon (MLXPolicy / rollout_mlx), the policy's LoRA folded in before each rollout; the
     # update and every log-probability stay PyTorch's.
@@ -3715,6 +3718,8 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
         state = torch.load(run_dir / "last" / "state.pt", map_location="cpu", weights_only=False)
         head.load_state_dict(state["head"])
         opt.load_state_dict(state["opt"])
+        for g in opt.param_groups:  # 08: the configured eps, not the saved one (a run continued with other settings)
+            g["eps"] = cfg["adam_eps"]
         critic_opt.load_state_dict(state["critic_opt"])
         window.extend(state["window"])
         if separate:
@@ -3979,7 +3984,8 @@ def train_ppo(cfg: dict, run_dir: Path, progress=print, resume: bool = False) ->
                 adv = normalized_advantages(adv, actor_mask)
             n_mb = max(1, min(int(cfg.get("minibatches", 1)), len(seqs)))
             if cfg.get("lr_anneal") and not warming:  # computed from the step: a resumed run lands on the same rate
-                frac = 1.0 - (step - cfg["critic_warmup"]) / max(1, cfg["steps"] - cfg["critic_warmup"])
+                a0 = max(cfg["critic_warmup"], int(cfg.get("lr_anneal_start") or 0))
+                frac = 1.0 - max(0, step - a0) / max(1, cfg["steps"] - a0)
                 for g in opt.param_groups:
                     g["lr"] = cfg["lr"] * max(frac, 0.0)
             updates, kl_stop, approx_kls, ratio_first = 0, False, [], None
