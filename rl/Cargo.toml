@@ -62,3 +62,7 @@ required-features = ["cuda"]
 [[bin]]
 name = "decode_bench"
 required-features = ["cuda"]
+
+[[bin]]
+name = "lp_check"
+required-features = ["cuda"]
