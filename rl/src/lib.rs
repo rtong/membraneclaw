@@ -15,3 +15,4 @@ pub mod membrane;
 pub mod probe;
 pub mod qwen3_5;
 pub mod tree;
+pub mod update;

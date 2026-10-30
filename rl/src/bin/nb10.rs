@@ -12,11 +12,8 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use burn::module::Module;
-use burn::optim::{GradientsParams, ModuleOptimizer};
 use burn::tensor::{DType, Device, FloatDType};
 use dash_ops::sample::SampleOptions;
-use dash_train::clip::{ClipGradNormOptions, clip_grad_norm};
-use dash_train::optim::{AdamW, Beta1};
 use membrane_rl::generate::Generator;
 use membrane_rl::grpo::{self, ErrorState, Rng};
 use membrane_rl::hf;
@@ -28,7 +25,7 @@ use membrane_rl::membrane::reward::score;
 use membrane_rl::membrane::tools::ToolPool;
 use membrane_rl::probe::{self, ERR0, Paired};
 use membrane_rl::qwen3_5::{Qwen3_5ForCausalLM, RotaryTable};
-use membrane_rl::tree::{self, Objective, Reads, Tree};
+use membrane_rl::update;
 use serde::Serialize;
 use serde_json::json;
 
@@ -225,16 +222,19 @@ fn train(args: &[String]) {
         ..SampleOptions::default()
     };
     let mut generator = Generator::new(model.valid(), run.table.clone(), h, options);
-    let mut optim = ModuleOptimizer::from(AdamW {
-        beta1: Beta1::new(cfg.adam_betas[0]),
-        beta2: cfg.adam_betas[1],
-        eps: cfg.adam_eps,
+    let settings = update::Settings {
+        lr: cfg.lr,
+        clip_eps: cfg.clip_eps,
+        inner_epochs: cfg.inner_epochs,
+        minibatches: cfg.minibatches,
+        max_grad_norm: cfg.max_grad_norm,
+        adam_betas: cfg.adam_betas,
+        adam_eps: cfg.adam_eps,
         weight_decay: cfg.weight_decay,
-    });
-    let clip = ClipGradNormOptions {
-        max_norm: cfg.max_grad_norm,
-        ..ClipGradNormOptions::default()
+        kl_coef: cfg.kl_coef,
+        seed: cfg.seed,
     };
+    let mut optim = settings.optimizer();
     let suppress = [h.suppress];
     let mut rng = Rng::new(cfg.seed);
     let mut pool: Vec<ErrorState> = Vec::new();
@@ -286,8 +286,7 @@ fn train(args: &[String]) {
         generator.reset();
         run.inner.memory_cleanup();
 
-        // Scores, rows, the tree, the old and the reference log-probs.
-        let t1 = Instant::now();
+        // Scores and rows, then the update.
         let scores: Vec<_> = eps.iter().map(|ep| score(&ep.case, &ep.calls, &ep.final_text, &ERR0)).collect();
         let prepared: Vec<grpo::Prepared> = eps
             .iter()
@@ -295,112 +294,30 @@ fn train(args: &[String]) {
             .map(|(ep, s)| grpo::prepare(ep, &episode_rows(h, ep, s, h.suppress)))
             .collect();
         let seqs: Vec<Vec<u32>> = eps.iter().map(|ep| [ep.prompt_ids.as_slice(), &ep.ids].concat()).collect();
-        assert!(seqs.iter().all(|s| s.len() < run.table.len()), "an episode is longer than the rotary table");
-        let limit: Vec<usize> = prepared
-            .iter()
-            .zip(&seqs)
-            .map(|(p, s)| p.reads.at.iter().copied().min().unwrap_or(s.len() - 1))
-            .collect();
-        let local = |t: &Tree, which: &dyn Fn(usize) -> Vec<usize>| -> Vec<Reads> {
-            (0..eps.len())
-                .map(|e| {
-                    if t.leaf[e] == usize::MAX {
-                        return Reads::default();
-                    }
-                    let start = t.segments[t.leaf[e]].start;
-                    let p = &prepared[e];
-                    let mut r = Reads::default();
-                    for k in which(e) {
-                        r.at.push(p.reads.at[k] - start);
-                        r.targets.push(p.reads.targets[k]);
-                    }
-                    r
-                })
-                .collect()
-        };
-        let all_tokens = |e: usize| (0..prepared[e].reads.at.len()).collect::<Vec<_>>();
-        let actor_tokens = |e: usize| {
-            (0..prepared[e].actor.len())
-                .filter(|&k| prepared[e].actor[k])
-                .collect::<Vec<_>>()
-        };
-        let tree_all = Tree::build(&seqs, &limit, &groups, 64);
-        let valid = model.valid();
-        let reads_all = local(&tree_all, &all_tokens);
-        let old = tree::logprobs(&valid, &run.table, &tree_all, &reads_all, &suppress);
-        let reference = lora::choose(valid.clone(), lora::REFERENCE);
-        let refl = tree::logprobs(&reference, &run.table, &tree_all, &reads_all, &suppress);
-        drop(reference);
-        let kl: Vec<f64> = old.iter().zip(&refl).map(|(a, b)| grpo::kl_sum(a, b)).collect();
-        let returns: Vec<f64> = scores.iter().zip(&kl).map(|(s, k)| s.total - cfg.kl_coef * k).collect();
-        let adv = grpo::group_advantages(&returns, &groups);
-        let fwd_s = t1.elapsed().as_secs_f64();
-        println!("  step {step}: old and reference log-probs {fwd_s:.0}s over {} tree tokens (of {})", tree_all.tokens(), seqs.iter().map(Vec::len).sum::<usize>());
-        run.inner.memory_cleanup();
-
-        // The update: inner_epochs passes, each over minibatches of whole groups.
-        let t2 = Instant::now();
-        let counts: Vec<usize> = (0..eps.len()).map(|e| actor_tokens(e).len()).collect();
-        let per_mb = cfg.groups / cfg.minibatches;
-        let mut mb_stats: Vec<serde_json::Value> = Vec::new();
-        let (mut ratio_first, mut kls, mut last_epoch) = (None, Vec::new(), Vec::new());
-        let mut grad_norms = Vec::new();
-        let mut valid = valid;
-        for epoch in 0..cfg.inner_epochs {
-            let mut order: Vec<usize> = (0..cfg.groups).collect();
-            Rng::new(cfg.seed ^ ((step as u64) << 20) ^ ((epoch as u64) << 8) ^ 0x5eed).shuffle(&mut order);
-            let mut epoch_stats = Vec::new();
-            for mb in order.chunks(per_mb) {
-                let mb_groups: Vec<Vec<usize>> = mb.iter().map(|&g| groups[g].clone()).collect();
-                let members: Vec<usize> = mb_groups.iter().flatten().copied().collect();
-                let z = grpo::normalized(
-                    &members.iter().map(|&e| adv[e]).collect::<Vec<_>>(),
-                    &members.iter().map(|&e| counts[e]).collect::<Vec<_>>(),
-                );
-                let t = Tree::build(&seqs, &limit, &mb_groups, 64);
-                let reads = local(&t, &actor_tokens);
-                let mut objectives: Vec<Option<Objective>> = vec![None; eps.len()];
-                for (j, &e) in members.iter().enumerate() {
-                    if counts[e] == 0 {
-                        continue;
-                    }
-                    let ks = actor_tokens(e);
-                    objectives[e] = Some(Objective {
-                        old: ks.iter().map(|&k| old[e][k]).collect(),
-                        advantages: vec![z[j]; ks.len()],
-                        weight: 1.0 / (counts[e] as f32 * members.len() as f32),
-                        reads: reads[e].clone(),
-                    });
-                }
-                let (grads, stats) = tree::gradients(
-                    &model, &valid, &run.table, &run.table_ad, &t, &objectives, &suppress, cfg.clip_eps,
-                );
-                let mut gp = GradientsParams::from_grads(grads, &model);
-                let norm = clip_grad_norm(&model, &mut gp, &clip)
-                    .into_data()
-                    .convert::<f32>()
-                    .try_into_vec::<f32>()
-                    .unwrap()[0];
-                grad_norms.push(norm as f64);
-                model = optim.step(cfg.lr, model, gp);
-                valid = model.valid();
-                let used: Vec<&tree::EpisodeStats> = members.iter().filter(|&&e| counts[e] > 0).map(|&e| &stats[e]).collect();
-                let kl_mb = mean(used.iter().map(|s| s.approx_kl));
-                let ratio_mb = mean(used.iter().map(|s| s.ratio_mean));
-                if ratio_first.is_none() {
-                    ratio_first = Some(ratio_mb);
-                }
-                kls.push(kl_mb);
-                epoch_stats.extend(used.iter().map(|s| (*s).clone()));
-                mb_stats.push(json!({"epoch": epoch, "groups": mb, "approx_kl": kl_mb, "ratio": ratio_mb, "grad_norm": norm}));
-                if step == 0 {
-                    println!("  step 0 epoch {epoch} minibatch {mb:?}: {} tree tokens, {:.1}s, ratio {ratio_mb:.5}, grad norm {norm:.4}, mem {:.1} GB", t.tokens(), t2.elapsed().as_secs_f64(), host_bytes(&run.inner));
-                }
+        let totals: Vec<f64> = scores.iter().map(|s| s.total).collect();
+        let batch = update::Batch { seqs: &seqs, prepared: &prepared, scores: &totals, groups: &groups };
+        let (next, out) = update::step(model, &mut optim, &settings, &run.table, &run.table_ad, &batch, &suppress, step);
+        model = next;
+        let fwd_s = out.before_seconds;
+        println!("  step {step}: old and reference log-probs {fwd_s:.0}s over {} tree tokens (of {})", out.before.tree_tokens, seqs.iter().map(Vec::len).sum::<usize>());
+        if step == 0 {
+            for m in &out.minibatches {
+                println!("  step 0 epoch {} minibatch {:?}: {} tree tokens, {:.1}s, ratio {:.5}, grad norm {:.4}, mem {:.1} GB", m.epoch, m.groups, m.tree_tokens, m.seconds, m.ratio, m.grad_norm, m.reserved_gb);
             }
-            last_epoch = epoch_stats;
         }
         generator.set_model(model.valid());
-        let update_s = t2.elapsed().as_secs_f64();
+        let update_s = out.update_seconds;
+        let update::Before { old, kl, returns, advantages: adv, .. } = &out.before;
+        let counts = &out.counts;
+        let ratio_first = out.minibatches.first().map(|m| m.ratio);
+        let kls: Vec<f64> = out.minibatches.iter().map(|m| m.approx_kl).collect();
+        let grad_norms: Vec<f64> = out.minibatches.iter().map(|m| m.grad_norm as f64).collect();
+        let last_epoch = &out.last_epoch;
+        let mb_stats: Vec<serde_json::Value> = out
+            .minibatches
+            .iter()
+            .map(|m| json!({"epoch": m.epoch, "groups": m.groups, "approx_kl": m.approx_kl, "ratio": m.ratio, "grad_norm": m.grad_norm}))
+            .collect();
         let mem_update = host_bytes(&run.inner);
         run.inner.memory_cleanup();
 
@@ -427,7 +344,7 @@ fn train(args: &[String]) {
         let mask_tokens: usize = old.iter().map(Vec::len).sum();
         let actor_total: usize = counts.iter().sum();
         let entropy = -(0..eps.len())
-            .flat_map(|e| actor_tokens(e).into_iter().map(move |k| (e, k)))
+            .flat_map(|e| batch.actor(e).into_iter().map(move |k| (e, k)))
             .map(|(e, k)| old[e][k] as f64)
             .sum::<f64>()
             / actor_total.max(1) as f64;
@@ -461,7 +378,7 @@ fn train(args: &[String]) {
             "grad_norm_max": grad_norms.iter().copied().fold(f64::NAN, f64::max),
             "updates": grad_norms.len(),
             "lr": cfg.lr,
-            "tree_tokens": tree_all.tokens(),
+            "tree_tokens": out.before.tree_tokens,
             "sequence_tokens": seqs.iter().map(Vec::len).sum::<usize>(),
             "decode_steps": gstats.decode_steps - before.decode_steps,
             "prefill_tokens": gstats.prefill_tokens - before.prefill_tokens,
