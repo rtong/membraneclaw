@@ -1,0 +1,96 @@
+
+running 1 test
+f32: loss -1.98681619e-1, |g| 5.270855e-1 over 228 factors
+  all factors                                  eps 1e-3  change 9.2e-4  differences +4.600063e-1  gradient +5.270855e-1  ratio 0.87274
+  all factors                                  eps 3e-4  change 3.2e-4  differences +5.257439e-1  gradient +5.270855e-1  ratio 0.99745
+  all factors                                  eps 1e-4  change 1.1e-4  differences +5.271329e-1  gradient +5.270855e-1  ratio 1.00009
+test gradient_matches_central_differences has been running for over 60 seconds
+  all factors                                  eps 3e-5  change 3.2e-5  differences +5.274482e-1  gradient +5.270855e-1  ratio 1.00069
+  layer 0                                      eps 3e-4  change 1.3e-4  differences +2.246814e-1  gradient +2.248352e-1  ratio 0.99932
+  layer 0                                      eps 1e-4  change 4.5e-5  differences +2.247216e-1  gradient +2.248352e-1  ratio 0.99949
+  layer 1                                      eps 3e-4  change 6.5e-5  differences +1.083554e-1  gradient +1.085140e-1  ratio 0.99854
+  layer 1                                      eps 1e-4  change 2.2e-5  differences +1.085290e-1  gradient +1.085140e-1  ratio 1.00014
+  layer 2                                      eps 3e-4  change 6.6e-5  differences +1.101129e-1  gradient +1.099762e-1  ratio 1.00124
+  layer 2                                      eps 1e-4  change 2.2e-5  differences +1.100571e-1  gradient +1.099762e-1  ratio 1.00074
+  layer 3                                      eps 3e-4  change 8.4e-5  differences +1.393041e-1  gradient +1.394025e-1  ratio 0.99929
+  layer 3                                      eps 1e-4  change 2.8e-5  differences +1.396532e-1  gradient +1.394025e-1  ratio 1.00180
+  layer 4                                      eps 3e-4  change 5.6e-5  differences +9.360480e-2  gradient +9.359433e-2  ratio 1.00011
+  layer 4                                      eps 1e-4  change 1.9e-5  differences +9.430724e-2  gradient +9.359433e-2  ratio 1.00762
+  layer 5                                      eps 3e-4  change 6.4e-5  differences +1.061829e-1  gradient +1.063537e-1  ratio 0.99839
+  layer 5                                      eps 1e-4  change 2.1e-5  differences +1.062300e-1  gradient +1.063537e-1  ratio 0.99884
+  layer 6                                      eps 3e-4  change 6.2e-5  differences +1.041254e-1  gradient +1.040778e-1  ratio 1.00046
+  layer 6                                      eps 1e-4  change 2.1e-5  differences +1.041262e-1  gradient +1.040778e-1  ratio 1.00047
+  layer 7                                      eps 3e-4  change 1.1e-4  differences +1.855573e-1  gradient +1.854531e-1  ratio 1.00056
+  layer 7                                      eps 1e-4  change 3.7e-5  differences +1.851830e-1  gradient +1.854531e-1  ratio 0.99854
+  layer 8                                      eps 3e-4  change 6.7e-5  differences +1.113271e-1  gradient +1.113384e-1  ratio 0.99990
+  layer 8                                      eps 1e-4  change 2.2e-5  differences +1.116093e-1  gradient +1.113384e-1  ratio 1.00243
+  layer 9                                      eps 3e-4  change 6.0e-5  differences +1.006433e-1  gradient +1.005884e-1  ratio 1.00055
+  layer 9                                      eps 1e-4  change 2.0e-5  differences +1.003779e-1  gradient +1.005884e-1  ratio 0.99791
+  layer 10                                     eps 3e-4  change 7.4e-5  differences +1.226036e-1  gradient +1.226447e-1  ratio 0.99967
+  layer 10                                     eps 1e-4  change 2.5e-5  differences +1.226147e-1  gradient +1.226447e-1  ratio 0.99976
+  layer 11                                     eps 3e-4  change 9.3e-5  differences +1.543426e-1  gradient +1.543000e-1  ratio 1.00028
+  layer 11                                     eps 1e-4  change 3.1e-5  differences +1.541727e-1  gradient +1.543000e-1  ratio 0.99917
+  layer 12                                     eps 3e-4  change 4.6e-5  differences +7.717508e-2  gradient +7.718528e-2  ratio 0.99987
+  layer 12                                     eps 1e-4  change 1.5e-5  differences +7.710662e-2  gradient +7.718528e-2  ratio 0.99898
+  layer 13                                     eps 3e-4  change 4.8e-5  differences +7.955745e-2  gradient +7.958829e-2  ratio 0.99961
+  layer 13                                     eps 1e-4  change 1.6e-5  differences +7.942928e-2  gradient +7.958829e-2  ratio 0.99800
+  layer 14                                     eps 3e-4  change 5.0e-5  differences +8.362902e-2  gradient +8.365700e-2  ratio 0.99967
+  layer 14                                     eps 1e-4  change 1.7e-5  differences +8.360721e-2  gradient +8.365700e-2  ratio 0.99940
+  layer 15                                     eps 3e-4  change 7.4e-5  differences +1.236909e-1  gradient +1.237508e-1  ratio 0.99952
+  layer 15                                     eps 1e-4  change 2.5e-5  differences +1.238377e-1  gradient +1.237508e-1  ratio 1.00070
+  layer 16                                     eps 3e-4  change 4.2e-5  differences +7.029231e-2  gradient +7.029600e-2  ratio 0.99995
+  layer 16                                     eps 1e-4  change 1.4e-5  differences +7.023152e-2  gradient +7.029600e-2  ratio 0.99908
+  layer 17                                     eps 3e-4  change 3.5e-5  differences +5.858197e-2  gradient +5.858794e-2  ratio 0.99990
+  layer 17                                     eps 1e-4  change 1.2e-5  differences +5.859504e-2  gradient +5.858794e-2  ratio 1.00012
+  layer 18                                     eps 3e-4  change 2.8e-5  differences +4.694648e-2  gradient +4.697944e-2  ratio 0.99930
+  layer 18                                     eps 1e-4  change 9.4e-6  differences +4.680607e-2  gradient +4.697944e-2  ratio 0.99631
+  layer 19                                     eps 3e-4  change 4.4e-5  differences +7.388789e-2  gradient +7.381805e-2  ratio 1.00095
+  layer 19                                     eps 1e-4  change 1.5e-5  differences +7.371233e-2  gradient +7.381805e-2  ratio 0.99857
+  layer 20                                     eps 3e-4  change 2.3e-5  differences +3.916137e-2  gradient +3.910689e-2  ratio 1.00139
+  layer 20                                     eps 1e-4  change 7.9e-6  differences +3.935049e-2  gradient +3.910689e-2  ratio 1.00623
+  layer 21                                     eps 3e-4  change 2.1e-5  differences +3.572478e-2  gradient +3.575051e-2  ratio 0.99928
+  layer 21                                     eps 1e-4  change 7.2e-6  differences +3.584163e-2  gradient +3.575051e-2  ratio 1.00255
+  layer 22                                     eps 3e-4  change 2.0e-5  differences +3.365966e-2  gradient +3.374321e-2  ratio 0.99752
+  layer 22                                     eps 1e-4  change 6.8e-6  differences +3.377366e-2  gradient +3.374321e-2  ratio 1.00090
+  layer 23                                     eps 3e-4  change 3.1e-5  differences +5.217127e-2  gradient +5.218884e-2  ratio 0.99966
+  layer 23                                     eps 1e-4  change 1.0e-5  differences +5.218303e-2  gradient +5.218884e-2  ratio 0.99989
+  model.layers.0.linear_attn.in_proj_a.lora_A  eps 3e-4  change 1.5e-7  differences +2.420229e-4  gradient +1.464537e-4  ratio 1.65256
+  model.layers.0.linear_attn.in_proj_a.lora_B  eps 3e-4  change 1.9e-6  differences +3.143090e-3  gradient +3.152605e-3  ratio 0.99698
+  model.layers.0.linear_attn.in_proj_b.lora_A  eps 3e-4  change 2.5e-7  differences +4.159421e-4  gradient +4.359371e-4  ratio 0.95413
+  model.layers.0.linear_attn.in_proj_b.lora_B  eps 3e-4  change 6.4e-6  differences +1.070664e-2  gradient +1.058029e-2  ratio 1.01194
+  model.layers.0.linear_attn.in_proj_qkv.lora_A eps 3e-4  change 2.9e-6  differences +4.822409e-3  gradient +4.846264e-3  ratio 0.99508
+  model.layers.0.linear_attn.in_proj_qkv.lora_B eps 3e-4  change 5.5e-5  differences +9.106178e-2  gradient +9.099331e-2  ratio 1.00075
+  model.layers.0.linear_attn.in_proj_z.lora_A  eps 3e-4  change 2.4e-6  differences +3.989387e-3  gradient +4.136362e-3  ratio 0.96447
+  model.layers.0.linear_attn.in_proj_z.lora_B  eps 3e-4  change 4.9e-5  differences +8.113067e-2  gradient +8.101032e-2  ratio 1.00149
+  model.layers.0.linear_attn.out_proj.lora_A   eps 3e-4  change 1.0e-5  differences +1.659312e-2  gradient +1.652489e-2  ratio 1.00413
+  model.layers.0.linear_attn.out_proj.lora_B   eps 3e-4  change 1.1e-4  differences +1.878402e-1  gradient +1.878101e-1  ratio 1.00016
+  model.layers.3.self_attn.k_proj.lora_A       eps 3e-4  change 1.8e-6  differences +3.035595e-3  gradient +2.995759e-3  ratio 1.01330
+  model.layers.3.self_attn.k_proj.lora_B       eps 3e-4  change 1.8e-5  differences +3.052824e-2  gradient +3.065579e-2  ratio 0.99584
+  model.layers.3.self_attn.o_proj.lora_A       eps 3e-4  change 3.0e-6  differences +5.048205e-3  gradient +5.150101e-3  ratio 0.98021
+  model.layers.3.self_attn.o_proj.lora_B       eps 3e-4  change 6.3e-5  differences +1.050627e-1  gradient +1.051590e-1  ratio 0.99908
+  model.layers.3.self_attn.q_proj.lora_A       eps 3e-4  change 2.7e-6  differences +4.439479e-3  gradient +4.486060e-3  ratio 0.98962
+  model.layers.3.self_attn.q_proj.lora_B       eps 3e-4  change 3.1e-5  differences +5.099269e-2  gradient +5.117628e-2  ratio 0.99641
+  model.layers.3.self_attn.v_proj.lora_A       eps 3e-4  change 2.9e-6  differences +4.845733e-3  gradient +4.782836e-3  ratio 1.01315
+  model.layers.3.self_attn.v_proj.lora_B       eps 3e-4  change 4.1e-5  differences +6.890079e-2  gradient +6.882855e-2  ratio 1.00105
+  model.layers.12.linear_attn.in_proj_a.lora_A eps 3e-4  change 1.0e-7  differences +1.660794e-4  gradient +1.508439e-4  ratio 1.10100
+  model.layers.12.linear_attn.in_proj_a.lora_B eps 3e-4  change 1.5e-6  differences +2.530001e-3  gradient +2.498055e-3  ratio 1.01279
+  model.layers.12.linear_attn.in_proj_b.lora_A eps 3e-4  change 1.4e-7  differences +2.374121e-4  gradient +2.396933e-4  ratio 0.99048
+  model.layers.12.linear_attn.in_proj_b.lora_B eps 3e-4  change 2.9e-6  differences +4.798328e-3  gradient +4.755236e-3  ratio 1.00906
+  model.layers.12.linear_attn.in_proj_qkv.lora_A eps 3e-4  change 3.0e-6  differences +5.003031e-3  gradient +4.912977e-3  ratio 1.01833
+  model.layers.12.linear_attn.in_proj_qkv.lora_B eps 3e-4  change 2.8e-5  differences +4.702741e-2  gradient +4.713268e-2  ratio 0.99777
+  model.layers.12.linear_attn.in_proj_z.lora_A eps 3e-4  change 1.3e-6  differences +2.203470e-3  gradient +2.295926e-3  ratio 0.95973
+  model.layers.12.linear_attn.in_proj_z.lora_B eps 3e-4  change 2.0e-5  differences +3.351498e-2  gradient +3.350329e-2  ratio 1.00035
+  model.layers.12.linear_attn.out_proj.lora_A  eps 3e-4  change 2.7e-6  differences +4.562836e-3  gradient +4.546726e-3  ratio 1.00354
+  model.layers.12.linear_attn.out_proj.lora_B  eps 3e-4  change 3.0e-5  differences +5.032003e-2  gradient +5.034474e-2  ratio 0.99951
+  model.layers.23.self_attn.k_proj.lora_A      eps 3e-4  change 1.2e-6  differences +1.926696e-3  gradient +1.903754e-3  ratio 1.01205
+  model.layers.23.self_attn.k_proj.lora_B      eps 3e-4  change 1.7e-5  differences +2.900829e-2  gradient +2.897016e-2  ratio 1.00132
+  model.layers.23.self_attn.o_proj.lora_A      eps 3e-4  change 1.0e-6  differences +1.704817e-3  gradient +1.709200e-3  ratio 0.99744
+  model.layers.23.self_attn.o_proj.lora_B      eps 3e-4  change 2.1e-5  differences +3.492779e-2  gradient +3.493273e-2  ratio 0.99986
+  model.layers.23.self_attn.q_proj.lora_A      eps 3e-4  change 1.6e-6  differences +2.735970e-3  gradient +2.745069e-3  ratio 0.99669
+  model.layers.23.self_attn.q_proj.lora_B      eps 3e-4  change 1.3e-5  differences +2.221373e-2  gradient +2.221293e-2  ratio 1.00004
+  model.layers.23.self_attn.v_proj.lora_A      eps 3e-4  change 6.1e-7  differences +1.011808e-3  gradient +1.031784e-3  ratio 0.98064
+  model.layers.23.self_attn.v_proj.lora_B      eps 3e-4  change 7.5e-6  differences +1.245667e-2  gradient +1.247193e-2  ratio 0.99878
+worst |ratio - 1| over 46 differences above 2e-5: 3.59e-3
+test gradient_matches_central_differences ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 699.53s

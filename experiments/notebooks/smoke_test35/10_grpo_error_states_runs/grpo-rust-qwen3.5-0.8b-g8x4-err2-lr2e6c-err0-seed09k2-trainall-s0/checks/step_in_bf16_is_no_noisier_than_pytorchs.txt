@@ -1,0 +1,15 @@
+
+running 1 test
+test step_in_bf16_is_no_noisier_than_pytorchs ... rust BF16: 16 updates, start 17s, update 129s
+  grad norms   rust 0.7347 0.7108 0.2878 0.7597 0.5277 0.2921 0.3595 0.6326 0.4611 0.3315 0.7931 0.1285 0.1406 0.4937 0.2734 0.3088
+               torch 0.7425 0.7440 0.2502 0.7229 0.4901 0.2046 0.4256 0.6386 0.4149 0.3047 0.8236 0.1848 0.1251 0.5735 0.3250 0.2351
+  ratio  worst 1.50e-3; approx kl worst 1.48e-3 (last rust 9.950e-5 torch 2.134e-4)
+  against PyTorch's bf16: old log-probs worst 7.25e-1 (mean 1.35e-3); KL worst 3.57e0; advantages worst 2.56e-2; grad norms worst relative 4.28e-1
+  the step's change of the factors: cosine, norm ratio, worst factor's cosine, same sign
+  rust bf16 vs pytorch fp32      0.950764  0.999718  0.864358 (model.layers.10.linear_attn.in_proj_a.lora_A)  0.9075
+  pytorch bf16 vs pytorch fp32   0.944684  0.990785  0.892294 (model.layers.2.linear_attn.in_proj_a.lora_A)  0.9022
+  rust bf16 vs pytorch bf16      0.927351  1.009016  0.783807 (model.layers.10.linear_attn.in_proj_a.lora_A)  0.8874
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 148.45s
+

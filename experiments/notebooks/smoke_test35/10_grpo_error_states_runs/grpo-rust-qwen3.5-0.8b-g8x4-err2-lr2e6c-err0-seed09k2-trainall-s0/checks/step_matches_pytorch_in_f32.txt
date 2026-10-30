@@ -1,0 +1,12 @@
+
+running 1 test
+test step_matches_pytorch_in_f32 ... rust F32: 16 updates, start 46s, update 269s
+  grad norms   rust 0.7188 0.7308 0.3309 0.7781 0.5605 0.1380 0.2769 0.6493 0.4525 0.2890 0.7538 0.1427 0.1222 0.5498 0.1999 0.2216
+               torch 0.7188 0.7308 0.3309 0.7781 0.5605 0.1380 0.2769 0.6493 0.4525 0.2890 0.7538 0.1427 0.1222 0.5498 0.1999 0.2216
+  ratio  worst 2.23e-7; approx kl worst 8.20e-8 (last rust 9.081e-5 torch 9.080e-5)
+  old log-probs worst 4.97e-4 (mean 8.11e-7); KL worst 7.11e-4; advantages worst 5.63e-6; grad norms worst relative 2.91e-5
+  the step's change of the factors: cosine 1.00000000, norm ratio 1.000001, worst factor 1.000000 (model.layers.20.linear_attn.in_proj_a.lora_A), same sign 1.0000; |change| 2.1270e-2
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 316.58s
+

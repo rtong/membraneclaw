@@ -1,0 +1,6 @@
+228 factors; cosine, norm ratio, worst factor's cosine, entries with the same sign (plain / weighted):
+  rust f32 vs pytorch fp32       1.00000000  1.000021  1.000000 (model.layers.19.self_attn.q_proj.lora_A)  1.0000 / 1.0000
+  rust bf16 vs pytorch fp32      0.91637812  1.073998  0.694393 (model.layers.14.linear_attn.in_proj_a.lora_A)  0.8790 / 0.9610
+  pytorch bf16 vs pytorch fp32   0.93700232  0.883877  0.677342 (model.layers.20.linear_attn.in_proj_b.lora_A)  0.8908 / 0.9678
+  rust bf16 vs pytorch bf16      0.80541774  1.215099  0.492873 (model.layers.19.self_attn.q_proj.lora_A)  0.8206 / 0.9121
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 37.71s
